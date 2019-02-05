@@ -8,33 +8,43 @@ include <../boardgame_insert_toolkit_lib.scad>;
 // 
 data =
 [
-    [   "29cm box", // for large printers
+    [   "card box",
         [
-            [   "box_dimensions",                 [290.0, 210.0, 28.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",                             [168.0, 210.0, 28.0] ],                       // float f -- default:[ 100, 100, 100]
             [ "enabled",                                    true ],
 
             [   "components",
                 [
                     [   "cards",
                         [
-                            ["type",                        "cards"],                   // "cards" | "chits" | "generic" -- default: "generic"
-                            ["compartment_size",            [ 80.0, 50.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
+                            ["type",                        "chit_stack"],              // "cards" | "chits" | "generic" -- default: "generic"
+                            ["compartment_size",            [ 20.0, 40.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
                             ["num_compartments",            [2, 3] ],                   // int i -- default: [1, 1]
-                            ["position",                    [115, "center" ] ],          // float f | "center" | "max" -- default: "center"
-                            ["extra_spacing",               [0.0, 0.0] ],                   // float f
                             ["enabled",                     true ],                     // true | false
-                            ["rotation",                    0 ],                        // 0 | 1 | -1
+                            ["rotation",                    0 ],                        // 0 | 1 
+                      //      ["position",                    [0,0]]
 
                         ]
                     ],
+                ]
+            ]
+        ]
+    ],
 
+    [   "chits box",
+        [
+            [ "box_dimensions",                             [118.0, 210.0, 28.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "enabled",                                    true ],
+
+            [   "components",
+                [
                     [   "disease markers",
                         [
                             ["enabled",                     true ],                     // true | false
                             ["type",                        "chits"],
                             ["compartment_size",            [ 45.0, 45.0, 10.0] ],
                             ["num_compartments",            [1, 4] ],
-                            ["position",                    [5, "center" ] ],
+                            ["position",                    [10, "center"] ],
                         ]
                     ],
 
@@ -44,14 +54,12 @@ data =
                             ["type",                        "chits"],
                             ["compartment_size",            [ 40.0, 50.0, 10.0] ],
                             ["num_compartments",            [1, 3] ],
-                            ["position",                    [62.5, "center" ] ],
+                            ["position",                    [65, "center"] ],
                             ["extra_spacing",               [0, 10] ]
                         ]
                     ]
-                    
-                    // more components here...
                 ]
-            ],
+            ]
         ]
     ]
 ];
