@@ -231,19 +231,16 @@ module MakeBox( box )
         function __component_size( D )= ( D == Z ) ? __compartment_size( Z ) : ( __compartment_size( D )* __compartments_num( D )) + ( __partitions_num( D )* __partition_thickness( D ));
 
         // clamp __partition heights
-        function __partition_height( D )= __partition_height_scale( D )< 1.0 ? max( 0, __compartment_size( Z ) * __partition_height_scale( D )) : __compartment_size( Z );
+        function __partition_height( D ) = __compartment_size( Z ) * __partition_height_scale( D );
 
         function __notch_length( D ) = __box_dimensions( D ) / 5.0;
         function __notch_depth() = __wall_thickness();
 
         function __notch_height() = 3.0;
 
-        function __lid_exterior_size( D )= D == Z ? __wall_thickness() + __wall_lip_height() - __tolerance() : __box_dimensions( D );
-        function __lid_local_size( D )= D == Z ? __lid_exterior_size( Z ) - __wall_thickness() : __lid_exterior_size( D )- 2 * ( __wall_thickness() + __tolerance() );
-
-        // Determines whether __compartments are made
-        function __b_partitions() = ( __compartments_num( X ) > 1 || __compartments_num( Y ) > 1 );
-            
+        function __lid_external_size( D )= D == Z ? __wall_thickness() + __wall_lip_height() - __tolerance() : __box_dimensions( D );
+        function __lid_internal_size( D )= D == Z ? __lid_external_size( Z ) - __wall_thickness() : __lid_external_size( D ) - ( __wall_thickness() + __tolerance() );
+  
         module RotateComponentInPlace()
         {
           //  x_offset = __component_rotation() == 90 ? __component_exterior_size( Y ) : 0;
@@ -268,14 +265,13 @@ module MakeBox( box )
             }
             else
             { 
-                translate( [ __component_position( X ), __component_position( Y ), 0 ] )
+                translate( [ __component_position( X ), __component_position( Y ), __box_dimensions( Z ) - __compartment_size( Z ) ] )
                 {
                     RotateComponentInPlace()
                     {
                         InnerLayer();
                     }
                 }
-                
             }
         }
 
@@ -313,20 +309,15 @@ module MakeBox( box )
             {
                 // 'carve-outs' are the big shapes of the 'components.' Each is then subdivided
                 // by adding partitions.
-
-                translate([ 0, 0, __box_dimensions( Z ) - __compartment_size( Z )]) // We make these relative to the top of the box.
-                {                      
-                    cube([  __component_size( X ), 
-                            __component_size( Y ), 
-                            __component_size( Z )]);
-                }
+              
+                cube([  __component_size( X ), 
+                        __component_size( Y ), 
+                        __component_size( Z )]);
+                
             }
             else if ( __is_additive_components() )
             {
-                if ( __b_partitions() )
-                {
-                    MakePartitions();
-                }
+                MakePartitions();
             }
             else if ( __is_final_carve_outs() )
             {
@@ -353,11 +344,11 @@ module MakeBox( box )
                 difference() 
                 {
                     // main __box
-                    cube([__lid_exterior_size( X ), __lid_exterior_size( Y ), __lid_exterior_size( Z )]);
+                    cube([__lid_external_size( X ), __lid_external_size( Y ), __lid_external_size( Z )]);
                     
-                    translate([ __wall_thickness(), __wall_thickness(), __wall_thickness()]) 
+                    translate([ __wall_thickness()/2, __wall_thickness()/2, __wall_thickness()]) 
                     {
-                        cube([  __lid_local_size( X ), __lid_local_size( Y ), __lid_local_size( Z )]);
+                        cube([  __lid_internal_size( X ), __lid_internal_size( Y ), __lid_internal_size( Z )]);
                     }
                 }
             }
@@ -380,7 +371,7 @@ module MakeBox( box )
                     {
                         y_pos = ( ( __compartment_size( Y ) ) + __partition_thickness( Y ) ) * y;
 
-                        translate( [ x_pos ,  y_pos , __box_dimensions( Z ) - __compartment_size( Z ) ] )
+                        translate( [ x_pos ,  y_pos , 0 ] )
                         {
                             children();
                         }
@@ -475,14 +466,14 @@ module MakeBox( box )
             {
                 translate( [ start_pos_x, 0, 0 ] )
                 {
-                    cube ( [ __partition_thickness( X ), __component_size( Y ), __partition_height( X ) * __partition_height_scale( X )  ] );
+                    cube ( [ __partition_thickness( X ), __component_size( Y ), __partition_height( X )  ] );
                 }
             }
             else if ( axis == "y" )
             {
                 translate( [ 0, start_pos_y, 0 ] )
                 {
-                    cube ( [ __component_size( X ), __partition_thickness( Y ) , __partition_height( Y ) * __partition_height_scale( Y ) ] );     
+                    cube ( [ __component_size( X ), __partition_thickness( Y ) , __partition_height( Y ) ] );     
                 }  
             }
         }
