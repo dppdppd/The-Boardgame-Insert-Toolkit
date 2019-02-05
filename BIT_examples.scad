@@ -10,14 +10,14 @@ data =
 [
     [   "a card box",
         [
-            [ "box_dimensions",                             [90.0, 120.0, 30.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",                             [90.0, 120.0, 30.0] ],      // float f -- default:[ 100, 100, 100]
             [ "enabled",                                    true ],
 
             [   "components",
                 [
                     [   "cards",
                         [
-                            ["type",                        "cards"],              // "cards" | "chits" | "chit_stack" | "" -- default: ""
+                            ["type",                        "cards"],                 // "cards" | "chits" | "chit_stack" | "" -- default: ""
                             ["compartment_size",            [ 40, 40.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
                             ["num_compartments",            [2, 2] ], 
                         ]
@@ -28,15 +28,15 @@ data =
     ],
     [   "a chit box",
         [
-            [ "box_dimensions",                             [60.0, 120.0, 30.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",                             [60.0, 120.0, 30.0] ],
             [ "enabled",                                    false ],
 
             [   "components",
                 [
                     [   "my chits",
                         [
-                            ["type",                        "chits"],              // "cards" | "chits" | "generic" -- default: "generic"
-                            ["compartment_size",            [ 20, 40.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
+                            ["type",                        "chits"],
+                            ["compartment_size",            [ 20, 40.0, 20.0] ],
                             ["num_compartments",            [2, 2] ], 
                         ]
                     ],
@@ -46,15 +46,15 @@ data =
     ],
     [   "a chit stack box",
         [
-            [ "box_dimensions",                             [60.0, 120.0, 30.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",                             [60.0, 120.0, 30.0] ], 
             [ "enabled",                                    true ],
 
             [   "components",
                 [
                     [   "my chit stack",
                         [
-                            ["type",                        "chit_stack"],              // "cards" | "chits" | "generic" -- default: "generic"
-                            ["compartment_size",            [ 20, 40.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
+                            ["type",                        "chit_stack"],
+                            ["compartment_size",            [ 20, 40.0, 20.0] ], 
                             ["num_compartments",            [2, 2] ], 
                         ]
                     ],
