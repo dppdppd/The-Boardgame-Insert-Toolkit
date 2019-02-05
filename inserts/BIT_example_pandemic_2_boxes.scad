@@ -23,7 +23,7 @@ data =
                             ["num_compartments",            [2, 3] ],                   // int i -- default: [1, 1]
                             ["enabled",                     true ],                     // true | false
                             ["rotation",                    0 ],                        // 0 | 1 | -1
-
+                         //   ["position",                    ["max","max"]]
                         ]
                     ],
                 ]

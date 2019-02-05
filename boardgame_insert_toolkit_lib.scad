@@ -199,8 +199,8 @@ module MakeBox( box )
 
         function __p_i_c( D) = __c_p_raw()[ D ] == "center";
         function __p_i_m( D) = __c_p_raw()[ D ] == "max";
-        function __component_center_position( D ) = ( __box_dimensions( D ) - ( __wall_thickness() * 2 ) - __component_size( D ))/2;
-        function __component_max_position( D ) = ( __box_dimensions( D ) - ( __wall_thickness() * 2 ) -  __component_size( D ));
+        function __component_center_position( D ) = ( __box_dimensions( D ) - __component_size( D ))/2;
+        function __component_max_position( D ) = ( __box_dimensions( D ) - __wall_thickness() -  __component_size( D ));
 
         /////////
 

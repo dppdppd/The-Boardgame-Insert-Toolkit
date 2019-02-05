@@ -21,8 +21,8 @@ data =
                             ["compartment_size",            [ 50, 40.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
                             ["num_compartments",            [1,1] ],                   // int i -- default: [1, 1]
                             ["enabled",                     true ],                     // true | false
-                            ["rotation",                1],                        // 0 | 1 
-                            ["position",                    [0,0]]
+                            ["rotation",                    1],                        // 0 | 1 
+                          //  ["position",                    [0,0]]
 
                         ]
                     ],
