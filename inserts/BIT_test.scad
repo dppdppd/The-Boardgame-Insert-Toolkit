@@ -10,19 +10,19 @@ data =
 [
     [   "card box",
         [
-            [ "box_dimensions",                             [168.0, 210.0, 28.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",                             [100.0, 80.0, 30.0] ],                       // float f -- default:[ 100, 100, 100]
             [ "enabled",                                    true ],
 
             [   "components",
                 [
                     [   "cards",
                         [
-                            ["type",                        "chit_stack"],              // "cards" | "chits" | "generic" -- default: "generic"
-                            ["compartment_size",            [ 20.0, 40.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
-                            ["num_compartments",            [2, 3] ],                   // int i -- default: [1, 1]
+                            ["type",                        ""],              // "cards" | "chits" | "generic" -- default: "generic"
+                            ["compartment_size",            [ 50, 40.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
+                            ["num_compartments",            [1,1] ],                   // int i -- default: [1, 1]
                             ["enabled",                     true ],                     // true | false
-                            ["rotation",                    0 ],                        // 0 | 1 
-                      //      ["position",                    [0,0]]
+                            ["rotation",                1],                        // 0 | 1 
+                            ["position",                    [0,0]]
 
                         ]
                     ],
@@ -66,7 +66,7 @@ data =
 
 
 // for printing control.
-b_print_lid = true;
+b_print_lid = false;
 b_print_box = true;
 
 b_print_box = "29cm box"; // isolate one box to print
