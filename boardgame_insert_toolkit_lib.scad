@@ -63,7 +63,7 @@ module MakeAll()
     function __box_isolated_for_print() = __get_index_of_key( data, b_print_box ) != [];
     function __box_enabled( b ) = __get_value( __get_box( b ), "enabled", default = true);
     function __box_dimensions( b, D ) = __get_value( __get_box( b ), "box_dimensions" )[ D ];
-    function __box_position( b ) = __get_box( b - 1 ) == undef ? 0 : __box_enabled( b - 1 ) ? __box_dimensions( b - 1, X ) + __box_position( b - 1 ) + DISTANCE_BETWEEN_PARTS : 0;
+    function __box_position( b ) = __get_box( b - 1 ) == undef ? 0 : __box_enabled( b - 1 ) ? __box_dimensions( b - 1, X ) + __box_position( b - 1 ) + DISTANCE_BETWEEN_PARTS : __box_dimensions( b - 2, X ) + __box_position( b - 2 ) + DISTANCE_BETWEEN_PARTS;
 
     echo( str( "\n\n\n", COPYRIGHT_INFO, "\n\n\tVersion ", VERSION, "\n\n" ));
 
@@ -208,7 +208,7 @@ module MakeBox( box )
         function __component_position( D )= __p_i_c( D )? __component_center_position( D ): __p_i_m( D )? __component_max_position( D ): __c_p_raw()[ D ] + __wall_thickness();
 
         // The thickness of the __compartment __partitions.
-        function __partition_thickness( D )= ( D == Y && __requires_thick_partitions() ) ? 10 + __component_extra_spacing( D ): __component_extra_spacing( D )+ 1;
+        function __partition_thickness( D )= ( D == Y && __requires_thick_partitions() ) ? 10 + __component_extra_spacing( D ): 1 + __component_extra_spacing( D );
 
         // whether to add __partitions on the __box edges.
         function __partition_ends( D )= ( D == Y && __requires_thick_partitions() );
@@ -382,7 +382,7 @@ module MakeBox( box )
 
         module MakeFingerCutout( axis = "x" )
         {
-            cutout_length = __compartment_size( Y ) * .7;
+            cutout_length = __compartment_size( X ) * .5;
             cutout_height = __box_dimensions( Z ) - 2.0;
             base = __compartment_size( Z ) - __box_dimensions( Z ) + 2.0;
 

@@ -8,7 +8,7 @@ include <boardgame_insert_toolkit_lib.scad>;
 // 
 data =
 [
-    [   "card box",
+    [   "box",
         [
             [ "box_dimensions",                             [60.0, 120.0, 30.0] ],                       // float f -- default:[ 100, 100, 100]
             [ "enabled",                                    true ],
