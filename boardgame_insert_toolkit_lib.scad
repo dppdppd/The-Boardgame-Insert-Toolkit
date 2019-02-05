@@ -154,9 +154,9 @@ module MakeBox( box )
 
         function __compartments_num( D ) = __get_value( component, "num_compartments", default = [1,1] )[ D ];
 
-        function __c_rot_raw() = __get_value( component, "rotation", default = 0 );
-        function __c_rot() = __c_rot_raw() == 1 ? 1 : __c_rot_raw() == 0 ? 0 : __c_rot_raw() == -1 ? -1 : 0; // restrict values to -1, 0, 1
-        function __component_rotation() = __c_rot() * 90;
+        function __component_rotation_raw() = __get_value( component, "rotation", default = 0 );
+        function __component_rotation_clean() = __component_rotation_raw() == 1 ? 1 : __component_rotation_raw() == 0 ? 0 : 0; // restrict values to 0, 1
+        function __component_rotation() = __component_rotation_clean() * 90;
 
         function __component_type() = __get_value( component, "type", default = "generic" );
 
@@ -168,6 +168,9 @@ module MakeBox( box )
 
         function __is_cards() = __component_type() == "cards";
         function __is_chits() = __component_type() == "chits";
+        function __is_chit_stack() = __component_type() == "chit_stack";
+
+        function __requires_thick_partitions() = __is_cards() || __is_chit_stack();
 
         ///////////
 
@@ -182,19 +185,20 @@ module MakeBox( box )
         // forms the lip that the lid fits on.
         function __wall_lip_height() = 4.0;
 
-        // The difference between __partition height and the __wall. Leave at 0 to make them as high.
-        // Use negative numbers to lower them. Dividers cannot be higher than the __walls.
-        function __partition_height_delta( D) = 0.0;
-        function __partition_height_delta( D) = 0.0;
+    
+        function __partition_height_scale( D ) = D == Y ? __is_chit_stack() ? 0.50 : 1.00 : 1.00;
 
         // Amount of curvature represented as a percentage of the __wall height.
-        function __bottom_curve_height_percentage() = 50;
+        function __bottom_curve_height_scale() = 0.50;
 
         function __b_corner_notch() = 1;
 
         // DERIVED VARIABLES
 
         ///////// __component_position helpers
+        function __x() = __component_rotation_clean() == 1 ? Y : X;
+        function __y() = __component_rotation_clean() == 1 ? X : Y;
+
         function __p_i_c( D) = __c_p_raw()[ D ] == "center";
         function __p_i_m( D) = __c_p_raw()[ D ] == "max";
         function __component_center_position( D ) = ( __box_dimensions( D ) - __component_exterior_size( D ))/2;
@@ -205,10 +209,10 @@ module MakeBox( box )
         function __component_position( D )= __p_i_c( D )? __component_center_position( D ): __p_i_m( D )? __component_max_position( D ): __c_p_raw()[ D ];
 
         // The thickness of the __compartment __partitions.
-        function __partition_thickness( D )= ( D == Y && __is_cards() ) ? 10 + __component_extra_spacing( D ): __component_extra_spacing( D )+ 1;
+        function __partition_thickness( D )= ( D == Y && __requires_thick_partitions() ) ? 10 + __component_extra_spacing( D ): __component_extra_spacing( D )+ 1;
 
         // whether to add __partitions on the __box edges.
-        function __partition_ends( D )= ( D == Y && __is_cards() );
+        function __partition_ends( D )= ( D == Y && __requires_thick_partitions() );
 
         // Determines whether finger cutouts are made. (For cards)
         function __finger_cutouts() = ( __component_type() == "cards" );
@@ -218,7 +222,7 @@ module MakeBox( box )
 
         // for rounded bottoms, use the lowest __wall
         function __get_height_for_rounded_bottom() = 
-            ( min( __partition_height( Y ), min( __bottom_curve_height_percentage() / 100 * __compartment_size( Z ), __partition_height( X ) )));
+            ( min( __partition_height( Y ), min( __bottom_curve_height_scale() * __compartment_size( Z ), __partition_height( X ) )));
 
         function __compartment_smallest_size() = ( __compartment_size( X ) < __compartment_size( Y ) ) ? __compartment_size( X ) : __compartment_size( Y );
 
@@ -233,7 +237,7 @@ module MakeBox( box )
         function __wall_exterior_height() = __compartment_size( Z ) + __wall_lip_height() + __padding_z();
 
         // clamp __partition heights
-        function __partition_height( D )= __partition_height_delta( D )< 0 ? max( 0, __compartment_size( Z ) + __partition_height_delta( D )) : __compartment_size( Z );
+        function __partition_height( D )= __partition_height_scale( D )< 1.0 ? max( 0, __compartment_size( Z ) * __partition_height_scale( D )) : __compartment_size( Z );
 
         function __component_exterior_pos_min( D )= 0;           
         function __component_exterior_max( D )= __component_exterior_pos_min( D )+ __component_exterior_size( D );
@@ -256,12 +260,12 @@ module MakeBox( box )
             
         module RotateComponentInPlace()
         {
-            x_offset = __component_rotation() == 1 ? __component_exterior_size( Y ) : 0;
-            y_offset = __component_rotation() == -1 ? __component_exterior_size( X ): 0;
+            x_offset = __component_rotation() == 90 ? __component_exterior_size( Y ) : 0;
+           // y_offset = __component_rotation() == 90 ? __component_exterior_size( X ) : 0;
 
             pivot = [ __component_exterior_pos_min( X ), __component_exterior_pos_min( Y ), 0];
 
-            translate( [ x_offset, y_offset, 0] )
+            translate( [ x_offset, 0, 0] )
                 RotateAboutPoint( __component_rotation(), [0,0,1], pivot )
                     children();
         }
@@ -277,7 +281,8 @@ module MakeBox( box )
                 InnerLayer();
             }
             else
-            { RotateComponentInPlace()
+            { 
+                RotateComponentInPlace()
                 {
                     translate( [ __component_position( X ), __component_position( Y ), 0 ] )
                     {
@@ -483,14 +488,14 @@ module MakeBox( box )
             {
                 translate( [ start_pos_x, 0, 0 ] )
                 {
-                    cube ( [ __partition_thickness( X ), __component_interior_size( Y ), __partition_height( X ) ] );
+                    cube ( [ __partition_thickness( X ), __component_interior_size( Y ), __partition_height( X ) * __partition_height_scale( X )  ] );
                 }
             }
             else if ( axis == "y" )
             {
                 translate( [ 0, start_pos_y, 0 ] )
                 {
-                    cube ( [ __component_interior_size( X ), __partition_thickness( Y ) , __partition_height( Y ) ] );     
+                    cube ( [ __component_interior_size( X ), __partition_thickness( Y ) , __partition_height( Y ) * __partition_height_scale( Y ) ] );     
                 }  
             }
         }
