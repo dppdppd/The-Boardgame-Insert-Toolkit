@@ -18,7 +18,7 @@ data =
                 [
                     [   "cards",
                         [
-                            ["type",                        "cards"],                   // "cards" | "chits" | "generic" -- default: "generic"
+                            ["type",                        "cards"],                   // "cards" | "chits" | "chit_stack" -- default: "generic"
                             ["compartment_size",            [ 80.0, 50.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
                             ["num_compartments",            [2, 3] ],                   // int i -- default: [1, 1]
                             ["enabled",                     true ],                     // true | false

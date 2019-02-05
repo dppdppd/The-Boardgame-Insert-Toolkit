@@ -4,8 +4,8 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "1.00";
-COPYRIGHT_INFO = "\tCopyright 2019 MysteryDough\n\thttps://www.thingiverse.com/MysteryDough/\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
+VERSION = "1.01";
+COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://www.thingiverse.com/thing:3405465\n\n\tCopyright 2019 MysteryDough\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn=100;
 
@@ -281,13 +281,6 @@ module MakeBox( box )
 
         module InnerLayer()
         {
-
-            echo( __component_size(X) );
-
-            translate([ __component_local_pos_min( X ), __component_local_pos_min( Y ), __component_local_pos_min( Z )])
-                cube([1,1,100]);
-
-
             if ( __is_outerbox() )
             {
                 // 'outerbox' is the insert. It may contain one or more 'components' that each
