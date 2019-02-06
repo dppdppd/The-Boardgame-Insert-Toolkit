@@ -84,7 +84,7 @@ data =
 
     [   "a simple box",
         [
-            [ "box_dimensions",                             [20.0, 20.0, 10.0] ], 
+            [ "box_dimensions",                             [20.0, 20.0, 12.0] ], 
             [ "enabled",                                    true ],
 
             [   "components",
@@ -92,7 +92,7 @@ data =
                     [   "my chit stack",
                         [
                             ["type",                        ""],
-                            ["compartment_size",            [ 5, 5.0, 5.0] ], 
+                            ["compartment_size",            [ 15, 15.0, 8.0] ], 
                             ["num_compartments",            [1, 1] ], 
                         ]
                     ],
@@ -100,6 +100,26 @@ data =
             ]
         ]
     ],
+
+    [   "a vertical chit stack",
+        [
+            [ "box_dimensions",                             [80.0, 80.0, 50.0] ], 
+            [ "enabled",                                    true ],
+
+            [   "components",
+                [
+                    [   "my chit stack",
+                        [
+                            ["type",                        "chit_stack_vertical"],
+                            ["compartment_size",            [ 30, 30.0, 30.0] ], 
+                            ["num_compartments",            [1, 1] ],
+                            ["shape",                       "hex"],
+                        ]
+                    ],
+                ]
+            ]
+        ]
+    ],    
 ];
 
 
@@ -107,6 +127,6 @@ data =
 b_print_lid = true;
 b_print_box = true;
 
-b_print_box = "a simple box"; // isolate one box to print
+//b_print_box = "a vertical chit stack"; // isolate one box to print
 
 MakeAll();

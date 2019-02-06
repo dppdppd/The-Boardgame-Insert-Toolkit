@@ -105,6 +105,7 @@ module MakeBox( box )
     
     if ( b_print_box )
     {
+render(convexity = 1)
         difference()
         {
             union()
@@ -166,10 +167,13 @@ module MakeBox( box )
         function __is_cards() = __component_type() == "cards";
         function __is_tokens() = __component_type() == "tokens";
         function __is_chit_stack() = __component_type() == "chit_stack";
+        function __is_chit_stack_vertical() = __component_type() == "chit_stack_vertical";
 
-        function __requires_thick_partitions() = __is_cards() || __is_chit_stack();
-        function __requires_lower_partitions() = __is_chit_stack();
-        function __requires_bottoms() = __is_tokens() || ( __is_chit_stack() && __component_shape() != "square" );
+        function __req_thick_partitions() = __is_cards() || __is_chit_stack() || __is_chit_stack_vertical();
+        function __req_lower_partitions() = __is_chit_stack();
+        function __req_bottoms() = __is_tokens() || ( __is_chit_stack() && __component_shape() != "square" );
+        function __req_single_end_partition() = __is_cards() || __is_chit_stack_vertical();
+        function __req_double_end_partition() = __is_chit_stack();
 
         ///////////
 
@@ -185,7 +189,7 @@ module MakeBox( box )
         function __wall_lip_height() = 8.0;
 
     
-        function __partition_height_scale( D ) = D == Y ? __requires_lower_partitions() ? min( 0.5, (__compartment_size( X ) / __compartment_size( Z )) /2) : 1.00 : 1.00;
+        function __partition_height_scale( D ) = D == Y ? __req_lower_partitions() ? min( 0.5, (__compartment_size( X ) / __compartment_size( Z )) /2) : 1.00 : 1.00;
 
         // Amount of curvature represented as a percentage of the __wall height.
         function __bottom_curve_height_scale() = 0.50;
@@ -204,16 +208,16 @@ module MakeBox( box )
         /////////
 
         function __c_p_raw() = __get_value( component, "position", default = [ "center", "center" ]);
-        function __component_position( D )= __p_i_c( D )? __c_p_c( D ): __p_i_m( D )? __c_p_max( D ): __c_p_raw()[D] < 0 ? __c_p_max( D ) + __c_p_raw()[D] : __c_p_raw()[D] + __wall_thickness();
+        function __component_position( D ) = __p_i_c( D )? __c_p_c( D ): __p_i_m( D )? __c_p_max( D ): __c_p_raw()[D] < 0 ? __c_p_max( D ) + __c_p_raw()[D] : __c_p_raw()[D] + __wall_thickness();
 
         // The thickness of the __compartment __partitions.
-        function __partition_thickness( D )= ( D == Y && __requires_thick_partitions() ) ? 10 + __component_extra_spacing( D ): 1 + __component_extra_spacing( D );
+        function __partition_thickness( D ) = ( D == Y ) && __req_thick_partitions() ? 10 + __component_extra_spacing( D ): 1 + __component_extra_spacing( D );
 
         // whether to add __partitions on the __box edges.
-        function __partition_ends( D )= ( D == Y && __requires_thick_partitions() );
+        function __partition_num_modifier( D ) = ( D == Y ) ? ( __req_single_end_partition() ? 0 : __req_double_end_partition() ? 1 : -1 ) : -1 ;
 
         // Determines whether finger cutouts are made. (For cards)
-        function __finger_cutouts() = ( __component_type() == "cards" );
+        function __finger_cutouts() = __is_cards() || __is_chit_stack_vertical();
 
         // for rounded bottoms, use the lowest __wall
         function __get_height_for_rounded_bottom() = 
@@ -221,7 +225,7 @@ module MakeBox( box )
 
         function __compartment_smallest_size() = ( __compartment_size( X ) < __compartment_size( Y ) ) ? __compartment_size( X ) : __compartment_size( Y );
 
-        function __partitions_num( D )= __partition_ends( D )? __compartments_num( D )+ 1 : __compartments_num( D )- 1;
+        function __partitions_num( D )= __compartments_num( D ) + __partition_num_modifier( D );
 
         // calculated __box local dimensions
         function __component_size( D )= ( D == Z ) ? __compartment_size( Z ) : ( __compartment_size( D )* __compartments_num( D )) + ( __partitions_num( D )* __partition_thickness( D ));
@@ -376,15 +380,17 @@ module MakeBox( box )
             }
         }
 
-        module MakeFingerCutout( axis = "x" )
+        module MakeFingerCutout()
         {
-            cutout_length = __compartment_size( X ) * .5;
+            cutout_length = __is_chit_stack_vertical() ? __component_size( Y ) / 2 : __component_size( Y );
+
+            cutout_width =  __is_chit_stack_vertical() ? __compartment_size( X ) * .6 : __compartment_size( X ) * .5;
             cutout_height = __box_dimensions( Z ) - 2.0;
             base = max( -10, __compartment_size( Z ) - __box_dimensions( Z ) + 2.0 );
 
-            translate( [ __compartment_size( X )/2 - cutout_length/2, 0, base ] )
+            translate( [ __compartment_size( X )/2 - cutout_width/2, 0, base ] )
             {
-                cube([ cutout_length , __component_size( Y ) /*- __partition_thickness( Y )*/, cutout_height ]);
+                cube([ cutout_width , cutout_length, cutout_height ]);
             }
         }
 
@@ -437,7 +443,7 @@ module MakeBox( box )
 
             r = __compartment_size( X )/2;
  
-            start_pos_y = __partition_ends( Y ) ? __partition_thickness( Y ) : 0;
+            start_pos_y =  __partition_thickness( Y );
 
             translate( [ 0, start_pos_y, 0 ] )
             {
@@ -468,38 +474,64 @@ module MakeBox( box )
             }    
         }
 
+        module ShapeCompartment()
+        {
+            $fn = __component_shape() == "hex" ? 6 : 100;
+
+            r = __compartment_smallest_size()/2;
+ 
+            {
+                difference()
+                { 
+                    // blocks
+
+                    cube ( [ __compartment_size( X ), __compartment_size( Y ) + __partition_thickness(Y), __compartment_size( Z ) ] );
+                    
+                    // cylinders
+
+                    translate( [ r , r + __partition_thickness(Y) , r ] )
+                    {
+                        rotate( 30, [0, 0, 1] )
+                        {
+                            cylinder(h = __compartment_size( Y ), r1 = r, r2 = r, center = true );  
+                        } 
+                    }
+                }       
+            }    
+        }
+
         module MakePartitions()
         {
-            x_modify = __partition_ends( X ) ? 1 : -1;
-
-            InEachCompartment( only_x = true, x_modify = x_modify )   
+            InEachCompartment( only_x = true, x_modify = __partition_num_modifier( X ) )   
             {
                 MakePartition( axis = "x");  
             }
 
-            y_modify = __partition_ends( Y ) ? 1 : -1;
-
-            InEachCompartment( only_y = true, y_modify = y_modify )  
+            InEachCompartment( only_y = true, y_modify = __partition_num_modifier( Y ) )  
             {
                 MakePartition( axis = "y");  
             }
 
-            if ( __requires_bottoms() )
+
+            InEachCompartment( x_modify = 0, y_modify = 0 )
             {
-                InEachCompartment( x_modify = 0, y_modify = 0 )
+                if ( __req_bottoms() )
                 {
                     if ( __is_chit_stack() )
                         MakeBottoms();
                     else if ( __is_tokens() )
                         MakeBottomsRounded();
                 }
+                
+                if ( __is_chit_stack_vertical() )
+                    ShapeCompartment();
             }
         }
 
         module MakePartition( axis = "x" )
         {
-            start_pos_x = __partition_ends( X ) ? 0 : __compartment_size( X );
-            start_pos_y = __partition_ends( Y ) ? 0 : __compartment_size( Y );
+            start_pos_x = __partition_num_modifier( X ) > -1 ? 0 : __compartment_size( X );
+            start_pos_y = __partition_num_modifier( Y ) > -1 ? 0 : __compartment_size( Y );
 
             if ( axis == "x" )
             {
