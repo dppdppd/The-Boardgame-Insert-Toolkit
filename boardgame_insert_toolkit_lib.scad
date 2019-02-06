@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "1.02";
+VERSION = "1.03";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://www.thingiverse.com/thing:3405465\n\n\tCopyright 2019 MysteryDough\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn=100;
@@ -167,8 +167,8 @@ module MakeBox( box )
         function __is_tokens() = __component_type() == "tokens";
         function __is_chit_stack() = __component_type() == "chit_stack";
 
-        function __requires_thick_partitions() = __is_cards() || __is_chit_stack() || __is_hex_stack();
-        function __requires_lower_partitions() = __is_chit_stack() || __is_hex_stack();
+        function __requires_thick_partitions() = __is_cards() || __is_chit_stack();
+        function __requires_lower_partitions() = __is_chit_stack();
         function __requires_bottoms() = __is_tokens() || ( __is_chit_stack() && __component_shape() != "square" );
 
         ///////////
@@ -182,7 +182,7 @@ module MakeBox( box )
 
         // this is the difference between the two __walls that
         // forms the lip that the lid fits on.
-        function __wall_lip_height() = 4.0;
+        function __wall_lip_height() = 8.0;
 
     
         function __partition_height_scale( D ) = D == Y ? __requires_lower_partitions() ? min( 0.5, (__compartment_size( X ) / __compartment_size( Z )) /2) : 1.00 : 1.00;
@@ -198,13 +198,13 @@ module MakeBox( box )
 
         function __p_i_c( D) = __c_p_raw()[ D ] == "center";
         function __p_i_m( D) = __c_p_raw()[ D ] == "max";
-        function __component_center_position( D ) = ( __box_dimensions( D ) - __component_size( D ))/2;
-        function __component_max_position( D ) = ( __box_dimensions( D ) - __wall_thickness() -  __component_size( D ));
+        function __c_p_c( D ) = ( __box_dimensions( D ) - __component_size( D )) / 2;
+        function __c_p_max( D ) = __box_dimensions( D ) - __wall_thickness() -  __component_size( D );
 
         /////////
 
         function __c_p_raw() = __get_value( component, "position", default = [ "center", "center" ]);
-        function __component_position( D )= __p_i_c( D )? __component_center_position( D ): __p_i_m( D )? __component_max_position( D ): __c_p_raw()[ D ] + __wall_thickness();
+        function __component_position( D )= __p_i_c( D )? __c_p_c( D ): __p_i_m( D )? __c_p_max( D ): __c_p_raw()[D] < 0 ? __c_p_max( D ) + __c_p_raw()[D] : __c_p_raw()[D] + __wall_thickness();
 
         // The thickness of the __compartment __partitions.
         function __partition_thickness( D )= ( D == Y && __requires_thick_partitions() ) ? 10 + __component_extra_spacing( D ): 1 + __component_extra_spacing( D );
@@ -235,7 +235,7 @@ module MakeBox( box )
         function __notch_height() = 3.0;
 
         function __lid_external_size( D )= D == Z ? __wall_thickness() + __wall_lip_height() - __tolerance() : __box_dimensions( D );
-        function __lid_internal_size( D )= D == Z ? __lid_external_size( Z ) - __wall_thickness() : __lid_external_size( D ) - ( __wall_thickness() + __tolerance() );
+        function __lid_internal_size( D )= D == Z ? __lid_external_size( Z ) - __wall_thickness() : __lid_external_size( D ) - ( __wall_thickness() - __tolerance() );
   
         module RotateComponentInPlace()
         {
@@ -342,7 +342,7 @@ module MakeBox( box )
                     // main __box
                     cube([__lid_external_size( X ), __lid_external_size( Y ), __lid_external_size( Z )]);
                     
-                    translate([ __wall_thickness()/2, __wall_thickness()/2, __wall_thickness()]) 
+                    translate([ ( __wall_thickness() - __tolerance() )/2 , ( __wall_thickness() - __tolerance() )/2, __wall_thickness()]) 
                     {
                         cube([  __lid_internal_size( X ), __lid_internal_size( Y ), __lid_internal_size( Z )]);
                     }
@@ -380,11 +380,11 @@ module MakeBox( box )
         {
             cutout_length = __compartment_size( X ) * .5;
             cutout_height = __box_dimensions( Z ) - 2.0;
-            base = __compartment_size( Z ) - __box_dimensions( Z ) + 2.0;
+            base = max( -10, __compartment_size( Z ) - __box_dimensions( Z ) + 2.0 );
 
             translate( [ __compartment_size( X )/2 - cutout_length/2, 0, base ] )
             {
-                cube([ cutout_length , __component_size( Y ), cutout_height ]);
+                cube([ cutout_length , __component_size( Y ) /*- __partition_thickness( Y )*/, cutout_height ]);
             }
         }
 

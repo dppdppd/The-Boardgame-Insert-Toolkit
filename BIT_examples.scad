@@ -81,11 +81,32 @@ data =
             ]
         ]
     ],
+
+    [   "a simple box",
+        [
+            [ "box_dimensions",                             [20.0, 20.0, 10.0] ], 
+            [ "enabled",                                    true ],
+
+            [   "components",
+                [
+                    [   "my chit stack",
+                        [
+                            ["type",                        ""],
+                            ["compartment_size",            [ 5, 5.0, 5.0] ], 
+                            ["num_compartments",            [1, 1] ], 
+                        ]
+                    ],
+                ]
+            ]
+        ]
+    ],
 ];
 
 
 // for printing control.
 b_print_lid = true;
 b_print_box = true;
+
+b_print_box = "a simple box"; // isolate one box to print
 
 MakeAll();
