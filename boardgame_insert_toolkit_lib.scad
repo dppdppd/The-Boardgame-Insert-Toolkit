@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "1.01";
+VERSION = "1.02";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://www.thingiverse.com/thing:3405465\n\n\tCopyright 2019 MysteryDough\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn=100;
@@ -151,26 +151,25 @@ module MakeBox( box )
         function __is_final_carve_outs() = layer == "final_carve_outs";
 
         function __compartment_size( D ) = __get_value( component, "compartment_size", default = [10.0, 10.0, 10.0] )[ D ];
-
         function __compartments_num( D ) = __get_value( component, "num_compartments", default = [1,1] )[ D ];
 
         function __component_rotation_raw() = __get_value( component, "rotation", default = 0 );
         function __component_rotation_clean() = __component_rotation_raw() == 1 ? 1 : __component_rotation_raw() == 0 ? 0 : 0; // restrict values to 0, 1
         function __component_rotation() = __component_rotation_clean() * 90;
-
+        function __component_shape() = __get_value( component, "shape", default = "square" );
         function __component_type() = __get_value( component, "type", default = "generic" );
-
         function __component_extra_spacing( D ) = __get_value( component, "extra_spacing", default = [0.0, 0.0] )[ D ];
-
         function __component_enabled() = __get_value( component, "enabled", default = true);
 
         /////////
 
         function __is_cards() = __component_type() == "cards";
-        function __is_chits() = __component_type() == "chits";
+        function __is_tokens() = __component_type() == "tokens";
         function __is_chit_stack() = __component_type() == "chit_stack";
 
-        function __requires_thick_partitions() = __is_cards() || __is_chit_stack();
+        function __requires_thick_partitions() = __is_cards() || __is_chit_stack() || __is_hex_stack();
+        function __requires_lower_partitions() = __is_chit_stack() || __is_hex_stack();
+        function __requires_bottoms() = __is_tokens() || ( __is_chit_stack() && __component_shape() != "square" );
 
         ///////////
 
@@ -186,7 +185,7 @@ module MakeBox( box )
         function __wall_lip_height() = 4.0;
 
     
-        function __partition_height_scale( D ) = D == Y ? __is_chit_stack() ? 0.50 : 1.00 : 1.00;
+        function __partition_height_scale( D ) = D == Y ? __requires_lower_partitions() ? min( 0.5, (__compartment_size( X ) / __compartment_size( Z )) /2) : 1.00 : 1.00;
 
         // Amount of curvature represented as a percentage of the __wall height.
         function __bottom_curve_height_scale() = 0.50;
@@ -215,9 +214,6 @@ module MakeBox( box )
 
         // Determines whether finger cutouts are made. (For cards)
         function __finger_cutouts() = ( __component_type() == "cards" );
-
-        // Determines whether to curve the bottom of the __compartments to make pulling items out easier.
-        function __rounded_bottoms() = ( __component_type() == "chits" );
 
         // for rounded bottoms, use the lowest __wall
         function __get_height_for_rounded_bottom() = 
@@ -392,7 +388,10 @@ module MakeBox( box )
             }
         }
 
-        module MakeBottomsRounded()
+
+        // this rounds out the bottoms regardless of the size of the compartment
+        // and doesn't attempt to fit a specific shape.
+       module MakeBottomsRounded()
         {
             r = __get_height_for_rounded_bottom();
 
@@ -432,6 +431,43 @@ module MakeBox( box )
                     
         }
 
+        module MakeBottoms()
+        {
+            $fn = __component_shape() == "hex" ? 6 : 100;
+
+            r = __compartment_size( X )/2;
+ 
+            start_pos_y = __partition_ends( Y ) ? __partition_thickness( Y ) : 0;
+
+            translate( [ 0, start_pos_y, 0 ] )
+            {
+                difference()
+                { 
+                    // blocks
+
+                    cube ( [ __compartment_size( X ), __compartment_size( Y ), __compartment_size( Z ) / 2 ] );
+                    
+
+                    // cylinders
+                    union()
+                    {
+                        translate( [ r , __compartment_size( Y ) , r ] )
+                        {
+                            rotate( 90, [1, 0, 0] )
+                            {
+                                cylinder(h = __compartment_size( Y ), r1 = r, r2 = r );  
+                            } 
+                        }
+
+                        translate( [ 0,0, r ])
+                        {
+                            cube ( [ __compartment_size( X ), __compartment_size( Y ), __box_dimensions( Z )] );
+                        }
+                    }
+                }       
+            }    
+        }
+
         module MakePartitions()
         {
             x_modify = __partition_ends( X ) ? 1 : -1;
@@ -448,11 +484,14 @@ module MakeBox( box )
                 MakePartition( axis = "y");  
             }
 
-            if ( __rounded_bottoms() )
+            if ( __requires_bottoms() )
             {
                 InEachCompartment( x_modify = 0, y_modify = 0 )
                 {
-                    MakeBottomsRounded();
+                    if ( __is_chit_stack() )
+                        MakeBottoms();
+                    else if ( __is_tokens() )
+                        MakeBottomsRounded();
                 }
             }
         }

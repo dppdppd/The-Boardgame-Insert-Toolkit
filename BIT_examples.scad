@@ -2,10 +2,6 @@
 include <boardgame_insert_toolkit_lib.scad>;
 
 
-// This is a working example of the Boardgame Insert Toolkit used to create a single large box insert
-// for the Z-Man game, Pandemic. It is designed for a printer that can print 290mm x 210mm x 28mm.
-// See the two box version for an example of a design for smaller printers.
-// 
 data =
 [
     [   "a card box",
@@ -17,26 +13,29 @@ data =
                 [
                     [   "cards",
                         [
-                            ["type",                        "cards"],                 // "cards" | "chits" | "chit_stack" | "" -- default: ""
-                            ["compartment_size",            [ 40, 40.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
-                            ["num_compartments",            [2, 2] ], 
+                            ["type",                        "cards"],                   // "cards" | "tokens" | "chit_stack" | "" -- default: ""
+                            ["compartment_size",            [ 40, 40.0, 20.0] ],        // float f -- default:[ 10, 10, 10]
+                            ["num_compartments",            [2, 2] ],                   // int i -- default: [1, 1]
+                            ["enabled",                     true ],                     // true | false
+                            ["rotation",                    0 ],                        // 0 | 1
+                            ["position",                    ["center","center"]]        // float f | "center" | "max" -- default: "center"
                         ]
                     ],
                 ]
             ]
         ]
     ],
-    [   "a chit box",
+    [   "a generic token box",
         [
             [ "box_dimensions",                             [60.0, 120.0, 30.0] ],
-            [ "enabled",                                    false ],
+            [ "enabled",                                    true ],
 
             [   "components",
                 [
                     [   "my chits",
                         [
-                            ["type",                        "chits"],
-                            ["compartment_size",            [ 20, 40.0, 20.0] ],
+                            ["type",                        "tokens"],
+                            ["compartment_size",            [ 26, 40.0, 20.0] ],
                             ["num_compartments",            [2, 2] ], 
                         ]
                     ],
@@ -44,7 +43,7 @@ data =
             ]
         ]
     ],
-    [   "a chit stack box",
+    [   "a round chit stack box",
         [
             [ "box_dimensions",                             [60.0, 120.0, 30.0] ], 
             [ "enabled",                                    true ],
@@ -56,6 +55,26 @@ data =
                             ["type",                        "chit_stack"],
                             ["compartment_size",            [ 20, 40.0, 20.0] ], 
                             ["num_compartments",            [2, 2] ], 
+                            ["shape",                       "circle"],              // "circle" | "hex"
+                        ]
+                    ],
+                ]
+            ]
+        ]
+    ],
+    [   "a hex tile stack box",
+        [
+            [ "box_dimensions",                             [60.0, 120.0, 30.0] ], 
+            [ "enabled",                                    true ],
+
+            [   "components",
+                [
+                    [   "my chit stack",
+                        [
+                            ["type",                        "chit_stack"],
+                            ["compartment_size",            [ 20, 40.0, 20.0] ], 
+                            ["num_compartments",            [2, 2] ], 
+                            ["shape",                       "hex"],
                         ]
                     ],
                 ]
