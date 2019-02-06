@@ -1,5 +1,5 @@
 
-include <../boardgame_insert_toolkit_lib.scad>;
+include <boardgame_insert_toolkit_lib.scad>;
 
 
 // This is a working example of the Boardgame Insert Toolkit used to create a single large box insert
@@ -8,43 +8,33 @@ include <../boardgame_insert_toolkit_lib.scad>;
 // 
 data =
 [
-    [   "card box",
+    [   "29cm box", // for large printers
         [
-            [ "box_dimensions",                             [100.0, 80.0, 30.0] ],                       // float f -- default:[ 100, 100, 100]
+            [   "box_dimensions",                 [290.0, 210.0, 28.0] ],                       // float f -- default:[ 100, 100, 100]
             [ "enabled",                                    true ],
 
             [   "components",
                 [
                     [   "cards",
                         [
-                            ["type",                        ""],              // "cards" | "chits" | "generic" -- default: "generic"
-                            ["compartment_size",            [ 50, 40.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
-                            ["num_compartments",            [1,1] ],                   // int i -- default: [1, 1]
+                            ["type",                        "cards"],                   // "cards" | "chits" | "generic" -- default: "generic"
+                            ["compartment_size",            [ 80.0, 50.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
+                            ["num_compartments",            [2, 3] ],                   // int i -- default: [1, 1]
+                            ["position",                    [115, "center" ] ],          // float f | "center" | "max" -- default: "center"
+                            ["extra_spacing",               [0.0, 0.0] ],                   // float f
                             ["enabled",                     true ],                     // true | false
-                            ["rotation",                    1],                        // 0 | 1 
-                          //  ["position",                    [0,0]]
+                            ["rotation",                    0 ],                        // 0 | 1 | -1
 
                         ]
                     ],
-                ]
-            ]
-        ]
-    ],
 
-    [   "chits box",
-        [
-            [ "box_dimensions",                             [118.0, 210.0, 28.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    true ],
-
-            [   "components",
-                [
                     [   "disease markers",
                         [
                             ["enabled",                     true ],                     // true | false
                             ["type",                        "chits"],
-                            ["compartment_size",            [ 45.0, 45.0, 10.0] ],
+                            ["compartment_size",            [ 45.0, 45.0, 20.0] ],
                             ["num_compartments",            [1, 4] ],
-                            ["position",                    [10, "center"] ],
+                            ["position",                    [5, "center" ] ],
                         ]
                     ],
 
@@ -52,21 +42,23 @@ data =
                         [
                             ["enabled",                     true ],                     // true | false
                             ["type",                        "chits"],
-                            ["compartment_size",            [ 40.0, 50.0, 10.0] ],
+                            ["compartment_size",            [ 40.0, 50.0, 20.0] ],
                             ["num_compartments",            [1, 3] ],
-                            ["position",                    [65, "center"] ],
+                            ["position",                    [62.5, "center" ] ],
                             ["extra_spacing",               [0, 10] ]
                         ]
                     ]
+                    
+                    // more components here...
                 ]
-            ]
+            ],
         ]
     ]
 ];
 
 
 // for printing control.
-b_print_lid = false;
+b_print_lid = true;
 b_print_box = true;
 
 b_print_box = "29cm box"; // isolate one box to print
