@@ -11,7 +11,7 @@ data =
 [
     [   "card box",
         [
-            [ "box_dimensions",                             [168.0, 210.0, 28.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",                             [173.0, 210.0, 28.0] ],                       // float f -- default:[ 100, 100, 100]
             [ "enabled",                                    true ],
 
             [   "components",
@@ -19,8 +19,8 @@ data =
                     [   "cards",
                         [
                             ["type",                        "cards"],                   // "cards" | "tokens" | "chit_stack" -- default: "generic"
-                            ["compartment_size",            [ 80.0, 50.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
-                            ["num_compartments",            [2, 3] ],                   // int i -- default: [1, 1]
+                            ["compartment_size",            [ 67.0, 92.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
+                            ["num_compartments",            [2, 2] ],                   // int i -- default: [1, 1]
                             ["enabled",                     true ],                     // true | false
                             ["rotation",                    0 ],                        // 0 | 1 | -1
                          //   ["position",                    ["max","max"]]

@@ -18,10 +18,10 @@ data =
                     [   "cards",
                         [
                             ["type",                        "cards"],                   // "cards" | "chits" | "generic" -- default: "generic"
-                            ["compartment_size",            [ 80.0, 50.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
-                            ["num_compartments",            [2, 3] ],                   // int i -- default: [1, 1]
-                            ["position",                    [115, "center" ] ],          // float f | "center" | "max" -- default: "center"
-                            ["extra_spacing",               [0.0, 0.0] ],                   // float f
+                            ["compartment_size",            [ 67.0, 92.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
+                            ["num_compartments",            [2, 2] ],                   // int i -- default: [1, 1]
+                            ["position",                    [130, "center" ] ],          // float f | "center" | "max" -- default: "center"
+                            ["extra_spacing",               [10.0, 0.0] ],                   // float f
                             ["enabled",                     true ],                     // true | false
                             ["rotation",                    0 ],                        // 0 | 1 | -1
 
@@ -44,7 +44,7 @@ data =
                             ["type",                        "chits"],
                             ["compartment_size",            [ 40.0, 50.0, 20.0] ],
                             ["num_compartments",            [1, 3] ],
-                            ["position",                    [62.5, "center" ] ],
+                            ["position",                    [70, "center" ] ],
                             ["extra_spacing",               [0, 10] ]
                         ]
                     ]
