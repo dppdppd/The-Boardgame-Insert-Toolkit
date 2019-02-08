@@ -17,8 +17,8 @@ data =
                             ["compartment_size",            [ 20, 50.0, 20.0] ],        // float f -- default:[ 10, 10, 10]
                             ["num_compartments",            [1, 1] ],                   // int i -- default: [1, 1]
                             ["enabled",                     true ],                     // true | false
-                            ["rotation",                    90 ],                        // 0 | 90 | -90 | 180
-                            ["position",                    [0,"max"]]        // float f | "center" | "max" -- default: "center"
+                            ["rotation",                    0 ],                        // 0 | 90 | -90 | 180
+                            ["position",                    [0,0]]        // float f | "center" | "max" -- default: "center"
                         ]
                     ],
                 ]
