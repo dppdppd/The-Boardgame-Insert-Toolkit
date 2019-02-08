@@ -114,6 +114,7 @@ data =
                             ["compartment_size",            [ 30, 30.0, 30.0] ], 
                             ["num_compartments",            [1, 1] ],
                             ["shape",                       "hex"],
+                            ["rotation",                     1],
                         ]
                     ],
                 ]

@@ -105,7 +105,7 @@ module MakeBox( box )
     
     if ( b_print_box )
     {
-render(convexity = 1)
+//render(convexity = 1)
         difference()
         {
             union()
@@ -154,9 +154,9 @@ render(convexity = 1)
         function __compartment_size( D ) = __get_value( component, "compartment_size", default = [10.0, 10.0, 10.0] )[ D ];
         function __compartments_num( D ) = __get_value( component, "num_compartments", default = [1,1] )[ D ];
 
-        function __component_rotation_raw() = __get_value( component, "rotation", default = 0 );
-        function __component_rotation_clean() = __component_rotation_raw() == 1 ? 1 : __component_rotation_raw() == 0 ? 0 : 0; // restrict values to 0, 1
-        function __component_rotation() = __component_rotation_clean() * 90;
+        function __comp_rot_raw() = __get_value( component, "rotation", default = 0 );
+        function __comp_rot_valid() = __comp_rot_raw() == 90 ? 90 : __comp_rot_raw() == -90 ? 90 : __comp_rot_raw() == 180 ? 180 : 0;
+        function __component_rotation() = __comp_rot_valid();
         function __component_shape() = __get_value( component, "shape", default = "square" );
         function __component_type() = __get_value( component, "type", default = "generic" );
         function __component_extra_spacing( D ) = __get_value( component, "extra_spacing", default = [0.0, 0.0] )[ D ];
@@ -241,16 +241,79 @@ render(convexity = 1)
         function __lid_external_size( D )= D == Z ? __wall_thickness() + __wall_lip_height() - __tolerance() : __box_dimensions( D );
         function __lid_internal_size( D )= D == Z ? __lid_external_size( Z ) - __wall_thickness() : __lid_external_size( D ) - ( __wall_thickness() - __tolerance() );
   
+        module Internal_RotateComponentInPlace( offset = [0,0,0], pivot=[0,0,0])
+        {
+            translate( offset )
+            {
+                RotateAboutPoint( __component_rotation(), [0,0,1], pivot )
+                {
+                    #children();
+                }
+
+                cube( [1,1,100] );
+            }
+
+
+
+
+                    
+        }
+
+
         module RotateComponentInPlace()
         {
-          //  x_offset = __component_rotation() == 90 ? __component_exterior_size( Y ) : 0;
-            y_offset = __component_rotation() == 90 ? __component_size( X ) : 0;
+            pivot_x = __p_i_c(X) ? __component_size( X)/2 : __p_i_m(X) ? __component_size(X) : 0;
+            pivot_y = __p_i_c(Y) ? __component_size( Y)/2 : __p_i_m(Y) ? __component_size(Y) : 0;
 
-            pivot = [ 0,0, 0];
+            pivot = [ pivot_x, pivot_y, 0 ];
 
-            translate( [ 0, y_offset, 0] )
-                RotateAboutPoint(  - __component_rotation(), [0,0,1], pivot )
+            // if ( __component_rotation() == 90 )
+            // {
+            //     x_offset = __p_i_c(X) ? 0 : __p_i_m(X) ? 0 : __component_size(Y);
+            //     y_offset = __p_i_m(X) ? __component_size(X) : 0;
+
+            //     Internal_RotateComponentInPlace( [x_offset, y_offset,0], pivot )
+            //         children();
+
+            // }
+            // else if ( __component_rotation() == -90 )
+            // {
+            //     y_offset = __p_i_c(Y) ? 0 : __component_size(X) - ( (__p_i_m(Y)?1:0) * __component_size(X)/2); 
+
+            //     Internal_RotateComponentInPlace( [0,y_offset,0], pivot )
+            //         children();
+            // }
+            // else if ( __component_rotation() == 180 )
+            // {
+            //     x_offset = __p_i_c(X) ? 0 : __component_size(X) - ( (__p_i_m(X)?1:0) * __component_size(X)/2); 
+            //     y_offset = __p_i_c(Y) ? 0 : __component_size(Y) - ( (__p_i_m(Y)?1:0) * __component_size(Y)/2); 
+
+            //     Internal_RotateComponentInPlace( [x_offset,y_offset,0], pivot )
+            //         children();
+            // }
+            // else
+            {
+                Internal_RotateComponentInPlace( [0,0,0], pivot )
                     children();
+            }
+
+
+            // x_offset = __component_rotation() == 90 ? 
+            //                 __p_i_c(X) ? 
+            //                     0 : 
+            //                     __p_i_m(X) ? 
+            //                         -__component_size(Y)/2 : 
+            //                         __component_size(Y) : 
+            //                 0;
+
+            // y_offset = __component_rotation() == -90 ?
+            //                 __p_i_c(Y) ? 
+            //                     0 : 
+            //                     __p_i_m(Y) ? 
+            //                         -__component_size(X)/2 : 
+            //                         __component_size(X) : 
+            //                 0;
+
         }
 
 /////////////////////////////////////////
