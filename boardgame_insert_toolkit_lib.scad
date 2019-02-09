@@ -7,7 +7,7 @@
 VERSION = "1.04";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://www.thingiverse.com/thing:3405465\n\n\tCopyright 2019 MysteryDough\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
-$fn=100;
+$fn=50;
 
 // constants
 KEY = 0;
@@ -109,6 +109,7 @@ module MakeBox( box )
         {
             union()
             {
+                render()
                 // first pass of carving out elements
                 difference()
                 {
@@ -156,8 +157,9 @@ module MakeBox( box )
 
         function __compartment_label() = __get_value( component, "label", default = [] );
         function __label_text() = __get_value( __compartment_label(), "text", default = "" );
-        function __label_size() = __get_value( __compartment_label(), "size", default = 5 );
+        function __label_size() = __get_value( __compartment_label(), "size", default = 4 );
         function __label_rotation() = __get_value( __compartment_label(), "rotation", default = 0 );
+        function __label_depth() = __get_value( __compartment_label(), "depth", default = 0.2 );
 
         function __comp_rot_raw() = __get_value( component, "rotation", default = 0 );
         function __comp_rot_valid() = __comp_rot_raw() == 90 ? 90 : __comp_rot_raw() == -90 ? 90 : __comp_rot_raw() == 180 ? 180 : 0;
@@ -192,7 +194,7 @@ module MakeBox( box )
 
         // this is the difference between the two __walls that
         // forms the lip that the lid fits on.
-        function __wall_lip_height() = 8.0;
+        function __wall_lip_height() = 5.0;
 
     
         function __partition_height_scale( D ) = D == Y ? __req_lower_partitions() ? min( 0.5, (__compartment_size( X ) / __compartment_size( Z )) /2) : 1.00 : 1.00;
@@ -307,16 +309,6 @@ module MakeBox( box )
                 cube([  __component_size( X ), 
                         __component_size( Y ), 
                         __component_size( Z )]);
-
-                // labels
-                if ( __req_label() )
-                {
-                    InEachCompartment( x_modify = 0, y_modify = 0 )
-                    {
-                        MakeLabel();
-                    }
-                }
-                
             }
             else if ( __is_additive_components() )
             {
@@ -337,13 +329,22 @@ module MakeBox( box )
                         MakeFingerCutout( axis = "x" );
                     }
                 }
+
+                                // labels
+                if ( __req_label() )
+                {
+                    InEachCompartment( x_modify = 0, y_modify = 0 )
+                    {
+                        MakeLabel();
+                    }
+                }
             }
         }
 
         module MakeLid() 
         {
             // move the lid to the side
-            translate([0, - __box_dimensions( Y ) - DISTANCE_BETWEEN_PARTS, 0 ]) 
+            translate([0, __box_dimensions( Y ) + DISTANCE_BETWEEN_PARTS, 0 ]) 
             {
                 difference() 
                 {
@@ -510,9 +511,9 @@ module MakeBox( box )
             {
                 RotateAboutPoint( __label_rotation(), [0,0,1], [0,0,0] )
                 {
-                    linear_extrude(1)
+                    linear_extrude( __label_depth() )
                     {
-                        #text(text = str( __label_text() ), font="Liberation Sans:style=Bold Italic", size = __label_size(), valign = "center", halign = "center");
+                        #text(text = str( __label_text() ), font="Liberation Sans:style=Bold Italic", size = __label_size(), valign = "center", halign = "center", $fn=1);
                     }
                 }
             }

@@ -11,7 +11,7 @@ data =
     [   "1",
         [
             [   "box_dimensions",                 [187, 190, 37.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    true ],
+            [ "enabled",                                    false ],
 
             [   "components",
                 [
@@ -24,8 +24,8 @@ data =
                             ["position",                    [122, 1 ] ],
                             ["label",
                                 [
-                                    ["text",                     "STATUS"],
-                                    ["size",                     4],
+                                    ["text",                     "status"],             // default ""
+                                    ["size",                     4],                    // default 4
                                 ]
                             ]
 
@@ -41,7 +41,7 @@ data =
                             ["position",                    [1, 1 ] ],
                             ["label",
                                 [
-                                    ["text",                     "MOUSE"],
+                                    ["text",                     "mouse"],
                                     ["size",                     4],
                                 ]
                             ]
@@ -57,7 +57,7 @@ data =
                             ["position",                    [32, 1 ] ],
                             ["label",
                                 [
-                                    ["text",                     "RAT"],
+                                    ["text",                     "rat"],
                                     ["size",                     4],
                                 ]
                             ]                            
@@ -73,7 +73,7 @@ data =
                             ["position",                    [70, 106 ] ],
                             ["label",
                                 [
-                                    ["text",                     "CENTIPEDE"],
+                                    ["text",                     "centipede"],
                                     ["size",                     4],
                                 ]
                             ]                            
@@ -89,7 +89,7 @@ data =
                             ["position",                    [70, 143 ] ],
                             ["label",
                                 [
-                                    ["text",                     "SPIDER"],
+                                    ["text",                     "spider"],
                                     ["size",                     4],
                                 ]
                             ]                            
@@ -105,7 +105,7 @@ data =
                             ["position",                    [70, 1 ] ],
                             ["label",
                                 [
-                                    ["text",                     "ROACH"],
+                                    ["text",                     "roach"],
                                     ["size",                     4],
                                 ]
                             ]                            
@@ -122,7 +122,7 @@ data =
     [   "2",
         [
             [   "box_dimensions",                 [93, 190, 20.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    true ],
+            [ "enabled",                                    false ],
 
             [   "components",
                 [
@@ -151,8 +151,8 @@ data =
                             ["enabled",                     true ],                     // true | false
                             ["type",                        "cards"],
                             ["compartment_size",            [ 70.0, 46.0, 12.0] ],
-                            ["num_compartments",            [1, 2] ],
-                            ["position",                    [ 0, "center" ] ],                         
+                            ["num_compartments",            [1, 3] ],
+                            ["position",                    [ 1, "center" ] ],                         
                         ]
                     ],
 
@@ -160,12 +160,12 @@ data =
                         [
                             ["enabled",                     true ],                     // true | false
                             ["type",                        "chit_stack"],
-                            ["compartment_size",            [ 16.0, 80.0, 16.0] ],
+                            ["compartment_size",            [ 17.0, 82.0, 17.0] ],
                             ["num_compartments",            [1, 1] ],
                             ["position",                    [-1, "center" ] ],
                             ["label",
                                 [
-                                    ["text",                     "DICE"],
+                                    ["text",                     "dice"],
                                     ["size",                     5],
                                     ["rotation",                90],
                                 ]
@@ -183,7 +183,7 @@ data =
     [   "4",
         [
             [   "box_dimensions",                 [187, 95, 37.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    true ],
+            [ "enabled",                                    false ],
 
             [   "components",
                 [
@@ -205,7 +205,7 @@ data =
 
 
 // for printing control.
-b_print_lid = false;
+b_print_lid = true;
 b_print_box = true;
 
 b_print_box = "29cm box"; // isolate one box to print
