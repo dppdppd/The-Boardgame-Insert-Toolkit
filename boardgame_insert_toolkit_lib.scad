@@ -156,7 +156,10 @@ module MakeBox( box )
         function __compartments_num( D ) = __get_value( component, "num_compartments", default = [1,1] )[ D ];
 
         function __compartment_label() = __get_value( component, "label", default = [] );
-        function __label_text() = __get_value( __compartment_label(), "text", default = "" );
+        function __is_string( s ) = len( str( s,s )) == len( s ) * 2;
+
+        function __is_multitext() = !__is_string( __get_value( __compartment_label(), "text" ) ) && len( __get_value( __compartment_label(), "text" )) != undef;
+        function __label_text( r = 0, c = 0 ) = __is_multitext() ?  __get_value( __compartment_label(), "text" )[c][r] : __get_value( __compartment_label(), "text", default = "" );
         function __label_size() = __get_value( __compartment_label(), "size", default = 4 );
         function __label_rotation() = __get_value( __compartment_label(), "rotation", default = 0 );
         function __label_depth() = __get_value( __compartment_label(), "depth", default = 0.2 );
@@ -182,6 +185,12 @@ module MakeBox( box )
         function __req_single_end_partition() = __is_cards() || __is_chit_stack_vertical();
         function __req_double_end_partition() = __is_chit_stack();
         function __req_label() = __compartment_label() != "";
+
+                // Determines whether finger cutouts are made. (For cards)
+        function __req_finger_cutouts() = __is_cards() || __is_chit_stack_vertical();
+
+        // the bottom of the finger cutout
+        function __finger_cutouts_bottom() = max( -10, __compartment_size( Z ) - __box_dimensions( Z ) + 2.0 );
 
         ///////////
 
@@ -223,9 +232,6 @@ module MakeBox( box )
 
         // whether to add __partitions on the __box edges.
         function __partition_num_modifier( D ) = ( D == Y ) ? ( __req_single_end_partition() ? 0 : __req_double_end_partition() ? 1 : -1 ) : -1 ;
-
-        // Determines whether finger cutouts are made. (For cards)
-        function __finger_cutouts() = __is_cards() || __is_chit_stack_vertical();
 
         // for rounded bottoms, use the lowest __wall
         function __get_height_for_rounded_bottom() = 
@@ -322,7 +328,7 @@ module MakeBox( box )
                 // entire box.
 
                 // finger cutouts
-                if ( __finger_cutouts() )
+                if ( __req_finger_cutouts() )
                 {
                     InEachCompartment( y_modify = 0, only_y = false, only_x = true  )
                     {
@@ -333,10 +339,7 @@ module MakeBox( box )
                                 // labels
                 if ( __req_label() )
                 {
-                    InEachCompartment( x_modify = 0, y_modify = 0 )
-                    {
-                        MakeLabel();
-                    }
+                    LabelEachCompartment();
                 }
             }
         }
@@ -385,15 +388,36 @@ module MakeBox( box )
             }
         }
 
+        module LabelEachCompartment()
+        {
+            n_x = __compartments_num( X );
+            n_y = __compartments_num( Y );
+
+            for ( x = [ 0: n_x - 1] )
+            {
+                x_pos = ( __compartment_size( X ) + __partition_thickness( X ) ) * x;
+
+                for ( y = [ 0: n_y - 1] )
+                {
+                    y_pos = ( ( __compartment_size( Y ) ) + __partition_thickness( Y ) ) * y;
+
+                    translate( [ x_pos ,  y_pos , 0 ] )
+                    {
+                        MakeLabel( x, y );
+                    }
+                }
+            }
+            
+        }        
+
         module MakeFingerCutout()
         {
             cutout_length = __is_chit_stack_vertical() ? __component_size( Y ) / 2 : __component_size( Y );
 
             cutout_width =  __is_chit_stack_vertical() ? __compartment_size( X ) * .6 : __compartment_size( X ) * .5;
             cutout_height = __box_dimensions( Z ) - 2.0;
-            base = max( -10, __compartment_size( Z ) - __box_dimensions( Z ) + 2.0 );
 
-            translate( [ __compartment_size( X )/2 - cutout_width/2, 0, base ] )
+            translate( [ __compartment_size( X )/2 - cutout_width/2, 0, __finger_cutouts_bottom() ] )
             {
                 cube([ cutout_width , cutout_length, cutout_height ]);
             }
@@ -505,15 +529,17 @@ module MakeBox( box )
             }    
         }
 
-        module MakeLabel()
+        module MakeLabel( x = 0, y = 0 )
         {
-            translate( [ __compartment_size(X)/2, __compartment_size(Y)/2, -1] )
+            z_pos = __req_finger_cutouts() ? __finger_cutouts_bottom() - __label_depth() : - __label_depth();
+
+            translate( [ __compartment_size(X)/2, __compartment_size(Y)/2, z_pos] )
             {
                 RotateAboutPoint( __label_rotation(), [0,0,1], [0,0,0] )
                 {
                     linear_extrude( __label_depth() )
                     {
-                        #text(text = str( __label_text() ), font="Liberation Sans:style=Bold Italic", size = __label_size(), valign = "center", halign = "center", $fn=1);
+                        text(text = str( __label_text( x, y ) ), font="Liberation Sans:style=Bold Italic", size = __label_size(), valign = "center", halign = "center", $fn=1);
                     }
                 }
             }

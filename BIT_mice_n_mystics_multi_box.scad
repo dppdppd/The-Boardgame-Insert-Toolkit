@@ -11,21 +11,24 @@ data =
     [   "1",
         [
             [   "box_dimensions",                 [187, 190, 37.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    false ],
+            [ "enabled",                                    true ],
 
             [   "components",
                 [
                     [   "hearts & cheese & status",
                         [
                             ["enabled",                     true ],                     // true | false
-                            ["type",                        "tokens"],
-                            ["compartment_size",            [ 60.0, 60.0, 20.0] ],
-                            ["num_compartments",            [1, 3] ],
-                            ["position",                    [122, 1 ] ],
+                            ["type",                        "tokens"],                  // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
+                            ["compartment_size",            [ 60.0, 60.0, 20.0] ],      // [float, float, float]
+                            ["num_compartments",            [1, 3] ],                   // [int, int]
+                            ["position",                    [122, 1 ] ],                // [float, float, float]
                             ["label",
                                 [
-                                    ["text",                     "status"],             // default ""
+                                    ["text",                     [  ["status"],         // simple string or array representing each compartment
+                                                                    ["cheese"],
+                                                                    ["health"]]],
                                     ["size",                     4],                    // default 4
+                                    ["rotation",                0]                      // 0 | 90 | -90 | 180 -- default = 0
                                 ]
                             ]
 
@@ -105,7 +108,7 @@ data =
                             ["position",                    [70, 1 ] ],
                             ["label",
                                 [
-                                    ["text",                     "roach"],
+                                    ["text",                    "roach"],
                                     ["size",                     4],
                                 ]
                             ]                            
@@ -122,7 +125,7 @@ data =
     [   "2",
         [
             [   "box_dimensions",                 [93, 190, 20.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    false ],
+            [ "enabled",                                    true ],
 
             [   "components",
                 [
@@ -152,7 +155,7 @@ data =
                             ["type",                        "cards"],
                             ["compartment_size",            [ 70.0, 46.0, 12.0] ],
                             ["num_compartments",            [1, 3] ],
-                            ["position",                    [ 1, "center" ] ],                         
+                            ["position",                    [ 1, "center" ] ],                       
                         ]
                     ],
 
@@ -183,7 +186,7 @@ data =
     [   "4",
         [
             [   "box_dimensions",                 [187, 95, 37.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    false ],
+            [ "enabled",                                    true ],
 
             [   "components",
                 [
