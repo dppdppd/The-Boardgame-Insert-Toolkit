@@ -109,7 +109,7 @@ module MakeBox( box )
         {
             union()
             {
-                render()
+               // render()
                 // first pass of carving out elements
                 difference()
                 {
@@ -182,7 +182,7 @@ module MakeBox( box )
         function __req_thick_partitions() = __is_cards() || __is_chit_stack() || __is_chit_stack_vertical();
         function __req_lower_partitions() = __is_chit_stack();
         function __req_bottoms() = __is_tokens() || ( __is_chit_stack() && __component_shape() != "square" );
-        function __req_single_end_partition() = __is_cards() || __is_chit_stack_vertical();
+        function __req_single_end_partition() = ( __is_cards() && __compartments_num( Y ) == 1 ) || __is_chit_stack_vertical();
         function __req_double_end_partition() = __is_chit_stack();
         function __req_label() = __compartment_label() != "";
 
@@ -344,6 +344,76 @@ module MakeBox( box )
             }
         }
 
+
+////////PATTERNS
+
+            module Hex( radius = 1, t = 0.1 )
+            {
+                difference()
+                {
+                    circle(r = radius, $fn = 6 );  
+                    
+                    offset(r = -t)
+                    {
+                        circle( r = radius, $fn = 6 );  
+                    }
+                }
+            }
+
+            module HexGrid( x = 200, y = 200, r = 5, thickness = 0.4 )
+            {
+                o = cos(30) * r;
+
+                x_count = x / ( o );
+                y_count = y / ( o );
+            
+                translate( [-x/3, -y/4,0])
+                {
+                    for( j = [0:y_count] )
+                    {
+                        translate( [ ( j % 2 ) * o, 0, 0 ] )
+                        {
+                            for( i = [ 0: x_count ] )
+                            {
+                                translate( [ i * ( o * 2 - thickness ), j * ( r * 1.5 - thickness), 0 ] )
+                                {
+                                    rotate( 30, [ 0, 0, 1 ] )
+                                    {
+                                        Hex( r, thickness );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            module StarGrid( x = 200, y = 200, r = 5, t = 1 )
+            {
+                y_count = 2 * y / r;
+            
+                g = max(x,y);
+                length = g * 1.5;
+                d = ( length - x ) / 2;
+
+                echo( x,y,g,length,d);
+                
+                for( i = [0:2] )
+                {
+                    a = i * 60;
+
+                    RotateAboutPoint( a, [0,0,1], [x/2,y/2,0])
+                    translate( [ -d, -y/2, 0])
+                    for( j = [0:y_count] )
+                    {
+                        translate([0, (r * j), 0] )
+                            cube( [length,  t, 1]);
+                    }
+                }
+            }
+
+///////////////////////
+
         module MakeLid() 
         {
             // move the lid to the side
@@ -354,13 +424,21 @@ module MakeBox( box )
                     // main __box
                     cube([__lid_external_size( X ), __lid_external_size( Y ), __lid_external_size( Z )]);
                     
-                    translate([ ( __wall_thickness() - __tolerance() )/2 , ( __wall_thickness() - __tolerance() )/2, __wall_thickness()]) 
+                    translate([ ( __wall_thickness() - __tolerance() )/2 , ( __wall_thickness() - __tolerance() )/2, 0]) 
+                    {
+                        cube([  __lid_internal_size( X ), __lid_internal_size( Y ),  __lid_external_size( Z )]);
+                    }
+                }
+
+                intersection()
                     {
                         cube([  __lid_internal_size( X ), __lid_internal_size( Y ), __lid_internal_size( Z )]);
-                    }
+                    //StarGrid( __lid_external_size( X ), __lid_external_size( Y ), r = 3, t = 0.5 );
+                    //pattern goes here
                 }
             }
         }
+
 
         module InEachCompartment( x_modify = 0, y_modify = 0 , only_x = false, only_y = false )
         {
@@ -433,18 +511,11 @@ module MakeBox( box )
             difference()
             { 
                 // blocks
-                union()
-                {
-                    cube ( [ r, __compartment_size( Y ), r ] );
                     
-                    translate( [ __compartment_size( X ) - r, 0, 0] )
-                    {
-                        cube ( [ r, __compartment_size( Y ), r ] );
-                    }
-                }
+                cube ( [ __compartment_size( X ), __compartment_size( Y ), r ] );
 
                 // cylinders
-                union()
+                hull()
                 {
                     translate( [ r, __compartment_size( Y ) , r ] )
                     {
@@ -539,7 +610,7 @@ module MakeBox( box )
                 {
                     linear_extrude( __label_depth() )
                     {
-                        text(text = str( __label_text( x, y ) ), font="Liberation Sans:style=Bold Italic", size = __label_size(), valign = "center", halign = "center", $fn=1);
+                        text(text = str( __label_text( x, y ) ), font="Liberation Sans:style=Bold", size = __label_size(), valign = "center", halign = "center", $fn=1);
                     }
                 }
             }

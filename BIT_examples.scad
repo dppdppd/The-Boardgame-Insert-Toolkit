@@ -6,7 +6,7 @@ data =
 [
     [   "a card box",
         [
-            [ "box_dimensions",                             [90.0, 120.0, 30.0] ],      // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",                             [150.0, 150.0, 30.0] ],      // float f -- default:[ 100, 100, 100]
             [ "enabled",                                    true ],
 
             [   "components",
@@ -17,7 +17,7 @@ data =
                             ["compartment_size",            [ 40, 40.0, 20.0] ],        // float f -- default:[ 10, 10, 10]
                             ["num_compartments",            [2, 2] ],                   // int i -- default: [1, 1]
                             ["enabled",                     true ],                     // true | false
-                            ["rotation",                    0 ],                        // 0 | 1
+                            ["rotation",                    90 ],                       
                             ["position",                    ["center","center"]]        // float f | "center" | "max" -- default: "center"
                         ]
                     ],
@@ -37,6 +37,7 @@ data =
                             ["type",                        "tokens"],
                             ["compartment_size",            [ 26, 40.0, 20.0] ],
                             ["num_compartments",            [2, 2] ], 
+                            ["rotation",                    90 ], 
                         ]
                     ],
                 ]

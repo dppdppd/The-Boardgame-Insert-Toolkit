@@ -29,7 +29,7 @@ data =
 
 
 // for printing control.
-b_print_lid = false;
+b_print_lid = true;
 b_print_box = true;
 
 //b_print_box = "a vertical chit stack"; // isolate one box to print
