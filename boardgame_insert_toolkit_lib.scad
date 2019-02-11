@@ -54,17 +54,24 @@ module MirrorAboutPoint( v, pt)
     }
 }
 
+function __get_box( b ) = data[ b ][1];
+function __num_boxes() = len( data );
+
+function __box_isolated_for_print() = __get_index_of_key( data, b_print_box ) != [];
+function __box_enabled( b ) = __get_value( __get_box( b ), "enabled", default = true);
+function __box_dimensions( b, D ) = __get_value( __get_box( b ), "box_dimensions" )[ D ];
+function __box_position( b ) = __get_box( b - 1 ) == undef ? 0 : __box_enabled( b - 1 ) ? __box_dimensions( b - 1, X ) + __box_position( b - 1 ) + DISTANCE_BETWEEN_PARTS : __box_position( b - 2 );
+
+function __is_string( s ) = len( str( s,s )) == len( s ) * 2;
+
+function __is_multitext( label ) = !__is_string( __get_value( label, "text" ) ) && len( __get_value( label, "text" )) != undef;
+function __label_text( label, r = 0, c = 0 ) = __is_multitext( label ) ?  __get_value( label, "text", default = "" )[c][r] : __get_value( label, "text", default = "" );
+function __label_size( label ) = __get_value( label , "size", default = 4 );
+function __label_rotation( label ) = __get_value( label, "rotation", default = 0 );
+function __label_depth( label ) = __get_value( label, "depth", default = 0.2 );
 
 module MakeAll()
 {
-    function __get_box( b ) = data[ b ][1];
-    function __num_boxes() = len( data );
-
-    function __box_isolated_for_print() = __get_index_of_key( data, b_print_box ) != [];
-    function __box_enabled( b ) = __get_value( __get_box( b ), "enabled", default = true);
-    function __box_dimensions( b, D ) = __get_value( __get_box( b ), "box_dimensions" )[ D ];
-    function __box_position( b ) = __get_box( b - 1 ) == undef ? 0 : __box_enabled( b - 1 ) ? __box_dimensions( b - 1, X ) + __box_position( b - 1 ) + DISTANCE_BETWEEN_PARTS : __box_dimensions( b - 2, X ) + __box_position( b - 2 ) + DISTANCE_BETWEEN_PARTS;
-
     echo( str( "\n\n\n", COPYRIGHT_INFO, "\n\n\tVersion ", VERSION, "\n\n" ));
 
     if ( __box_isolated_for_print() )
@@ -93,10 +100,11 @@ module MakeBox( box )
 {
     function __box_dimensions( D ) = __get_value( box, "box_dimensions", default = [ 100.0, 100.0, 100.0 ] )[ D ];
 
-
     function __get_components() =  __get_value( box, "components" );
     function __num_components() =  len( __get_components() );
     function __get_component( c ) = __get_components()[ c ][1];
+
+    function __box_label() = __get_value( box, "label", default = "");
 
     if( b_print_lid )    
     {
@@ -155,14 +163,7 @@ module MakeBox( box )
         function __compartment_size( D ) = __get_value( component, "compartment_size", default = [10.0, 10.0, 10.0] )[ D ];
         function __compartments_num( D ) = __get_value( component, "num_compartments", default = [1,1] )[ D ];
 
-        function __compartment_label() = __get_value( component, "label", default = [] );
-        function __is_string( s ) = len( str( s,s )) == len( s ) * 2;
-
-        function __is_multitext() = !__is_string( __get_value( __compartment_label(), "text" ) ) && len( __get_value( __compartment_label(), "text" )) != undef;
-        function __label_text( r = 0, c = 0 ) = __is_multitext() ?  __get_value( __compartment_label(), "text" )[c][r] : __get_value( __compartment_label(), "text", default = "" );
-        function __label_size() = __get_value( __compartment_label(), "size", default = 4 );
-        function __label_rotation() = __get_value( __compartment_label(), "rotation", default = 0 );
-        function __label_depth() = __get_value( __compartment_label(), "depth", default = 0.2 );
+        function __component_label() = __get_value( component, "label", default = [] );
 
         function __comp_rot_raw() = __get_value( component, "rotation", default = 0 );
         function __comp_rot_valid() = __comp_rot_raw() == 90 ? 90 : __comp_rot_raw() == -90 ? 90 : __comp_rot_raw() == 180 ? 180 : 0;
@@ -184,7 +185,7 @@ module MakeBox( box )
         function __req_bottoms() = __is_tokens() || ( __is_chit_stack() && __component_shape() != "square" );
         function __req_single_end_partition() = ( __is_cards() && __compartments_num( Y ) == 1 ) || __is_chit_stack_vertical();
         function __req_double_end_partition() = __is_chit_stack();
-        function __req_label() = __compartment_label() != "";
+        function __req_label() = __component_label() != "";
 
                 // Determines whether finger cutouts are made. (For cards)
         function __req_finger_cutouts() = __is_cards() || __is_chit_stack_vertical();
@@ -254,7 +255,7 @@ module MakeBox( box )
 
         function __lid_external_size( D )= D == Z ? __wall_thickness() + __wall_lip_height() - __tolerance() : __box_dimensions( D );
         function __lid_internal_size( D )= D == Z ? __lid_external_size( Z ) - __wall_thickness() : __lid_external_size( D ) - ( __wall_thickness() - __tolerance() );
-  
+        function __lid_thickness() = __wall_thickness() - __tolerance();
 
 /////////////////////////////////////////
 /////////////////////////////////////////
@@ -347,75 +348,71 @@ module MakeBox( box )
 
 ////////PATTERNS
 
-            module Hex( radius = 1, t = 0.1 )
-            {
-                difference()
-                {
-                    circle(r = radius, $fn = 6 );  
-                    
-                    offset(r = -t)
-                    {
-                        circle( r = radius, $fn = 6 );  
-                    }
-                }
-            }
+        module MakeHexGrid( x = 200, y = 200, R = 1, t = 0.2 )
+        {
+            r = cos(30) * R;
 
-            module HexGrid( x = 200, y = 200, r = 5, thickness = 0.4 )
-            {
-                o = cos(30) * r;
+            dx = r * 2 - t;
+            dy = R * 1.5 - t;
 
-                x_count = x / ( o );
-                y_count = y / ( o );
-            
-                translate( [-x/3, -y/4,0])
+            x_count = x / dx + 1;
+            y_count = y / dy + 1;
+
+            {
+                for( j = [1:y_count] )
                 {
-                    for( j = [0:y_count] )
+                    translate( [ ( j % 2 ) * (r - t/2), 0, 0 ] )
                     {
-                        translate( [ ( j % 2 ) * o, 0, 0 ] )
+                        for( i = [ 1: x_count ] )
                         {
-                            for( i = [ 0: x_count ] )
+                            translate( [ i * dx, j * dy, 0 ] )
                             {
-                                translate( [ i * ( o * 2 - thickness ), j * ( r * 1.5 - thickness), 0 ] )
+                                rotate( 30, [ 0, 0, 1 ] )
                                 {
-                                    rotate( 30, [ 0, 0, 1 ] )
-                                    {
-                                        Hex( r, thickness );
-                                    }
+                                    children();
                                 }
                             }
                         }
                     }
                 }
             }
+        }
 
-            module StarGrid( x = 200, y = 200, r = 5, t = 1 )
-            {
-                y_count = 2 * y / r;
-            
-                g = max(x,y);
-                length = g * 1.5;
-                d = ( length - x ) / 2;
-
-                echo( x,y,g,length,d);
+        module Hex( R = 1, t = 0.2 )
+        {
+ 
+            polygon([
+                [ R * cos(0 * 2 * ( PI / 6)* 180 / PI), R * sin(0 * 2 * ( PI / 6) * 180 / PI) ],
+                [ R * cos(1 * 2 * ( PI / 6)* 180 / PI), R * sin(1 * 2 * ( PI / 6) * 180 / PI) ],
+                [ R * cos(2 * 2 * ( PI / 6)* 180 / PI), R * sin(2 * 2 * ( PI / 6) * 180 / PI) ],
+                [ R * cos(3 * 2 * ( PI / 6)* 180 / PI), R * sin(3 * 2 * ( PI / 6) * 180 / PI) ],
+                [ R * cos(4 * 2 * ( PI / 6)* 180 / PI), R * sin(4 * 2 * ( PI / 6) * 180 / PI) ],
+                [ R * cos(5 * 2 * ( PI / 6)* 180 / PI), R * sin(5 * 2 * ( PI / 6) * 180 / PI) ],
+                [ ( R - t ) * cos(0 * 2 * ( PI / 6)* 180 / PI), ( R - t ) * sin(0 * 2 * ( PI / 6) * 180 / PI) ],
+                [ ( R - t ) * cos(1 * 2 * ( PI / 6)* 180 / PI), ( R - t ) * sin(1 * 2 * ( PI / 6) * 180 / PI) ],
+                [ ( R - t ) * cos(2 * 2 * ( PI / 6)* 180 / PI), ( R - t ) * sin(2 * 2 * ( PI / 6) * 180 / PI) ],
+                [ ( R - t ) * cos(3 * 2 * ( PI / 6)* 180 / PI), ( R - t ) * sin(3 * 2 * ( PI / 6) * 180 / PI) ],
+                [ ( R - t ) * cos(4 * 2 * ( PI / 6)* 180 / PI), ( R - t ) * sin(4 * 2 * ( PI / 6) * 180 / PI) ],
+                [ ( R - t ) * cos(5 * 2 * ( PI / 6)* 180 / PI), ( R - t ) * sin(5 * 2 * ( PI / 6) * 180 / PI) ]],
                 
-                for( i = [0:2] )
-                {
-                    a = i * 60;
+                [[0,1,2,3,4,5],[6,7,8,9,10,11]]
+                );
+            
+                    
+        };
 
-                    RotateAboutPoint( a, [0,0,1], [x/2,y/2,0])
-                    translate( [ -d, -y/2, 0])
-                    for( j = [0:y_count] )
-                    {
-                        translate([0, (r * j), 0] )
-                            cube( [length,  t, 1]);
-                    }
-                }
-            }
 
 ///////////////////////
 
         module MakeLid() 
         {
+            module MoveToLidInterior()
+            {
+                translate([ ( __wall_thickness() - __tolerance() )/2 , ( __wall_thickness() - __tolerance() )/2, 0]) 
+                {
+                    children();
+                }
+            }
             // move the lid to the side
             translate([0, __box_dimensions( Y ) + DISTANCE_BETWEEN_PARTS, 0 ]) 
             {
@@ -424,17 +421,50 @@ module MakeBox( box )
                     // main __box
                     cube([__lid_external_size( X ), __lid_external_size( Y ), __lid_external_size( Z )]);
                     
-                    translate([ ( __wall_thickness() - __tolerance() )/2 , ( __wall_thickness() - __tolerance() )/2, 0]) 
+                    MoveToLidInterior()
                     {
                         cube([  __lid_internal_size( X ), __lid_internal_size( Y ),  __lid_external_size( Z )]);
                     }
                 }
 
-                intersection()
+                linear_extrude( __lid_thickness() )
+                {
+                    R = 1;
+                    t = 0.2;
+
+                    intersection()
                     {
-                        cube([  __lid_internal_size( X ), __lid_internal_size( Y ), __lid_internal_size( Z )]);
-                    //StarGrid( __lid_external_size( X ), __lid_external_size( Y ), r = 3, t = 0.5 );
-                    //pattern goes here
+                        MoveToLidInterior()
+                        polygon( [[0,0], 
+                                [0, __lid_internal_size( Y )], 
+                                [ __lid_internal_size( X ), __lid_internal_size( Y )],
+                                [ __lid_internal_size( X ), 0] ]);
+
+                        MakeHexGrid( x = __lid_internal_size( X ), y = __lid_internal_size( Y ), R = R, t = t )
+                        {
+                            Hex( R = R, t = t );
+                        }
+                    }
+                }
+
+
+                translate( [ __lid_external_size( X )/2, __lid_external_size( Y )/2, 0 ] )
+                {
+                    MirrorAboutPoint( [ 1,0,0],[0,0, __lid_thickness() / 2])
+                    {
+                        RotateAboutPoint( __label_rotation( __box_label() ), [0,0,1], [0,0,0] )
+                        linear_extrude( __lid_thickness() )
+                        {
+                            size = __label_size( __box_label());
+
+                            text(text = str( __label_text( __box_label() ) ), 
+                                            font="Liberation Sans:style=Bold", 
+                                            size = size, 
+                                            valign = "center", 
+                                            halign = "center", 
+                                            $fn=1);
+                        }
+                    }
                 }
             }
         }
@@ -471,7 +501,7 @@ module MakeBox( box )
             n_x = __compartments_num( X );
             n_y = __compartments_num( Y );
 
-            for ( x = [ 0: n_x - 1] )
+        for ( x = [ 0: n_x - 1] )
             {
                 x_pos = ( __compartment_size( X ) + __partition_thickness( X ) ) * x;
 
@@ -602,15 +632,19 @@ module MakeBox( box )
 
         module MakeLabel( x = 0, y = 0 )
         {
-            z_pos = __req_finger_cutouts() ? __finger_cutouts_bottom() - __label_depth() : - __label_depth();
+            z_pos = __req_finger_cutouts() ? __finger_cutouts_bottom() - __label_depth( __component_label() ) : - __label_depth( __component_label() );
 
             translate( [ __compartment_size(X)/2, __compartment_size(Y)/2, z_pos] )
             {
-                RotateAboutPoint( __label_rotation(), [0,0,1], [0,0,0] )
+                RotateAboutPoint( __label_rotation( __component_label() ), [0,0,1], [0,0,0] )
                 {
-                    linear_extrude( __label_depth() )
+                    linear_extrude( 2 * __label_depth( __component_label() ) )
                     {
-                        text(text = str( __label_text( x, y ) ), font="Liberation Sans:style=Bold", size = __label_size(), valign = "center", halign = "center", $fn=1);
+                        text(text = str( __label_text( __component_label(), x, y ) ), 
+                        font="Liberation Sans:style=Bold", 
+                        size = __label_size( __component_label() ), 
+                        valign = "center", 
+                        halign = "center", $fn=1);
                     }
                 }
             }

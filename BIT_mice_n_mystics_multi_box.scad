@@ -9,13 +9,19 @@ data =
     [   "1",
         [
             [   "box_dimensions",                 [183, 190, 38.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    true ],
+            [ "enabled",                                    1 ],
+            ["label",
+                [
+                    [ "text",                              "Mice & Mystics"],
+                    [ "size",                               14 ]
+                ]
+            ],
 
             [   "components",
                 [
                     [   "hearts & cheese & status",
                         [
-                            ["enabled",                     true ],                     // true | false
+                            ["enabled",                     1 ],                     // true | false
                             ["type",                        "tokens"],                  // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["compartment_size",            [ 57.0, 60.0, 20.0] ],      // [float, float, float]
                             ["num_compartments",            [1, 3] ],                   // [int, int]
@@ -35,7 +41,7 @@ data =
 
                     [   "heroes",
                         [
-                            ["enabled",                     true ],                     // true | false
+                            ["enabled",                     1 ],                     // true | false
                             ["type",                        ""],
                             ["compartment_size",            [ 30.0, 29.5, 32.0] ],
                             ["num_compartments",            [1, 6] ],
@@ -55,7 +61,7 @@ data =
 
                     [   "centipede",
                         [
-                            ["enabled",                     true ],                     // true | false
+                            ["enabled",                     1 ],                     // true | false
                             ["type",                        ""],
                             ["compartment_size",            [ 51.0, 35.0, 36.0] ],
                             ["num_compartments",            [1, 1] ],
@@ -65,7 +71,7 @@ data =
 
                     [   "spider",
                         [
-                            ["enabled",                     true ],                     // true | false
+                            ["enabled",                     1 ],                     // true | false
                             ["type",                        ""],
                             ["compartment_size",            [ 51.0, 40.0, 17.0] ],
                             ["num_compartments",            [1, 1] ],
@@ -75,7 +81,7 @@ data =
 
                     [   "roaches",
                         [
-                            ["enabled",                     true ],                     // true | false
+                            ["enabled",                     1 ],                     // true | false
                             ["type",                        ""],
                             ["compartment_size",            [ 25.0, 25.0, 7.0] ],
                             ["num_compartments",            [2, 4] ],
@@ -93,7 +99,15 @@ data =
     [   "2",
         [
             [   "box_dimensions",                 [93, 183, 18.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    true ],
+            [ "enabled",                                    1 ],
+            ["label",
+                [
+                    [ "text",                              "tokens"],
+                    [ "size",                               8 ],
+                    [ "rotation",                           90 ],    
+
+                ]
+            ],
 
             [   "components",
                 [
@@ -112,7 +126,14 @@ data =
     [   "3",
         [
             [   "box_dimensions",                 [93, 183, 18.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    true ],
+            [ "enabled",                                    1 ],
+            ["label",
+                [
+                    [ "text",                              "cards & dice"],
+                    [ "size",                               8 ],
+                    [ "rotation",                           90 ], 
+                ]
+            ],
 
             [   "components",
                 [
@@ -146,8 +167,15 @@ data =
     ],
     [   "4",
         [
-            [   "box_dimensions",                 [190, 100, 18.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    true ],
+            [ "box_dimensions",                 [190, 100, 18.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "enabled",                                    1 ],
+            [ "label",
+                [
+                    [ "text",                              "cards"],
+                    [ "size",                               8 ],
+                    [ "rotation",                           90 ], 
+                ]
+            ],
 
             [   "components",
                 [
@@ -167,8 +195,14 @@ data =
 
     [   "5",
         [
-            [   "box_dimensions",                 [100, 190, 18.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",                 [100, 190, 18.0] ],                       // float f -- default:[ 100, 100, 100]
             [ "enabled",                                    true ],
+            [ "label",
+                [
+                    [ "text",                              "characters"],
+                    [ "size",                               8 ],
+                ]
+            ],
 
             [   "components",
                 [
