@@ -103,7 +103,7 @@ data =
             ["label",
                 [
                     [ "text",                              "tokens"],
-                    [ "size",                               8 ],
+                    [ "size",                               12 ],
                     [ "rotation",                           90 ],    
 
                 ]
@@ -130,7 +130,7 @@ data =
             ["label",
                 [
                     [ "text",                              "cards & dice"],
-                    [ "size",                               8 ],
+                    [ "size",                               12 ],
                     [ "rotation",                           90 ], 
                 ]
             ],
@@ -172,7 +172,7 @@ data =
             [ "label",
                 [
                     [ "text",                              "cards"],
-                    [ "size",                               8 ],
+                    [ "size",                               12 ],
                     [ "rotation",                           90 ], 
                 ]
             ],
@@ -196,11 +196,11 @@ data =
     [   "5",
         [
             [ "box_dimensions",                 [100, 190, 18.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    true ],
+            [ "enabled",                                    1 ],
             [ "label",
                 [
                     [ "text",                              "characters"],
-                    [ "size",                               8 ],
+                    [ "size",                               12 ],
                 ]
             ],
 

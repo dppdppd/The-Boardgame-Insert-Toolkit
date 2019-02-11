@@ -4,10 +4,10 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "1.06";
+VERSION = "1.07";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://www.thingiverse.com/thing:3405465\n\n\tCopyright 2019 MysteryDough\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
-$fn=50;
+$fn=100;
 
 // constants
 KEY = 0;
@@ -117,7 +117,6 @@ module MakeBox( box )
         {
             union()
             {
-               // render()
                 // first pass of carving out elements
                 difference()
                 {
@@ -355,15 +354,15 @@ module MakeBox( box )
             dx = r * 2 - t;
             dy = R * 1.5 - t;
 
-            x_count = x / dx + 1;
-            y_count = y / dy + 1;
+            x_count = x / dx;
+            y_count = y / dy;
 
             {
-                for( j = [1:y_count] )
+                for( j = [ 0: y_count ] )
                 {
                     translate( [ ( j % 2 ) * (r - t/2), 0, 0 ] )
                     {
-                        for( i = [ 1: x_count ] )
+                        for( i = [ 0: x_count ] )
                         {
                             translate( [ i * dx, j * dy, 0 ] )
                             {
@@ -413,6 +412,23 @@ module MakeBox( box )
                     children();
                 }
             }
+
+            module PositionText()
+            {
+                translate( [ __lid_external_size( X )/2, __lid_external_size( Y )/2, 0 ] )
+                {
+                    MirrorAboutPoint( [ 1,0,0],[0,0, __lid_thickness() / 2])
+                    {
+                        RotateAboutPoint( __label_rotation( __box_label() ), [0,0,1], [0,0,0] )
+                        {
+                            children();
+                        }
+                    }
+                }
+
+            }
+
+
             // move the lid to the side
             translate([0, __box_dimensions( Y ) + DISTANCE_BETWEEN_PARTS, 0 ]) 
             {
@@ -427,45 +443,55 @@ module MakeBox( box )
                     }
                 }
 
-                linear_extrude( __lid_thickness() )
+                difference()
                 {
-                    R = 1;
-                    t = 0.2;
-
-                    intersection()
+                    linear_extrude( __lid_thickness() )
                     {
-                        MoveToLidInterior()
-                        polygon( [[0,0], 
-                                [0, __lid_internal_size( Y )], 
-                                [ __lid_internal_size( X ), __lid_internal_size( Y )],
-                                [ __lid_internal_size( X ), 0] ]);
+                        R = 4.0;
+                        t = 1.0;
 
-                        MakeHexGrid( x = __lid_internal_size( X ), y = __lid_internal_size( Y ), R = R, t = t )
+                        intersection()
                         {
-                            Hex( R = R, t = t );
+                            polygon( [[0,0], 
+                                    [0, __lid_external_size( Y )], 
+                                    [ __lid_external_size( X ), __lid_external_size( Y )],
+                                    [ __lid_external_size( X ), 0] ]);   
+                            
+                            MakeHexGrid( x = __lid_external_size( X ), y = __lid_external_size( Y ), R = R, t = t )
+                            {
+                                Hex( R = R, t = t );
+                            }
                         }
                     }
+
+                            linear_extrude( __lid_thickness() / 2 )
+                            PositionText()
+                            {
+                                offset( 4 )
+                                {
+                                    text(text = str( __label_text( __box_label() ) ), 
+                                        font="Liberation Sans:style=Bold", 
+                                        size = __label_size( __box_label()), 
+                                        valign = "center", 
+                                        halign = "center", 
+                                        $fn=1);
+                                }
+                            } 
                 }
 
 
-                translate( [ __lid_external_size( X )/2, __lid_external_size( Y )/2, 0 ] )
+                PositionText()
                 {
-                    MirrorAboutPoint( [ 1,0,0],[0,0, __lid_thickness() / 2])
+                    linear_extrude( __lid_thickness() )
                     {
-                        RotateAboutPoint( __label_rotation( __box_label() ), [0,0,1], [0,0,0] )
-                        linear_extrude( __lid_thickness() )
-                        {
-                            size = __label_size( __box_label());
-
-                            text(text = str( __label_text( __box_label() ) ), 
-                                            font="Liberation Sans:style=Bold", 
-                                            size = size, 
-                                            valign = "center", 
-                                            halign = "center", 
-                                            $fn=1);
-                        }
+                        text(text = str( __label_text( __box_label() ) ), 
+                                        font="Liberation Sans:style=Bold", 
+                                        size = __label_size( __box_label()), 
+                                        valign = "center", 
+                                        halign = "center", 
+                                        $fn=1);
                     }
-                }
+                } 
             }
         }
 
