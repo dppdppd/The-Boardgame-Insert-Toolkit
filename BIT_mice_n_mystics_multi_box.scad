@@ -2,37 +2,51 @@
 include <boardgame_insert_toolkit_lib.scad>;
 
 
+// for printing control.
+b_print_lid = true;
+b_print_box = true;
+
+isolated_print_box = ""; // isolate one box to print
+
+b_visualization = 1;          // used to visualize how all of the boxes fit together. Turn off for printing.
+
 // 285 x 285
 // 
 data =
 [
     [   "1",
         [
-            [   "box_dimensions",                 [183, 190, 38.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    1 ],
-            ["label",
+            [ "box_dimensions", [183, 190, 38.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "enabled",        1 ],
+            [ "label",
                 [
-                    [ "text",                              "Mice & Mystics"],
-                    [ "size",                               14 ]
+                    [ "text",   "Mice & Mystics"],
+                    [ "size",   14 ]
                 ]
             ],
+            [ "visualization",
+                [
+                    [ "position",   [0,0,0] ],
+                    [ "rotation",   0 ],
+                ]
+            ],                   
 
             [   "components",
                 [
                     [   "hearts & cheese & status",
                         [
-                            ["enabled",                     1 ],                     // true | false
-                            ["type",                        "tokens"],                  // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",            [ 57.0, 60.0, 20.0] ],      // [float, float, float]
-                            ["num_compartments",            [1, 3] ],                   // [int, int]
-                            ["position",                    [122, 1 ] ],                // [float, float, float]
+                            ["enabled",             1 ],                     // true | false
+                            ["type",                "tokens"],                  // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
+                            ["compartment_size",    [ 57.0, 60.0, 20.0] ],      // [float, float, float]
+                            ["num_compartments",    [1, 3] ],                   // [int, int]
+                            ["position",            [122, 1 ] ],                // [float, float, float]
                             ["label",
                                 [
-                                    ["text",                     [  ["status"],         // simple string or array representing each compartment
-                                                                    ["cheese"],
-                                                                    ["health"]]],
-                                    ["size",                     5],                    // default 4
-                                    ["rotation",                0]                      // 0 | 90 | -90 | 180 -- default = 0
+                                    ["text",        [   ["status"],         // simple string or array representing each compartment
+                                                        ["cheese"],
+                                                        ["health"]]],
+                                    ["size",        5],                    // default 4
+                                    ["rotation",    0]                      // 0 | 90 | -90 | 180 -- default = 0
                                 ]
                             ]
 
@@ -41,51 +55,51 @@ data =
 
                     [   "heroes",
                         [
-                            ["enabled",                     1 ],                     // true | false
-                            ["type",                        ""],
-                            ["compartment_size",            [ 30.0, 29.5, 32.0] ],
-                            ["num_compartments",            [1, 6] ],
-                            ["position",                    [1, 1 ] ],
+                            ["enabled",             1 ],                     // true | false
+                            ["type",                ""],
+                            ["compartment_size",    [ 30.0, 29.5, 32.0] ],
+                            ["num_compartments",    [1, 6] ],
+                            ["position",            [1, 1 ] ],
                         ]
                     ],
 
                     [   "rats",
                         [
-                            ["enabled",                     true ],                     // true | false
-                            ["type",                        ""],
-                            ["compartment_size",            [ 37.0, 29.5, 32.0] ],
-                            ["num_compartments",            [1, 6] ],
-                            ["position",                    [32, 1 ] ],                          
+                            ["enabled",             true ],                     // true | false
+                            ["type",                ""],
+                            ["compartment_size",    [ 37.0, 29.5, 32.0] ],
+                            ["num_compartments",    [1, 6] ],
+                            ["position",            [32, 1 ] ],                          
                         ] 
                     ],
 
                     [   "centipede",
                         [
-                            ["enabled",                     1 ],                     // true | false
-                            ["type",                        ""],
-                            ["compartment_size",            [ 51.0, 35.0, 36.0] ],
-                            ["num_compartments",            [1, 1] ],
-                            ["position",                    [70, 106 ] ],                       
+                            ["enabled",             1 ],                     // true | false
+                            ["type",                ""],
+                            ["compartment_size",    [ 51.0, 35.0, 36.0] ],
+                            ["num_compartments",    [1, 1] ],
+                            ["position",            [70, 106 ] ],                       
                         ]
                     ],
 
                     [   "spider",
                         [
-                            ["enabled",                     1 ],                     // true | false
-                            ["type",                        ""],
-                            ["compartment_size",            [ 51.0, 40.0, 17.0] ],
-                            ["num_compartments",            [1, 1] ],
-                            ["position",                    [70, 143 ] ],                           
+                            ["enabled",             1 ],                     // true | false
+                            ["type",                ""],
+                            ["compartment_size",    [ 51.0, 40.0, 17.0] ],
+                            ["num_compartments",    [1, 1] ],
+                            ["position",            [70, 143 ] ],                           
                         ]
                     ],
 
                     [   "roaches",
                         [
-                            ["enabled",                     1 ],                     // true | false
-                            ["type",                        ""],
-                            ["compartment_size",            [ 25.0, 25.0, 7.0] ],
-                            ["num_compartments",            [2, 4] ],
-                            ["position",                    [70, 1 ] ],                           
+                            ["enabled",             1 ],                     // true | false
+                            ["type",                ""],
+                            ["compartment_size",    [ 25.0, 25.0, 7.0] ],
+                            ["num_compartments",    [2, 4] ],
+                            ["position",            [70, 1 ] ],                           
                         ]
                     ],
 
@@ -98,16 +112,22 @@ data =
 
     [   "2",
         [
-            [   "box_dimensions",                 [93, 183, 18.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    1 ],
-            ["label",
+            [ "box_dimensions",     [93, 183, 17.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "enabled",            1 ],
+            [ "label",
                 [
-                    [ "text",                              "tokens"],
-                    [ "size",                               12 ],
-                    [ "rotation",                           90 ],    
+                    [ "text",       "tokens"],
+                    [ "size",       12 ],
+                    [ "rotation",   -90 ],    
 
                 ]
             ],
+            [ "visualization",
+                [
+                    [ "position",   [0,191,0] ],
+                    [ "rotation",   90 ],
+                ]
+            ],    
 
             [   "components",
                 [
@@ -115,7 +135,7 @@ data =
                         [
                             ["enabled",                     true ],                     // true | false
                             ["type",                        "tokens"],
-                            ["compartment_size",            [ 42.0, 59.0, 16.0] ],
+                            ["compartment_size",            [ 42.0, 59.0, 15.0] ],
                             ["num_compartments",            [2, 3] ],
                         ]
                     ],
@@ -125,36 +145,42 @@ data =
     ],
     [   "3",
         [
-            [   "box_dimensions",                 [93, 183, 18.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    1 ],
-            ["label",
+            [ "box_dimensions",     [93, 183, 18.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "enabled",            1 ],
+            [ "label",
                 [
-                    [ "text",                              "cards & dice"],
-                    [ "size",                               12 ],
-                    [ "rotation",                           90 ], 
+                    [ "text",       "cards & dice"],
+                    [ "size",       12 ],
+                    [ "rotation",   -90 ], 
                 ]
             ],
+            [ "visualization",
+                [
+                    [ "position",   [0, 191, 20 ] ],
+                    [ "rotation",   90 ],
+                ]
+            ],    
 
             [   "components",
                 [
 
                     [   "small cards",
                         [
-                            ["enabled",                     true ],                     // true | false
-                            ["type",                        "cards"],
-                            ["compartment_size",            [ 70.0, 46.0, 12.0] ],
-                            ["num_compartments",            [1, 3] ],
-                            ["position",                    [ 0, "center" ] ],                       
+                            ["enabled",             true ],                     // true | false
+                            ["type",                "cards"],
+                            ["compartment_size",    [ 70.0, 46.0, 12.0] ],
+                            ["num_compartments",    [1, 3] ],
+                            ["position",            [ 0, "center" ] ],                       
                         ]
                     ],
 
                     [   "dice",
                         [
-                            ["enabled",                     true ],                     // true | false
-                            ["type",                        "chit_stack"],
-                            ["compartment_size",            [ 17.0, 82.0, 17.0] ],
-                            ["num_compartments",            [1, 1] ],
-                            ["position",                    [ "max", "center" ] ],                         
+                            ["enabled",             true ],                     // true | false
+                            ["type",                "chit_stack"],
+                            ["compartment_size",    [ 17.0, 82.0, 17.0] ],
+                            ["num_compartments",    [1, 1] ],
+                            ["position",            [ "max", "center" ] ],                         
                         ]
                     ],
  
@@ -167,24 +193,30 @@ data =
     ],
     [   "4",
         [
-            [ "box_dimensions",                 [190, 100, 18.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    1 ],
+            [ "box_dimensions",     [190, 100, 18.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "enabled",            1 ],
             [ "label",
                 [
-                    [ "text",                              "cards"],
-                    [ "size",                               12 ],
-                    [ "rotation",                           90 ], 
+                    [ "text",       "cards"],
+                    [ "size",       12 ],
+                    [ "rotation",   -90 ], 
                 ]
             ],
+            [ "visualization",
+                [
+                    [ "position",   [184,0,20] ],
+                    [ "rotation",   90 ],
+                ]
+            ],       
 
             [   "components",
                 [
                     [   "cards",
                         [
-                            ["type",                        "cards"],                   // "cards" | "chits" | "generic" -- default: "generic"
-                            ["compartment_size",            [ 90.0, 65.0, 16.0] ],      // float f -- default:[ 10, 10, 10]
-                            ["num_compartments",            [2, 1] ],                   // int i -- default: [1, 1]
-                            ["enabled",                     true ],                     // true | false
+                            ["type",                "cards"],                   // "cards" | "chits" | "generic" -- default: "generic"
+                            ["compartment_size",    [ 90.0, 65.0, 16.0] ],      // float f -- default:[ 10, 10, 10]
+                            ["num_compartments",    [2, 1] ],                   // int i -- default: [1, 1]
+                            ["enabled",             true ],                     // true | false
 
                         ]
                     ],
@@ -195,23 +227,29 @@ data =
 
     [   "5",
         [
-            [ "box_dimensions",                 [100, 190, 18.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",                                    1 ],
+            [ "box_dimensions",     [100, 190, 17.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "enabled",            1 ],
             [ "label",
                 [
-                    [ "text",                              "characters"],
-                    [ "size",                               12 ],
+                    [ "text",   "characters"],
+                    [ "size",   12 ],
                 ]
             ],
+            [ "visualization",
+                [
+                    [ "position",   [184,0,0] ],
+                    [ "rotation",   0 ],
+                ]
+            ],      
 
             [   "components",
                 [
                     [   "player cards",
                         [
-                            ["type",                        "cards"],                   // "cards" | "chits" | "generic" -- default: "generic"
-                            ["compartment_size",            [ 96.0, 175.0, 16.0] ],      // float f -- default:[ 10, 10, 10]
-                            ["num_compartments",            [1, 1] ],                   // int i -- default: [1, 1]
-                            ["enabled",                     true ],                     // true | false
+                            ["type",                "cards"],                   // "cards" | "chits" | "generic" -- default: "generic"
+                            ["compartment_size",    [ 96.0, 175.0, 16.0] ],      // float f -- default:[ 10, 10, 10]
+                            ["num_compartments",    [1, 1] ],                   // int i -- default: [1, 1]
+                            ["enabled",             true ],                     // true | false
 
                         ]
                     ],
@@ -219,14 +257,22 @@ data =
             ],
         ]
     ],
+
+[   "6",
+        [
+            [ "box_dimensions",     [100, 93, 40.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "enabled",            1 ],
+
+            [ "visualization",
+                [
+                    [ "position",   [184,191,0] ],
+                    [ "rotation",   0 ],
+                ]
+            ],      
+        ]
+    ],    
     
 ];
 
-
-// for printing control.
-b_print_lid = true;
-b_print_box = true;
-
-b_print_box = "29cm box"; // isolate one box to print
 
 MakeAll();
