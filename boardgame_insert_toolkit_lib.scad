@@ -138,15 +138,18 @@ module MakeBox( box )
     m_box_dimensions = __get_value( box, "box_dimensions", default = [ 100.0, 100.0, 100.0 ] );
 
     m_components =  __get_value( box, "components" );
+
     m_num_components =  len( m_components );
+
     function __get_component( c ) = m_components[ c ][1];
 
     m_box_label = __get_value( box, "label", default = "");
 
-    function __box_is_spacer( box ) = __get_value( box, "type") == "spacer";
+    m_box_is_spacer = __get_value( box, "type") == "spacer";
 
+    m_box_has_thin_lid = __get_value( box, "thin_lid", default = false ) == true;
 
-    if ( __box_is_spacer( box ) )
+    if ( m_box_is_spacer )
     {
         MakeLayer( layer = "spacer" );
     }  
@@ -303,9 +306,12 @@ module MakeBox( box )
         function __notch_length( D ) = m_box_dimensions[ D ] / 5.0;
         function __notch_depth() = m_wall_thickness;
 
-        function __lid_external_size( D )= D == Z ? m_wall_thickness + m_wall_lip_height - m_tolerance : m_box_dimensions[ D ];
-        function __lid_internal_size( D )= D == Z ? __lid_external_size( Z ) - m_wall_thickness : __lid_external_size( D ) - ( m_wall_thickness - m_tolerance );
-        function __lid_thickness() = m_wall_thickness - m_tolerance;
+        m_lid_thickness = ( m_box_has_thin_lid ? 0.2 : m_wall_thickness ) - m_tolerance;
+
+        function __lid_external_size( D )= D == Z ? m_lid_thickness + m_wall_lip_height : m_box_dimensions[ D ];
+        function __lid_internal_size( D )= D == Z ? __lid_external_size( Z ) - m_lid_thickness : __lid_external_size( D ) - m_wall_thickness + m_tolerance;
+
+        function __has_simple_lid() = g_b_simple_lids || g_b_visualization || m_box_has_thin_lid;
 
 /////////////////////////////////////////
 /////////////////////////////////////////
@@ -477,9 +483,9 @@ module MakeBox( box )
             {
                 for( j = [ 0: x_count ] )
                 {
-                    translate( [ j * ( w + dx2 ), 0, ( 1 - ratio ) * __lid_thickness() ] )
+                    translate( [ j * ( w + dx2 ), 0, ( 1 - ratio ) * m_lid_thickness ] )
                     {
-                        cube( [ w, y, __lid_thickness() * ratio ]);
+                        cube( [ w, y, m_lid_thickness * ratio ]);
                     }
                 }
             }
@@ -488,9 +494,9 @@ module MakeBox( box )
             {
                 for( j = [ 0: y_count ] )
                 {
-                    translate( [ 0, j * ( w + dy2 ), ( 1 - ratio ) * __lid_thickness() ] )
+                    translate( [ 0, j * ( w + dy2 ), ( 1 - ratio ) * m_lid_thickness ] )
                     {
-                        cube( [ x, w, __lid_thickness() * ratio ]);
+                        cube( [ x, w, m_lid_thickness * ratio ]);
                     }
                 }
             }
@@ -510,7 +516,7 @@ module MakeBox( box )
                 }
             }
 
-            module MakeLidText( offset = 0, thickness = __lid_thickness() )
+            module MakeLidText( offset = 0, thickness = m_lid_thickness )
             {
                 linear_extrude( thickness )
                 {
@@ -537,11 +543,12 @@ module MakeBox( box )
             }
 
             lid_print_position = [0, m_box_dimensions[ Y ] + DISTANCE_BETWEEN_PARTS, 0 ];
-            lid_vis_position = [ 0, 0, m_box_dimensions[ Z ] + __lid_thickness() ];
+            lid_vis_position = [ 0, 0, m_box_dimensions[ Z ] + m_lid_thickness ];
           
             translate( g_b_visualization ? lid_vis_position : lid_print_position ) 
             RotateAboutPoint( g_b_visualization ? 180 : 0, [0, 1, 0], [__lid_external_size( X )/2, __lid_external_size( Y )/2, 0] )
             {
+                // lid edge only
                 difference() 
                 {
                     // main __box
@@ -555,10 +562,10 @@ module MakeBox( box )
 
                 difference()
                 {
-                    linear_extrude( __lid_thickness() )
+                    linear_extrude( m_lid_thickness )
                     {
-                        R = 6.0;
-                        t = 1.0;
+                        R = 3.0;
+                        t = 0.5;
 
                         intersection()
                         {
@@ -567,7 +574,7 @@ module MakeBox( box )
                                     [ __lid_external_size( X ), __lid_external_size( Y )],
                                     [ __lid_external_size( X ), 0] ]);   
                             
-                            if ( !g_b_simple_lids && !g_b_visualization )
+                            if ( !__has_simple_lid() )
                             {
                                 MakeHexGrid( x = __lid_external_size( X ), y = __lid_external_size( Y ), R = R, t = t )
                                 {
@@ -577,11 +584,19 @@ module MakeBox( box )
                         }
                     }
 
-                    MakeLidText( 4 );
+                    if ( !__has_simple_lid() )
+                    {
+                        MakeLidText( 4 );
+                    }
+                    else if ( !m_box_has_thin_lid )
+                    {
+                        MakeLidText( 0, thickness = m_lid_thickness / 2 );
+                    }
                     
                 }
+                
 
-                if ( !g_b_simple_lids )
+                if ( !__has_simple_lid() )
                 {
                     intersection()
                     {
@@ -591,13 +606,16 @@ module MakeBox( box )
                     }
                 }
 
+                if ( !__has_simple_lid() )
+                    MakeLidText();
 
-                MakeLidText();
-
-                difference()
+                if ( !__has_simple_lid() )
                 {
-                    MakeLidText( 4 );
-                    MakeLidText( 3 );
+                    difference()
+                    {
+                        MakeLidText( 4 );
+                        MakeLidText( 3 );
+                    }
                 }
             }
         }

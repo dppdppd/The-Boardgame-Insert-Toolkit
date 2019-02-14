@@ -113,16 +113,17 @@ data =
 
     [   "2",
         [
-            [ "box_dimensions",     [93, 183, 17.0] ],                       // float f -- default:[ 100, 100, 100]
-            [ "enabled",            1 ],
-            // [ "label",
-            //     [
-            //         [ "text",       "tokens"],
-            //         [ "size",       12 ],
-            //         [ "rotation",   -90 ],    
+            [ "box_dimensions",     [93, 183, 18.8] ],                       // float f -- default:[ 100, 100, 100]
+            [ "enabled",            true ],
+            [ "thin_lid",           true ],                                 // intended for gluing on bottom of upper container
+            [ "label",
+                [
+                    [ "text",       "tokens"],
+                    [ "size",       12 ],
+                    [ "rotation",   -90 ],    
 
-            //     ]
-            // ],
+                ]
+            ],
             [ "visualization",
                 [
                     [ "position",   [0,191,0] ],
@@ -136,7 +137,7 @@ data =
                         [
                             ["enabled",                     true ],                     // true | false
                             ["type",                        "tokens"],
-                            ["compartment_size",            [ 42.0, 59.0, 15.0] ],
+                            ["compartment_size",            [ 42.0, 59.0, 17.0] ],
                             ["num_compartments",            [2, 3] ],
                         ]
                     ],
@@ -190,18 +191,19 @@ data =
     ],
     [   "4",
         [
-            [ "box_dimensions",     [190, 100, 28.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",     [190, 100, 29.0] ],                       // float f -- default:[ 100, 100, 100]
             [ "enabled",            1 ],
-            // [ "label",
-            //     [
-            //         [ "text",       "cards"],
-            //         [ "size",       12 ],
-            //         [ "rotation",   -90 ], 
-            //     ]
-            // ],
+            [ "thin_lid",           true ],                                 // intended for gluing on bottom of upper container
+            [ "label",
+                [
+                    [ "text",       "cards"],
+                    [ "size",       12 ],
+                    [ "rotation",   -90 ], 
+                ]
+            ],
             [ "visualization",
                 [
-                    [ "position",   [184,0,16] ],
+                    [ "position",   [184,0, 0] ],
                     [ "rotation",   90 ],
                 ]
             ],       
@@ -211,7 +213,7 @@ data =
                     [   "cards",
                         [
                             ["type",                "cards"],                   // "cards" | "chits" | "generic" -- default: "generic"
-                            ["compartment_size",    [ 90.0, 65.0, 20.0] ],      // float f -- default:[ 10, 10, 10]
+                            ["compartment_size",    [ 90.0, 65.0, 22.0] ],      // float f -- default:[ 10, 10, 10]
                             ["num_compartments",    [2, 1] ],                   // int i -- default: [1, 1]
                             ["enabled",             true ],                     // true | false
 
@@ -224,7 +226,7 @@ data =
 
     [   "5",
         [
-            [ "box_dimensions",     [100, 190, 7.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",     [100, 190, 7.8] ],                       // float f -- default:[ 100, 100, 100]
             [ "enabled",            1 ],
             [ "label",
                 [
@@ -234,7 +236,7 @@ data =
             ],
             [ "visualization",
                 [
-                    [ "position",   [184,0,0] ],
+                    [ "position",   [184,0,29] ],
                     [ "rotation",   0 ],
                 ]
             ],      
@@ -244,7 +246,7 @@ data =
                     [   "player cards",
                         [
                             ["type",                "cards"],                   // "cards" | "chits" | "generic" -- default: "generic"
-                            ["compartment_size",    [ 96.0, 175.0, 5.0] ],      // float f -- default:[ 10, 10, 10]
+                            ["compartment_size",    [ 96.0, 175.0, 6.0] ],      // float f -- default:[ 10, 10, 10]
                             ["num_compartments",    [1, 1] ],                   // int i -- default: [1, 1]
                             ["enabled",             true ],                     // true | false
 
@@ -257,16 +259,29 @@ data =
 
 [   "6",
         [
-            [ "box_dimensions",     [100, 93, 40.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",     [100, 93, 38.0] ],                       // float f -- default:[ 100, 100, 100]
             [ "enabled",            1 ],
-            [ "type",               "spacer" ],
+           // [ "type",               "spacer" ],
 
             [ "visualization",
                 [
                     [ "position",   [184,191,0] ],
                     [ "rotation",   0 ],
                 ]
-            ],      
+            ],     
+            [   "components",
+                [
+                    [   "box",
+                        [
+                            ["type",                ""],                   // "cards" | "chits" | "generic" -- default: "generic"
+                            ["compartment_size",    [ 96.0, 89.0, 36.0] ],      // float f -- default:[ 10, 10, 10]
+                            ["num_compartments",    [1, 1] ],                   // int i -- default: [1, 1]
+                            ["enabled",             true ],                     // true | false
+
+                        ]
+                    ],
+                ]
+            ], 
         ]
     ],    
     
