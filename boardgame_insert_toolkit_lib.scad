@@ -358,11 +358,37 @@ module MakeBox( box )
                 difference()
                 {
                     // outer, shorter wall
-                    cube([  m_box_dimensions[ X ], 
+                    if ( g_b_fit_lid_underneath )
+                    {
+                        translate( [0,0,m_wall_lip_height])
+                        {
+                            cube([  m_box_dimensions[ X ], 
+                                    m_box_dimensions[ Y ], 
+                                    m_box_dimensions[ Z ] - ( 2 * m_wall_lip_height) ] );
+                        }
+                    }
+                    else
+                    {
+                        cube([  m_box_dimensions[ X ], 
                             m_box_dimensions[ Y ], 
-                            m_box_dimensions[ Z ] - m_wall_lip_height]);
+                            m_box_dimensions[ Z ] - ( 1 * m_wall_lip_height) ] );
+                    }
 
-                            MakeLidNotches();
+
+                    notch_pos_z =  m_box_dimensions[ Z ] - m_wall_lip_height - m_notch_height;
+
+                    translate([ 0, 0, notch_pos_z]) 
+                    MakeLidNotches();
+
+                    if ( g_b_fit_lid_underneath )
+                    {
+                        translate([ 0, 0, m_wall_lip_height]) 
+                        {
+                            MakeLidNotches();  
+                        }
+                    }
+                     
+                                     
                 }
 
                 // inner, taller wall
@@ -564,7 +590,7 @@ module MakeBox( box )
                 {
                     linear_extrude( m_lid_thickness )
                     {
-                        R = 3.0;
+                        R = 4.0;
                         t = 0.5;
 
                         intersection()
@@ -858,9 +884,6 @@ module MakeBox( box )
 
         module MakeCornerNotch()
         {
-            notch_pos_z =  m_box_dimensions[ Z ] - m_wall_lip_height - m_notch_height;
-
-            translate([ 0, 0, notch_pos_z]) 
             {
                 cube([ __notch_length( X ), __notch_depth(), m_notch_height ]);
                 cube([__notch_depth(), __notch_length( Y ), m_notch_height]);

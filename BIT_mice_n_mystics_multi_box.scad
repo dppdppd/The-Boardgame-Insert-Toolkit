@@ -3,13 +3,15 @@ include <boardgame_insert_toolkit_lib.scad>;
 
 
 // for printing control.
-g_b_print_lid = 1;
-g_b_print_box = 1;
+g_b_print_lid = 1; // determines whether lids are constructed.
+g_b_print_box = 1; // determines whether boxes are constructed.
 
-isolated_print_box = ""; // isolate one box to print
+isolated_print_box = "4"; // easy way to isolate one box to print
 
 g_b_visualization = 0;          // used to visualize how all of the boxes fit together. Turn off for printing.
-g_b_simple_lids = 0;
+g_b_simple_lids = 0;            // solid simple lids instead of the honeycomb ones. Might be faster to print. Definitely faster to render.
+
+g_b_fit_lid_underneath = 1; // creates the indentation on the bottom of the box that allows the lid to be put under when in play. Requires support.
 
 // 285 x 285
 // 
@@ -113,9 +115,9 @@ data =
 
     [   "2",
         [
-            [ "box_dimensions",     [93, 183, 18.8] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",     [93, 183, 17] ],                       // float f -- default:[ 100, 100, 100]
             [ "enabled",            true ],
-            [ "thin_lid",           true ],                                 // intended for gluing on bottom of upper container
+      //      [ "thin_lid",           true ],                                 // intended for gluing on bottom of upper container
             [ "label",
                 [
                     [ "text",       "tokens"],
@@ -137,7 +139,7 @@ data =
                         [
                             ["enabled",                     true ],                     // true | false
                             ["type",                        "tokens"],
-                            ["compartment_size",            [ 42.0, 59.0, 17.0] ],
+                            ["compartment_size",            [ 42.0, 59.0, 15.0] ],
                             ["num_compartments",            [2, 3] ],
                         ]
                     ],
@@ -191,9 +193,9 @@ data =
     ],
     [   "4",
         [
-            [ "box_dimensions",     [190, 100, 29.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",     [190, 100, 27.0] ],                       // float f -- default:[ 100, 100, 100]
             [ "enabled",            1 ],
-            [ "thin_lid",           true ],                                 // intended for gluing on bottom of upper container
+   //         [ "thin_lid",           true ],                                 // intended for gluing on bottom of upper container
             [ "label",
                 [
                     [ "text",       "cards"],
@@ -226,7 +228,7 @@ data =
 
     [   "5",
         [
-            [ "box_dimensions",     [100, 190, 7.8] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",     [100, 190, 8] ],                       // float f -- default:[ 100, 100, 100]
             [ "enabled",            1 ],
             [ "label",
                 [
@@ -236,7 +238,7 @@ data =
             ],
             [ "visualization",
                 [
-                    [ "position",   [184,0,29] ],
+                    [ "position",   [184,0,30] ],
                     [ "rotation",   0 ],
                 ]
             ],      
@@ -246,7 +248,7 @@ data =
                     [   "player cards",
                         [
                             ["type",                "cards"],                   // "cards" | "chits" | "generic" -- default: "generic"
-                            ["compartment_size",    [ 96.0, 175.0, 6.0] ],      // float f -- default:[ 10, 10, 10]
+                            ["compartment_size",    [ 96.0, 175.0, 7.0] ],      // float f -- default:[ 10, 10, 10]
                             ["num_compartments",    [1, 1] ],                   // int i -- default: [1, 1]
                             ["enabled",             true ],                     // true | false
 
