@@ -6,7 +6,7 @@ include <boardgame_insert_toolkit_lib.scad>;
 g_b_print_lid = 1; // determines whether lids are constructed.
 g_b_print_box = 1; // determines whether boxes are constructed.
 
-isolated_print_box = "4"; // easy way to isolate one box to print
+g_isolated_print_box = ""; // easy way to isolate one box to print
 
 g_b_visualization = 0;          // used to visualize how all of the boxes fit together. Turn off for printing.
 g_b_simple_lids = 0;            // solid simple lids instead of the honeycomb ones. Might be faster to print. Definitely faster to render.
@@ -248,7 +248,7 @@ data =
                     [   "player cards",
                         [
                             ["type",                "cards"],                   // "cards" | "chits" | "generic" -- default: "generic"
-                            ["compartment_size",    [ 96.0, 175.0, 7.0] ],      // float f -- default:[ 10, 10, 10]
+                            ["compartment_size",    [ 96.0, 173.0, 7.0] ],      // float f -- default:[ 10, 10, 10]
                             ["num_compartments",    [1, 1] ],                   // int i -- default: [1, 1]
                             ["enabled",             true ],                     // true | false
 
