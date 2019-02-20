@@ -2,19 +2,32 @@
 include <boardgame_insert_toolkit_lib.scad>;
 
 
-// for printing control.
-g_b_print_lid = 1; // determines whether lids are constructed.
-g_b_print_box = 1; // determines whether boxes are constructed.
 
-g_isolated_print_box = "2"; // easy way to isolate one box to print
+// determines whether lids are output.
+g_b_print_lid = 1;
 
-g_b_visualization = 0;          // used to visualize how all of the boxes fit together. Turn off for printing.
-g_b_simple_lids = 0;            // solid simple lids instead of the honeycomb ones. Might be faster to print. Definitely faster to render.
+// determines whether boxes are output.
+g_b_print_box = 1; 
 
-g_b_fit_lid_underneath = 1; // creates the indentation on the bottom of the box that allows the lid to be put under when in play. Requires support.
+// Focus on one box
+g_isolated_print_box = "1"; 
 
-// 210 x 300
+// Used to visualize how all of the boxes fit together. 
+// Turn off for printing.
+g_b_visualization = 0;          
+
+// Makes solid simple lids instead of the honeycomb ones.
+// Might be faster to print. Definitely faster to render.
+g_b_simple_lids = 0;            
+
+
+// creates the indentation on the bottom of the box 
+//that allows the lid to be put under when in play.
+g_b_fit_lid_underneath = 1; 
+
+// total indonesia box interior dimensions: 210 x 300
 // 
+
 data =
 [
     [   "1",
@@ -24,8 +37,8 @@ data =
             [ "enabled",        1 ],
             [ "label",
                 [
-                    [ "text",   "1"],
-                    [ "size",   14 ]
+                    [ "text",   "Indonesia A"],
+                    [ "size",   12 ]
                 ]
             ],
             [ "visualization",
@@ -39,12 +52,12 @@ data =
                 [
                     [   "cards",
                         [
-                            ["enabled",             1 ],                     // true | false
-                            ["type",                "cards"],                  // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 58.0, 90.0, 8.0] ],      // [float, float, float]
+                            ["enabled",             1 ],                        // true | false
+                            ["type",                "cards"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
+                            ["compartment_size",    [ 60.0, 92.0, 10.0] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
-                            ["position",            [0, -13 ] ],                // [float, float, float]
-                           // ["rotation",            90 ],
+                            ["position",            [-12, 6 ] ],                // [float, float, float]
+                            ["rotation",            90 ],
                             // ["label",
                             //     [
                             //         ["text",        [   ["status"],         // simple string or array representing each compartment
@@ -58,48 +71,41 @@ data =
                         ]
                     ],
 
-                    [   "goods chits",
+                    [ "goods chits",
                         [
                             ["enabled",             1 ],                     // true | false
                             ["type",                "chit_stack"],
-                            ["compartment_size",    [ 15.0, 25, 15.0] ],
+                            ["compartment_size",    [ 16.0, 26, 16.0] ],
+                            ["extra_spacing",       [0, 0, 0] ],
                             ["num_compartments",    [6, 2] ],
-                            ["position",            [60, 0 ] ],
+                            ["position",            ["max", "max" ] ],
                             ["rotation",            0]
                         ]
                     ],
+
 
                     [   "money",
                         [
                             ["enabled",             1 ],                     // true | false
                             ["type",                "cards"],
-                            ["compartment_size",    [ 50.0, 94, 20.0] ],
+                            ["compartment_size",    [ 52.0, 96, 20.0] ],
                             ["num_compartments",    [1, 1] ],
-                            ["position",            ["max", 105 ] ],
-                            ["rotation",            180 ],
-                            ["label",
-                                [
-                                    ["text",        "money"],
-                                    ["size",        5],                    // default 4
-                                    ["rotation",    1]                      // 0 | 90 | -90 | 180 -- default = 0
-                                ]
-                            ]
+                            ["position",            [-12, "max" ] ],
+                            ["rotation",            90 ],
                         ]
                     ],
+
 
                     [   "other",
                         [
                             ["enabled",             1 ],                     // true | false
                             ["type",                "tokens"],
-                            ["compartment_size",    [ 33.7, 50, 28.0] ],
+                            ["compartment_size",    [ 30.5, 55, 24.0] ],
                             ["num_compartments",    [3, 2] ],
-                            ["position",            [0, "max" ] ],
+                            ["position",            ["max", 0 ] ],
                             ["rotation",            90],
                         ]
                     ],
-
-                    
-                    // more components here...
                 ]
             ],
         ]
@@ -112,8 +118,8 @@ data =
             [ "enabled",        1 ],
             [ "label",
                 [
-                    [ "text",   "2"],
-                    [ "size",   14 ]
+                    [ "text",   "Indonesia B"],
+                    [ "size",   12 ]
                 ]
             ],
             [ "visualization",

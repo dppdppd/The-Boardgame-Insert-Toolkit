@@ -390,7 +390,7 @@ module MakeBox( box )
             {
                 intersection()
                 {
-                    echo( "WARNING: Components in RED do not fit in box.\nIf this is not intentional then adjustments\nare required or pieces won't fit.");
+                    echo( "<br><font color='red'>WARNING: Components in RED do not fit in box. If this is not intentional then adjustments are required or pieces won't fit.</font><br>");
                     translate( [m_wall_thickness, m_wall_thickness, 0] )
                     {
                         cube([  m_box_dimensions[ X ] - (2 * m_wall_thickness ), 
@@ -771,9 +771,6 @@ module MakeBox( box )
             only_x2 = __component_rotated_90() ? only_y : only_x;
             only_y2 = __component_rotated_90() ? only_x : only_y;
 
-            echo( x_modify, y_modify);
-            echo( x2_modify, y2_modify);
-
             x2_modify = __component_rotated_90() ? y_modify : x_modify;
             y2_modify = __component_rotated_90() ? x_modify : y_modify;
 
@@ -827,7 +824,7 @@ module MakeBox( box )
         {
             cutout_y = __is_chit_stack_vertical() ? __component_size( __Y2() ) / 2 : __component_size( __Y2() );
 
-            cutout_x = min ( PARTITION_FINGERS, __compartment_size( __X2() ) * .5 );
+            cutout_x = min ( PARTITION_FINGERS * 2, __compartment_size( __X2() ) * .5 );
             cutout_z = m_box_dimensions[ Z ] - 2.0;
 
             RotatedTranslate( 

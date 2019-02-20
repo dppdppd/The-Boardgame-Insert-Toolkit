@@ -1,6 +1,27 @@
 
 include <boardgame_insert_toolkit_lib.scad>;
 
+// determines whether lids are output.
+g_b_print_lid = 1;
+
+// determines whether boxes are output.
+g_b_print_box = 1; 
+
+// Focus on one box
+g_isolated_print_box = ""; 
+
+// Used to visualize how all of the boxes fit together. 
+// Turn off for printing.
+g_b_visualization = 0;          
+
+// Makes solid simple lids instead of the honeycomb ones.
+// Might be faster to print. Definitely faster to render.
+g_b_simple_lids = 0;            
+
+
+// creates the indentation on the bottom of the box 
+//that allows the lid to be put under when in play.
+g_b_fit_lid_underneath = 1; 
 
 data =
 [
@@ -46,7 +67,7 @@ data =
     ],
     [   "a round chit stack box",
         [
-            [ "box_dimensions",                             [60.0, 120.0, 30.0] ], 
+            [ "box_dimensions",                             [60.0, 140.0, 30.0] ], 
             [ "enabled",                                    true ],
 
             [   "components",
@@ -65,7 +86,7 @@ data =
     ],
     [   "a hex tile stack box",
         [
-            [ "box_dimensions",                             [60.0, 120.0, 30.0] ], 
+            [ "box_dimensions",                             [60.0, 140.0, 30.0] ], 
             [ "enabled",                                    true ],
 
             [   "components",
@@ -104,7 +125,7 @@ data =
 
     [   "a vertical chit stack",
         [
-            [ "box_dimensions",                             [80.0, 80.0, 50.0] ], 
+            [ "box_dimensions",                             [40.0, 40.0, 50.0] ], 
             [ "enabled",                                    true ],
 
             [   "components",
@@ -115,7 +136,7 @@ data =
                             ["compartment_size",            [ 30, 30.0, 30.0] ], 
                             ["num_compartments",            [1, 1] ],
                             ["shape",                       "hex"],
-                            ["rotation",                     1],
+                            ["position",                    ["center", -10]],
                         ]
                     ],
                 ]
@@ -124,11 +145,5 @@ data =
     ],    
 ];
 
-
-// for printing control.
-b_print_lid = true;
-b_print_box = true;
-
-//b_print_box = "a vertical chit stack"; // isolate one box to print
 
 MakeAll();
