@@ -97,7 +97,7 @@ function __is_multitext( label ) = !__is_string( __value( label, "text" ) ) && l
 function __label_text( label, r = 0, c = 0 ) = __is_multitext( label ) ?  __value( label, "text", default = "" )[c][r] : __value( label, "text", default = "" );
 function __label_size( label ) = __value( label , "size", default = 4 );
 function __label_rotation( label ) = __value( label, "rotation", default = 0 );
-function __label_depth( label ) = __value( label, "depth", default = 0.2 );
+function __label_depth( label ) = __value( label, "depth", default = 0.3 );
 
 module Colorize()
 {
@@ -253,12 +253,13 @@ module MakeBox( box )
         m_component_label = __value( component, "label", default = [] );
 
         function __comp_rot_raw() = __value( component, "rotation", default = 0 );
-        function __comp_rot_valid() = __comp_rot_raw() == 90 ? 90 : __comp_rot_raw() == -90 ? 90 : __comp_rot_raw() == 180 ? 180 : 0;
+        function __comp_rot_valid() = __comp_rot_raw() == 90 ? 90 : __comp_rot_raw() == -90 ? -90 : __comp_rot_raw() == 180 ? 180 : 0;
         function __component_rotation() = __comp_rot_valid();
         function __component_rotated_90() = abs( __component_rotation() ) == 90;
         function __component_rotated_180() = abs( __component_rotation() ) == 180;
         function __X2() = __component_rotated_90() ? Y : X;
         function __Y2() = __component_rotated_90() ? X : Y;
+        function __RotatedResult( _0 = 0, _90 = 0, _180 = 0, _n90 = 0 ) = ( __component_rotation() == 90 ) ? _90 : ( __component_rotation() == 180 ) ? _180 : ( __component_rotation() == -90 ) ? _n90 : _0 ;
         function __component_shape() = __value( component, "shape", default = "square" );
         function __component_type() = __value( component, "type", default = "generic" );
         function __component_extra_spacing( D ) = __value( component, "extra_spacing", default = [0.0, 0.0] )[ D ];
@@ -266,6 +267,7 @@ module MakeBox( box )
 
         /////////
 
+        function __is_plain() = __component_type() == "generic";
         function __is_cards() = __component_type() == "cards";
         function __is_tokens() = __component_type() == "tokens";
         function __is_chit_stack() = __component_type() == "chit_stack";
@@ -356,9 +358,9 @@ module MakeBox( box )
                                         __lid_external_size( Z ) - m_lid_thickness : 
                                         __lid_external_size( D ) - m_wall_thickness + m_tolerance;
 
-        function __has_simple_lid() = g_b_simple_lids || g_b_visualization || m_box_has_thin_lid;
+        function __has_simple_lid() = g_b_simple_lids || g_b_visualization;
 
-        module RotatedTranslate( normal, rotated )
+        module TranslateWithRotation( normal, rotated )
         {
             if ( abs( __component_rotation() ) == 90 )
             {
@@ -768,11 +770,11 @@ module MakeBox( box )
 
         module InEachCompartment( x_modify = 0, y_modify = 0 , only_x = false, only_y = false )
         {
-            only_x2 = __component_rotated_90() ? only_y : only_x;
-            only_y2 = __component_rotated_90() ? only_x : only_y;
+            only_x2 = __RotatedResult( _0 = only_x, _90 = only_y, _180 = only_x, _n90 = only_y  );
+            only_y2 = __RotatedResult( _0 = only_y, _90 = only_x, _180 = only_y, _n90 = only_x  );
 
-            x2_modify = __component_rotated_90() ? y_modify : x_modify;
-            y2_modify = __component_rotated_90() ? x_modify : y_modify;
+            x2_modify = __RotatedResult( _0 = x_modify, _90 = y_modify, _180 = x_modify, _n90 = y_modify );
+            y2_modify = __RotatedResult( _0 = y_modify, _90 = x_modify, _180 = y_modify, _n90 = x_modify );
 
             n_x = only_y2 ? 1  : __compartments_num( X ) + x2_modify;
             n_y = only_x2 ? 1 : __compartments_num( Y ) + y2_modify;
@@ -827,19 +829,20 @@ module MakeBox( box )
             cutout_x = min ( PARTITION_FINGERS * 2, __compartment_size( __X2() ) * .5 );
             cutout_z = m_box_dimensions[ Z ] - 2.0;
 
-            RotatedTranslate( 
-                            normal = [ __compartment_size( X )/2 - cutout_x/2, 0, __finger_cutouts_bottom() ],
-                            rotated = [ 0, __compartment_size( Y )/2 - cutout_x/2, __finger_cutouts_bottom() ])
-            {
-                if ( __component_rotated_90() )
-                {
-                    cube([ cutout_y, cutout_x , cutout_z ]);
-                }
-                else
-                {
-                    cube([ cutout_x , cutout_y, cutout_z ]);
+            translation = __RotatedResult( _0 = [ __compartment_size( X )/2 - cutout_x/2, 0, __finger_cutouts_bottom() ],
+                                         _90 = [ 0, __compartment_size( Y )/2 - cutout_x/2, __finger_cutouts_bottom() ],
+                                         _180 = [ __compartment_size( X )/2 - cutout_x/2, 0, __finger_cutouts_bottom() ],
+                                         _n90 = [ 0, __compartment_size( Y )/2 - cutout_x/2, __finger_cutouts_bottom() ] );
 
-                }
+            cube_rotated = __RotatedResult( _0 = [ cutout_x , cutout_y, cutout_z ],
+                                            _90 = [ cutout_y, cutout_x , cutout_z ],
+                                            _180 = [ cutout_x , cutout_y, cutout_z ],
+                                            _n90 = [ cutout_y, cutout_x , cutout_z ] );
+
+
+            translate( translation )
+            {
+                cube( cube_rotated );
             }
         }
 
@@ -852,40 +855,42 @@ module MakeBox( box )
 
             rotated = abs( __component_rotation() ) == 90;
 
-            X2 = rotated ? Y : X; 
-            Y2 = rotated ? X : Y;
-
             difference()
             { 
                 // blocks
                     
-                cube ( [ __compartment_size( X ), __compartment_size( Y ), r ] );
+                cube_rotated = __RotatedResult( _0 = [ r, __compartment_size( Y ), r ],
+                                                _90 = [ __compartment_size( X ), r, r ],
+                                                _180 = [ r, __compartment_size( Y ), r ],
+                                                _n90 = [ __compartment_size( X ), r, r ] );
+
+
+                cube_translated = __RotatedResult( _0 = [ 0, 0, 0 ],
+                                                _90 = [ 0, 0, 0, ],
+                                                _180 = [ __compartment_size( X ) - r, 0, 0 ],
+                                                _n90 = [ 0, __compartment_size( Y ) - r, 0 ] );
+
+                                                echo( __component_rotation(), cube_translated);
+               translate( cube_translated )
+                {
+                    cube ( cube_rotated );
+                }
 
                 // cylinders
-                hull()
-                {
-                    RotatedTranslate( 
-                        normal = [ r, __compartment_size( Y ), r ], 
-                        rotated = [ 0, r, r ]
-                        )
-                    {
-                        rotate( [ 90, 0, __component_rotation() ], 0 )
-                        {
-                            cylinder(h = __compartment_size( Y2 ), r1 = r, r2 = r);  
-                        } 
-                    }
 
-                    RotatedTranslate( 
-                        normal = [ __compartment_size( X ) - r, __compartment_size( Y ), r ], 
-                        rotated = [ 0, __compartment_size( Y ) -r, r]
-                        )
+                cylinder_translated = __RotatedResult( _0 = [ r, __compartment_size( Y ), r ],
+                                                _90 = [ 0, r, r ],
+                                                _180 = [ __compartment_size( X ) - r, 0, r ],
+                                                _n90 = [ __compartment_size( X ), __compartment_size( Y ) - r, r ] );
+                    
+               translate( cylinder_translated )
+                {
+                    rotate( [ 90, 0, __component_rotation() ], 0 )
                     {
-                        rotate( [ 90, 0, __component_rotation() ], 0 )
-                        {
-                            cylinder(h = __compartment_size( Y2 ), r1 = r, r2 = r);  
-                        } 
-                    }
+                        cylinder(h = __compartment_size( __Y2() ), r1 = r, r2 = r);  
+                    } 
                 }
+                
             }
                     
         }
@@ -894,15 +899,30 @@ module MakeBox( box )
         {
             $fn = __component_shape() == "hex" ? 6 : 100;
 
-            r = __compartment_size( X )/2;
+            r = __compartment_size( __X2() )/2;
  
-            start_pos_y =  __partition_thickness( Y );
+            translation = __RotatedResult( _0 = [ 0, __partition_thickness( Y ), 0 ],
+                                                _90 = [ __partition_thickness( X ), 0, 0, ],
+                                                _180 = [ 0, __partition_thickness( Y ), 0 ],
+                                                _n90 = [ __partition_thickness( X ), 0, 0 ] );
 
-            translate( [ 0, start_pos_y, 0 ] )
+
+            translate( translation )
             {
                 difference()
                 { 
                     // blocks
+
+                cube_rotated = __RotatedResult( _0 = [ r, __compartment_size( Y ), r ],
+                                                _90 = [ __compartment_size( X ), r, r ],
+                                                _180 = [ r, __compartment_size( Y ), r ],
+                                                _n90 = [ __compartment_size( X ), r, r ] );
+
+
+                cube_translated = __RotatedResult( _0 = [ 0, 0, 0 ],
+                                                _90 = [ 0, 0, 0, ],
+                                                _180 = [ __compartment_size( X ) - r, 0, 0 ],
+                                                _n90 = [ 0, __compartment_size( Y ) - r, 0 ] );
 
                     cube ( [ __compartment_size( X ), __compartment_size( Y ), __compartment_size( Z ) / 2 ] );
                     
@@ -910,14 +930,26 @@ module MakeBox( box )
                     // cylinders
                     union()
                     {
-                        translate( [ r , __compartment_size( Y ) , r ] )
+
+                        cylinder_translation = __RotatedResult( _0 = [ r , __compartment_size( Y ) , r ],
+                                                                _90 = [ 0 , (__compartment_size( Y ) )/2 , r ],
+                                                                _180 = [ r , __compartment_size( Y ) , r ],
+                                                                _n90 = [ 0 , (__compartment_size( Y ) )/2 , r ] );
+
+                        translate( cylinder_translation )
                         {
-                            rotate( 90, [1, 0, 0] )
+                            cylinder_rotation = __RotatedResult( _0 = [ 1, 0, 0 ],
+                                                                _90 = [ 0, 1, 0, ],
+                                                                _180 = [ 1, 0, 0 ],
+                                                                _n90 = [ 0, 1, 0 ] );
+
+                            rotate( 90, cylinder_rotation )
                             {
-                                cylinder(h = __compartment_size( Y ), r1 = r, r2 = r );  
+                                cylinder(h = __compartment_size( __Y2() ), r1 = r, r2 = r );  
                             } 
                         }
 
+                        // midpoint--up. clear the rest of the compartment
                         translate( [ 0,0, r ])
                         {
                             cube ( [ __compartment_size( X ), __compartment_size( Y ), m_box_dimensions[ Z ]] );
@@ -1009,8 +1041,8 @@ module MakeBox( box )
 
         module MakePartition( axis )
         {
-            start_pos_x = __partition_num_modifier( X ) > -1 && !__component_rotated_180() ? 0 : __compartment_size( X );
-            start_pos_y = __partition_num_modifier( Y ) > -1 && !__component_rotated_180() ? 0 : __compartment_size( Y );
+            start_pos_x = __partition_num_modifier( X ) > -1 ? 0 : __compartment_size( X );
+            start_pos_y = __partition_num_modifier( Y ) > -1 ? 0 : __compartment_size( Y );
 
             if ( axis == X )
             {

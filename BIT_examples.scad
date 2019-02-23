@@ -2,7 +2,7 @@
 include <boardgame_insert_toolkit_lib.scad>;
 
 // determines whether lids are output.
-g_b_print_lid = 1;
+g_b_print_lid = 0;
 
 // determines whether boxes are output.
 g_b_print_box = 1; 
@@ -25,9 +25,9 @@ g_b_fit_lid_underneath = 1;
 
 data =
 [
-    [   "a card box",
+    [   "1",
         [
-            [ "box_dimensions",                             [150.0, 150.0, 30.0] ],      // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",                             [120.0, 100.0, 30.0] ],      // float f -- default:[ 100, 100, 100]
             [ "enabled",                                    true ],
 
             [   "components",
@@ -36,17 +36,28 @@ data =
                         [
                             ["type",                        "cards"],                   // "cards" | "tokens" | "chit_stack" | "" -- default: ""
                             ["compartment_size",            [ 40, 40.0, 20.0] ],        // float f -- default:[ 10, 10, 10]
-                            ["num_compartments",            [2, 2] ],                   // int i -- default: [1, 1]
+                            ["num_compartments",            [1,2] ],                   // int i -- default: [1, 1]
                             ["enabled",                     true ],                     // true | false
                             ["rotation",                    90 ],                       
-                            ["position",                    ["center","center"]]        // float f | "center" | "max" -- default: "center"
+                            ["position",                    [0,"center"]]        // float f | "center" | "max" -- default: "center"
+                        ]
+                    ],
+
+                   [   "cards",
+                        [
+                            ["type",                        "cards"],                   // "cards" | "tokens" | "chit_stack" | "" -- default: ""
+                            ["compartment_size",            [ 40, 40.0, 20.0] ],        // float f -- default:[ 10, 10, 10]
+                            ["num_compartments",            [1,2] ],                   // int i -- default: [1, 1]
+                            ["enabled",                     true ],                     // true | false
+                            ["rotation",                    -90 ],                       
+                            ["position",                    ["max","center"]]        // float f | "center" | "max" -- default: "center"
                         ]
                     ],
                 ]
             ]
         ]
     ],
-    [   "a generic token box",
+    [   "2",
         [
             [ "box_dimensions",                             [60.0, 120.0, 30.0] ],
             [ "enabled",                                    true ],
@@ -57,8 +68,19 @@ data =
                         [
                             ["type",                        "tokens"],
                             ["compartment_size",            [ 26, 40.0, 20.0] ],
-                            ["num_compartments",            [2, 2] ], 
+                            ["num_compartments",            [1, 2] ], 
+                            ["rotation",                    0 ], 
+                            ["position",                    [0,"center"]]        // float f | "center" | "max" -- default: "center"
+                        ]
+                    ],
+
+                    [   "my chits",
+                        [
+                            ["type",                        "tokens"],
+                            ["compartment_size",            [ 26, 40.0, 20.0] ],
+                            ["num_compartments",            [1, 2] ], 
                             ["rotation",                    90 ], 
+                            ["position",                    ["max","center"]]        // float f | "center" | "max" -- default: "center"
                         ]
                     ],
                 ]
@@ -67,7 +89,7 @@ data =
     ],
     [   "a round chit stack box",
         [
-            [ "box_dimensions",                             [60.0, 140.0, 30.0] ], 
+            [ "box_dimensions",                             [80.0, 140.0, 30.0] ], 
             [ "enabled",                                    true ],
 
             [   "components",
@@ -75,9 +97,22 @@ data =
                     [   "my chit stack",
                         [
                             ["type",                        "chit_stack"],
-                            ["compartment_size",            [ 20, 40.0, 20.0] ], 
-                            ["num_compartments",            [2, 2] ], 
+                            ["compartment_size",            [ 25, 40.0, 20.0] ], 
+                            ["num_compartments",            [1, 2] ], 
                             ["shape",                       "circle"],              // "circle" | "hex"
+                            ["position",                    [0,"center"]],        // float f | "center" | "max" -- default: "center"
+                            ["rotation",                   0]
+                        ]
+                    ],
+
+                    [   "my chit stack",
+                        [
+                            ["type",                        "chit_stack"],
+                            ["compartment_size",            [ 20, 40.0, 20.0] ], 
+                            ["num_compartments",            [1, 2] ], 
+                            ["shape",                       "circle"],              // "circle" | "hex"
+                            ["position",                    ["max","center"]],        // float f | "center" | "max" -- default: "center"
+                            ["rotation",                    90 ],
                         ]
                     ],
                 ]
