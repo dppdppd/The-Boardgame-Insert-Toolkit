@@ -27,7 +27,7 @@ g_b_fit_lid_underneath = 1;
 
 // this is the outer wall thickness. 
 //Default = 2
-g_wall_thickness = 1;
+g_wall_thickness = 1.5;
 
 // this is the thickness of partitions between compartments
 // Default = 1
@@ -49,7 +49,7 @@ data =
             [ "label",
                 [
                     [ "text",   "PAX EMANCIPATION"],
-                    [ "size",   5 ]
+                    [ "size",   6 ]
                 ]
             ],
             [ "visualization",
@@ -65,7 +65,7 @@ data =
                         [
                             ["enabled",             1 ],                        // true | false
                             ["type",                ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 56.75, 27, 26.5] ],      // [float, float, float]
+                            ["compartment_size",    [ 56.25, 26.75, 26.5] ],      // [float, float, float]
                             ["num_compartments",    [2, 3] ],                   // [int, int]
                             ["position",            [0, 0 ] ],                // [float, float, float]
                             ["rotation",            90 ],
@@ -80,7 +80,7 @@ data =
                             ["type",                "chit_stack"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["compartment_size",    [ 73.0, 15.5, 26.5] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
-                            ["position",            [0, "max" ] ],                // [float, float, float]
+                            ["position",            [0, 97.5 ] ],                // [float, float, float]
                             ["rotation",            90 ],
                             ["label",               
                                 [
@@ -97,18 +97,18 @@ data =
                             ["shape",               "round"],
                             ["compartment_size",    [ 65.0, 15.0, 15.0] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
-                            ["position",            [4, 83 ] ],                // [float, float, float]
+                            ["position",            [4, 82 ] ],                // [float, float, float]
                             ["rotation",            90 ],
                         ]
                     ],
 
-                    [   "dice",
+                    [   "cubes",
                         [
                             ["enabled",             1 ],                        // true | false
                             ["type",                "chit_stack_compact"],      // "cards" | "tokens" | "chit_stack" | "chit_stack_compact" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 28, 31, 15] ],      // [float, float, float]
+                            ["compartment_size",    [ 27, 32, 15] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
-                            ["position",            ["max", 83 ] ],                // [float, float, float]
+                            ["position",            ["max", 82 ] ],                // [float, float, float]
                             ["rotation",            180 ],
                         ]
                     ],
@@ -119,7 +119,7 @@ data =
 
     [   "2",
         [
-            [ "box_dimensions", [27, 116, 25.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions", [27, 110, 25.0] ],                       // float f -- default:[ 100, 100, 100]
 
             [ "enabled",        1 ],
             [ "thin_lid",       true ],
@@ -137,7 +137,7 @@ data =
                         [
                             ["enabled",             1 ],                        // true | false
                             ["type",                "chit_stack_compact"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 25, 86.0, 24.0] ],      // [float, float, float]
+                            ["compartment_size",    [ 24, 80.0, 24.0] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
                             ["position",            [0, -6 ] ],                // [float, float, float]
                             ["rotation",            0 ],
@@ -154,7 +154,7 @@ data =
                         [
                             ["enabled",             1 ],                        // true | false
                             ["type",                ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 25, 30.0, 14.0] ],      // [float, float, float]
+                            ["compartment_size",    [ 24, 30.0, 14.0] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
                             ["position",            [0, "max" ] ],                // [float, float, float]
                             ["rotation",            90 ],

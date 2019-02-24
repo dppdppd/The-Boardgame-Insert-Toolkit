@@ -50,7 +50,9 @@ g_b_simple_lids = 0;
 g_b_fit_lid_underneath = 1; 
 
 g_wall_thickness = 2; // default = 2
+
 g_partition_thickness = 1; // default = 1
+
 g_finger_partition_thickness = 13;
 
 
@@ -192,20 +194,21 @@ module MakeBox( box )
 
     m_box_is_spacer = __value( box, "type") == "spacer";
 
-    m_box_has_thin_lid = __value( box, "thin_lid", default = false ) == true;
+    m_box_has_thin_lid = __value( box, "thin_lid", default = false );
+    m_box_has_lid = __value( box, "lid", default = true );
+    m_box_wall_thickness = __value( box, "wall_thickness", default = g_wall_thickness ); // needs work to change if no lid
 
             // tolerance for fittings
-    m_tolerance = 0.05; 
+    m_tolerance = 0.1; 
 
-    // __wall_local determins the lid-less (part) __wall width.
-    // Wall exterior is added on and creates the sturdier exterior that also holds the lid.
- 
+    m_wall_thickness = m_box_wall_thickness;
+
     // this is the depth of the lid
     m_wall_lip_height = 5.0;
 
-    m_wall_underside_lid_storage_depth = 7.0;
+    m_wall_underside_lid_storage_depth = 7;
 
-    m_box_inner_position_min = [ g_wall_thickness, g_wall_thickness, g_wall_thickness ];
+    m_box_inner_position_min = [ m_wall_thickness, m_wall_thickness, m_wall_thickness ];
     m_box_inner_position_max = m_box_dimensions - m_box_inner_position_min;
 
 
@@ -215,7 +218,7 @@ module MakeBox( box )
     }  
     else
     {
-        if( g_b_print_lid )    
+        if( g_b_print_lid  && m_box_has_lid )    
         {
             MakeLayer( layer = "lid");
         }
@@ -233,7 +236,7 @@ module MakeBox( box )
 
                         for( i = [ 0: m_num_components - 1 ] )
                         {
-                            MakeLayer( __component( i ) , layer = "carve_outs");
+                            MakeLayer( __component( i ) , layer = "component_subtractions");
                         }
                     }
 
@@ -241,15 +244,18 @@ module MakeBox( box )
                     // now add the positive elements
                     for( i = [ 0: m_num_components - 1 ] )
                     {
-                        MakeLayer( __component( i ), layer = "additive_components" );     
+                        MakeLayer( __component( i ), layer = "component_additions" );     
                     }
                 }
 
-                // final carving from everything
+                // 2nd pass carving for components
                 for( i = [ 0: m_num_components - 1 ] )
                 {
-                    MakeLayer( __component( i ), layer = "final_carve_outs" );
+                    MakeLayer( __component( i ), layer = "final_component_subtractions" );
                 }
+
+                // lid carve outs
+                MakeLayer( layer = "lid_substractions" );
                 
             }
             
@@ -265,13 +271,15 @@ module MakeBox( box )
         m_is_outerbox = layer == "outerbox";
         m_is_lid = layer == "lid";
         m_is_spacer = layer == "spacer";
+        m_is_lid_subtractions = layer == "lid_substractions";
 
         // we don't use position for the box or the lid. Only for components.
-        m_ignore_position = m_is_outerbox || m_is_lid || m_is_spacer;
+        m_ignore_position = m_is_outerbox || m_is_lid || m_is_spacer || m_is_lid_subtractions;
 
-        m_is_carve_outs = layer == "carve_outs";
-        m_is_additive_components = layer == "additive_components";
-        m_is_final_carve_outs = layer == "final_carve_outs";
+        m_is_component_subtractions = layer == "component_subtractions";
+        m_is_component_additions = layer == "component_additions";
+        m_is_final_component_subtractions = layer == "final_component_subtractions";
+
 
         function __compartment_size( D ) = __value( component, "compartment_size", default = [10.0, 10.0, 10.0] )[ D ];
         function __compartments_num( D ) = __value( component, "num_compartments", default = [1,1] )[ D ];
@@ -331,7 +339,7 @@ module MakeBox( box )
         function __p_i_c( D) = __c_p_raw()[ D ] == "center";
         function __p_i_m( D) = __c_p_raw()[ D ] == "max";
         function __c_p_c( D ) = ( m_box_dimensions[ D ] - __component_size( D )) / 2;
-        function __c_p_max( D ) = m_box_dimensions[ D ] - g_wall_thickness -  __component_size( D );
+        function __c_p_max( D ) = m_box_dimensions[ D ] - m_wall_thickness -  __component_size( D );
 
         /////////
 
@@ -342,7 +350,7 @@ module MakeBox( box )
                                                 __c_p_max( D ): 
                                            //     __c_p_raw()[D] < 0 ? 
                                            //         __c_p_max( D ) + __c_p_raw()[D] : 
-                                                    __c_p_raw()[D] + g_wall_thickness;
+                                                    __c_p_raw()[D] + m_wall_thickness;
 
         function __component_position_max( D ) = __component_position( D ) + __component_size( D );
 
@@ -373,9 +381,9 @@ module MakeBox( box )
         function __partition_height( D ) = __compartment_size( Z ) * __partition_height_scale( D );
 
         function __notch_length( D ) = m_box_dimensions[ D ] / 5.0;
-        function __notch_depth() = g_wall_thickness;
+        function __lid_notch_depth() = m_wall_thickness / 2;
 
-        m_lid_thickness = ( m_box_has_thin_lid ? 0.4 : g_wall_thickness ) - m_tolerance;
+        m_lid_thickness = ( m_box_has_thin_lid ? 0.4 : m_wall_thickness ) - m_tolerance;
 
         function __lid_external_size( D )= D == Z ?     
                                         m_lid_thickness + m_wall_lip_height : 
@@ -383,13 +391,13 @@ module MakeBox( box )
 
         function __lid_internal_size( D )= D == Z ? 
                                         __lid_external_size( Z ) - m_lid_thickness : 
-                                        __lid_external_size( D ) - g_wall_thickness + m_tolerance;
+                                        __lid_external_size( D ) - m_wall_thickness + m_tolerance;
 
         function __has_simple_lid() = g_b_simple_lids || g_b_visualization;
 
         module ContainWithinBox()
         {
-            b_needs_trimming = m_is_additive_components;
+            b_needs_trimming = m_is_component_additions;
 
             if ( b_needs_trimming &&
             ( __component_position( X ) < m_box_inner_position_min[ X ] ||
@@ -402,10 +410,10 @@ module MakeBox( box )
                 intersection()
                 {
                     echo( "<br><font color='red'>WARNING: Components in RED do not fit in box. If this is not intentional then adjustments are required or pieces won't fit.</font><br>");
-                    translate( [g_wall_thickness / 2, g_wall_thickness / 2, 0] )
+                  //  translate( [m_wall_thickness / 2, m_wall_thickness / 2, 0] )
                     {
-                        cube([  m_box_dimensions[ X ] - ( g_wall_thickness ), 
-                                m_box_dimensions[ Y ] - ( g_wall_thickness ), 
+                        cube([  m_box_dimensions[ X ], 
+                                m_box_dimensions[ Y ], 
                                 m_box_dimensions[ Z ]]);
                     }    
 
@@ -443,6 +451,36 @@ module MakeBox( box )
             }
         }
 
+        module MakeLidNotch( extra_height = 0, extra_depth = 0, offset = 0 )
+        {
+            translate( [ offset, offset, 0 ] )
+            {
+                cube( [  m_box_dimensions[ X ] - ( 2 * offset ),
+                        __lid_notch_depth() + extra_depth, 
+                        m_wall_lip_height + extra_height ] );   
+
+                cube( [  __lid_notch_depth() + extra_depth,
+                        m_box_dimensions[ Y ] - ( 2 * offset ),
+                        m_wall_lip_height + extra_height ] ); 
+            }
+        }
+
+        module MakeLidNotches( extra_height = 0, extra_depth = 0, offset = 0 )
+        {
+                MakeLidNotch( extra_height = extra_height, extra_depth = extra_depth, offset = offset );
+
+                center = [ m_box_dimensions[ X ] / 2, m_box_dimensions[ Y ] / 2, 0];
+
+                MirrorAboutPoint( [1,0,0], [ m_box_dimensions[ X ] / 2, m_box_dimensions[ Y ] / 2, 0] )
+                {
+                    MirrorAboutPoint( [0,1,0], [ m_box_dimensions[ X ] / 2, m_box_dimensions[ Y ] / 2, 0] )
+                    {                  
+                        MakeLidNotch( extra_height = extra_height, extra_depth = extra_depth, offset = offset );
+                    }
+                }
+
+        }
+
         module InnerLayer()
         {
             if ( m_is_spacer )
@@ -451,9 +489,9 @@ module MakeBox( box )
                 {
                     cube( [ m_box_dimensions[ X ], m_box_dimensions[ Y ], m_box_dimensions[ Z ] ] );
 
-                    translate( [ g_wall_thickness, g_wall_thickness, 0 ])
+                    translate( [ m_wall_thickness, m_wall_thickness, 0 ])
                     {
-                        cube( [ m_box_dimensions[ X ] - ( 2 * g_wall_thickness ), m_box_dimensions[ Y ] - ( 2 * g_wall_thickness ), m_box_dimensions[ Z ] ] );
+                        cube( [ m_box_dimensions[ X ] - ( 2 * m_wall_thickness ), m_box_dimensions[ Y ] - ( 2 * m_wall_thickness ), m_box_dimensions[ Z ] ] );
                     }
                 }
             }
@@ -462,78 +500,15 @@ module MakeBox( box )
                 // 'outerbox' is the insert. It may contain one or more 'components' that each
                 // define a repeated compartment type.
                 //
-
-                difference()
-                {
-                    // outer, shorter wall
-                    if ( g_b_fit_lid_underneath )
-                    {
-                        hull()
-                        {
-                            translate( [0,0,m_wall_underside_lid_storage_depth])
-                            {
-                                cube([  m_box_dimensions[ X ], 
-                                        m_box_dimensions[ Y ], 
-                                        m_box_dimensions[ Z ] - ( m_wall_lip_height + m_wall_underside_lid_storage_depth ) ] );
-                            }
-
-                            translate( [g_wall_thickness/2, g_wall_thickness/2, m_wall_underside_lid_storage_depth - 2] )
-                            {
-                                cube([  m_box_dimensions[ X ] - g_wall_thickness - (4 * m_tolerance), 
-                                        m_box_dimensions[ Y ] - g_wall_thickness - (4  * m_tolerance), 
-                                        2 ]);
-                            } 
-                        }
-                    }
-                    else
-                    {
-                        cube([  m_box_dimensions[ X ], 
-                            m_box_dimensions[ Y ], 
-                            m_box_dimensions[ Z ] - ( 1 * m_wall_lip_height) ] );     
-                    }
-
-
-                    notch_pos_z =  m_box_dimensions[ Z ] - m_wall_lip_height - m_notch_height;
-
-                    translate([ 0, 0, notch_pos_z]) 
-                        MakeLidNotches();
-
-                    // if ( g_b_fit_lid_underneath )
-                    // {
-                    //     translate([ 0, 0, m_wall_lip_height]) 
-                    //     {
-                    //         MakeLidNotches();  
-                    //     }
-                    // }
-                     
-                                     
-                }
-
-                // inner, taller wall
-
-                top_height = max( m_wall_lip_height, m_box_dimensions[ Z ] / 2  );
-
-                // top half is a tighter fit
-                translate( [g_wall_thickness/2, g_wall_thickness/2, max( 0, m_box_dimensions[ Z ] - top_height) ] )
-                {
-                    cube([  m_box_dimensions[ X ] - g_wall_thickness, 
-                            m_box_dimensions[ Y ] - g_wall_thickness, 
-                            top_height]);
-                }       
-                // lower half is a looser fit. If there's no lid storage in the base than this gets covered
-                translate( [g_wall_thickness/2, g_wall_thickness/2, 0] )
-                {
-                    cube([  m_box_dimensions[ X ] - g_wall_thickness - (4 * m_tolerance), 
-                            m_box_dimensions[ Y ] - g_wall_thickness - (4  * m_tolerance), 
-                            m_box_dimensions[ Z ] / 2]);
-                }        
-                
+                cube([  m_box_dimensions[ X ], 
+                        m_box_dimensions[ Y ], 
+                        m_box_dimensions[ Z ]]);
             }
             else if ( m_is_lid )
             {
                 MakeLid();
             }
-            else if ( m_is_carve_outs ) 
+            else if ( m_is_component_subtractions ) 
             {
                 // 'carve-outs' are the big shapes of the 'components.' Each is then subdivided
                 // by adding partitions.
@@ -541,13 +516,12 @@ module MakeBox( box )
                         __component_size( Y ), 
                         __component_size( Z )]);
             }
-            else if ( m_is_additive_components )
+            else if ( m_is_component_additions )
             {
                 MakePartitions();
             }
-            else if ( m_is_final_carve_outs )
+            else if ( m_is_final_component_subtractions )
             {
-
                 // Some shapes, such as the finger cutouts for card compartments
                 // need to be done at the end becaause they substract from the 
                 // entire box.
@@ -567,7 +541,51 @@ module MakeBox( box )
                     LabelEachCompartment();
                 }
             }
+            else if ( m_is_lid_subtractions && m_box_has_lid )
+            {
+
+                notch_pos_z =  m_box_dimensions[ Z ] - m_wall_lip_height ;
+                
+                translate( [ 0,0, notch_pos_z ] )
+                {
+                    MakeLidNotches();
+                }
+
+                // outer, shorter wall
+                if ( g_b_fit_lid_underneath )
+                {
+                    // we need to carve out angles so we won't need supports.
+                    difference()
+                    {
+                        vertical_clearance = 1.0 + m_tolerance;
+
+                        MakeLidNotches( extra_height = vertical_clearance, extra_depth = m_tolerance );
+
+                        hull()
+                        {
+                            translate( [ 0, 0, m_wall_lip_height + vertical_clearance] )
+                                MakeLidNotches();
+
+                            translate( [ 0, 0, m_wall_lip_height - 1 + vertical_clearance] )
+                                MakeLidNotches( offset = __lid_notch_depth() + m_tolerance );
+
+                        }
+                    }
+
+                }
+
+
+                notch_pos_z_corner = notch_pos_z - m_notch_height ;
+
+                translate([ 0, 0, notch_pos_z_corner]) 
+                {
+                    MakeLidCornerNotches();
+                }
+                    
+                
+            }
         }
+
 
 
 ////////PATTERNS
@@ -624,7 +642,7 @@ module MakeBox( box )
                     
         };
 
-        module MakeStripedGrid( x = 200, y = 200, w = 1, dx = 0, dy = 0, ratio = 0.5 )
+        module MakeStripedGrid( x = 200, y = 200, w = 1, dx = 0, dy = 0, depth_ratio = 0.5 )
         {
             x2 = abs( __label_rotation( m_box_label ) ) == 90 ? y : x; 
             y2 = abs( __label_rotation( m_box_label ) ) == 90 ? x : y;
@@ -666,7 +684,7 @@ module MakeBox( box )
         {
             module MoveToLidInterior()
             {
-                translate([ ( g_wall_thickness - m_tolerance )/2 , ( g_wall_thickness - m_tolerance )/2, 0]) 
+                translate([ ( m_wall_thickness - m_tolerance )/2 , ( m_wall_thickness - m_tolerance )/2, 0]) 
                 {
                     children();
                 }
@@ -758,7 +776,7 @@ module MakeBox( box )
                 {
                     intersection()
                     {
-                        MakeStripedGrid( x = __lid_external_size( X ), y = __lid_external_size( Y ), w = 0.5, dx = 1, dy = 0, ratio = 0.5 );
+                        MakeStripedGrid( x = __lid_external_size( X ), y = __lid_external_size( Y ), w = 0.5, dx = 10, dy = 1, depth_ratio = 0.5 );
 
                         MakeLidText( offset = text_offset  );                  
                     }
@@ -1075,33 +1093,33 @@ module MakeBox( box )
             }
         }
 
-        module MakeCornerNotch()
+        module MakeLidCornerNotch()
         {
             {
-                cube([ __notch_length( X ), __notch_depth(), m_notch_height ]);
-                cube([__notch_depth(), __notch_length( Y ), m_notch_height]);
+                cube([ __notch_length( X ), __lid_notch_depth(), m_notch_height ]);
+                cube([__lid_notch_depth(), __notch_length( Y ), m_notch_height]);
             }
         }
 
-        module MakeLidNotches()
+        module MakeLidCornerNotches()
         {
-            MakeCornerNotch();
+            MakeLidCornerNotch();
 
             MirrorAboutPoint( [1,0,0], [ m_box_dimensions[ X ] / 2, m_box_dimensions[ Y ] / 2, 0] )
             {
-                MakeCornerNotch();
+                MakeLidCornerNotch();
             }
 
             MirrorAboutPoint( [0,1,0], [ m_box_dimensions[ X ] / 2, m_box_dimensions[ Y ] / 2, 0] )
             {
-                MakeCornerNotch();
+                MakeLidCornerNotch();
             }
 
             MirrorAboutPoint( [1,0,0], [ m_box_dimensions[ X ] / 2, m_box_dimensions[ Y ] / 2, 0] )
             {
                 MirrorAboutPoint( [0,1,0], [ m_box_dimensions[ X ] / 2, m_box_dimensions[ Y ] / 2, 0] )
                 {
-                    MakeCornerNotch();    
+                    MakeLidCornerNotch();    
                 }
             }
         }

@@ -42,7 +42,6 @@ data =
         [
             [ "box_dimensions",                             [90.0, 100.0, 30.0] ],      // float f -- default:[ 100, 100, 100]
             [ "enabled",                                    true ],
-
             [   "components",
                 [
                     [   "cards",
@@ -136,6 +135,7 @@ data =
         [
             [ "box_dimensions",                             [60.0, 140.0, 30.0] ], 
             [ "enabled",                                    true ],
+           [ "lid",                                        false ],
 
             [   "components",
                 [
@@ -156,6 +156,8 @@ data =
         [
             [ "box_dimensions",                             [20.0, 20.0, 12.0] ], 
             [ "enabled",                                    true ],
+           [ "lid",                                        1 ],
+
 
             [   "components",
                 [
