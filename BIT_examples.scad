@@ -2,7 +2,7 @@
 include <boardgame_insert_toolkit_lib.scad>;
 
 // determines whether lids are output.
-g_b_print_lid = 0;
+g_b_print_lid = 1;
 
 // determines whether boxes are output.
 g_b_print_box = 1; 
@@ -23,11 +23,24 @@ g_b_simple_lids = 0;
 //that allows the lid to be put under when in play.
 g_b_fit_lid_underneath = 1; 
 
+// this is the outer wall thickness. 
+//Default = 2
+g_wall_thickness = 2;
+
+// this is the thickness of partitions between compartments
+// Default = 1
+g_partition_thickness = 1; // default = 1
+
+// this is the width of partitions that are for 
+// inserting fingers to grab the bits.
+// default = 13
+g_finger_partition_thickness = 13; 
+
 data =
 [
     [   "1",
         [
-            [ "box_dimensions",                             [120.0, 100.0, 30.0] ],      // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",                             [90.0, 100.0, 30.0] ],      // float f -- default:[ 100, 100, 100]
             [ "enabled",                                    true ],
 
             [   "components",
@@ -39,7 +52,7 @@ data =
                             ["num_compartments",            [1,2] ],                   // int i -- default: [1, 1]
                             ["enabled",                     true ],                     // true | false
                             ["rotation",                    90 ],                       
-                            ["position",                    [0,"center"]]        // float f | "center" | "max" -- default: "center"
+                            ["position",                    [-10,"center"]]        // float f | "center" | "max" -- default: "center"
                         ]
                     ],
 
@@ -49,7 +62,7 @@ data =
                             ["compartment_size",            [ 40, 40.0, 20.0] ],        // float f -- default:[ 10, 10, 10]
                             ["num_compartments",            [1,2] ],                   // int i -- default: [1, 1]
                             ["enabled",                     true ],                     // true | false
-                            ["rotation",                    -90 ],                       
+                            ["rotation",                    0 ],                       
                             ["position",                    ["max","center"]]        // float f | "center" | "max" -- default: "center"
                         ]
                     ],
@@ -146,9 +159,8 @@ data =
 
             [   "components",
                 [
-                    [   "my chit stack",
+                    [   "box",
                         [
-                            ["type",                        ""],
                             ["compartment_size",            [ 15, 15.0, 8.0] ], 
                             ["num_compartments",            [1, 1] ], 
                         ]
@@ -172,6 +184,34 @@ data =
                             ["num_compartments",            [1, 1] ],
                             ["shape",                       "hex"],
                             ["position",                    ["center", -10]],
+                        ]
+                    ],
+                ]
+            ]
+        ]
+    ],    
+    [   "a compact chit stack",
+        [
+            [ "box_dimensions",                             [50.0, 100.0, 50.0] ], 
+            [ "enabled",                                    true ],
+
+            [   "components",
+                [
+                    [   "my chit stack",
+                        [
+                            ["type",                        "chit_stack_compact"],
+                            ["compartment_size",            [ 30, 30.0, 30.0] ], 
+                            ["num_compartments",            [1, 1] ],
+                            ["position",                    ["center", -1]],
+                        ]
+                    ],
+                    [   "my chit stack",
+                        [
+                            ["type",                        "chit_stack_compact"],
+                            ["compartment_size",            [ 30, 30.0, 30.0] ], 
+                            ["num_compartments",            [1, 1] ],
+                            ["position",                    ["center", "max"]],
+                            ["rotation",                    180],
                         ]
                     ],
                 ]

@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "1.11";
+VERSION = "1.12";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://www.thingiverse.com/thing:3405465\n\n\tCopyright 2019 MysteryDough\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn=100;
@@ -18,7 +18,6 @@ Y = 1;
 Z = 2;
 
 DISTANCE_BETWEEN_PARTS = 2;
-PARTITION_FINGERS = 13;
 ////////////////////
 
 // key-values helpers
@@ -26,6 +25,34 @@ function __index_of_key( table, key ) = search( [ key ], table )[ KEY ];
 function __value( table, key, default = false ) = __index_of_key( table, key ) == [] ? default : table[ __index_of_key( table, key ) ][ VALUE ];
 
 ///////////////////////
+
+
+
+// determines whether lids are output.
+g_b_print_lid = 1;
+
+// determines whether boxes are output.
+g_b_print_box = 1; 
+
+// Focus on one box
+g_isolated_print_box = ""; 
+
+// Used to visualize how all of the boxes fit together. 
+// Turn off for printing.
+g_b_visualization = 0;          
+
+// Makes solid simple lids instead of the honeycomb ones.
+// Might be faster to print. Definitely faster to render.
+g_b_simple_lids = 0;            
+
+// creates the indentation on the bottom of the box 
+//that allows the lid to be put under when in play.
+g_b_fit_lid_underneath = 1; 
+
+g_wall_thickness = 2; // default = 2
+g_partition_thickness = 1; // default = 1
+g_finger_partition_thickness = 13;
+
 
 
 module RotateAndMoveBackToOrigin(a, extents ) 
@@ -97,7 +124,7 @@ function __is_multitext( label ) = !__is_string( __value( label, "text" ) ) && l
 function __label_text( label, r = 0, c = 0 ) = __is_multitext( label ) ?  __value( label, "text", default = "" )[c][r] : __value( label, "text", default = "" );
 function __label_size( label ) = __value( label , "size", default = 4 );
 function __label_rotation( label ) = __value( label, "rotation", default = 0 );
-function __label_depth( label ) = __value( label, "depth", default = 0.3 );
+function __label_depth( label ) = __value( label, "depth", default = 0.2 );
 
 module Colorize()
 {
@@ -168,19 +195,18 @@ module MakeBox( box )
     m_box_has_thin_lid = __value( box, "thin_lid", default = false ) == true;
 
             // tolerance for fittings
-        m_tolerance = 0.05; 
+    m_tolerance = 0.05; 
 
-        // __wall_local determins the lid-less (part) __wall width.
-        // Wall exterior is added on and creates the sturdier exterior that also holds the lid.
-        m_wall_thickness = 2.0;
+    // __wall_local determins the lid-less (part) __wall width.
+    // Wall exterior is added on and creates the sturdier exterior that also holds the lid.
+ 
+    // this is the depth of the lid
+    m_wall_lip_height = 5.0;
 
-        // this is the depth of the lid
-        m_wall_lip_height = 5.0;
+    m_wall_underside_lid_storage_depth = 7.0;
 
-        m_wall_underside_lid_storage_depth = 7.0;
-
-        m_box_inner_position_min = [ m_wall_thickness, m_wall_thickness, m_wall_thickness ];
-        m_box_inner_position_max = m_box_dimensions - m_box_inner_position_min;
+    m_box_inner_position_min = [ g_wall_thickness, g_wall_thickness, g_wall_thickness ];
+    m_box_inner_position_max = m_box_dimensions - m_box_inner_position_min;
 
 
     if ( m_box_is_spacer )
@@ -270,13 +296,14 @@ module MakeBox( box )
         function __is_plain() = __component_type() == "generic";
         function __is_cards() = __component_type() == "cards";
         function __is_tokens() = __component_type() == "tokens";
-        function __is_chit_stack() = __component_type() == "chit_stack";
+        function __is_chit_stack() = __component_type() == "chit_stack" || __component_type() == "chit_stack_compact";
+        function __is_chit_stack_compact() = __component_type() == "chit_stack_compact";
         function __is_chit_stack_vertical() = __component_type() == "chit_stack_vertical";
 
-        function __req_thick_partitions() = __is_cards() || __is_chit_stack() || __is_chit_stack_vertical();
-        function __req_lower_partitions() = __is_chit_stack();
+        function __req_thick_partitions() = __is_cards() || __is_chit_stack() || __is_chit_stack_vertical() || __is_chit_stack_compact();
+        function __req_lower_partitions() = __is_chit_stack() || __is_chit_stack_compact() ;
         function __req_bottoms() = __is_tokens() || ( __is_chit_stack() && __component_shape() != "square" );
-        function __req_single_end_partition() = ( __is_cards() && __compartments_num( __Y2() ) == 1 ) || __is_chit_stack_vertical();
+        function __req_single_end_partition() = ( __is_cards() && __compartments_num( __Y2() ) == 1 ) || __is_chit_stack_vertical() || __is_chit_stack_compact();
         function __req_double_end_partition() = __is_chit_stack();
         function __req_label() = m_component_label != "";
 
@@ -304,7 +331,7 @@ module MakeBox( box )
         function __p_i_c( D) = __c_p_raw()[ D ] == "center";
         function __p_i_m( D) = __c_p_raw()[ D ] == "max";
         function __c_p_c( D ) = ( m_box_dimensions[ D ] - __component_size( D )) / 2;
-        function __c_p_max( D ) = m_box_dimensions[ D ] - m_wall_thickness -  __component_size( D );
+        function __c_p_max( D ) = m_box_dimensions[ D ] - g_wall_thickness -  __component_size( D );
 
         /////////
 
@@ -315,12 +342,12 @@ module MakeBox( box )
                                                 __c_p_max( D ): 
                                            //     __c_p_raw()[D] < 0 ? 
                                            //         __c_p_max( D ) + __c_p_raw()[D] : 
-                                                    __c_p_raw()[D] + m_wall_thickness;
+                                                    __c_p_raw()[D] + g_wall_thickness;
 
         function __component_position_max( D ) = __component_position( D ) + __component_size( D );
 
         // The thickness of the __compartment __partitions.
-        function __partition_thickness( D ) = ( D == __Y2() ) && __req_thick_partitions() ? PARTITION_FINGERS + __component_extra_spacing( D ): 1 + __component_extra_spacing( D );
+        function __partition_thickness( D ) = ( D == __Y2() ) && __req_thick_partitions() ? g_finger_partition_thickness + __component_extra_spacing( D ): g_partition_thickness + __component_extra_spacing( D );
 
         // whether to add __partitions on the __box edges.
         function __partition_num_modifier( D ) = ( D == __Y2() ) ? 
@@ -346,9 +373,9 @@ module MakeBox( box )
         function __partition_height( D ) = __compartment_size( Z ) * __partition_height_scale( D );
 
         function __notch_length( D ) = m_box_dimensions[ D ] / 5.0;
-        function __notch_depth() = m_wall_thickness;
+        function __notch_depth() = g_wall_thickness;
 
-        m_lid_thickness = ( m_box_has_thin_lid ? 0.2 : m_wall_thickness ) - m_tolerance;
+        m_lid_thickness = ( m_box_has_thin_lid ? 0.4 : g_wall_thickness ) - m_tolerance;
 
         function __lid_external_size( D )= D == Z ?     
                                         m_lid_thickness + m_wall_lip_height : 
@@ -356,31 +383,13 @@ module MakeBox( box )
 
         function __lid_internal_size( D )= D == Z ? 
                                         __lid_external_size( Z ) - m_lid_thickness : 
-                                        __lid_external_size( D ) - m_wall_thickness + m_tolerance;
+                                        __lid_external_size( D ) - g_wall_thickness + m_tolerance;
 
         function __has_simple_lid() = g_b_simple_lids || g_b_visualization;
 
-        module TranslateWithRotation( normal, rotated )
-        {
-            if ( abs( __component_rotation() ) == 90 )
-            {
-                translate( rotated )
-                {
-                    children();
-                }
-            }
-            else
-            {
-                translate( normal )
-                {
-                    children();
-                }
-            }
-        }
-
         module ContainWithinBox()
         {
-            b_needs_trimming = m_is_carve_outs || m_is_additive_components;
+            b_needs_trimming = m_is_additive_components;
 
             if ( b_needs_trimming &&
             ( __component_position( X ) < m_box_inner_position_min[ X ] ||
@@ -393,10 +402,10 @@ module MakeBox( box )
                 intersection()
                 {
                     echo( "<br><font color='red'>WARNING: Components in RED do not fit in box. If this is not intentional then adjustments are required or pieces won't fit.</font><br>");
-                    translate( [m_wall_thickness, m_wall_thickness, 0] )
+                    translate( [g_wall_thickness / 2, g_wall_thickness / 2, 0] )
                     {
-                        cube([  m_box_dimensions[ X ] - (2 * m_wall_thickness ), 
-                                m_box_dimensions[ Y ] - ( 2 * m_wall_thickness ), 
+                        cube([  m_box_dimensions[ X ] - ( g_wall_thickness ), 
+                                m_box_dimensions[ Y ] - ( g_wall_thickness ), 
                                 m_box_dimensions[ Z ]]);
                     }    
 
@@ -442,9 +451,9 @@ module MakeBox( box )
                 {
                     cube( [ m_box_dimensions[ X ], m_box_dimensions[ Y ], m_box_dimensions[ Z ] ] );
 
-                    translate( [ m_wall_thickness, m_wall_thickness, 0 ])
+                    translate( [ g_wall_thickness, g_wall_thickness, 0 ])
                     {
-                        cube( [ m_box_dimensions[ X ] - ( 2 * m_wall_thickness ), m_box_dimensions[ Y ] - ( 2 * m_wall_thickness ), m_box_dimensions[ Z ] ] );
+                        cube( [ m_box_dimensions[ X ] - ( 2 * g_wall_thickness ), m_box_dimensions[ Y ] - ( 2 * g_wall_thickness ), m_box_dimensions[ Z ] ] );
                     }
                 }
             }
@@ -468,10 +477,10 @@ module MakeBox( box )
                                         m_box_dimensions[ Z ] - ( m_wall_lip_height + m_wall_underside_lid_storage_depth ) ] );
                             }
 
-                            translate( [m_wall_thickness/2, m_wall_thickness/2, m_wall_underside_lid_storage_depth - 2] )
+                            translate( [g_wall_thickness/2, g_wall_thickness/2, m_wall_underside_lid_storage_depth - 2] )
                             {
-                                cube([  m_box_dimensions[ X ] - m_wall_thickness - (4 * m_tolerance), 
-                                        m_box_dimensions[ Y ] - m_wall_thickness - (4  * m_tolerance), 
+                                cube([  m_box_dimensions[ X ] - g_wall_thickness - (4 * m_tolerance), 
+                                        m_box_dimensions[ Y ] - g_wall_thickness - (4  * m_tolerance), 
                                         2 ]);
                             } 
                         }
@@ -505,17 +514,17 @@ module MakeBox( box )
                 top_height = max( m_wall_lip_height, m_box_dimensions[ Z ] / 2  );
 
                 // top half is a tighter fit
-                translate( [m_wall_thickness/2, m_wall_thickness/2, max( 0, m_box_dimensions[ Z ] - top_height) ] )
+                translate( [g_wall_thickness/2, g_wall_thickness/2, max( 0, m_box_dimensions[ Z ] - top_height) ] )
                 {
-                    cube([  m_box_dimensions[ X ] - m_wall_thickness, 
-                            m_box_dimensions[ Y ] - m_wall_thickness, 
+                    cube([  m_box_dimensions[ X ] - g_wall_thickness, 
+                            m_box_dimensions[ Y ] - g_wall_thickness, 
                             top_height]);
                 }       
                 // lower half is a looser fit. If there's no lid storage in the base than this gets covered
-                translate( [m_wall_thickness/2, m_wall_thickness/2, 0] )
+                translate( [g_wall_thickness/2, g_wall_thickness/2, 0] )
                 {
-                    cube([  m_box_dimensions[ X ] - m_wall_thickness - (4 * m_tolerance), 
-                            m_box_dimensions[ Y ] - m_wall_thickness - (4  * m_tolerance), 
+                    cube([  m_box_dimensions[ X ] - g_wall_thickness - (4 * m_tolerance), 
+                            m_box_dimensions[ Y ] - g_wall_thickness - (4  * m_tolerance), 
                             m_box_dimensions[ Z ] / 2]);
                 }        
                 
@@ -657,7 +666,7 @@ module MakeBox( box )
         {
             module MoveToLidInterior()
             {
-                translate([ ( m_wall_thickness - m_tolerance )/2 , ( m_wall_thickness - m_tolerance )/2, 0]) 
+                translate([ ( g_wall_thickness - m_tolerance )/2 , ( g_wall_thickness - m_tolerance )/2, 0]) 
                 {
                     children();
                 }
@@ -707,6 +716,8 @@ module MakeBox( box )
                     }
                 }
 
+                text_offset = __label_size( m_box_label) * .7;
+
                 difference()
                 {
                     linear_extrude( m_lid_thickness )
@@ -733,11 +744,11 @@ module MakeBox( box )
 
                     if ( !__has_simple_lid() )
                     {
-                        MakeLidText( 4 );
+                        MakeLidText( offset = text_offset );
                     }
                     else if ( !m_box_has_thin_lid )
                     {
-                        MakeLidText( 0, thickness = m_lid_thickness / 2 );
+                        MakeLidText( offset = 0, thickness = m_lid_thickness / 2 );
                     }
                     
                 }
@@ -747,9 +758,9 @@ module MakeBox( box )
                 {
                     intersection()
                     {
-                        MakeStripedGrid( x = __lid_external_size( X ), y = __lid_external_size( Y ), w = 0.5, dx = 0, dy = 1, ratio = 0.5 );
+                        MakeStripedGrid( x = __lid_external_size( X ), y = __lid_external_size( Y ), w = 0.5, dx = 1, dy = 0, ratio = 0.5 );
 
-                        MakeLidText( offset = 4 );                  
+                        MakeLidText( offset = text_offset  );                  
                     }
                 }
 
@@ -760,8 +771,8 @@ module MakeBox( box )
                 {
                     difference()
                     {
-                        MakeLidText( 4 );
-                        MakeLidText( 3 );
+                        MakeLidText( offset = text_offset );
+                        MakeLidText( offset = text_offset - 1 );
                     }
                 }
             }
@@ -826,7 +837,7 @@ module MakeBox( box )
         {
             cutout_y = __is_chit_stack_vertical() ? __component_size( __Y2() ) / 2 : __component_size( __Y2() );
 
-            cutout_x = min ( PARTITION_FINGERS * 2, __compartment_size( __X2() ) * .5 );
+            cutout_x = min ( g_finger_partition_thickness * 2, __compartment_size( __X2() ) * .5 );
             cutout_z = m_box_dimensions[ Z ] - 2.0;
 
             translation = __RotatedResult( _0 = [ __compartment_size( X )/2 - cutout_x/2, 0, __finger_cutouts_bottom() ],
@@ -1041,19 +1052,23 @@ module MakeBox( box )
 
         module MakePartition( axis )
         {
-            start_pos_x = __partition_num_modifier( X ) > -1 ? 0 : __compartment_size( X );
-            start_pos_y = __partition_num_modifier( Y ) > -1 ? 0 : __compartment_size( Y );
+
+            start_pos_x1 = __partition_num_modifier( X ) > -1 ? 0 : __compartment_size( X );
+            start_pos_y1 = __partition_num_modifier( Y ) > -1 ? 0 : __compartment_size( Y );
+
+            start_pos_x2 = __req_single_end_partition() && __component_rotation() == -90 ? __compartment_size( X ) : start_pos_x1;
+            start_pos_y2 = __req_single_end_partition() && __component_rotation() == 180 ? __compartment_size( Y ) : start_pos_y1;
 
             if ( axis == X )
             {
-                translate( [ start_pos_x, 0, 0 ] )
+                translate( [ start_pos_x2, 0, 0 ] )
                 {
                     cube ( [ __partition_thickness( X ), __component_size( Y ), __partition_height( X )  ] );
                 }
             }
             else if ( axis == Y )
             {
-                translate( [ 0, start_pos_y, 0 ] )
+                translate( [ 0, start_pos_y2, 0 ] )
                 {
                     cube ( [ __component_size( X ), __partition_thickness( Y ) , __partition_height( Y ) ] );     
                 }  

@@ -23,23 +23,33 @@ g_b_simple_lids = 0;
 
 // creates the indentation on the bottom of the box 
 //that allows the lid to be put under when in play.
-g_b_fit_lid_underneath = 0; 
+g_b_fit_lid_underneath = 1; 
 
-// total indonesia box interior dimensions: 115 x 115 x 50
-// 
+// this is the outer wall thickness. 
+//Default = 2
+g_wall_thickness = 1;
+
+// this is the thickness of partitions between compartments
+// Default = 1
+g_partition_thickness = 0.5; // default = 1
+
+// this is the width of partitions that are for 
+// inserting fingers to grab the bits.
+// default = 13
+g_finger_partition_thickness = 6; 
 
 data =
 [
     [   "1",
         [
-            [ "box_dimensions", [115, 115, 25.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions", [116, 116, 27.0] ],                       // float f -- default:[ 100, 100, 100]
 
             [ "enabled",        1 ],
             [ "thin_lid",       true ],
             [ "label",
                 [
                     [ "text",   "PAX EMANCIPATION"],
-                    [ "size",   8 ]
+                    [ "size",   5 ]
                 ]
             ],
             [ "visualization",
@@ -51,54 +61,24 @@ data =
 
             [   "components",
                 [
-                    [   "meeples",
-                        [
-                            ["enabled",             0 ],                        // true | false
-                            ["type",                "tokens"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 98.0, 38.0, 24.0] ],      // [float, float, float]
-                            ["num_compartments",    [1, 1] ],                   // [int, int]
-                            ["position",            [0, 0 ] ],                // [float, float, float]
-                            ["rotation",            90 ],
-                        ]
-                    ],
-
                     [   "agents",
                         [
                             ["enabled",             1 ],                        // true | false
-                            ["type",                "tokens"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 55.0, 74.0, 24.0] ],      // [float, float, float]
-                            ["num_compartments",    [1, 1] ],                   // [int, int]
+                            ["type",                ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
+                            ["compartment_size",    [ 56.75, 27, 26.5] ],      // [float, float, float]
+                            ["num_compartments",    [2, 3] ],                   // [int, int]
                             ["position",            [0, 0 ] ],                // [float, float, float]
                             ["rotation",            90 ],
-                            ["label",               
-                                [
-                                    [ "text",   "AGENTS"],
-                                    [ "size",   4 ]
-                                ]],
                         ]
                     ],
 
-                    [   "meeples",
-                        [
-                            ["enabled",             1 ],                        // true | false
-                            ["type",                ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 55.0, 24.0, 24.0] ],      // [float, float, float]
-                            ["num_compartments",    [1, 3] ],                   // [int, int]
-                            ["position",            ["max", 0] ],                // [float, float, float]
-                            ["rotation",            -90 ],
-                            ["label",               
-                                [
-                                    [ "text",   "MEEPLES"],
-                                    [ "size",   4 ]
-                                ]],
-                        ]
-                    ],
+
 
                     [   "ships",
                         [
                             ["enabled",             1 ],                        // true | false
                             ["type",                "chit_stack"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 51.0, 15.0, 24.0] ],      // [float, float, float]
+                            ["compartment_size",    [ 73.0, 15.5, 26.5] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
                             ["position",            [0, "max" ] ],                // [float, float, float]
                             ["rotation",            90 ],
@@ -117,25 +97,19 @@ data =
                             ["shape",               "round"],
                             ["compartment_size",    [ 65.0, 15.0, 15.0] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
-                            ["position",            [0, 75 ] ],                // [float, float, float]
+                            ["position",            [4, 83 ] ],                // [float, float, float]
                             ["rotation",            90 ],
                         ]
                     ],
 
-                    [   "cubes",
+                    [   "dice",
                         [
                             ["enabled",             1 ],                        // true | false
-                            ["type",                ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["label",               
-                                [
-                                    [ "text",   "CUBES"],
-                                    [ "size",   4 ]
-                                ]],
-                            ["shape",               "square"],
-                            ["compartment_size",    [ 30.0, 15.0, 12.0] ],      // [float, float, float]
+                            ["type",                "chit_stack_compact"],      // "cards" | "tokens" | "chit_stack" | "chit_stack_compact" | "chit_stack_vertical" | "" -- default: ""
+                            ["compartment_size",    [ 28, 31, 15] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
-                            ["position",            ["max", "max" ] ],                // [float, float, float]
-                            ["rotation",            90 ],
+                            ["position",            ["max", 83 ] ],                // [float, float, float]
+                            ["rotation",            180 ],
                         ]
                     ],
                 ]
@@ -145,7 +119,7 @@ data =
 
     [   "2",
         [
-            [ "box_dimensions", [26, 115, 25.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions", [27, 116, 25.0] ],                       // float f -- default:[ 100, 100, 100]
 
             [ "enabled",        1 ],
             [ "thin_lid",       true ],
@@ -162,10 +136,10 @@ data =
                     [   "tiles",
                         [
                             ["enabled",             1 ],                        // true | false
-                            ["type",                ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 22.0, 76.0, 24.0] ],      // [float, float, float]
+                            ["type",                "chit_stack_compact"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
+                            ["compartment_size",    [ 25, 86.0, 24.0] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
-                            ["position",            [0, 0 ] ],                // [float, float, float]
+                            ["position",            [0, -6 ] ],                // [float, float, float]
                             ["rotation",            0 ],
                             ["label",               
                                 [
@@ -180,13 +154,13 @@ data =
                         [
                             ["enabled",             1 ],                        // true | false
                             ["type",                ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 22.0, 34.0, 24.0] ],      // [float, float, float]
+                            ["compartment_size",    [ 25, 30.0, 14.0] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
-                            ["position",            [0, 77 ] ],                // [float, float, float]
+                            ["position",            [0, "max" ] ],                // [float, float, float]
                             ["rotation",            90 ],
                             ["label",               
                                 [
-                                    [ "text",   "DICE & E"],
+                                    [ "text",   "DICE"],
                                     [ "size",   4 ],
                                     [ "rotation", 90]
                                 ]],
