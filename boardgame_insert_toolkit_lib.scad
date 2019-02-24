@@ -383,7 +383,7 @@ module MakeBox( box )
         function __notch_length( D ) = m_box_dimensions[ D ] / 5.0;
         function __lid_notch_depth() = m_wall_thickness / 2;
 
-        m_lid_thickness = ( m_box_has_thin_lid ? 0.4 : m_wall_thickness ) - m_tolerance;
+        m_lid_thickness = ( m_box_has_thin_lid ? 0.6 : m_wall_thickness ) - m_tolerance;
 
         function __lid_external_size( D )= D == Z ?     
                                         m_lid_thickness + m_wall_lip_height : 
@@ -650,6 +650,8 @@ module MakeBox( box )
             dx2 = abs( __label_rotation( m_box_label ) ) == 90 ? dy : dx;
             dy2 = abs( __label_rotation( m_box_label ) ) == 90 ? dx : dy;
 
+            thickness = max( 0.6, m_lid_thickness * depth_ratio );
+
             x_count = x / ( w + dx2 );
             y_count = y / ( w + dy2 );
 
@@ -657,9 +659,9 @@ module MakeBox( box )
             {
                 for( j = [ 0: x_count ] )
                 {
-                    translate( [ j * ( w + dx2 ), 0, ( 1 - ratio ) * m_lid_thickness ] )
+                    translate( [ j * ( w + dx2 ), 0, m_lid_thickness - thickness ] )
                     {
-                        cube( [ w, y, m_lid_thickness * ratio ]);
+                        cube( [ w, y, thickness]);
                     }
                 }
             }
@@ -668,9 +670,9 @@ module MakeBox( box )
             {
                 for( j = [ 0: y_count ] )
                 {
-                    translate( [ 0, j * ( w + dy2 ), ( 1 - ratio ) * m_lid_thickness ] )
+                    translate( [ 0, j * ( w + dy2 ), m_lid_thickness - thickness  ] )
                     {
-                        cube( [ x, w, m_lid_thickness * ratio ]);
+                        cube( [ x, w, thickness ]);
                     }
                 }
             }
