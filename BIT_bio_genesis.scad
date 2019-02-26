@@ -42,14 +42,15 @@ data =
 [
     [   "1",
         [
-            [ "box_dimensions", [117, 27, 26.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions", [27.5, 115, 26.0] ],                       // float f -- default:[ 100, 100, 100]
 
             [ "enabled",        1 ],
             [ "thin_lid",       true ],
             [ "label",
                 [
                     [ "text",   "BIOS: GENESIS"],
-                    [ "size",   6 ]
+                    [ "size",   6 ],
+                    ["rotation", 90]
                 ]
             ],
             [ "visualization",
@@ -65,7 +66,7 @@ data =
                         [
                             ["enabled",             1 ],                        // true | false
                             ["type",                ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 114, 24.0, 17.0] ],      // [float, float, float]
+                            ["compartment_size",    [ 24.5, 112, 17.0] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
                             ["position",            [0, "max" ] ],                // [float, float, float]
                             ["rotation",            0 ],
@@ -73,7 +74,7 @@ data =
                                 [
                                     [ "text",   "CUBES"],
                                     [ "size",   4 ],
-                                    [ "rotation", 0]
+                                    [ "rotation", 90]
                                 ]],
                         ]
                     ]
@@ -83,7 +84,7 @@ data =
     ],
     [   "2",
         [
-            [ "box_dimensions", [57, 92, 26.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions", [57, 88, 26.0] ],                       // float f -- default:[ 100, 100, 100]
 
             [ "enabled",        1 ],
             [ "thin_lid",       true ],
@@ -101,7 +102,7 @@ data =
                             ["enabled",             1 ],                        // true | false
                             ["type",                "chit_stack_compact"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_compact" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",               "round"],
-                            ["compartment_size",    [ 36.0, 17.0, 16.0] ],      // [float, float, float]
+                            ["compartment_size",    [ 37.0, 17.0, 16.0] ],      // [float, float, float]
                             ["num_compartments",    [1, 4] ],                   // [int, int]
                             ["position",            [-6, 0 ] ],                // [float, float, float]
                             ["rotation",            90 ],
@@ -111,7 +112,7 @@ data =
                         [
                             ["enabled",             1 ],                        // true | false
                             ["type",                ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 17.0, 71.0, 16.0] ],      // [float, float, float]
+                            ["compartment_size",    [ 16.0, 85.0, 23.5] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
                             ["position",            ["max", 0] ],                // [float, float, float]
                             ["rotation",            90 ],
@@ -127,7 +128,7 @@ data =
                         [
                             ["enabled",             1 ],                        // true | false
                             ["type",                "tokens"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 54.0, 17.5, 16.0] ],      // [float, float, float]
+                            ["compartment_size",    [ 37.0, 15, 23.5] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
                             ["position",            [0, "max"] ],                // [float, float, float]
                             ["rotation",            -90 ],

@@ -38,18 +38,20 @@ g_partition_thickness = 0.5; // default = 1
 // default = 13
 g_finger_partition_thickness = 8; 
 
+// depth: 46mm
+
 data =
 [
     [   "1",
         [
-            [ "box_dimensions", [116, 116, 27.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions", [57, 116, 22] ],                       // float f -- default:[ 100, 100, 100]
 
             [ "enabled",        1 ],
             [ "thin_lid",       true ],
             [ "label",
                 [
-                    [ "text",   "PAX EMANCIPATION"],
-                    [ "size",   6 ]
+                    [ "text",   "GREENLAND"],
+                    [ "size",   5 ]
                 ]
             ],
             [ "visualization",
@@ -65,51 +67,15 @@ data =
                         [
                             ["enabled",             1 ],                        // true | false
                             ["type",                ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 56.25, 26.75, 26.5] ],      // [float, float, float]
-                            ["num_compartments",    [2, 3] ],                   // [int, int]
-                            ["position",            [0, 0 ] ],                // [float, float, float]
-                            ["rotation",            90 ],
-                        ]
-                    ],
-
-
-
-                    [   "ships",
-                        [
-                            ["enabled",             1 ],                        // true | false
-                            ["type",                "chit_stack"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 69.0, 15.5, 26.5] ],      // [float, float, float]
-                            ["num_compartments",    [1, 1] ],                   // [int, int]
-                            ["position",            [0, 97.5 ] ],                // [float, float, float]
-                            ["rotation",            90 ],
+                            ["compartment_size",    [ 54, 27.8, 21.5] ],      // [float, float, float]
+                            ["num_compartments",    [1, 4] ],                   // [int, int]
+                            ["position",            [0, "center" ] ],                // [float, float, float]
+                            ["rotation",            0 ],
                             ["label",               
                                 [
-                                    [ "text",   "SHIPS"],
+                                    [ "text",   "MEEPLE"],
                                     [ "size",   4 ]
                                 ]],
-                        ]
-                    ],
-
-                    [   "tokens",
-                        [
-                            ["enabled",             1 ],                        // true | false
-                            ["type",                "chit_stack"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["shape",               "round"],
-                            ["compartment_size",    [ 65.0, 15.0, 15.0] ],      // [float, float, float]
-                            ["num_compartments",    [1, 1] ],                   // [int, int]
-                            ["position",            [4, 82 ] ],                // [float, float, float]
-                            ["rotation",            90 ],
-                        ]
-                    ],
-
-                    [   "cubes",
-                        [
-                            ["enabled",             1 ],                        // true | false
-                            ["type",                "chit_stack_compact"],      // "cards" | "tokens" | "chit_stack" | "chit_stack_compact" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 27, 32, 15] ],      // [float, float, float]
-                            ["num_compartments",    [1, 1] ],                   // [int, int]
-                            ["position",            ["max", 82 ] ],                // [float, float, float]
-                            ["rotation",            180 ],
                         ]
                     ],
                 ]
@@ -119,7 +85,7 @@ data =
 
     [   "2",
         [
-            [ "box_dimensions", [27, 110, 25.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions", [57, 116, 25.5] ],                      // float f -- default:[ 100, 100, 100]
 
             [ "enabled",        1 ],
             [ "thin_lid",       true ],
@@ -133,20 +99,45 @@ data =
 
             [   "components",
                 [
-                    [   "tiles",
+                    [   "tokens r",
+                        [
+                            ["enabled",             1],                        // true | false
+                            ["type",                "chit_stack_vertical"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
+                            ["shape",               "round"],
+                            ["compartment_size",    [ 15.75, 15.75, 25.5] ],      // [float, float, float]
+                            ["extra_spacing",       [0,.2]],                     // [float,float]
+                            ["num_compartments",    [1, 5] ],                   // [int, int]
+                            ["position",            [-9, 1 ] ],                // [float, float, float]
+                            ["rotation",            90 ],
+                        ]
+                    ],
+                    [   "tokens l",
+                        [
+                            ["enabled",             1],                        // true | false
+                            ["type",                "chit_stack_vertical"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
+                            ["shape",               "round"],
+                            ["compartment_size",    [ 15.75, 15.75, 25.5] ],      // [float, float, float]
+                            ["extra_spacing",       [0,.2]],                     // [float,float]
+                            ["num_compartments",    [1, 5] ],                   // [int, int]
+                            ["position",            [40, 1 ] ],                // [float, float, float]
+                            ["rotation",            -90 ],
+                        ]
+                    ],
+                    [   "chits",
                         [
                             ["enabled",             1 ],                        // true | false
-                            ["type",                "chit_stack_compact"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 24, 80.0, 24.0] ],      // [float, float, float]
+                            ["type",                ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
+                            ["compartment_size",    [ 54, 18, 25] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
-                            ["position",            [0, -8 ] ],                // [float, float, float]
-                            ["rotation",            0 ],
+                            ["position",            [0, "max"] ],                // [float, float, float]
+                            ["rotation",            90 ],
                             ["label",               
                                 [
-                                    [ "text",   "TILES"],
+                                    [ "text",   "CHITS"],
                                     [ "size",   4 ],
-                                    [ "rotation", 90]
-                                ]],
+                                    [ "rotation", 0]
+                                ]
+                            ],
                         ]
                     ],
 
@@ -154,25 +145,42 @@ data =
                         [
                             ["enabled",             1 ],                        // true | false
                             ["type",                ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 24, 30.0, 14.0] ],      // [float, float, float]
+                            ["compartment_size",    [ 23, 79.5, 25] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
-                            ["position",            [0, "max" ] ],                // [float, float, float]
+                            ["position",            ["center", 0 ] ],                // [float, float, float]
                             ["rotation",            90 ],
                             ["label",               
                                 [
                                     [ "text",   "DICE"],
                                     [ "size",   4 ],
                                     [ "rotation", 90]
-                                ]],
+                                ]
+                            ],
                         ]
                     ],
 
+                    [   "big meeple",
+                        [
+                            ["enabled",             1 ],                        // true | false
+                            ["type",                "chit_stack"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
+                            ["compartment_size",    [ 54, 11, 22.5] ],      // [float, float, float]
+                            ["num_compartments",    [1, 1] ],                   // [int, int]
+                            ["position",            [ "center", 83 ] ],                // [float, float, float]
+                            ["rotation",            90 ],
 
+                            ["label",               
+                                [
+                                    [ "text",   "HUNTERS"],
+                                    [ "size",   4 ],
+                                    [ "rotation", 0]
+                                ]
+                            ],
+                        ]
+                    ],
                 ]
-            ],            
+            ]     
         ]
-    ],  
-    
+    ],
 ];
 
 
