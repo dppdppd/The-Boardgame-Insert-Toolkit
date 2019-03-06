@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "1.14";
+VERSION = "1.13";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://www.thingiverse.com/thing:3405465\n\n\tCopyright 2019 MysteryDough\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn=100;
@@ -319,11 +319,11 @@ module MakeBox( box )
         function __req_finger_cutouts() = __is_cards() || __is_chit_stack_vertical();
 
         // the bottom of the finger cutout
-        function __finger_cutouts_bottom() = __compartment_size( Z ) - m_box_dimensions[ Z ];
+        function __finger_cutouts_bottom() = -m_wall_thickness;//__compartment_size( Z ) - m_box_dimensions[ Z ];
 
         ///////////
     
-        function __partition_height_scale( D ) = D == __Y2() ? __req_lower_partitions() ? min( 0.5, (__compartment_size( X ) / __compartment_size( Z )) /2) : 1.00 : 1.00;
+        function __partition_height_scale( D ) = D == __Y2() ? __req_lower_partitions() ? 0.5 : 1.00 : 1.00;
 
         // Amount of curvature represented as a percentage of the __wall height.
         m_bottom_curve_height_scale = 0.50;
@@ -528,17 +528,19 @@ module MakeBox( box )
 
                 // finger cutouts
                 if ( __req_finger_cutouts() )
-                {
-                    difference()
+                { 
+                   // intersection()
                     {
-                        InEachCompartment( y_modify = 0, only_y = false, only_x = true  )
+                        cutout_undercut = m_box_dimensions[ Z ] - __compartment_size( Z );
+
+                        translate( [0,0, -cutout_undercut] )
+                        {
+                           // cube( [ __component_size( X ), __component_size( Y ), m_box_dimensions[ Z ]] );
+                        }
+                    
+                        InEachCompartment( y_modify = __partition_num_modifier( __Y2() ), only_y = false, only_x = false  )
                         {
                             MakeFingerCutout();
-                        }
-
-                        InEachCompartment( y_modify = 0, only_y = false, only_x = false  )
-                        {
-                            MakeFingerCutoutSupports();
                         }
                     }
 
@@ -845,7 +847,7 @@ module MakeBox( box )
             n_x = __compartments_num( X );
             n_y = __compartments_num( Y );
 
-            for ( x = [ 0: n_x - 1] )
+        for ( x = [ 0: n_x - 1] )
             {
                 x_pos = ( __compartment_size( X ) + __partition_thickness( X ) ) * x;
 
@@ -864,15 +866,28 @@ module MakeBox( box )
 
         module MakeFingerCutout()
         {
-            cutout_y = __is_chit_stack_vertical() ? __component_size( __Y2() ) / 1.3 : __component_size( __Y2() );
+            start_pos_x1 = __partition_num_modifier( X ) > -1 ? 0 : __compartment_size( X );
+            start_pos_y1 = __partition_num_modifier( Y ) > -1 ? 0 : __compartment_size( Y );
+
+            cutout_y = __is_chit_stack_vertical() ? __component_size( __Y2() ) / 1.3 : __partition_thickness( __Y2() );
 
             cutout_x = min ( g_finger_partition_thickness * 2, __compartment_size( __X2() ) * .5 );
-            cutout_z = m_box_dimensions[ Z ] + 2.0;
+            cutout_z = m_box_dimensions[ Z ];
 
-            translation = __RotatedResult( _0 = [ __compartment_size( X )/2 - cutout_x/2, 0, __finger_cutouts_bottom() ],
-                                         _90 = [ 0, __compartment_size( Y )/2 - cutout_x/2, __finger_cutouts_bottom() ],
-                                         _180 = [ __compartment_size( X )/2 - cutout_x/2, 0 , __finger_cutouts_bottom() ],
-                                         _n90 = [ 0, __compartment_size( Y )/2 - cutout_x/2, __finger_cutouts_bottom() ] );
+            cutout_undercut = m_box_dimensions[ Z ] - __compartment_size( Z );
+
+            translation = __RotatedResult( _0 = [ __compartment_size( X )/2 - cutout_x/2, 
+                                                start_pos_y1 + __partition_thickness( Y )/2 - cutout_y/2, 
+                                                0 ],
+                                         _90 = [ start_pos_x1+ __partition_thickness( X )/2 - cutout_y/2, 
+                                                __compartment_size( Y )/2 - cutout_x/2, 
+                                                0 ],
+                                         _180 = [ ( __compartment_size( X ) - cutout_x ) / 2, 
+                                                start_pos_y1 + __partition_thickness( Y )/2 - cutout_y/2, 
+                                                0 ],
+                                         _n90 = [ start_pos_x1+ __partition_thickness( X )/2 - cutout_y/2, 
+                                                __compartment_size( Y )/2 - cutout_x/2, 
+                                                0 ] );
 
             cube_rotated = __RotatedResult( _0 = [ cutout_x , cutout_y, cutout_z ],
                                             _90 = [ cutout_y, cutout_x , cutout_z ],
@@ -880,27 +895,12 @@ module MakeBox( box )
                                             _n90 = [ cutout_y, cutout_x , cutout_z ] );
 
 
-            translate( translation )
+            translate([0,0, -cutout_undercut ] )
             {
-                cube( cube_rotated );
-            }
-        }
-
-        module MakeFingerCutoutSupports()
-        {
-
-            start_pos_x1 = __partition_num_modifier( X ) > -1 ? __partition_thickness( X ) : 0 ;
-            start_pos_y1 = __partition_num_modifier( Y ) > -1 ? __partition_thickness( Y ) : 0 ;
-
-            start_pos_x2 = __req_single_end_partition() && __component_rotation() == -90 ? __compartment_size( X ) : start_pos_x1;
-            start_pos_y2 = __req_single_end_partition() && __component_rotation() == 180 ? __compartment_size( Y ) : start_pos_y1;
-
-            cutout_x = min ( g_finger_partition_thickness * 2, __compartment_size( __X2() ) * .5 );
-            cutout_z = m_box_dimensions[ Z ] - __component_size( Z ) ;
-
-            translate( [ start_pos_x1 + __compartment_size( X )/2 - cutout_x/2, start_pos_y1 + __compartment_size( Y )/2 - cutout_x/2, __finger_cutouts_bottom() ] )
-            {
-                cube( [ cutout_x , cutout_x, cutout_z ] );
+                translate( translation )
+                {
+                    cube( cube_rotated );
+                }
             }
         }
 
@@ -1069,7 +1069,7 @@ module MakeBox( box )
 
         module MakeLabel( x = 0, y = 0 )
         {
-            z_pos = - __label_depth( m_component_label );
+            z_pos = __req_finger_cutouts() ? __finger_cutouts_bottom() - __label_depth( m_component_label ) : - __label_depth( m_component_label );
 
             translate( [ __compartment_size(X)/2, __compartment_size(Y)/2, z_pos] )
             {
@@ -1091,12 +1091,12 @@ module MakeBox( box )
         {
             InEachCompartment( only_x = true, x_modify = __partition_num_modifier( __X2() ) )   
             {
-                MakePartition( axis = __X2() );  
+                color( rands(0,1,3), g_b_visualization ? 0.5 : 1 ) MakePartition( axis = __X2() );  
             }
 
             InEachCompartment( only_y = true, y_modify = __partition_num_modifier( __Y2() ) )  
             {
-                MakePartition( axis = __Y2() );  
+                color( rands(0,1,3), g_b_visualization ? 0.5 : 1 ) MakePartition( axis = __Y2() );  
             }
 
 
