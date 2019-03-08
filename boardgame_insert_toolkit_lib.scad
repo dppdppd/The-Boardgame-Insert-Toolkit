@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "1.14";
+VERSION = "1.15";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://www.thingiverse.com/thing:3405465\n\n\tCopyright 2019 MysteryDough\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn=100;
@@ -302,7 +302,8 @@ module MakeBox( box )
         /////////
 
         function __is_plain() = __component_type() == "generic";
-        function __is_cards() = __component_type() == "cards";
+        function __is_cards() = __component_type() == "cards" || __is_cards_compact();
+        function __is_cards_compact() = __component_type() == "cards_compact";
         function __is_tokens() = __component_type() == "tokens";
         function __is_chit_stack() = __component_type() == "chit_stack" || __component_type() == "chit_stack_compact";
         function __is_chit_stack_compact() = __component_type() == "chit_stack_compact";
@@ -311,8 +312,8 @@ module MakeBox( box )
         function __req_thick_partitions() = __is_cards() || __is_chit_stack() || __is_chit_stack_vertical() || __is_chit_stack_compact();
         function __req_lower_partitions() = __is_chit_stack() || __is_chit_stack_compact() ;
         function __req_bottoms() = __is_tokens() || ( __is_chit_stack() && __component_shape() != "square" );
-        function __req_single_end_partition() = ( __is_cards() && __compartments_num( __Y2() ) == 1 ) || __is_chit_stack_vertical() || __is_chit_stack_compact();
-        function __req_double_end_partition() = __is_chit_stack();
+        function __req_single_end_partition() = ( __is_cards_compact() && __compartments_num( __Y2() ) == 1 ) || __is_chit_stack_vertical() || __is_chit_stack_compact();
+        function __req_double_end_partition() = __is_chit_stack() || ( __is_cards() && !__is_cards_compact());
         function __req_label() = m_component_label != "";
 
                 // Determines whether finger cutouts are made. (For cards)
