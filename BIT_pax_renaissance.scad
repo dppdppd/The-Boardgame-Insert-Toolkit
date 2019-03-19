@@ -96,7 +96,7 @@ data =
 
     [   "2",
         [
-            [ "box_dimensions", [92, 58, 33.0] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions", [88, 58, 33.0] ],                       // float f -- default:[ 100, 100, 100]
 
             [ "enabled",        1 ],
             [ "thin_lid",       true ],
@@ -114,7 +114,7 @@ data =
                         [
                             ["enabled",             1 ],                        // true | false
                             ["type",                ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 29.25, 55, 32.5] ],      // [float, float, float]
+                            ["compartment_size",    [ 28, 55, 32.5] ],      // [float, float, float]
                             ["num_compartments",    [3, 1] ],                   // [int, int]
                             ["position",            [0, 0 ] ],                // [float, float, float]
                             ["rotation",            0 ],

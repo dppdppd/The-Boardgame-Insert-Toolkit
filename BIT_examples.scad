@@ -40,13 +40,13 @@ data =
 [
     [   "1",
         [
-            [ "box_dimensions",                             [90.0, 100.0, 30.0] ],      // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions",                             [150.0, 100.0, 30.0] ],      // float f -- default:[ 100, 100, 100]
             [ "enabled",                                    true ],
             [   "components",
                 [
-                    [   "cards",
+                    [   "cards comaact",
                         [
-                            ["type",                        "cards"],                   // "cards" | "tokens" | "chit_stack" | "" -- default: ""
+                            ["type",                        "cards_compact"],                   // "cards" | "tokens" | "chit_stack" | "" -- default: ""
                             ["compartment_size",            [ 40, 40.0, 20.0] ],        // float f -- default:[ 10, 10, 10]
                             ["num_compartments",            [1,2] ],                   // int i -- default: [1, 1]
                             ["enabled",                     true ],                     // true | false
@@ -58,6 +58,17 @@ data =
                    [   "cards",
                         [
                             ["type",                        "cards"],                   // "cards" | "tokens" | "chit_stack" | "" -- default: ""
+                            ["compartment_size",            [ 40, 40.0, 20.0] ],        // float f -- default:[ 10, 10, 10]
+                            ["num_compartments",            [1,2] ],                   // int i -- default: [1, 1]
+                            ["enabled",                     true ],                     // true | false
+                            ["rotation",                    0 ],                       
+                            ["position",                    ["center","center"]]        // float f | "center" | "max" -- default: "center"
+                        ]
+                    ],
+
+                   [   "cards",
+                        [
+                            ["type",                        "cards_compact"],                   // "cards" | "tokens" | "chit_stack" | "" -- default: ""
                             ["compartment_size",            [ 40, 40.0, 20.0] ],        // float f -- default:[ 10, 10, 10]
                             ["num_compartments",            [1,2] ],                   // int i -- default: [1, 1]
                             ["enabled",                     true ],                     // true | false
@@ -133,7 +144,7 @@ data =
     ],
     [   "a hex tile stack box",
         [
-            [ "box_dimensions",                             [60.0, 140.0, 30.0] ], 
+            [ "box_dimensions",                             [140.0, 140.0, 30.0] ], 
             [ "enabled",                                    true ],
            [ "lid",                                        false ],
 
@@ -144,7 +155,19 @@ data =
                             ["type",                        "chit_stack"],
                             ["compartment_size",            [ 20, 40.0, 20.0] ], 
                             ["num_compartments",            [2, 2] ], 
-                            ["shape",                       "hex"],
+                            ["shape",                       "hex_rotated"],
+                            ["rotation",                    0],
+                            ["position",                    [0,0]]
+                        ]
+                    ],
+                    [   "my chit stack",
+                        [
+                            ["type",                        "chit_stack_compact"],
+                            ["compartment_size",            [ 20, 20.0, 20.0] ], 
+                            ["num_compartments",            [2, 2] ], 
+                            ["shape",                       "hex_rotated"],
+                            ["rotation",                    90],
+                            ["position",                    ["max","max"]]
                         ]
                     ],
                 ]
@@ -174,7 +197,7 @@ data =
 
     [   "a vertical chit stack",
         [
-            [ "box_dimensions",                             [40.0, 40.0, 50.0] ], 
+            [ "box_dimensions",                             [40.0, 220.0, 50.0] ], 
             [ "enabled",                                    true ],
 
             [   "components",
@@ -183,11 +206,32 @@ data =
                         [
                             ["type",                        "chit_stack_vertical"],
                             ["compartment_size",            [ 30, 30.0, 30.0] ], 
-                            ["num_compartments",            [1, 1] ],
+                            ["num_compartments",            [1, 2] ],
                             ["shape",                       "hex"],
-                            ["position",                    ["center", -10]],
+                            ["position",                    [ -12, 0]],
+                            ["rotation",                    90]
                         ]
                     ],
+                    [   "my chit stack",
+                        [
+                            ["type",                        "chit_stack_vertical"],
+                            ["compartment_size",            [ 30, 30.0, 30.0] ], 
+                            ["num_compartments",            [1, 2] ],
+                            ["shape",                       "round"],
+                            ["position",                    [ -12, 70]],
+                            ["rotation",                    90]
+                        ]
+                    ],
+                    [   "my chit stack",
+                        [
+                            ["type",                        "chit_stack_vertical"],
+                            ["compartment_size",            [ 30, 30.0, 30.0] ], 
+                            ["num_compartments",            [1, 2] ],
+                            ["position",                    [ -12, 140]],
+                            ["rotation",                    90]
+                        ]
+                    ],
+                                   
                 ]
             ]
         ]
@@ -216,6 +260,28 @@ data =
                             ["rotation",                    180],
                         ]
                     ],
+                ]
+            ]
+        ]
+    ],    
+    [   "decahedron",
+        [
+            [ "box_dimensions",                             [140.0, 140.0, 30.0] ], 
+            [ "enabled",                                    true ],
+           [ "lid",                                        false ],
+
+            [   "components",
+                [
+                    [   "my chit stack",
+                        [
+                            ["type",                        "decahedron"],
+                            ["compartment_size",            [ 20, 20.0, 22.0] ], 
+                            ["num_compartments",            [2, 2] ], 
+                            ["rotation",                    0],
+                            ["position",                    [0,0]]
+                        ]
+                    ],
+
                 ]
             ]
         ]

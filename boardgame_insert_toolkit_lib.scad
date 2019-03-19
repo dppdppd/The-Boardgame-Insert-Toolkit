@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "1.15";
+VERSION = "1.16";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://www.thingiverse.com/thing:3405465\n\n\tCopyright 2019 MysteryDough\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn=100;
@@ -295,8 +295,14 @@ module MakeBox( box )
         function __Y2() = __component_rotated_90() ? X : Y;
         function __RotatedResult( _0 = 0, _90 = 0, _180 = 0, _n90 = 0 ) = ( __component_rotation() == 90 ) ? _90 : ( __component_rotation() == 180 ) ? _180 : ( __component_rotation() == -90 ) ? _n90 : _0 ;
         function __component_shape() = __value( component, "shape", default = "square" );
+        function __is_shape_square() = __component_shape() == "square";
+        function __is_shape_round() = __component_shape() == "round";       
+        function __is_shape_hex() = __component_shape() == "hex" || __component_shape() == "hex_rotated";
+        function __is_shape_hex_rotated() = __component_shape() == "hex_rotated";
+
         function __component_type() = __value( component, "type", default = "generic" );
-        function __component_extra_spacing( D ) = __value( component, "extra_spacing", default = [0.0, 0.0] )[ D ];
+        function __partition_size_adjustment( D ) = __value( component, "partition_size_adjustment", default = [0.0, 0.0] )[ D ];
+        function __partition_height_adjustment( D ) = __value( component, "partition_height_adjustment", default = [0.0, 0.0] )[ D ];       
         function __is_component_enabled() = __value( component, "enabled", default = true);
 
         /////////
@@ -308,6 +314,7 @@ module MakeBox( box )
         function __is_chit_stack() = __component_type() == "chit_stack" || __component_type() == "chit_stack_compact";
         function __is_chit_stack_compact() = __component_type() == "chit_stack_compact";
         function __is_chit_stack_vertical() = __component_type() == "chit_stack_vertical";
+        function __is_dice() = __component_type() == "decahedron";
 
         function __req_thick_partitions() = __is_cards() || __is_chit_stack() || __is_chit_stack_vertical() || __is_chit_stack_compact();
         function __req_lower_partitions() = __is_chit_stack() || __is_chit_stack_compact() ;
@@ -324,7 +331,7 @@ module MakeBox( box )
 
         ///////////
     
-        function __partition_height_scale( D ) = D == __Y2() ? __req_lower_partitions() ? min( 0.5, (__compartment_size( X ) / __compartment_size( Z )) /2) : 1.00 : 1.00;
+        function __partition_height_scale( D ) = D == __Y2() ? __req_lower_partitions() ? 0.5 : 1.00 : 1.00;
 
         // Amount of curvature represented as a percentage of the __wall height.
         m_bottom_curve_height_scale = 0.50;
@@ -356,7 +363,7 @@ module MakeBox( box )
         function __component_position_max( D ) = __component_position( D ) + __component_size( D );
 
         // The thickness of the __compartment __partitions.
-        function __partition_thickness( D ) = ( D == __Y2() ) && __req_thick_partitions() ? g_finger_partition_thickness + __component_extra_spacing( D ): g_partition_thickness + __component_extra_spacing( D );
+        function __partition_thickness( D ) = ( D == __Y2() ) && __req_thick_partitions() ? g_finger_partition_thickness + __partition_size_adjustment( D ): g_partition_thickness + __partition_size_adjustment( D );
 
         // whether to add __partitions on the __box edges.
         function __partition_num_modifier( D ) = ( D == __Y2() ) ? 
@@ -379,7 +386,7 @@ module MakeBox( box )
         function __component_size( D )= ( D == Z ) ? __compartment_size( Z ) : ( __compartment_size( D )* __compartments_num( D )) + ( __partitions_num( D )* __partition_thickness( D ));
 
         // clamp __partition heights
-        function __partition_height( D ) = __compartment_size( Z ) * __partition_height_scale( D );
+        function __partition_height( D ) = __compartment_size( Z ) * __partition_height_scale( D ) + __partition_height_adjustment( D );
 
         function __notch_length( D ) = m_box_dimensions[ D ] / 5.0;
         function __lid_notch_depth() = m_wall_thickness / 2;
@@ -452,23 +459,23 @@ module MakeBox( box )
             }
         }
 
-        module MakeLidNotch( extra_height = 0, extra_depth = 0, offset = 0 )
+        module MakeLidNotch( height = 0, depth = 0, offset = 0 )
         {
             translate( [ offset, offset, 0 ] )
             {
                 cube( [  m_box_dimensions[ X ] - ( 2 * offset ),
-                        __lid_notch_depth() + extra_depth, 
-                        m_wall_lip_height + extra_height ] );   
+                        __lid_notch_depth() + depth, 
+                        m_wall_lip_height + height ] );   
 
-                cube( [  __lid_notch_depth() + extra_depth,
+                cube( [  __lid_notch_depth() + depth,
                         m_box_dimensions[ Y ] - ( 2 * offset ),
-                        m_wall_lip_height + extra_height ] ); 
+                        m_wall_lip_height + height ] ); 
             }
         }
 
-        module MakeLidNotches( extra_height = 0, extra_depth = 0, offset = 0 )
+        module MakeLidNotches( height = 0, depth = 0, offset = 0 )
         {
-                MakeLidNotch( extra_height = extra_height, extra_depth = extra_depth, offset = offset );
+                MakeLidNotch( height = height, depth = depth, offset = offset );
 
                 center = [ m_box_dimensions[ X ] / 2, m_box_dimensions[ Y ] / 2, 0];
 
@@ -476,7 +483,7 @@ module MakeBox( box )
                 {
                     MirrorAboutPoint( [0,1,0], [ m_box_dimensions[ X ] / 2, m_box_dimensions[ Y ] / 2, 0] )
                     {                  
-                        MakeLidNotch( extra_height = extra_height, extra_depth = extra_depth, offset = offset );
+                        MakeLidNotch( height = height, depth = depth, offset = offset );
                     }
                 }
 
@@ -513,9 +520,9 @@ module MakeBox( box )
             {
                 // 'carve-outs' are the big shapes of the 'components.' Each is then subdivided
                 // by adding partitions.
-                cube([  __component_size( X ), 
-                        __component_size( Y ), 
-                        __component_size( Z )]);
+
+                CarveOutCompartment();
+                
             }
             else if ( m_is_component_additions )
             {
@@ -537,14 +544,24 @@ module MakeBox( box )
                             MakeFingerCutout();
                         }
 
-                        InEachCompartment( y_modify = 0, only_y = false, only_x = false  )
+                        if ( !__is_chit_stack_vertical() )
                         {
-                            MakeFingerCutoutSupports();
+                            InEachCompartment( y_modify = 0, only_y = false, only_x = false  )
+                            {
+                                MakeFingerCutoutSupports();
+                            }
                         }
                     }
-
                 }
-
+                else if ( __is_dice() )
+                {
+                    translate( [ 0, 0, __component_size( Z ) / 2] )
+                    {
+                        cube([  __component_size( X ), 
+                                __component_size( Y ), 
+                                __component_size( Z ) / 2]);
+                    }
+                }
                                 // labels
                 if ( __req_label() )
                 {
@@ -569,7 +586,7 @@ module MakeBox( box )
                     {
                         vertical_clearance = 1.0 + m_tolerance;
 
-                        MakeLidNotches( extra_height = vertical_clearance, extra_depth = m_tolerance );
+                        MakeLidNotches( height = vertical_clearance, depth = m_tolerance );
 
                         hull()
                         {
@@ -872,8 +889,8 @@ module MakeBox( box )
 
             translation = __RotatedResult( _0 = [ __compartment_size( X )/2 - cutout_x/2, 0, __finger_cutouts_bottom() ],
                                          _90 = [ 0, __compartment_size( Y )/2 - cutout_x/2, __finger_cutouts_bottom() ],
-                                         _180 = [ __compartment_size( X )/2 - cutout_x/2, 0 , __finger_cutouts_bottom() ],
-                                         _n90 = [ 0, __compartment_size( Y )/2 - cutout_x/2, __finger_cutouts_bottom() ] );
+                                         _180 = [ __compartment_size( X )/2 - cutout_x/2, __partition_thickness( Y ) , __finger_cutouts_bottom() ],
+                                         _n90 = [ __partition_thickness( X ), __compartment_size( Y )/2 - cutout_x/2, __finger_cutouts_bottom() ] );
 
             cube_rotated = __RotatedResult( _0 = [ cutout_x , cutout_y, cutout_z ],
                                             _90 = [ cutout_y, cutout_x , cutout_z ],
@@ -955,14 +972,14 @@ module MakeBox( box )
 
         module MakeBottoms()
         {
-            $fn = __component_shape() == "hex" ? 6 : 100;
+            $fn = __is_shape_hex() ? 6 : 100;
 
-            r = __compartment_size( __X2() )/2;
+            r = __is_shape_hex() ? __compartment_size( __X2() ) / 2 / cos(30) : __compartment_size( __X2() ) / 2;
  
             translation = __RotatedResult( _0 = [ 0, __partition_thickness( Y ), 0 ],
                                                 _90 = [ __partition_thickness( X ), 0, 0, ],
-                                                _180 = [ 0, __partition_thickness( Y ), 0 ],
-                                                _n90 = [ __partition_thickness( X ), 0, 0 ] );
+                                                _180 = [ 0, 0, 0 ],
+                                                _n90 = [ 0, 0, 0 ] );
 
 
             translate( translation )
@@ -971,16 +988,16 @@ module MakeBox( box )
                 { 
                     // blocks
 
-                cube_rotated = __RotatedResult( _0 = [ r, __compartment_size( Y ), r ],
-                                                _90 = [ __compartment_size( X ), r, r ],
-                                                _180 = [ r, __compartment_size( Y ), r ],
-                                                _n90 = [ __compartment_size( X ), r, r ] );
+                    cube_rotated = __RotatedResult( _0 = [ r, __compartment_size( Y ), r ],
+                                                    _90 = [ __compartment_size( X ), r, r ],
+                                                    _180 = [ r, __compartment_size( Y ), r ],
+                                                    _n90 = [ __compartment_size( X ), r, r ] );
 
 
-                cube_translated = __RotatedResult( _0 = [ 0, 0, 0 ],
-                                                _90 = [ 0, 0, 0, ],
-                                                _180 = [ __compartment_size( X ) - r, 0, 0 ],
-                                                _n90 = [ 0, __compartment_size( Y ) - r, 0 ] );
+                    cube_translated = __RotatedResult( _0 = [ 0, 0, 0 ],
+                                                    _90 = [ 0, 0, 0, ],
+                                                    _180 = [ __compartment_size( X ) - r, 0, 0 ],
+                                                    _n90 = [ 0, __compartment_size( Y ) - r, 0 ] );
 
                     cube ( [ __compartment_size( X ), __compartment_size( Y ), __compartment_size( Z ) / 2 ] );
                     
@@ -991,20 +1008,29 @@ module MakeBox( box )
 
                         cylinder_translation = __RotatedResult( _0 = [ r , __compartment_size( Y ) , r ],
                                                                 _90 = [ 0 , (__compartment_size( Y ) )/2 , r ],
-                                                                _180 = [ r , __compartment_size( Y ) , r ],
+                                                                _180 = [ r , __compartment_size( Y ), r ],
                                                                 _n90 = [ 0 , (__compartment_size( Y ) )/2 , r ] );
 
                         translate( cylinder_translation )
                         {
-                            cylinder_rotation = __RotatedResult( _0 = [ 1, 0, 0 ],
-                                                                _90 = [ 0, 1, 0, ],
-                                                                _180 = [ 1, 0, 0 ],
-                                                                _n90 = [ 0, 1, 0 ] );
+                            cylinder_rotation = __RotatedResult( _0 = 0,
+                                                                _90 = 90,
+                                                                _180 = 0,
+                                                                _n90 = 90 );
 
-                            rotate( 90, cylinder_rotation )
+                            // respect "rotation'
+                            rotate( cylinder_rotation, [ 0, 0, 1])
                             {
-                                cylinder(h = __compartment_size( __Y2() ), r1 = r, r2 = r );  
-                            } 
+                                // lay the hex down
+                                rotate( 90, [ 1, 0, 0 ] )
+                                {
+                                    // do we want hex point down?
+                                    rotate( __is_shape_hex_rotated() ? 30 : 0, [ 0, 0, 1])
+                                    {
+                                        cylinder(h = __compartment_size( __Y2() ), r1 = r, r2 = r );  
+                                    }
+                                } 
+                            }
                         }
 
                         // midpoint--up. clear the rest of the compartment
@@ -1017,72 +1043,118 @@ module MakeBox( box )
             }    
         }
 
+        module CarveOutCompartment()
+        {
+            if ( __is_chit_stack_vertical() )
+            {
+                InEachCompartment()
+                {
+                    ShapeCompartment();
+                }
+            }
+            else if ( __is_dice() )
+            {
+                InEachCompartment()
+                {
+                    ShapeDiceCompartment();   
+                }
+            }
+            else
+            {
+                cube([  __component_size( X ), 
+                        __component_size( Y ), 
+                        __component_size( Z )]);
+            }
+        }
+
+
+        module ShapeDiceCompartment()
+        {
+            r = __compartment_smallest_dimension()/2 + m_tolerance;
+            h = __compartment_size( Z ) / 2;
+
+            cylinder_translation = __RotatedResult( _0 = [ r , r, 0 ],
+                                                    _90 = [ r, r , 0 ],
+                                                    _180 = [ r , r , 0 ],
+                                                    _n90 = [ r, r , 0 ] );
+            translate( cylinder_translation )
+            {
+                rotate( 18, [0, 0, 1] )
+                {
+                    cylinder(h = h, r1 = 0, r2 = r, center = false, $fn = 5 ); 
+                }
+            }
+        }
+
+
         module ShapeCompartment()
         {
-            $fn = __component_shape() == "hex" ? 6 : 100;
+            $fn = __is_shape_hex() ? 6 : __is_shape_round() ? 100 : 4;
 
             r = __compartment_smallest_dimension()/2;
 
             compartment_z_min = m_wall_thickness;
             compartment_internal_z = __compartment_size( Z ) - compartment_z_min;
 
+
+            cube_rotated = __RotatedResult( _0 = [ __compartment_size( X ) , __compartment_size( Y ) + __partition_thickness( Y ), __compartment_size( Z ) ],
+                                            _90 = [ __compartment_size( X ) + __partition_thickness( X ) , __compartment_size( Y ), __compartment_size( Z ) ],
+                                            _180 = [ __compartment_size( X ) , __compartment_size( Y ) + __partition_thickness( Y ), __compartment_size( Z ) ],
+                                            _n90 = [ __compartment_size( X ) + __partition_thickness( X ) , __compartment_size( Y ), __compartment_size( Z ) ] );
+
+            //cube ( cube_rotated );
+            
+            // cylinders
+
+            cylinder_translation = __RotatedResult( _0 = [ r , r + __partition_thickness(Y) , m_wall_thickness ],
+                                                    _90 = [ r + __partition_thickness( X ), r , m_wall_thickness ],
+                                                    _180 = [ r , __compartment_size( Y ) - r , m_wall_thickness ],
+                                                    _n90 = [ __compartment_size( X ) - r, r , m_wall_thickness ] );
+
+
+
+            translate( cylinder_translation )
             {
-                difference()
-                { 
-                    // blocks
+                rotate( __is_shape_square() ? 45 : 30, [0, 0, 1] )
+                {
+                    cylinder(h = __compartment_size( Z ) - m_wall_thickness, r1 = r, r2 = r, center = false );  
+                } 
+            }
 
-                    cube_rotated = __RotatedResult( _0 = [ __compartment_size( X ) , __compartment_size( Y ) + __partition_thickness( Y ), __compartment_size( Z ) ],
-                                                    _90 = [ __compartment_size( X ) + __partition_thickness( X ) , __compartment_size( Y ), __compartment_size( Z ) ],
-                                                    _180 = [ __compartment_size( X ) , __compartment_size( Y ) + __partition_thickness( Y ), __compartment_size( Z ) ],
-                                                    _n90 = [ __compartment_size( X ) + __partition_thickness( X ) , __compartment_size( Y ), __compartment_size( Z ) ] );
-
-
-                    cube ( cube_rotated );
-                    
-                    // cylinders
-
-                    cylinder_translation = __RotatedResult( _0 = [ r , r + __partition_thickness(Y) , m_wall_thickness ],
-                                                            _90 = [ r + __partition_thickness( X ), r , m_wall_thickness ],
-                                                            _180 = [ r , __compartment_size( Y ) - r , m_wall_thickness ],
-                                                            _n90 = [ __compartment_size( X ) - r, r , m_wall_thickness ] );
-
-
-
-                    translate( cylinder_translation )
+            underbase = m_box_dimensions[ Z ] - __compartment_size( Z ) + m_wall_thickness;
+            
+            translate( [ 0,0, -underbase ])
+            {
+                translate( cylinder_translation )
+                {
+                    rotate( __is_shape_square() ? 45 : 30, [0, 0, 1] )
                     {
-                        rotate( 30, [0, 0, 1] )
-                        {
-                            cylinder(h = __compartment_size( Z ) - m_wall_thickness, r1 = r, r2 = r, center = false );  
-                        } 
-                    }
+                        cylinder(h = underbase, r1 = r/1.3, r2 = r/1.3, center = false );  
+                    } 
+                }
+            }
 
-                    translate( [ 0,0,-2])
-                    translate( cylinder_translation )
-                    {
-                        rotate( 30, [0, 0, 1] )
-                        {
-                            cylinder(h = __compartment_size( Z ) - m_wall_thickness, r1 = r/1.5, r2 = r/1.5, center = false );  
-                        } 
-                    }
-                }       
-            }    
         }
 
         module MakeLabel( x = 0, y = 0 )
         {
             z_pos = - __label_depth( m_component_label );
 
-            translate( [ __compartment_size(X)/2, __compartment_size(Y)/2, z_pos] )
+            part_x = __partition_num_modifier( X ) > -1 ? __partition_thickness( X ) : 0 ;
+            part_y = __partition_num_modifier( Y ) > -1 ? __partition_thickness( Y ) : 0 ;
+
+            translate( [ __compartment_size(X)/2 + part_x, __compartment_size(Y)/2 + part_y, z_pos] )
             {
                 RotateAboutPoint( __label_rotation( m_component_label ), [0,0,1], [0,0,0] )
                 {
                     linear_extrude( 2 * __label_depth( m_component_label ) )
                     {
-                        text(text = str( __label_text( m_component_label, x, y ) ), 
+                        #text(text = str( __label_text( m_component_label, x, y ) ), 
                         font="Liberation Sans:style=Bold", 
                         size = __label_size( m_component_label ), 
                         valign = "center", 
-                        halign = "center", $fn=1);
+                        halign = "center", 
+                        $fn=1);
                     }
                 }
             }
@@ -1113,11 +1185,6 @@ module MakeBox( box )
                     {
                         MakeBottomsRounded();
                     }
-                }
-                
-                if ( __is_chit_stack_vertical() )
-                {
-                    ShapeCompartment();
                 }
             }
         }
