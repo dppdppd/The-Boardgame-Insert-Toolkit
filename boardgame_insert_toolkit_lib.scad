@@ -49,7 +49,7 @@ g_b_simple_lids = 0;
 //that allows the lid to be put under when in play.
 g_b_fit_lid_underneath = 1; 
 
-g_wall_thickness = 2; // default = 2
+g_wall_thickness = 1.5; // default = 1.5
 
 g_partition_thickness = 1; // default = 1
 
@@ -321,6 +321,7 @@ module MakeBox( box )
         function __req_bottoms() = __is_tokens() || ( __is_chit_stack() && __component_shape() != "square" );
         function __req_single_end_partition() = ( __is_cards_compact() && __compartments_num( __Y2() ) == 1 ) || __is_chit_stack_vertical() || __is_chit_stack_compact();
         function __req_double_end_partition() = __is_chit_stack() || ( __is_cards() && !__is_cards_compact());
+        function __req_quad_end_partition() = __is_dice();
         function __req_label() = m_component_label != "";
 
                 // Determines whether finger cutouts are made. (For cards)
@@ -366,13 +367,14 @@ module MakeBox( box )
         function __partition_thickness( D ) = ( D == __Y2() ) && __req_thick_partitions() ? g_finger_partition_thickness + __partition_size_adjustment( D ): g_partition_thickness + __partition_size_adjustment( D );
 
         // whether to add __partitions on the __box edges.
-        function __partition_num_modifier( D ) = ( D == __Y2() ) ? 
-                                            ( __req_single_end_partition() ? 
-                                            0 : 
-                                            __req_double_end_partition() ? 
-                                                1 : 
-                                                -1 ) : 
-                                            -1 ;
+        function __partition_num_modifier( D ) = __req_quad_end_partition() ? 1 :
+                                                ( D == __Y2() ) ? 
+                                                    ( __req_single_end_partition() ? 
+                                                    0 : 
+                                                    __req_double_end_partition() ? 
+                                                        1 : 
+                                                        -1 ) : 
+                                                    -1 ;
 
         // for rounded bottoms, use the lowest __wall
         function __height_for_rounded_bottom() = 
@@ -884,7 +886,7 @@ module MakeBox( box )
         {
             cutout_y = __is_chit_stack_vertical() ? __component_size( __Y2() ) / 1.3 : __component_size( __Y2() );
 
-            cutout_x = min ( g_finger_partition_thickness * 2, __compartment_size( __X2() ) * .5 );
+            cutout_x = __compartment_size( __X2() ) * .5;
             cutout_z = m_box_dimensions[ Z ] + 2.0;
 
             translation = __RotatedResult( _0 = [ __compartment_size( X )/2 - cutout_x/2, 0, __finger_cutouts_bottom() ],
@@ -913,7 +915,7 @@ module MakeBox( box )
             start_pos_x2 = __req_single_end_partition() && __component_rotation() == -90 ? __compartment_size( X ) : start_pos_x1;
             start_pos_y2 = __req_single_end_partition() && __component_rotation() == 180 ? __compartment_size( Y ) : start_pos_y1;
 
-            cutout_x = min ( g_finger_partition_thickness * 2, __compartment_size( __X2() ) * .5 );
+            cutout_x = __compartment_size( __X2() ) * .5;
             cutout_z = m_box_dimensions[ Z ] - __component_size( Z ) ;
 
             translate( [ start_pos_x1 + __compartment_size( X )/2 - cutout_x/2, start_pos_y1 + __compartment_size( Y )/2 - cutout_x/2, __finger_cutouts_bottom() ] )
@@ -1070,16 +1072,16 @@ module MakeBox( box )
 
         module ShapeDiceCompartment()
         {
-            r = __compartment_smallest_dimension()/2 + m_tolerance;
+            r = __compartment_smallest_dimension()/2;
             h = __compartment_size( Z ) / 2;
 
-            cylinder_translation = __RotatedResult( _0 = [ r , r, 0 ],
-                                                    _90 = [ r, r , 0 ],
-                                                    _180 = [ r , r , 0 ],
-                                                    _n90 = [ r, r , 0 ] );
+            cylinder_translation = __RotatedResult( _0 = [ r + __partition_thickness( X ) , r + __partition_thickness( Y ), 0 ],
+                                                    _90 = [ r + __partition_thickness( X ) , r + __partition_thickness( Y ), 0 ],
+                                                    _180 = [ r + __partition_thickness( X ) , r + __partition_thickness( Y ), 0 ],
+                                                    _n90 = [ r + __partition_thickness( X ) , r + __partition_thickness( Y ), 0 ] );
             translate( cylinder_translation )
             {
-                rotate( 18, [0, 0, 1] )
+                rotate( 0, [0, 0, 1] )
                 {
                     cylinder(h = h, r1 = 0, r2 = r, center = false, $fn = 5 ); 
                 }
@@ -1149,7 +1151,7 @@ module MakeBox( box )
                 {
                     linear_extrude( 2 * __label_depth( m_component_label ) )
                     {
-                        #text(text = str( __label_text( m_component_label, x, y ) ), 
+                        text(text = str( __label_text( m_component_label, x, y ) ), 
                         font="Liberation Sans:style=Bold", 
                         size = __label_size( m_component_label ), 
                         valign = "center", 
