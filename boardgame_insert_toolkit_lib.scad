@@ -298,6 +298,7 @@ module MakeBox( box )
         function __is_shape_square() = __component_shape() == "square";
         function __is_shape_round() = __component_shape() == "round";       
         function __is_shape_hex() = __component_shape() == "hex" || __component_shape() == "hex_rotated";
+        function __is_shape_oct() = __component_shape() == "oct" || __component_shape() == "oct_rotated";
         function __is_shape_hex_rotated() = __component_shape() == "hex_rotated";
 
         function __component_type() = __value( component, "type", default = "generic" );
@@ -807,7 +808,7 @@ module MakeBox( box )
                 {
                     intersection()
                     {
-                        MakeStripedGrid( x = __lid_external_size( X ), y = __lid_external_size( Y ), w = 0.5, dx = 10, dy = 1, depth_ratio = 0.5 );
+                        MakeStripedGrid( x = __lid_external_size( X ), y = __lid_external_size( Y ), w = 0.5, dx = 1, dy = 0, depth_ratio = 0.5 );
 
                         MakeLidText( offset = text_offset  );                  
                     }
@@ -974,9 +975,9 @@ module MakeBox( box )
 
         module MakeBottoms()
         {
-            $fn = __is_shape_hex() ? 6 : 100;
+            $fn = __is_shape_hex() ? 6 : __is_shape_oct() ? 8 : 100;
 
-            r = __is_shape_hex() ? __compartment_size( __X2() ) / 2 / cos(30) : __compartment_size( __X2() ) / 2;
+            r = __is_shape_square() ? __compartment_size( __X2() ) / 2 : __compartment_size( __X2() ) / 2 / cos( 180 / $fn );
  
             translation = __RotatedResult( _0 = [ 0, __partition_thickness( Y ), 0 ],
                                                 _90 = [ __partition_thickness( X ), 0, 0, ],
@@ -1091,7 +1092,7 @@ module MakeBox( box )
 
         module ShapeCompartment()
         {
-            $fn = __is_shape_hex() ? 6 : __is_shape_round() ? 100 : 4;
+            $fn = __is_shape_hex() ? 6 : __is_shape_round() ? 100 : __is_shape_oct() ? 8 : 4;
 
             r = __compartment_smallest_dimension()/2;
 

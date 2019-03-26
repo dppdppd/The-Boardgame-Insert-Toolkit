@@ -24,8 +24,8 @@ g_b_simple_lids = 0;
 g_b_fit_lid_underneath = 1; 
 
 // this is the outer wall thickness. 
-//Default = 2
-g_wall_thickness = 2;
+//Default = 1.5
+g_wall_thickness = 1.5;
 
 // this is the thickness of partitions between compartments
 // Default = 1
@@ -37,12 +37,12 @@ g_partition_thickness = 1;
 g_finger_partition_thickness = 9; 
 
 
-// 285 X 225 X 60 
+// 285 X 220 X 60 
 data =
 [
     [   "spacer",
         [
-            [ "box_dimensions", [40, 225, 30] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions", [40, 220, 30] ],                       // float f -- default:[ 100, 100, 100]
 
             [ "enabled",        1 ],
             [ "thin_lid",       false ],
@@ -56,9 +56,9 @@ data =
             ],
         ]
     ],
-    [   "1",
+    [   "tiles",
         [
-            [ "box_dimensions", [70, 225, 46] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions", [70, 220, 46] ],                       // float f -- default:[ 100, 100, 100]
 
             [ "enabled",        1 ],
             [ "thin_lid",       false ],
@@ -84,7 +84,7 @@ data =
                             ["type",                            "chit_stack"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           "hex_rotated"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
                             ["compartment_size",                [ 64, 39, 45] ],      // [float, float, float]
-                            ["partition_size_adjustment",       [0,5]],                     // [float,float]
+                            ["partition_size_adjustment",       [0,4]],                     // [float,float]
                             ["num_compartments",                [1, 5] ],                   // [int, int]
                             ["position",                        ["center", "center" ] ],                // [float, float, float]
                             ["rotation",                        90 ],
@@ -96,7 +96,7 @@ data =
     ],
     [   "1",
         [
-            [ "box_dimensions", [110, 225, 57] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions", [110, 220, 57] ],                       // float f -- default:[ 100, 100, 100]
 
             [ "enabled",        1 ],
             [ "thin_lid",       false ],
@@ -122,7 +122,7 @@ data =
                             ["shape",                           "square"],
                             ["compartment_size",                [ 7, 71, 44] ],      // [float, float, float]
                             ["partition_size_adjustment",       [-0.8,0]],                     // [float,float]
-                            ["partition_height_adjustment",     [0, -12]],                     // [float,float]                            
+                            ["partition_height_adjustment",     [0, -22]],                     // [float,float]                            
                             ["num_compartments",                [4, 3] ],                   // [int, int]
                             ["position",                        [0, "center" ] ],                // [float, float, float]
                             ["rotation",                        90 ],
@@ -147,10 +147,10 @@ data =
                             ["enabled",                         1],                        // true | false
                             ["type",                            "tokens"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           ""],
-                            ["compartment_size",                [ 35, 70, 30] ],      // [float, float, float]
+                            ["compartment_size",                [ 36.5, 70, 30] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, 0]],                     // [float,float]
                             ["num_compartments",                [1, 2] ],                   // [int, int]
-                            ["position",                        ["max", 77 ] ],                // [float, float, float]
+                            ["position",                        ["max", 75 ] ],                // [float, float, float]
                             ["rotation",                        -90 ],
                         ]
                     ],
@@ -162,7 +162,7 @@ data =
 
     [   "money",
         [
-            [ "box_dimensions", [63, 225, 57] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions", [63, 220, 57] ],                       // float f -- default:[ 100, 100, 100]
 
             [ "enabled",        1 ],
             [ "thin_lid",       false ],

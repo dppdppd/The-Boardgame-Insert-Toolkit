@@ -59,24 +59,9 @@ data =
             ],   
         ]
     ],
-    [   "spacer",
-        [
-            [ "box_dimensions", [27, 152, 46] ],                       // float f -- default:[ 100, 100, 100]
-
-            [ "enabled",        1 ],
-            [ "type",           "spacer"],
-            [ "thin_lid",       false ],
-            [ "visualization",
-                [
-                    [ "position",   [0,0,0] ],
-                    [ "rotation",   0 ],
-                ]
-            ],   
-        ]
-    ],
     [   "4 of these",
         [
-            [ "box_dimensions", [80, 46, 32] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions", [100, 46, 32] ],                       // float f -- default:[ 100, 100, 100]
 
             [ "enabled",        1 ],
             [ "thin_lid",       false ],
@@ -110,7 +95,7 @@ data =
                         [
                             ["enabled",             1 ],                        // true | false
                             ["type",                "tokens"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 13, 43.0, 30.0] ],      // [float, float, float]
+                            ["compartment_size",    [ 23, 43.0, 30.0] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
                             ["position",            ["max", "center" ] ],                // [float, float, float]
                             ["rotation",            90 ],
@@ -126,7 +111,7 @@ data =
                         [
                             ["enabled",             1 ],                        // true | false
                             ["type",                "tokens"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
-                            ["compartment_size",    [ 12.5, 43.0, 20.0] ],      // [float, float, float]
+                            ["compartment_size",    [ 22.5, 43.0, 20.0] ],      // [float, float, float]
                             ["num_compartments",    [1, 1] ],                   // [int, int]
                             ["position",            [50.5, "center" ] ],                // [float, float, float]
                             ["rotation",            90 ],

@@ -197,7 +197,7 @@ data =
 
     [   "a vertical chit stack",
         [
-            [ "box_dimensions",                             [40.0, 220.0, 50.0] ], 
+            [ "box_dimensions",                             [40.0, 260.0, 50.0] ], 
             [ "enabled",                                    true ],
 
             [   "components",
@@ -227,7 +227,17 @@ data =
                             ["type",                        "chit_stack_vertical"],
                             ["compartment_size",            [ 30, 30.0, 30.0] ], 
                             ["num_compartments",            [1, 2] ],
+                            ["shape",                       "oct"],
                             ["position",                    [ -12, 140]],
+                            ["rotation",                    90]
+                        ]
+                    ],
+                    [   "my chit stack",
+                        [
+                            ["type",                        "chit_stack_vertical"],
+                            ["compartment_size",            [ 30, 30.0, 30.0] ], 
+                            ["num_compartments",            [1, 2] ],
+                            ["position",                    [ -12, 210]],
                             ["rotation",                    90]
                         ]
                     ],
