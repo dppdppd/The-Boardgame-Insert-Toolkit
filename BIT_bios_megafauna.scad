@@ -46,7 +46,7 @@ data =
 [
     [   "spacer",
         [
-            [ "box_dimensions", [46, 80, 19] ],                       // float f -- default:[ 100, 100, 100]
+            [ "box_dimensions", [100, 46, 19] ],                       // float f -- default:[ 100, 100, 100]
 
             [ "enabled",        1 ],
             [ "type",           "spacer"],

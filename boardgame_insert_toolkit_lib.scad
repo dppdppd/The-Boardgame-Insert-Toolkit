@@ -568,7 +568,7 @@ module MakeBox( box )
                                 // labels
                 if ( __req_label() )
                 {
-                    LabelEachCompartment();
+                    color([0,0,1])LabelEachCompartment();
                 }
             }
             else if ( m_is_lid_subtractions && m_box_has_lid )
