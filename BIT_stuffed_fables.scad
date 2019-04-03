@@ -104,7 +104,7 @@ data =
     ],    
     [   "minis",
         [
-            [ "box_dimensions", [160, 182, 45] ],                       // float f -- default:[ 100, 100, 100 ]
+            [ "box_dimensions", [194, 182, 45] ],                       // float f -- default:[ 100, 100, 100 ]
 
             [ "enabled",        1 ],
             [ "thin_lid",       false ],
@@ -132,7 +132,7 @@ data =
                             ["compartment_size",                [ 46, 38, 40] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, 0 ]],                     // [float,float]
                             ["num_compartments",                [2, 2] ],                   // [int, int]
-                            ["position",                        [0, "max" ] ],                // [float, float, float]
+                            ["position",                        [34, "max" ] ],                // [float, float, float]
                             ["rotation",                        90 ],
                             ["label",               
                                 [
@@ -166,10 +166,10 @@ data =
                             ["enabled",                         1 ],                        // true | false
                             ["type",                            ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           ""],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
-                            ["compartment_size",                [ 38, 67, 34] ],      // [float, float, float]
+                            ["compartment_size",                [ 28, 67, 43] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, 0 ]],                     // [float,float]
                             ["num_compartments",                [1,1] ],                   // [int, int]
-                            ["position",                        [0, 34 ] ],                // [float, float, float]
+                            ["position",                        [34, 34 ] ],                // [float, float, float]
                             ["rotation",                        90 ],
                             ["label",               
                                 [
@@ -184,10 +184,10 @@ data =
                             ["enabled",                         1 ],                        // true | false
                             ["type",                            ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           ""],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
-                            ["compartment_size",                [ 84, 67, 43] ],      // [float, float, float]
+                            ["compartment_size",                [ 80, 67, 43] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, 0 ]],                     // [float,float]
                             ["num_compartments",                [1, 1] ],                   // [int, int]
-                            ["position",                        [39, 34 ] ],                // [float, float, float]
+                            ["position",                        [63, 34 ] ],                // [float, float, float]
                             ["rotation",                        0 ],
                             ["label",               
                                 [
@@ -224,7 +224,7 @@ data =
                             ["compartment_size",                [ 57, 33, 38] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, 0 ]],                     // [float,float]
                             ["num_compartments",                [1, 1] ],                   // [int, int]
-                            ["position",                        [47, 0 ] ],                // [float, float, float]
+                            ["position",                        [81, 0 ] ],                // [float, float, float]
                             ["rotation",                        90 ],
                             ["label",               
                                 [
@@ -243,7 +243,7 @@ data =
                             ["compartment_size",                [ 46, 33, 30] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, 0 ]],                     // [float,float]
                             ["num_compartments",                [1, 1] ],                   // [int, int]
-                            ["position",                        [0, 0 ] ],                // [float, float, float]
+                            ["position",                        [34, 0 ] ],                // [float, float, float]
                             ["rotation",                        90 ],
                             ["label",               
                                 [
@@ -254,61 +254,49 @@ data =
                             ],
                         ]
                     ],   
-                     [   "crawly",
+                    [   "crawly",
                         [
                             ["enabled",                         1 ],                        // true | false
                             ["type",                            ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           ""],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
-                            ["compartment_size",                [ 33, 33, 20] ],      // [float, float, float]
+                            ["compartment_size",                [ 22, 33, 38] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, 0 ]],                     // [float,float]
-                            ["num_compartments",                [1, 2] ],                   // [int, int]
+                            ["num_compartments",                [2, 2] ],                   // [int, int]
                             ["position",                        ["max", 34 ] ],                // [float, float, float]
                             ["rotation",                        90 ],
                             ["label",               
                                 [
                                     [ "text",   "CRAWLY"],
                                     [ "size",   4 ],
-                                    [ "rotation",   0]
+                                    [ "rotation",  90]
                                 ]
                             ],
-                        ]
-                    ],                                                        
-                ]
-            ]
-        ]
-    ],
-    [   "minis",
-        [
-            [ "box_dimensions", [105, 105, 45] ],                       // float f -- default:[ 100, 100, 100 ]
-
-            [ "enabled",        1 ],
-            [ "thin_lid",       false ],
-
-            [ "visualization",
-                [
-                    [ "position",   [161, 170, 0 ] ],
-                    [ "rotation",   0 ],
-                ]
-            ],                   
-
-            [   "components",
-                [
-                    [   "",
+                        ],
+                    ],
+                    [   "heroes",
                         [
                             ["enabled",                         1 ],                        // true | false
                             ["type",                            ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           ""],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
-                            ["compartment_size",                [ 33, 33, 34] ],      // [float, float, float]
+                            ["compartment_size",                [ 33, 29, 35] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, 0 ]],                     // [float,float]
-                            ["num_compartments",                [3, 3] ],                   // [int, int]
-                            ["position",                        ["center", "center" ] ],                // [float, float, float]
+                            ["num_compartments",                [1, 6] ],                   // [int, int]
+                            ["position",                        [0,0  ] ],                // [float, float, float]
                             ["rotation",                        90 ],
+                            ["label",               
+                                [
+                                    [ "text",   "HERO"],
+                                    [ "size",   4 ],
+                                    [ "rotation",  0]
+                                ]
+                            ],
                         ]
-                    ],                                     
+                    ],   
+
                 ]
             ]
         ]
-    ],    
+    ],
     [   "chits",
         [
             [ "box_dimensions", [85, 185, 40] ],                       // float f -- default:[ 100, 100, 100 ]
