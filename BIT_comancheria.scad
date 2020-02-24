@@ -2,13 +2,13 @@
 include <boardgame_insert_toolkit_lib.scad>;
 
 // determines whether lids are output.
-g_b_print_lid = 1;
+g_b_print_lid = 0;
 
 // determines whether boxes are output.
 g_b_print_box = 1; 
 
 // Focus on one box
-g_isolated_print_box = ""; 
+g_isolated_print_box = "chits_in_play"; 
 
 // Used to visualize how all of the boxes fit together. 
 // Turn off for printing.
@@ -73,8 +73,7 @@ data =
 
    [   "chits_in_play",
         [
-            [ "box_dimensions", [203, 106, 20] ],                       // float f -- default:[ 100, 100, 100 ]
-       //     [ "box_dimensions", [59, 106, 20] ],                       // float f -- default:[ 100, 100, 100 ]
+            [ "box_dimensions", [203, 104, 20] ],                       // float f -- default:[ 100, 100, 100 ]
 
             
             [   "components",
@@ -83,7 +82,7 @@ data =
                         [
                             ["type",                            "chit_stack"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           "hex"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
-                            ["compartment_size",                [ 20, 43, 20] ],      // [float, float, float]
+                            ["compartment_size",                [ 20, 33, 20] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, -8 ]],                     // [float,float]
                             ["position",                        [0, -5 ] ],                // [float, float, float]                          
                         ]
@@ -133,14 +132,14 @@ data =
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
                             ["compartment_size",                [ 17, 15+2, 18] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, -5 ]],                     // [float,float]
-                            ["position",                        [21, 14 ] ],                // [float, float, float]
+                            ["position",                        [21, 14 ] ],                // [float, float, float]                         
                             ["label",               
                                 [
                                     [ "text",   "WAR"],
                                     [ "rotation",  90],
                                     [ "size",   4 ]
                                 ]
-                            ],                               
+                            ]
                         ]
                     ],  
                     [   "green_war",
@@ -149,14 +148,14 @@ data =
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
                             ["compartment_size",                [ 17, 15+2, 18] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, -5 ]],                     // [float,float]
-                            ["position",                        [21, 39 ] ],                // [float, float, float]     
+                            ["position",                        [21, 39 ] ],                // [float, float, float]                                                   
                             ["label",               
                                 [
                                     [ "text",   "WAR"],
                                     [ "rotation",  90],
                                     [ "size",   4 ]
                                 ]
-                            ],                                                  
+                            ],  
                         ]
                     ],  
                     [   "yello_war",
@@ -165,7 +164,7 @@ data =
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
                             ["compartment_size",                [ 17, 23+2, 18] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, -5 ]],                     // [float,float]
-                            ["position",                        [21, 64 ] ],                // [float, float, float]
+                            ["position",                        [21, 64 ] ],                // [float, float, float]                          
                             ["label",               
                                 [
                                     [ "text",   "WAR"],
@@ -175,7 +174,6 @@ data =
                             ],                              
                         ]
                     ], 
-
 
 
                     [   "3-4",
@@ -202,7 +200,7 @@ data =
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
                             ["compartment_size",                [ 17, 15+2, 18] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, -5 ]],                     // [float,float]
-                            ["position",                        [39, 34 ] ],                // [float, float, float]
+                            ["position",                        [39, 34 ] ],                // [float, float, float]                         
                             ["label",               
                                 [
                                     [ "text",   "BANDS"],
@@ -211,14 +209,14 @@ data =
                                 ]
                             ],                              
                         ]
-                    ],                     
+                    ],      
                     [   "ravaged",
                         [
                             ["type",                            "chit_stack"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           "round"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
-                            ["compartment_size",                [ 17, 19+3, 18] ],      // [float, float, float]
+                            ["compartment_size",                [ 18, 19+3, 18] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, -5 ]],                     // [float,float]
-                            ["position",                        [39, 67 ] ],                // [float, float, float]
+                            ["position",                        [75, 67 ] ],                // [float, float, float]
                         ]
                     ],    
 
@@ -230,7 +228,7 @@ data =
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
                             ["compartment_size",                [ 17, 43, 18] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, -8 ]],                     // [float,float]
-                            ["position",                        [57, -2 ] ],                // [float, float, float]
+                            ["position",                        [57, -2 ] ],                // [float, float, float]                          
                             ["label",               
                                 [
                                     [ "text",   "?"],
@@ -246,7 +244,7 @@ data =
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
                             ["compartment_size",                [ 17, 51, 18] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, -8 ]],                     // [float,float]
-                            ["position",                        [57, 46 ] ],                // [float, float, float]
+                            ["position",                        [57, 46 ] ],                // [float, float, float]                            
                             ["label",               
                                 [
                                     [ "text",   "INSTRUCTIONS"],
@@ -263,9 +261,9 @@ data =
                         [
                             ["type",                            "chit_stack"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
-                            ["compartment_size",                [ 17, 18, 18] ],      // [float, float, float]
+                            ["compartment_size",                [ 17, 20, 18] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, -8 ]],                     // [float,float]
-                            ["position",                        [75, -2 ] ],                // [float, float, float]
+                            ["position",                        [75, -2 ] ],                // [float, float, float]                           
                             ["label",               
                                 [
                                     [ "text",   "ENEMY"],
@@ -274,14 +272,14 @@ data =
                                 ]
                             ],                               
                         ]
-                    ],  
+                    ],
                     [   "markers",
                         [
                             ["type",                            "chit_stack"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           "round"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
-                            ["compartment_size",                [ 17, 11, 18] ],      // [float, float, float]
+                            ["compartment_size",                [ 18, 13, 18] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, -8 ]],                     // [float,float]
-                            ["position",                        [75, 21 ] ],                // [float, float, float]
+                            ["position",                        [75, 47 ] ],                // [float, float, float]                            
                             ["label",               
                                 [
                                     [ "text",   ""],
@@ -291,13 +289,14 @@ data =
                             ],                               
                         ]
                     ],     
+
                     [   "medicine",
                         [
                             ["type",                            "chit_stack"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
-                            ["compartment_size",                [ 17, 29, 18] ],      // [float, float, float]
+                            ["compartment_size",                [ 17, 32, 18] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, -8 ]],                     // [float,float]
-                            ["position",                        [75, 37 ] ],                // [float, float, float]
+                            ["position",                        [39, 64 ] ],                // [float, float, float]                           
                             ["label",               
                                 [
                                     [ "text",   "MEDICINE"],
@@ -311,10 +310,10 @@ data =
                         [
                             ["type",                            "tokens"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
-                            ["compartment_size",                [ 17, 26, 5] ],      // [float, float, float]
+                            ["compartment_size",                [ 20, 50, 8] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, -8 ]],                     // [float,float]
-                            ["position",                        [75, "max" ] ],                // [float, float, float]
-                            ["rotation",                        90],
+                            ["position",                        [94, 47 ] ],                // [float, float, float]
+                            ["rotation",                        180],                           
                             ["label",               
                                 [
                                     [ "text",   "SUCCESS"],
@@ -331,9 +330,9 @@ data =
                         [
                             ["type",                            "chit_stack"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
-                            ["compartment_size",                [ 17, 34, 18] ],      // [float, float, float]
-                            ["partition_size_adjustment",       [0, -4 ]],                     // [float,float]
-                            ["position",                        [75+18, -6 ] ],                // [float, float, float]
+                            ["compartment_size",                [ 17, 37, 18] ],      // [float, float, float]
+                            ["partition_size_adjustment",       [0, -7 ]],                     // [float,float]
+                            ["position",                        [75+18, -3 ] ],                // [float, float, float]                           
                             ["label",               
                                 [
                                     [ "text",   "RESOURCE"],
@@ -347,9 +346,9 @@ data =
                         [
                             ["type",                            "chit_stack"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
-                            ["compartment_size",                [ 17, 34, 18] ],      // [float, float, float]
-                            ["partition_size_adjustment",       [0, -4 ]],                     // [float,float]
-                            ["position",                        [75+18*2, -6 ] ],                // [float, float, float]
+                            ["compartment_size",                [ 17, 37, 18] ],      // [float, float, float]
+                            ["partition_size_adjustment",       [0, -7 ]],                     // [float,float]
+                            ["position",                        [75+18*2, -3 ] ],                // [float, float, float                            
                             ["label",               
                                 [
                                     [ "text",   "RESOURCE"],
@@ -358,14 +357,14 @@ data =
                                 ]
                             ],                               
                         ]
-                    ],       
+                    ],
                     [   "trade goods",
                         [
                             ["type",                            "chit_stack"],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
                             ["compartment_size",                [ 17, 10+2, 18] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, -4 ]],                     // [float,float]
-                            ["position",                        [75+18*3, -6 ] ],                // [float, float, float]
+                            ["position",                        [75+18*3, -6 ] ],                // [float, float, float]                            
                             ["label",               
                                 [
                                     [ "text",   "RES"],
@@ -381,7 +380,7 @@ data =
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
                             ["compartment_size",                [ 17, 10+2, 18] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, -4 ]],                     // [float,float]
-                            ["position",                        [75+18*4, -6 ] ],                // [float, float, float]
+                            ["position",                        [75+18*4, -6 ] ],                // [float, float, float]                            
                             ["label",               
                                 [
                                     [ "text",   "RES"],
@@ -397,7 +396,7 @@ data =
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
                             ["compartment_size",                [ 17, 10+2, 18] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, -4 ]],                     // [float,float]
-                            ["position",                        [75+18*5, -6 ] ],                // [float, float, float]
+                            ["position",                        [75+18*5, -6 ] ],                // [float, float, float]                           
                             ["label",               
                                 [
                                     [ "text",   "RES"],
@@ -413,7 +412,7 @@ data =
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
                             ["compartment_size",                [ 17, 10+2, 18] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, -4 ]],                     // [float,float]
-                            ["position",                        [75+18*6, -6 ] ],                // [float, float, float]
+                            ["position",                        [75+18*6, -6 ] ],                // [float, float, float]                          
                             ["label",               
                                 [
                                     [ "text",   "RES"],
@@ -427,23 +426,17 @@ data =
                         [
                             ["type",                            ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
-                            ["compartment_size",                [ 107, 50, 5] ],      // [float, float, float]
+                            ["compartment_size",                [ 106, 50, 5] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, 0 ]],                     // [float,float]
                             ["position",                        ["max", 47 ] ],                // [float, float, float]       
-                            ["label",               
-                                [
-                                    [ "text",   "Comanchería"],
-                                    [ "rotation",  0],
-                                    [ "size",   12 ]
-                                ]
-                            ],                                                 
+                                             
                         ]
                     ],
                     [   "cards",
                         [
                             ["type",                            ""],                   // "cards" | "tokens" | "chit_stack" | "chit_stack_vertical" | "" -- default: ""
                             ["shape",                           "square"],                 // "round" | "hex" | "hex_rotated" | "square" -- default: "square"
-                            ["compartment_size",                [ 107, 5, 15] ],      // [float, float, float]
+                            ["compartment_size",                [ 106, 5, 15] ],      // [float, float, float]
                             ["partition_size_adjustment",       [0, 0 ]],                     // [float,float]
                             ["position",                        ["max", "max" ] ],                // [float, float, float]                                                      
                         ]
@@ -455,14 +448,7 @@ data =
                             ["compartment_size",                [ 50, 17, 18] ],      // [float, float, float]
                             ["partition_size_adjustment",       [-3, 0 ]],                     // [float,float]
                             ["position",                        [129, 27 ] ],                // [float, float, float]  
-                            ["rotation",                        90],
-                            ["label",               
-                                [
-                                    [ "text",   "DICE"],
-                                    [ "rotation",  0],
-                                    [ "size",   4 ]
-                                ]
-                            ],                                                       
+                            ["rotation",                        90],                                                  
                         ]
                     ], 
 
