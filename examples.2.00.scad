@@ -68,25 +68,25 @@ data =
                         [
                             ["compartment_size",                [ 22, 60.0, 20.0] ],    // size of each compartment in x,y,z
                             ["num_compartments",                [2,2] ],                // number of compartments [vertically, horizontally]
-                            ["shape",                           "hex"],                // one of several presets: "hex" | "hex2" | "round" | "square" | "oct" | "oct2"
+                            ["shape",                           "square"],                // one of several presets: "hex" | "hex2" | "round" | "square" | "oct" | "oct2"
                             ["shape_rotated_90",                f],                     // rotate shape on Z axis
                             ["shape_vertical",                  f],                     // use shape vertically
                             ["padding",                         [15,12]],               // Determines space between compartments (and margins) in mm
                             ["padding_height_adjust",           [-5, 0] ],             // Vertical, Horizontal
-                            ["margin",                          [f,f,f,f]],             // front,back,left,right
+                            ["margin",                          [t,f,f,f]],             // front,back,left,right
                             ["cutout_sides",                    [f,f,f,t]],             // front,back,left,right                                                             
                             ["rotation",                        5 ],                    // rotate the whole component.
                             ["position",                        ["center","center"]],   // x,y in mm | "center" | "max"
                             ["label",               
                                 [
                                     ["text",        [   
-                                                        ["frontleft", "frontright"],        // simple string or array representing each compartment
-                                                        ["backleft", "backright"],
+                                                        ["backleft", "backright"],        // simple string or array representing each compartment
+                                                        ["frontleft", "frontright"],
                                                     ]
                                     ],
-                                    ["placement",   "below"],                           // "center" | "below" | "above" | "left" | "right"
+                                    ["placement",   "front"],                           // "center" | "front" | "back" | "left" | "right" |  "front-wall" | "back-wall" | "left-wall" | "right-wall"
                                     [ "rotation",  10],
-                                    [ "width",   "auto" ],
+                                    [ "font_size", "auto"],
                                     [ "offset", [ -4,-2]],
                                     [ "font", "Times New Roman:style=bold italic"],
 

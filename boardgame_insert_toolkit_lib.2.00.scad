@@ -131,7 +131,7 @@ function __label_size_is_auto( label ) = __label_size_raw( label ) == "auto";
 function __label_size( label ) = __label_size_is_auto( label ) ? 10 : __label_size_raw( label);
 function __label_rotation_raw( label ) = __value( label, "rotation", default = 0 ) % 360;
 function __label_rotation( label ) = __label_rotation_raw( label ) + 
-   ( __label_placement_is_left( label ) ? 90 : __label_placement_is_right( label ) ? -90 : __label_placement_is_front( label ) && __label_placement_is_wall( label ) ? -180 : 0 );
+   ( __label_placement_is_left( label ) ? 90 : __label_placement_is_right( label ) ? -90 : __label_placement_is_front( label ) && __label_placement_is_wall( label ) ? 0 : 0 );
 function __label_depth( label ) = __value( label, "depth", default = 0.2 );
 function __label_placement_raw( label ) = __value( label, "placement", default = "center" );
 function __label_placement_is_center( label ) = __label_placement_raw( label ) == "center";
@@ -890,7 +890,6 @@ module MakeBox( box )
 
         module LabelEachCompartment()
         {
-
             n_x = __compartments_num( X );
             n_y = __compartments_num( Y );
 
@@ -1131,7 +1130,11 @@ module MakeBox( box )
             // max_width = label_on_y ? __component_padding( Y ) : 
             //             label_on_x ? __component_padding( X ) : 0;
 
-                RotateAboutPoint( __label_rotation( m_component_label ), [0,0,1], [0,0,0] )
+                rotate_vector = label_on_side ? [ 0,1,0] : [0,0,1];
+                label_needs_to_be_180ed = __label_placement_is_front( m_component_label) && __label_placement_is_wall( m_component_label);
+
+RotateAboutPoint( label_needs_to_be_180ed ? 180 : 0, [0,0,1], [0,0,0] )
+                RotateAboutPoint( __label_rotation( m_component_label ), rotate_vector, [0,0,0] )
                     RotateAboutPoint( label_on_side ? 90:0, [1,0,0], [0,0,0] )
                         translate( [ __label_offset( m_component_label )[X], __label_offset( m_component_label )[Y], 0])
                             resize( [ width, 0, 0], auto=true)
@@ -1146,7 +1149,7 @@ module MakeBox( box )
 
         module MakeLabel( x = 0, y = 0 )
         {
-            z_pos = - __label_depth( m_component_label );
+            z_pos = 0;
             z_pos_vertical = __partition_height( Y )- __label_size( m_component_label );
 
             if ( __label_placement_is_center( m_component_label) )
@@ -1190,7 +1193,6 @@ module MakeBox( box )
                     translate( [ __compartment_size(X) + __component_padding(X)/4, __compartment_size(Y)/2, __partition_height( Y ) + z_pos] )
                         children();
             }
-            children();
         }
 
         module MakePartitions()
