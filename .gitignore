@@ -1,4 +1,4 @@
 *.stl
 *.rsls
 old
-BIT_*
+BIT_*.scad

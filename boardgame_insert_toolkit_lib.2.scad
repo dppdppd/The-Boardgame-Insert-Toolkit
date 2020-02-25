@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.00";
+VERSION = "2.01";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://www.thingiverse.com/thing:3405465\n\n\tCopyright 2020 MysteryDough\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn=100;
@@ -413,11 +413,11 @@ module MakeBox( box )
                 intersection()
                 {
                     echo( "<br><font color='red'>WARNING: Components in RED do not fit in box. If this is not intentional then adjustments are required or pieces won't fit.</font><br>");
-                    translate( [m_wall_thickness / 2, m_wall_thickness / 2, 0] )
+                    translate( [0, 0, 0] )
                     {
                         cube([  
-                                m_box_dimensions[ X ] - m_box_wall_thickness, 
-                                m_box_dimensions[ Y ] - m_box_wall_thickness, 
+                                m_box_dimensions[ X ], 
+                                m_box_dimensions[ Y ], 
                                 m_box_dimensions[ Z ]
                             ]);
                     }    
@@ -842,16 +842,21 @@ module MakeBox( box )
 
         module ForEachPartition( D )
         {
-            start = __component_has_margin( D )[0] ? 0 : 1;
+            start = 0;
             end = __partitions_num( D ) - 1;
 
-           for ( a = [ 0 : end  ] )
+            if ( end >= start )
             {
-                pos = ( __component_has_margin(D)[0] ? 0 : __compartment_size( D ) ) +
-                ( __compartment_size( D ) + __component_padding( D )) * a ;
+                for ( a = [ start : end  ] )
+                {
+                    pos = ( __component_has_margin(D)[0] ? 0 : __compartment_size( D ) ) +
+                    ( __compartment_size( D ) + __component_padding( D )) * a ;
 
-                translate( [ D == X ? pos : 0 ,  D == Y ? pos : 0 , 0 ] )
-                    children();
+                    translate( [ D == X ? pos : 0 ,  D == Y ? pos : 0 , 0 ] )
+                    {
+                        children();
+                    }
+                }
             }
         }
 
@@ -860,12 +865,14 @@ module MakeBox( box )
             start = 0;
             end = __compartments_num( D ) - 1;
 
-           for ( a = [ start: end  ] )
             {
-                dim1 = __component_margin( D )[0] + ( __component_padding( D ) + __compartment_size( D )) * a ;
+                for ( a = [ start: end  ] )
+                {
+                    dim1 = __component_margin( D )[0] + ( __component_padding( D ) + __compartment_size( D )) * a ;
 
-                translate( [ D == X ? dim1 : 0 ,  D == Y ? dim1 : 0 , 0 ] )
-                   children();
+                    translate( [ D == X ? dim1 : 0 ,  D == Y ? dim1 : 0 , 0 ] )
+                    children();
+                }
             }
         }
 
@@ -935,11 +942,11 @@ module MakeBox( box )
 
             if ( side == BACK || side == FRONT )
             {
-                cutout_y = __component_padding(Y)/2 + min(10, __compartment_size(Y));
+                cutout_y = min( __component_padding(Y)*2, __compartment_size(Y)/2 )  + min(10, __compartment_size(Y));
                 cutout_x = max( 10, __compartment_size( X )/3 );
 
                 pos_x = __compartment_size( X )/2  - cutout_x/2;
-                pos_y = - __component_padding( Y )/2 - m_wall_thickness - radius;
+                pos_y = - __component_padding( Y ) - m_wall_thickness - radius;
 
                 if ( side == FRONT )
                 {
@@ -956,10 +963,10 @@ module MakeBox( box )
             }  
             else if ( side == LEFT || side == RIGHT )
             {
-                cutout_x = __component_padding(X)/2 + min(10, __compartment_size(X));
+                cutout_x = min( __component_padding(X)*2, __compartment_size(X)/2) + min(10, __compartment_size(X));
                 cutout_y = max( 10, __compartment_size( Y )/3 );
 
-                pos_x = - __component_padding( X )/2 - m_wall_thickness -radius;
+                pos_x = - __component_padding( X ) - m_wall_thickness -radius;
                 pos_y = __compartment_size( Y )/2  - cutout_y/2;
 
                 if ( side == LEFT )
@@ -1133,19 +1140,20 @@ module MakeBox( box )
                 rotate_vector = label_on_side ? [ 0,1,0] : [0,0,1];
                 label_needs_to_be_180ed = __label_placement_is_front( m_component_label) && __label_placement_is_wall( m_component_label);
 
-RotateAboutPoint( label_needs_to_be_180ed ? 180 : 0, [0,0,1], [0,0,0] )
-                RotateAboutPoint( __label_rotation( m_component_label ), rotate_vector, [0,0,0] )
-                    RotateAboutPoint( label_on_side ? 90:0, [1,0,0], [0,0,0] )
-                        translate( [ __label_offset( m_component_label )[X], __label_offset( m_component_label )[Y], 0])
-                            resize( [ width, 0, 0], auto=true)
-                              linear_extrude( height =  __label_depth( m_component_label ) )
-                                text(text = str( __label_text( m_component_label, x, text_y_reverse) ), 
-                                    font = __label_font( m_component_label ), 
-                                    size = __label_size( m_component_label ), 
-                                    valign = "center", 
-                                    halign = "center", 
-                                    $fn=1);
-        }
+                RotateAboutPoint( label_needs_to_be_180ed ? 180 : 0, [0,0,1], [0,0,0] )
+                    RotateAboutPoint( __label_rotation( m_component_label ), rotate_vector, [0,0,0] )
+                        RotateAboutPoint( label_on_side ? 90:0, [1,0,0], [0,0,0] )
+                            translate( [ __label_offset( m_component_label )[X], __label_offset( m_component_label )[Y], 0])
+                                resize( [ width, 0, 0], auto=true)
+                                    translate([0,0,-__label_depth( m_component_label )]) 
+                                        linear_extrude( height =  2 * __label_depth( m_component_label ) )
+                                            text(text = str( __label_text( m_component_label, x, text_y_reverse) ), 
+                                                font = __label_font( m_component_label ), 
+                                                size = __label_size( m_component_label ), 
+                                                valign = "center", 
+                                                halign = "center", 
+                                                $fn=1);
+            }
 
         module MakeLabel( x = 0, y = 0 )
         {
@@ -1210,8 +1218,6 @@ RotateAboutPoint( label_needs_to_be_180ed ? 180 : 0, [0,0,1], [0,0,0] )
 
         module MakePartition( axis )
         {
-            // At this point we're placed outside the margin and at the corner of the compartment.
-            // since partitions extend into the margins we need to adjust them
             if ( axis == X )
             {
                 cube ( [ __component_padding( X ), __component_size( Y ), __partition_height( X )  ] );
