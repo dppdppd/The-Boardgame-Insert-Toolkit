@@ -36,23 +36,25 @@ function __value( table, key, default = false ) = __index_of_key( table, key ) =
 ///////////////////////
 
 // determines whether lids are output.
-g_b_print_lid = 1;
+g_b_print_lid = t;
 
 // determines whether boxes are output.
-g_b_print_box = 1; 
+g_b_print_box = t; 
 
 // Focus on one box
 g_isolated_print_box = ""; 
 
-// Used to visualize how all of the boxes fit together. 
-// Turn off for printing.
-g_b_visualization = 0;
-
+// Used to visualize how all of the boxes fit together.
+g_b_visualization = f;
 g_b_vis_actual = g_b_visualization && $preview;
+
+// Turn off labels during preview. 
+g_b_preview_no_labels = f;
+g_b_no_labels_actual = g_b_preview_no_labels && $preview;
 
 // Makes solid simple lids instead of the honeycomb ones.
 // Might be faster to print. Definitely faster to render.
-g_b_simple_lids = 0;            
+g_b_simple_lids = f;            
 
 // default = 1.5
 g_wall_thickness = 1.5; 
@@ -594,7 +596,7 @@ module MakeBox( box )
                     }
                 }
 
-                if ( __req_label() )
+                if ( __req_label() && !g_b_no_labels_actual)
                 {
                     color([0,0,1])LabelEachCompartment();
                 }
