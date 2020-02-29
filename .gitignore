@@ -2,3 +2,4 @@
 *.rsls
 old
 BIT_*.scad
+*.test.scad

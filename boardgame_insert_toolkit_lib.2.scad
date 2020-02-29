@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.01";
+VERSION = "2.02";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://www.thingiverse.com/thing:3405465\n\n\tCopyright 2020 MysteryDough\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn=100;
@@ -258,34 +258,29 @@ module MakeBox( box )
         {
             difference()
             {
-                union()
-                {
-                    // first pass of carving out elements
-                    difference()
-                    {
-                        MakeLayer( layer = "outerbox" );
 
-                        for( i = [ 0: m_num_components - 1 ] )
-                        {
-                            MakeLayer( __component( i ) , layer = "component_subtractions");
-                        }
-                    }
-                    // now add the positive elements
+                // carve out the compartments from the box
+                difference()
+                {
+                    MakeLayer( layer = "outerbox" );
+
+
+                    // create a negative of the component
                     for( i = [ 0: m_num_components - 1 ] )
                     {
-                        MakeLayer( __component( i ), layer = "component_additions" );     
+                        union()
+                        {
+                            difference()
+                            {
+                                MakeLayer( __component( i ) , layer = "component_subtractions");
+                                MakeLayer( __component( i ), layer = "component_additions" );     
+                            }
+                            MakeLayer( __component( i ), layer = "final_component_subtractions" );
+                        }
                     }
                 }
-
-                // 2nd pass carving for components
-                for( i = [ 0: m_num_components - 1 ] )
-                {
-                    MakeLayer( __component( i ), layer = "final_component_subtractions" );
-                }
-
                 // lid carve outs
                 MakeLayer( layer = "lid_substractions" );
-                
             }
             
         }
@@ -402,7 +397,7 @@ module MakeBox( box )
 
         module ContainWithinBox()
         {
-            b_needs_trimming = m_is_component_additions;
+            b_needs_trimming = false;//m_is_component_additions;
 
             if ( b_needs_trimming &&
             ( 
@@ -412,42 +407,14 @@ module MakeBox( box )
                 || __component_position( Y ) + __component_size( Y )  > m_box_inner_position_max[ Y ]
             ))
             {
-                intersection()
-                {
-                    echo( "<br><font color='red'>WARNING: Components in RED do not fit in box. If this is not intentional then adjustments are required or pieces won't fit.</font><br>");
-                    translate( [0, 0, 0] )
-                    {
-                        cube([  
-                                m_box_dimensions[ X ], 
-                                m_box_dimensions[ Y ], 
-                                m_box_dimensions[ Z ]
-                            ]);
-                    }    
+                echo( "<br><font color='red'>WARNING: Components in RED do not fit in box. If this is not intentional then adjustments are required or pieces won't fit.</font><br>");
 
-                    color([1,0,0])
-                        children();    
-                }
+                color([1,0,0])
+                    children();    
             }
             else
             {
-                if ( b_needs_trimming && 
-                 ( __component_size( Z ) + m_wall_thickness > m_box_dimensions[ Z ] )
-                )
-                {
-                    intersection()
-                    {
-                        translate( [m_wall_thickness / 2, m_wall_thickness / 2, 0] )
-                            cube([  m_box_dimensions[ X ], 
-                                    m_box_dimensions[ Y ], 
-                                    m_box_dimensions[ Z ]]);
-
-                        children();    
-                    }
-                }
-                else
-                {
-                    children();  
-                }
+                children();  
             }
         }
 
@@ -944,7 +911,7 @@ module MakeBox( box )
 
             if ( side == BACK || side == FRONT )
             {
-                cutout_y = min( __component_padding(Y)*2, __compartment_size(Y)/2 )  + min(10, __compartment_size(Y));
+                cutout_y = min( __component_padding(Y)*2, __compartment_size(Y)/2 )  + 10;
                 cutout_x = max( 10, __compartment_size( X )/3 );
 
                 pos_x = __compartment_size( X )/2  - cutout_x/2;
@@ -954,6 +921,7 @@ module MakeBox( box )
                 {
                     translate( [ pos_x, pos_y, __finger_cutouts_bottom() ] )
                         MakeRoundedCube( [ cutout_x , cutout_y, cutout_z ], radius );
+                        //cube([ cutout_x , cutout_y, cutout_z ]);
                 }
                 else if ( side == BACK )
                 {
@@ -961,11 +929,12 @@ module MakeBox( box )
 
                     translate( [ pos_x, pos_y2, __finger_cutouts_bottom() ] )
                         MakeRoundedCube( [ cutout_x , cutout_y, cutout_z ], radius );
+                        //cube([ cutout_x , cutout_y, cutout_z ]);
                 }                
             }  
             else if ( side == LEFT || side == RIGHT )
             {
-                cutout_x = min( __component_padding(X)*2, __compartment_size(X)/2) + min(10, __compartment_size(X));
+                cutout_x = min( __component_padding(X)*2, __compartment_size(X)/2) + 10;
                 cutout_y = max( 10, __compartment_size( Y )/3 );
 
                 pos_x = - __component_padding( X ) - m_wall_thickness -radius;
@@ -975,6 +944,7 @@ module MakeBox( box )
                 {
                     translate( [ pos_x, pos_y, __finger_cutouts_bottom() ] )
                         MakeRoundedCube( [ cutout_x , cutout_y, cutout_z ], radius );
+                        //cube([ cutout_x , cutout_y, cutout_z ]);
                 }   
                 else if ( side == RIGHT )
                 {
@@ -982,6 +952,7 @@ module MakeBox( box )
 
                     translate( [ pos_x2, pos_y, __finger_cutouts_bottom() ] )
                         MakeRoundedCube( [ cutout_x , cutout_y, cutout_z ], radius );
+                        //cube([ cutout_x , cutout_y, cutout_z ]);
                 }                    
             }    
         }
