@@ -83,7 +83,7 @@ And this is the result:
 
 
 
-# Published inserts that myself and others have made:
+* Published inserts:
 
 - Pandemic: https://www.thingiverse.com/thing:3412724
 - Mice and Mystics: https://www.thingiverse.com/thing:3435429
