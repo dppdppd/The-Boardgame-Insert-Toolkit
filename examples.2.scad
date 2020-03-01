@@ -45,7 +45,7 @@ data =
             ]
         ]
     ],    
-    [   "example 1: basic tray with defaults",
+    [   "example 1",
         [
             [ "box_dimensions",                             [110.0, 180.0, 22.0] ],             // outside dimensions of the box
             [ "enabled",                                    t],

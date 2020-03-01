@@ -23,7 +23,7 @@ Result: ![example1](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blo
 
 Here is another example:
 
-    [   "example 1: basic tray with defaults",
+    [   "example 1",
         [
             [ "box_dimensions",                             [110.0, 180.0, 22.0] ],             
             [ "enabled",                                    t],
