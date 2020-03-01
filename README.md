@@ -17,7 +17,7 @@ The file is built of keyvalue pairs. Here is an example:
 
 The outer keyvalue is [ "box", array_of_keyvalues ]. The array_of_keyvalues is a bunch of stuff we need to define the box. One of those is "components," which contains the different kinds of compartments our box will have.
 
-Result: ![example1](https://raw.githubusercontent.com/username/projectname/branch/path/to/img.png)
+Result: ![example1](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/example1.png)
 
 
 
@@ -79,7 +79,7 @@ Here is another example:
 
 And this is the result:
 
-![example2](https://raw.githubusercontent.com/username/projectname/branch/path/to/img.png)
+![example2](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/example2.png)
 
 
 
