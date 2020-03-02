@@ -6,12 +6,12 @@ The file is built of keyvalue pairs. Here is an example:
 
     [   "example 0: minimal",
         [
-            [ "box_dimensions", [46.5, 46.5, 15.0] ],
-            [ "components",
+            [ BOX_DIMENSIONS, [46.5, 46.5, 15.0] ],
+            [ BOX_COMPONENTS,
                 [[   "my chits",
                         [
-                            ["num_compartments", [4,4]],
-                            ["compartment_size", [ 10, 10, 13.0] ],
+                            [CMP_NUM_COMPARTMENTS, [4,4]],
+                            [CMP_COMPARTMENT_SIZE, [ 10, 10, 13.0] ],
                         ]
                     ]]]]]
 
@@ -25,48 +25,48 @@ Here is another example:
 
     [   "example 1",
         [
-            [ "box_dimensions",                             [110.0, 180.0, 22.0] ],             
-            [ "enabled",                                    t],
-            [ "lid_notches",                                f],
-            [ "lid_hex_radius",                             8.0],
-            [ "fit_lid_under",                              f],
+            [ BOX_DIMENSIONS,                             [110.0, 180.0, 22.0] ],             
+            [ ENABLED,                                    t],
+            [ BOX_LID_NOTCHES,                                f],
+            [ BOX_LID_HEX_RADIUS,                             8.0],
+            [ BOX_LID_FIT_UNDER,                              f],
 
-            [ "label",
+            [ LABEL,
                 [
-                    [ "text",   "Example title"],
-                    [ "width",   "auto" ],
-                    [ "rotation", 45 ],
-                    [ "offset", [ -4,-2]],
+                    [ LBL_TEXT,   "Example title"],
+                    [ LBL_SIZE,   AUTO ],
+                    [ ROTATION, 45 ],
+                    [ POSITION, [ -4,-2]],
                 ]
             ],
 
-            [   "components",
+            [   BOX_COMPONENTS,
                 [
                     [   "my chits",
                         [
-                            ["compartment_size",                [ 22, 60.0, 20.0] ],    
-                            ["num_compartments",                [2,2] ],                
-                            ["shape",                           "square"],                
-                            ["shape_rotated_90",                f],                     
-                            ["shape_vertical",                  f],                     
-                            ["padding",                         [15,12]],               
-                            ["padding_height_adjust",           [-5, 0] ],             
-                            ["margin",                          [t,f,f,f]],             
-                            ["cutout_sides",                    [f,f,f,t]],             
-                            ["rotation",                        5 ],                    
-                            ["position",                        ["center","center"]],   
-                            ["label",               
+                            [CMP_COMPARTMENT_SIZE,                [ 22, 60.0, 20.0] ],    
+                            [CMP_NUM_COMPARTMENTS,                [2,2] ],                
+                            [CMP_SHAPE,                           SQUARE],                
+                            [CMP_SHAPE_ROTATED,                f],                     
+                            [CMP_SHAPE_VERTICAL,                  f],                     
+                            [CMP_PADDING,                         [15,12]],               
+                            [CMP_PADDING_HEIGHT_ADJUST,           [-5, 0] ],             
+                            [CMP_MARGIN,                          [t,f,f,f]],             
+                            [CMP_CUTOUT_SIDES,                    [f,f,f,t]],             
+                            [ROTATION,                        5 ],                    
+                            [POSITION,                        [CENTER,CENTER]],   
+                            [LABEL,               
                                 [
-                                    ["text",        [   
+                                    [LBL_TEXT,        [   
                                                         ["backleft", "backright"],        
                                                         ["frontleft", "frontright"],
                                                     ]
                                     ],
-                                    ["placement",   "front"],                           
-                                    [ "rotation",  10],
-                                    [ "font_size", "auto"],
-                                    [ "offset", [ -4,-2]],
-                                    [ "font", "Times New Roman:style=bold italic"],
+                                    [LBL_PLACEMENT,   FRONT],                           
+                                    [ ROTATION,  10],
+                                    [ LBL_SIZE, AUTO],
+                                    [ POSITION, [ -4,-2]],
+                                    [ LBL_FONT, "Times New Roman:style=bold italic"],
 
                                 ]
                             ],  

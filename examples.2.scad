@@ -32,13 +32,13 @@ data =
 [
     [   "example 0: minimal",
         [
-            [ "box_dimensions",                             [46.5, 46.5, 15.0] ],             // outside dimensions of the box
-            [ "components",
+            [ BOX_DIMENSIONS,                             [46.5, 46.5, 15.0] ],             // outside dimensions of the box
+            [ BOX_COMPONENTS,
                 [
                     [   "my chits",
                         [
-                            ["num_compartments",                [4,4]],
-                            ["compartment_size",                [ 10, 10, 13.0] ],    // size of each compartment in x,y,z
+                            [CMP_NUM_COMPARTMENTS,                [4,4]],
+                            [CMP_COMPARTMENT_SIZE,                [ 10, 10, 13.0] ],    // size of each compartment in x,y,z
                         ]
                     ],                  
                 ]
@@ -47,48 +47,48 @@ data =
     ],    
     [   "example 1",
         [
-            [ "box_dimensions",                             [110.0, 180.0, 22.0] ],             // outside dimensions of the box
-            [ "enabled",                                    t],
-            [ "lid_notches",                                f],
-            [ "lid_hex_radius",                             8.0],
-            [ "fit_lid_under",                              f],
+            [ BOX_DIMENSIONS,                             [110.0, 180.0, 22.0] ],             // outside dimensions of the box
+            [ ENABLED,                                    t],
+            [ BOX_LID_NOTCHES,                                f],
+            [ BOX_LID_HEX_RADIUS,                             8.0],
+            [ BOX_LID_FIT_UNDER,                              f],
 
-            [ "label",
+            [ LABEL,
                 [
-                    [ "text",   "Example title"],
-                    [ "width",   "auto" ],
-                    [ "rotation", 45 ],
-                    [ "offset", [ -4,-2]],
+                    [ LBL_TEXT,   "Example title"],
+                    [ LBL_SIZE,   AUTO ],
+                    [ ROTATION, 45 ],
+                    [ POSITION, [ -4,-2]],
                 ]
             ],
 
-            [   "components",
+            [   BOX_COMPONENTS,
                 [
                     [   "my chits",
                         [
-                            ["compartment_size",                [ 22, 60.0, 20.0] ],    // size of each compartment in x,y,z
-                            ["num_compartments",                [2,2] ],                // number of compartments [vertically, horizontally]
-                            ["shape",                           "square"],                // one of several presets: "hex" | "hex2" | "round" | "square" | "oct" | "oct2"
-                            ["shape_rotated_90",                f],                     // rotate shape on Z axis
-                            ["shape_vertical",                  f],                     // use shape vertically
-                            ["padding",                         [15,12]],               // Determines space between compartments (and margins) in mm
-                            ["padding_height_adjust",           [-5, 0] ],             // Vertical, Horizontal
-                            ["margin",                          [t,f,f,f]],             // front,back,left,right
-                            ["cutout_sides",                    [f,f,f,t]],             // front,back,left,right                                                             
-                            ["rotation",                        5 ],                    // rotate the whole component.
-                            ["position",                        ["center","center"]],   // x,y in mm | "center" | "max"
-                            ["label",               
+                            [CMP_COMPARTMENT_SIZE,                [ 22, 60.0, 20.0] ],    // size of each compartment in x,y,z
+                            [CMP_NUM_COMPARTMENTS,                [2,2] ],                // number of compartments [vertically, horizontally]
+                            [CMP_SHAPE,                           SQUARE],                // one of several presets: HEX | HEX2 | ROUND | SQUARE | OCT | OCT2
+                            [CMP_SHAPE_ROTATED,                f],                     // rotate shape on Z axis
+                            [CMP_SHAPE_VERTICAL,                  f],                     // use shape vertically
+                            [CMP_PADDING,                         [15,12]],               // Determines space between compartments (and margins) in mm
+                            [CMP_PADDING_HEIGHT_ADJUST,           [-5, 0] ],             // Vertical, Horizontal
+                            [CMP_MARGIN,                          [t,f,f,f]],             // front,back,left,right
+                            [CMP_CUTOUT_SIDES,                    [f,f,f,t]],             // front,back,left,right                                                             
+                            [ROTATION,                        5 ],                    // rotate the whole component.
+                            [POSITION,                        [CENTER,CENTER]],   // x,y in mm | CENTER | MAX
+                            [LABEL,               
                                 [
-                                    ["text",        [   
+                                    [LBL_TEXT,        [   
                                                         ["backleft", "backright"],        // simple string or array representing each compartment
                                                         ["frontleft", "frontright"],
                                                     ]
                                     ],
-                                    ["placement",   "front"],                           // "center" | "front" | "back" | "left" | "right" |  "front-wall" | "back-wall" | "left-wall" | "right-wall"
-                                    [ "rotation",  10],
-                                    [ "font_size", "auto"],
-                                    [ "offset", [ -4,-2]],
-                                    [ "font", "Times New Roman:style=bold italic"],
+                                    [LBL_PLACEMENT,   FRONT],                           // CENTER | FRONT | BACK | LEFT | RIGHT |  FRONT_WALL | BACK_WALL | LEFT_WALL | RIGHT_WALL
+                                    [ ROTATION,  10],
+                                    [ LBL_SIZE, AUTO],
+                                    [ POSITION, [ -4,-2]],
+                                    [ LBL_FONT, "Times New Roman:style=bold italic"],
 
                                 ]
                             ],  
@@ -100,26 +100,26 @@ data =
     ],
     [   "example 2: card tray, shear example",
         [
-            [ "box_dimensions",                             [50.0, 50.0, 20.0] ],             // outside dimensions of the box
-            [ "components",
+            [ BOX_DIMENSIONS,                             [50.0, 50.0, 20.0] ],             // outside dimensions of the box
+            [ BOX_COMPONENTS,
                 [
                     [   "my chits",
                         [
-                            ["num_compartments",                [2,4]],
-                            ["compartment_size",                [ 20, 5.0, 5.0] ],    // size of each compartment in x,y,z
-                            ["shape_vertical",                  t],
-                            ["shear",                           [0,45]],
-                            ["label",               
+                            [CMP_NUM_COMPARTMENTS,                [2,4]],
+                            [CMP_COMPARTMENT_SIZE,                [ 20, 5.0, 5.0] ],    // size of each compartment in x,y,z
+                            [CMP_SHAPE_VERTICAL,                  t],
+                            [CMP_SHEAR,                           [0,45]],
+                            [LABEL,               
                                 [
-                                    ["text",        [   
+                                    [LBL_TEXT,        [   
                                                         [ "1",  "2" ],        // simple string or array representing each compartment
                                                         [ "3",  "4" ],
                                                         [ "4",  "5" ],
                                                         [ "6",  "7" ]
                                                     ]
                                     ],
-                                    ["placement",   "back-wall"],                           // "center" | "front" | "back" | "left" | "right" |  "front-wall" | "back-wall" | "left-wall" | "right-wall"
-                                    ["font_size",        2],
+                                    [LBL_PLACEMENT,   BACK_WALL],                           // CENTER | FRONT | BACK | LEFT | RIGHT |  FRONT_WALL | BACK_WALL | LEFT_WALL | RIGHT_WALL
+                                    [LBL_SIZE,        2],
                                     
                                 ]
                             ],  
