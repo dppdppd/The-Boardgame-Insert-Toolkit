@@ -101,4 +101,3 @@ And this is the result:
 - Mansions of Madness 2nd edition persons container: https://www.thingiverse.com/thing:3527361
 - Stuffed Fables: https://www.thingiverse.com/thing:3535505
 - Star Trek: Frontiers: https://www.thingiverse.com/thing:3538652
-Cheers.
