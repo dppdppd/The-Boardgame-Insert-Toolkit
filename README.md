@@ -5,15 +5,15 @@ This OpenSCAD library was designed to allow the quick design and iteration on bo
 # How
 - Download the Openscad for your OS. https://www.openscad.org
 - Create a new directory for the board game you're working on. This is not required, but good habit. It's best to keep the BIT file with the board game file because future BIT versions may not be backwards compatible and this way you will always have the version that was and be able to recreate the STLs.
-- Put the boardgame_insert_toolkit_library.2.scad file in the directory. See #1.
-- Make a copy of example.2.scad. Rename it. This will have the specific details that form your insert.
-- The first line should be **include <boardgame_insert_toolkit_lib.2.scad>;** and the last should be **MakeAll();** Your design goes inbetween.
+- Put the _boardgame_insert_toolkit_library.2.scad_ file in the directory. See above.
+- Make a copy of _example.2.scad_. Rename it. This will have the specific details that form your insert.
+- The first line should be __include <boardgame_insert_toolkit_lib.2.scad>;__ and the last should be __MakeAll();__ Your design goes inbetween.
 - I don't recommend using the Openscad built in editor to edit the scad file. I like emacs and Visual Studio Code.
 - Open your new scad file in both your favorite text editor and in Openscad.
 - In Openscad, set "Automatic Reload and Preview" to on in the Design menu. Now openscad will update the display whenever you save the scad file in the text editor.
 - Measure, build, measure again.
 - When you're done, in Openscad, _Render_ final geometry, then _Export_ and STL file for your slicer. 
-- I also recommend making a little script that will split your STL into separate objects using Slic3r's --split feature. https://slic3r.org This is especially handy when sharing your designs, as it eliminates the tedious manual work and allows you to post individual pieces rather than compound objects.
+- I also recommend making a little script that will split your STL into separate objects using Slic3r (https://slic3r.org)'s --split feature. This is especially handy when sharing your designs, as it eliminates the tedious manual work and allows you to post individual pieces rather than compound objects.
 - If you post it on Thingiverse, make it a _remix_ of BIT (https://www.thingiverse.com/thing:3405465) and I'll get notified and eventually add it to the list of game inserts. 
 
 ### Pay attention to your dimensions.
