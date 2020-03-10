@@ -17,10 +17,10 @@ This OpenSCAD library was designed to allow the quick design and iteration on bo
 - If you post it on Thingiverse, make it a _remix_ of BIT (https://www.thingiverse.com/thing:3405465) and I'll get notified and eventually add it to the list of game inserts. 
 
 ### Pay attention to your dimensions.
-- Note that the box dimensions are _exterior_ dimensions and are such to guarantee that the component box you design fits inside the game box as you measured it.
-- Also note that the compartment dimensions are _interior_ dimensions and are such to guarantee that the game pieces you will measure will fit inside the compartments.
-- This means that you'll want to make sure that they don't get too close or your box walls will be thin and/or nonexistant.
-- If you stick to defaults, then the side walls are 1.5mm thick and the lid is 2mm. So you'll want to leave 3mm in depth and length and 2mm in the height.
+- Note that the box dimensions are _exterior_ dimensions and are such to guarantee that the box you're designing fits inside the game box, as you measured the cavity within.
+- Also note that the compartment dimensions are _interior_ dimensions and are such to guarantee that the game pieces will fit inside the compartments.
+- This means that you'll want to make sure that those exterior and interior values don't get too close to each other or your box walls will be thin and/or nonexistant.
+- If you stick to defaults, then the side walls are 1.5mm thick and the lid is 2mm. So you'll want to leave 3mm in depth and length and 2mm in the height when designing compartments.
 
 ## Key Values
 The fundamental concept of the insert configuration file is the key-value pair, i.e. [ _key_ , _value_ ]. Often the _value_ is an array of other key-value pairs, so it's important to use tabs to keep track of the alignment. That's where a good text editor comes in handy. See the following example.
