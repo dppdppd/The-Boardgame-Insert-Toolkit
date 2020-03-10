@@ -10,7 +10,7 @@ This OpenSCAD library was designed to allow the quick design and iteration on bo
 - The first line should be __include <boardgame_insert_toolkit_lib.2.scad>;__ and the last should be __MakeAll();__ Your design goes inbetween.
 - I don't recommend using the Openscad built in editor to edit the scad file. I like emacs and Visual Studio Code.
 - Open your new scad file in both your favorite text editor and in Openscad.
-- In Openscad, set "Automatic Reload and Preview" to on in the Design menu. Now openscad will update the display whenever you save the scad file in the text editor.
+- In Openscad, set "Automatic Reload and Preview" _on_ in the Design menu. Now openscad will update the display whenever you save the scad file in the text editor.
 - Measure, build, measure again.
 - When you're done, in Openscad, _Render_ final geometry, then _Export_ and STL file for your slicer. 
 - I also recommend making a little script that will split your STL into separate objects using Slic3r (https://slic3r.org)'s --split feature. This is especially handy when sharing your designs, as it eliminates the tedious manual work and allows you to post individual pieces rather than compound objects.
