@@ -1,27 +1,55 @@
-This OpenSCAD library was created to make it easy to create board game inserts with lids for either horizontal or vertical storage, without any programming required.
 
-Create a settings file, in which you specify the box dimensions and any number of compartments, their sizes, what kind of pieces it holds, etc, and the script will do the rest.
+# Why
+This OpenSCAD library was designed to allow the quick design and iteration on board game inserts, specifically ones with lids. There are lots of great insert designs out there, but very few for us vertical storers.
 
-The file is built of keyvalue pairs. Here is an example:
+# How
+- Download the Openscad for your OS. https://www.openscad.org
+- Create a new directory for the board game you're working on. This is not required, but good habit. It's best to keep the BIT file with the board game file because future BIT versions may not be backwards compatible and this way you will always have the version that was and be able to recreate the STLs.
+- Put the boardgame_insert_toolkit_library.2.scad file in the directory. See #1.
+- Make a copy of example.2.scad. Rename it. This will have the specific details that form your insert.
+- The first line should be **include <boardgame_insert_toolkit_lib.2.scad>;** and the last should be **MakeAll();** Your design goes inbetween.
+- I don't recommend using the Openscad built in editor to edit the scad file. I like emacs and Visual Studio Code.
+- Open your new scad file in both your favorite text editor and in Openscad.
+- In Openscad, set "Automatic Reload and Preview" to on in the Design menu. Now openscad will update the display whenever you save the scad file in the text editor.
+- Measure, build, measure again.
+- When you're done, in Openscad, _Render_ final geometry, then _Export_ and STL file for your slicer. 
+- I also recommend making a little script that will split your STL into separate objects using Slic3r's --split feature. https://slic3r.org This is especially handy when sharing your designs, as it eliminates the tedious manual work and allows you to post individual pieces rather than compound objects.
+- If you post it on Thingiverse, make it a _remix_ of BIT (https://www.thingiverse.com/thing:3405465) and I'll get notified and eventually add it to the list of game inserts. 
 
-    [   "example 0: minimal",
+### Pay attention to your dimensions.
+- Note that the box dimensions are _exterior_ dimensions and are such to guarantee that the component box you design fits inside the game box as you measured it.
+- Also note that the compartment dimensions are _interior_ dimensions and are such to guarantee that the game pieces you will measure will fit inside the compartments.
+- This means that you'll want to make sure that they don't get too close or your box walls will be thin and/or nonexistant.
+- If you stick to defaults, then the side walls are 1.5mm thick and the lid is 2mm. So you'll want to leave 3mm in depth and length and 2mm in the height.
+
+## Key Values
+The fundamental concept of the insert configuration file is the key-value pair, i.e. [ _key_ , _value_ ]. Often the _value_ is an array of other key-value pairs, so it's important to use tabs to keep track of the alignment. That's where a good text editor comes in handy. See the following example.
+
+    [   "example 0: minimal", // our box
         [
-            [ BOX_DIMENSIONS, [46.5, 46.5, 15.0] ],
-            [ BOX_COMPONENTS,
-                [[   "my chits",
+            [ BOX_DIMENSIONS, [46.5, 46.5, 15.0] ],             // one kv pair specifying the x, y, and z of our box exterior.
+            [ BOX_COMPONENTS,                                   // this is where our components will go.
+                [
+                    [   "my chits",                             // our first component.
                         [
                             [CMP_NUM_COMPARTMENTS, [4,4]],
                             [CMP_COMPARTMENT_SIZE, [ 10, 10, 13.0] ],
                         ]
-                    ]]]]]
+                    ]
+                ]
+            ]
+        ]
+    ]
 
-The outer keyvalue is [ "box", array_of_keyvalues ]. The array_of_keyvalues is a bunch of stuff we need to define the box. One of those is "components," which contains the different kinds of compartments our box will have.
+That made this: 
+![example1](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/example1.png)
 
-Result: ![example1](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/example1.png)
+### Some Explanation
+The first key-value pair is [ "example 0: minimal", _one_big_array_of_keyvalues_ ]. The _one_big_array_of_keyvalues_ is all of the details of the box. And we assign it to the key named after our box "example 0: minimal". Those key-values will be properties of the box BOX_, including the key-value pair called BOX_COMPONENTS, which contains all of the various different kinds of game piece component. Each component can have many compartments, albiet they will all be nearly identical are generally used to hold multiples of the same kind of piece. See https://www.thingiverse.com/thing:3435429 for an example of lots of compartments of lots of components in lots of boxes.
 
 
+Here is an example of some card compartments with holes to get our fingers in to pull them out:
 
-Here is another example:
 
     [   "example 1",
         [
@@ -78,12 +106,77 @@ Here is another example:
     ],
 
 And this is the result:
-
 ![example2](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/example2.png)
 
 
+# Keys
+The following are the reserved keys and values you can/should use.
 
-* Published inserts:
+    // Box keys
+    //
+    BOX_DIMENSIONS
+    BOX_COMPONENTS
+    BOX_VISUALIZATION
+    BOX_LID_NOTCHES
+    BOX_LID_HEX_RADIUS
+    BOX_LID_FIT_UNDER
+    BOX_LID
+    BOX_THIN_LID
+
+    // Compartment keys
+    //
+    CMP_NUM_COMPARTMENTS
+    CMP_COMPARTMENT_SIZE
+    CMP_SHAPE
+    CMP_SHAPE_ROTATED
+    CMP_SHAPE_VERTICAL
+    CMP_PADDING
+    CMP_PADDING_HEIGHT_ADJUST
+    CMP_MARGIN
+    CMP_CUTOUT_SIDES
+    CMP_SHEAR
+
+    // Label keys
+    //
+    LBL_TEXT
+    LBL_SIZE
+    LBL_PLACEMENT
+    LBL_FONT
+    LBL_DEPTH
+
+    LABEL
+
+    // Valid values for LBL_PLACEMENT
+    FRONT
+    BACK
+    LEFT
+    RIGHT
+    FRONT_WALL
+    BACK_WALL
+    LEFT_WALL
+    RIGHT_WALL
+    CENTER
+
+    // valid values for CMP_SHAPE
+    SQUARE
+    HEX
+    HEX2
+    OCT
+    OCT2
+    ROUND
+    FILLET
+
+    AUTO
+    MAX
+
+    ENABLED
+    ROTATION
+    POSITION
+
+
+
+
+# Published inserts:
 
 - Pandemic: https://www.thingiverse.com/thing:3412724
 - Mice and Mystics: https://www.thingiverse.com/thing:3435429
