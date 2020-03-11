@@ -115,7 +115,7 @@ And this is the result:
 #### `BOX_DIMENSIONS`
 value is expected to be an array of 3 numbers, and determines that represents the exterior dimensions
 of the box as width, depth, height.  
-//e.g. `[ BOX_DIMENSIONS, [ 140, 250, 80 ] ]`
+e.g. `[ BOX_DIMENSIONS, [ 140, 250, 80 ] ]`
 
 #### `BOX_COMPONENTS`
 value is expected to be an array of components, each one representing one type of compartment, repeated in 2d.
