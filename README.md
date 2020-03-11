@@ -113,7 +113,7 @@ And this is the result:
 # Keys
 ### Box keys
 #### `BOX_DIMENSIONS`
-value is expected to be an array of 3 numbers, and determines that represents the exterior dimensions
+value is expected to be an array of 3 numbers, and determines the exterior dimensions
 of the box as width, depth, height.  
 e.g. `[ BOX_DIMENSIONS, [ 140, 250, 80 ] ]`
 
