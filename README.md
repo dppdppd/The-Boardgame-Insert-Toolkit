@@ -111,48 +111,48 @@ And this is the result:
 
 
 # Keys
-## Box keys
-### `BOX_DIMENSIONS`
+### Box keys
+#### `BOX_DIMENSIONS`
 value is expected to be an array of 3 numbers, and determines that represents the exterior dimensions
 of the box as width, depth, height.  
 //e.g. `[ BOX_DIMENSIONS, [ 140, 250, 80 ] ]`
 
-### `BOX_COMPONENTS`
+#### `BOX_COMPONENTS`
 value is expected to be an array of components, each one representing one type of compartment, repeated in 2d.
 
-### `BOX_VISUALIZATION`
+#### `BOX_VISUALIZATION`
 describe me
 
-### `BOX_LID_NOTCHES`
+#### `BOX_LID_NOTCHES`
 value is expected to be a bool, "true", "false", "t", or "f", and determines whether the box will have notches that make pulling the lid off easier.  
 e.g. `[ BOX_LID_NOTCHES, f ]`
 
-### `BOX_LID_HEX_RADIUS`
+#### `BOX_LID_HEX_RADIUS`
 value is expected to be a number, and determines the radius of the hexes in the lid.  
 e.g. `[ BOX_LID_HEX_RADIUS, 5 ]`
 
-### `BOX_LID_FIT_UNDER`
+#### `BOX_LID_FIT_UNDER`
 value is expected to be a bool, and determines whether the box bottom is formed to allow the box to sit in the lid when open. Note that this requires a printer that can handle printing 45 degrees outward without supports.
 
-### `BOX_LID`
+#### `BOX_LID`
 value is expected to be a bool, and determines whether a lid is constructed and whether the box has the inset lip to support one.
 
-### `BOX_THIN_LID`
+#### `BOX_THIN_LID`
 describe me
 
 
-## Compartment keys
+### Compartment keys
 
 
-### `CMP_NUM_COMPARTMENTS`
+#### `CMP_NUM_COMPARTMENTS`
 value is expected to be an array of 2 numbers, and determines how many compartments this component will have in the width and depth direction.  
 e.g. `[ CMP_NUM_COMPARTMENTS, [ 4, 6 ] ]`
 
-### `CMP_COMPARTMENT_SIZE`
+#### `CMP_COMPARTMENT_SIZE`
 value is expected to be an array of 3 numbers, and determines the interior dimensions of each compartment within the component.  
 e.g. `[ CMP_COMPARTMENT_SIZE, [ 10, 20, 5 ] ]`
 
-### CMP_SHAPE
+#### CMP_SHAPE
 value is expected to be one of the following:
 - `SQUARE`    
 default right angled compartment
@@ -171,40 +171,40 @@ a square compartment with rounded bottoms
 
 e.g. `[ CMP_SHAPE, HEX2 ]`
 
-### `CMP_SHAPE_ROTATED`
+#### `CMP_SHAPE_ROTATED`
 value is expected to be a bool, and determines whether the shape is rotated along the Z axis. That is, whether it goes back and forth or side to side.
 
-### `CMP_SHAPE_VERTICAL`
+#### `CMP_SHAPE_VERTICAL`
 value is expected to be a bool, and determines whether the shape is rotated for vertical stacks of pieces.
 
-### `CMP_PADDING`
+#### `CMP_PADDING`
 value is expected to be an array of 3 numbers, and determines how far apart the compartments in a component are, in the width and depth direction.  
 e.g. `[ CMP_PADDING, [ 2.5, 1.3 ] ]`
 
-### `CMP_PADDING_HEIGHT_ADJUST`
+#### `CMP_PADDING_HEIGHT_ADJUST`
 value is expected to be an array of 2 numbers, and determines how much to modify the height of the padding between compartments. These should typically
 be negative values.  
 e.g. `[ CMP_PADDING_HEIGHT_ADJUST, [ -3, 0 ] ]`
 
-### `CMP_MARGIN`
+#### `CMP_MARGIN`
 value is expected to be an array of 4 bools, and determines whether padding is also added to the outside of the compartment array. The values represent [front, back, left, right ].  
 e.g. `[ CMP_MARGIN, [ t, f, t, f ] ]`
 
-### `CMP_CUTOUT_SIDES`
+#### `CMP_CUTOUT_SIDES`
 value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the compartments. The values represent [front, back, left, right ].  
 e.g. `[ CMP_CUTOUT_SIDES, [ t, t, f, f ] ]`
 
-### `CMP_SHEAR`
+#### `CMP_SHEAR`
 value is expected to be an array of 2 numbers, and determines the degrees to which the component should be sheared in the direction of width and depth.  
 e.g. `[ CMP_SHEAR, [ 45, 0 ] ]`
 
-### 'LABEL'
+#### `LABEL`
 value is expected to be an array of key-values that define the label. A Label can be defined at the box-level for the label that will appear on the lid, or at the component label for the labels that will appear on the compartments.
 
 
-## Label keys
+### Label keys
 
-### `LBL_TEXT`
+#### `LBL_TEXT`
 value is expected to either be a string, or an array of strings matching the structure of the compartments. A single string will label every compartment with that string while an array will label each compartment with its respective string.  
 e.g. `[ LBL_TEXT, "tokens" ]`  
 or
@@ -216,11 +216,11 @@ or
         ]
     ]
 
-### LBL_SIZE
+#### `LBL_SIZE`
 value is expected to either be `AUTO` or a number. `AUTO` will attempt to scale the label to fit in the space according to _width_. This does not work will with very short words. A number will specify the font size.  
 e.g. `[ LBL_SIZE, 12 ]`
 
-### LBL_PLACEMENT
+#### `LBL_PLACEMENT`
 value is expected to be one of the following:  
 - `FRONT`
 - `BACK`
@@ -234,32 +234,28 @@ value is expected to be one of the following:
 
 Front, back, left, and right, will place the label on the top surface, while the _wall values will place the label inside, on the compartment wall. Center will place the label on the compartment floor.
 
-### LBL_FONT
+#### `LBL_FONT`
 value is expected to be a string that determines what font to use for the label. More [here](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Text#Using_Fonts_&_Styles).  
 e.g. `[ LBL_FONT, "Times New Roman:style=bold italic" ]`
 
-### LBL_DEPTH
+#### `LBL_DEPTH`
 value is expected to be a number, and determines how deep the label should cut.  
 e.g. `[ LBL_DEPTH, 0.5 ]`
 
-### ROTATION
+#### `ROTATION`
 value is expected to be a number, and determines the degree to which the component or label is to be rotated.  
 e.g. `[ ROTATION, 45 ]`
 
-### POSITION
+#### `POSITION`
 value is expected to be an array of 2 numbers, although `MAX` is also valid, and determines the position of the label or component. 
 - When used on a label, the values are relative to reasonable centers and can be used to adjust the positioning of the text.
 - When used on a component, it is always relative to the origin of the box, and almost always needs to be present.
 - When used on a component, the value `MAX` essentially aligns that value to opposite end, so 'right' when placed in the x position, and 'back' when placed in the y position.  
 e.g. `[ POSITION, [ 20, MAX ] ]`
 
-## ENABLED
+#### `ENABLED`
 value is expected to be a bool, and determines whether the box, component, or label, is used. This allows for easily turning features off temporarily or permanently without needing to delete lots of content.  
 e.g. `[ ENABLED, f ]`
-
-
-
-
 
 
 # Published inserts:
