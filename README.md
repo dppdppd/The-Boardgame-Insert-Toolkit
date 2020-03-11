@@ -46,7 +46,7 @@ That made this:
 ![example1](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/example1.png)
 
 ### Some Explanation
-The first key-value pair is [ "example 0: minimal", _one_big_array_of_keyvalues_ ]. The _one_big_array_of_keyvalues_ is all of the details of the box. Those nested key-values will define properties of the box, including the key-value pair called `BOX_COMPONENTS`, which contains defines a key-value array that holds the parameters of the components. It's key-values all the way down. See https://www.thingiverse.com/thing:3435429 for an example of lots of compartments of lots of components in lots of boxes.
+The first key-value pair is [ "example 0: minimal", _one_big_array_of_keyvalues_ ], and its value is an array of all of the details of the box. One of those children key-value pairs is `BOX_COMPONENTS`, which holds all of the individual components. It's key-values all the way down. See https://www.thingiverse.com/thing:3435429 for an example of lots of compartments of lots of components in lots of boxes.
 
 
 Here is an example of some compartments designed to hold cards, with holes to get our fingers in on the side. Many of these parameters are just the default values and are not necessary, but are included for easy modification:
@@ -152,7 +152,7 @@ e.g. `[ CMP_NUM_COMPARTMENTS, [ 4, 6 ] ]`
 value is expected to be an array of 3 numbers, and determines the interior dimensions of each compartment within the component.  
 e.g. `[ CMP_COMPARTMENT_SIZE, [ 10, 20, 5 ] ]`
 
-#### CMP_SHAPE
+#### `CMP_SHAPE`
 value is expected to be one of the following:
 - `SQUARE`    
 default right angled compartment
