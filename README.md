@@ -116,7 +116,7 @@ As of v2.04, there is also the ability to create card dividers in addition to bo
     [ "divider example 1",
         [
             [ TYPE, DIVIDERS ],
-            [ DIV_TAB_TEXT,   ["001","002"]],
+            [ DIV_TAB_TEXT,   ["001","002","003"]],
             [ DIV_FRAME_NUM_COLUMNS, 2 ]
         ]
     ]
@@ -342,19 +342,22 @@ e.g. `[ ENABLED, f ]`
 
 # Published inserts:
 
-- Pandemic: https://www.thingiverse.com/thing:3412724
-- Mice and Mystics: https://www.thingiverse.com/thing:3435429
-- Indonesia (upgraded goods): https://www.thingiverse.com/thing:3446879
-- Indonesia (upgraded goods and ships ): https://www.thingiverse.com/thing:3454636
-- Pax Emancipation: https://www.thingiverse.com/thing:3450282
-- Bios: Genesis: https://www.thingiverse.com/thing:3452368
-- Greenland/Neanderthal: https://www.thingiverse.com/thing:3469793
-- Pax Porfiriana (Collector's Edition): https://www.thingiverse.com/thing:3478944
-- Pax Renaissance: https://www.thingiverse.com/thing:3479114
-- High Frontier (3rd): https://www.thingiverse.com/thing:3482341
-- Bios: Megafauna: https://www.thingiverse.com/thing:3493660
-- 1830: https://www.thingiverse.com/thing:3499314
-- Sword & Sorcery: https://www.thingiverse.com/thing:3515523
-- Mansions of Madness 2nd edition persons container: https://www.thingiverse.com/thing:3527361
-- Stuffed Fables: https://www.thingiverse.com/thing:3535505
-- Star Trek: Frontiers: https://www.thingiverse.com/thing:3538652
+
+- [Pandemic]( https://www.thingiverse.com/thing:3412724)
+- [Mice and Mystics]( https://www.thingiverse.com/thing:3435429)
+- [Indonesia (upgraded goods)]( https://www.thingiverse.com/thing:3446879)
+- [Indonesia (upgraded goods and ships )]( https://www.thingiverse.com/thing:3454636)
+- [Pax Emancipation]( https://www.thingiverse.com/thing:3450282)
+- [Bios:Genesis](https://www.thingiverse.com/thing:3452368)
+- [Greenland/Neanderthal]( https://www.thingiverse.com/thing:3469793)
+- [Pax Porfiriana (Collector's Edition)]( https://www.thingiverse.com/thing:3478944)
+- [Pax Renaissance]( https://www.thingiverse.com/thing:3479114)
+- [High Frontier (3rd)]( https://www.thingiverse.com/thing:3482341)
+- [Bios: Megafauna](https://www.thingiverse.com/thing:3493660)
+- [1830]( https://www.thingiverse.com/thing:3499314)
+- [Sword & Sorcery]( https://www.thingiverse.com/thing:3515523)
+- [Mansions of Madness 2nd edition persons container]( https://www.thingiverse.com/thing:3527361)
+- [Stuffed Fables]( https://www.thingiverse.com/thing:3535505)
+- [Star Trek" Frontiers]( https://www.thingiverse.com/thing:3538652)
+- [Comanchería]( https://www.thingiverse.com/thing:4187266)
+- [7th Continent dividers]( https://www.thingiverse.com/thing:4223923)
