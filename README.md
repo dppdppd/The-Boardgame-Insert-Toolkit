@@ -111,6 +111,14 @@ And this is the result:
 
 
 # Keys
+
+#### `TYPE`
+value is expected to be one of the following:
+- `BOX` (default)
+a box.
+- `DIVIDERS`
+a set of dividers.
+
 ### Box keys
 #### `BOX_DIMENSIONS`
 value is expected to be an array of 3 numbers, and determines the exterior dimensions
@@ -140,10 +148,64 @@ value is expected to be a bool, and determines whether a lid is constructed and 
 #### `BOX_THIN_LID`
 describe me
 
+### Dividers
+as of v2.04, in addition to boxes, one can also create card dividers.
+
+### Dividers keys
+#### `DIV_THICKNESS`
+value is expected to be a number, and determines the thickness of each divider.
+
+#### `DIV_FRAME_HEIGHT`
+value is expected to be a number, and determines the height of each divider without the tab.
+
+#### `DIV_FRAME_WIDTH`
+value is expected to be a number, and determines the width of each divider.
+
+#### `DIV_FRAME_TOP`
+value is expected to be a number, and determines the height of the top bar of the divider.
+
+#### `DIV_FRAME_BOTTOM`
+value is expected to be a number, and determines the height of the bottom bar of the divider.
+
+#### `DIV_FRAME_COLUMN`
+value is expected to be a number, and determines the width of the vertical bars of the divider.
+
+#### `DIV_FRAME_RADIUS`
+value is expected to be a number, and determines the radius of the frame corners of the divider.
+
+#### `DIV_FRAME_NUM_COLUMNS`
+value is expected to be a number, and determines the number of columns in the middle of the frame of the divider. 0 makes for a frame that has no middle columns. -1 makes for a solid divider with no holes.
+
+#### `DIV_TAB_WIDTH`
+value is expected to be a number, and determines the width of the tab on the divider.
+
+#### `DIV_TAB_HEIGHT`
+value is expected to be a number, and determines the height of the tab on the divider.
+
+#### `DIV_TAB_RADIUS`
+value is expected to be a number, and determines the radius of the corner of the tab on the divider.
+
+#### `DIV_TAB_CYCLE`
+value is expected to be a number, and determines over how many dividers should the tab drift from left to right.
+
+#### `DIV_TAB_TEXT`
+value is expected to be an array of strings, and determines what dividers get created.
+e.g. `[ DIV_TAB_TEXT, [ "Tab-1", "Tab-2", "Tab-3", "Tab-4" ] ]`
+
+#### `DIV_TAB_TEXT_SIZE`
+value is expected to be a number, and determines the font size of the tab text.
+
+#### `DIV_TAB_TEXT_FONT`
+value is expected to be a string, and determines the font of the tab text. More [here](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Text#Using_Fonts_&_Styles).  
+e.g. `[ LBL_FONT, "Times New Roman:style=bold italic" ]`
+
+#### `DIV_TAB_TEXT_SPACING`
+value is expected to be a number, and determines the letter spacing of the tab text.
+
+#### `DIV_TAB_TEXT_CHAR_THRESHOLD`
+value is expected to be a number, and determines the number of characters above which the size of the font should be determined automatically.
 
 ### Compartment keys
-
-
 #### `CMP_NUM_COMPARTMENTS`
 value is expected to be an array of 2 numbers, and determines how many compartments this component will have in the width and depth direction.  
 e.g. `[ CMP_NUM_COMPARTMENTS, [ 4, 6 ] ]`
@@ -219,6 +281,11 @@ or
 #### `LBL_SIZE`
 value is expected to either be `AUTO` or a number. `AUTO` will attempt to scale the label to fit in the space according to _width_. This does not work will with very short words. A number will specify the font size.  
 e.g. `[ LBL_SIZE, 12 ]`
+
+#### `LBL_SPACING`
+value is expected to either be a number, and determines the letter spacing. 
+e.g. `[ LBL_SPACING, 1.1 ]`
+
 
 #### `LBL_PLACEMENT`
 value is expected to be one of the following:  

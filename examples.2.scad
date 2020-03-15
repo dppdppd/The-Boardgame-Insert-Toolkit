@@ -45,16 +45,6 @@ data =
             ]
         ]
     ],
-    [ "divider example",
-        [
-            [ TYPE, DIVIDERS ],
-            [ DIV_TEXT,   ["001","002","RIVER"]],
-            [ DIV_TAB_WIDTH, 30],
-            [ DIV_TAB_HEIGHT, 15],
-            [ DIV_TEXT_SIZE, 8],
-            [ DIV_FRAME_NUM_COLUMNS, 1],
-        ]
-    ],
     [   "example 1",
         [
             [ BOX_DIMENSIONS,                             [110.0, 180.0, 22.0] ],             // outside dimensions of the box
@@ -139,6 +129,33 @@ data =
             ]
         ]
     ],
+    [ "divider example 1",
+        [
+            [ TYPE, DIVIDERS ],
+            [ DIV_TAB_TEXT,   ["001","002"]],
+        ]
+    ],
+    
+    [ "divider example 2",
+        [
+            [ TYPE, DIVIDERS ],
+
+            [ DIV_TAB_TEXT,   ["001","002","PASS","004","010101"]],
+
+            [ DIV_TAB_TEXT_SIZE, 6],
+
+            [ DIV_TAB_WIDTH, 30],
+            [ DIV_TAB_HEIGHT, 12],
+            [ DIV_TAB_CYCLE, 5],
+
+            [ DIV_FRAME_NUM_COLUMNS, 2],
+            [ DIV_FRAME_WIDTH, 120],
+            [ DIV_FRAME_HEIGHT, 50],
+            [ DIV_FRAME_COLUMN, 7],
+
+
+        ]
+    ],    
 ];
 
 

@@ -39,11 +39,11 @@ DIV_TAB_HEIGHT = "div_tab_height";
 DIV_TAB_RADIUS = "div_tab_radius";
 DIV_TAB_CYCLE = "div_tab_cycle";
 
-DIV_TEXT = "div_text";
-DIV_TEXT_SIZE = "div_text_size";
-DIV_TEXT_FONT = "div_text_font";
-DIV_TEXT_SPACING = "div_text_spacing";
-DIV_TEXT_CHAR_THRESHOLD = "div_text_char_threshold";
+DIV_TAB_TEXT = "div_tab_text";
+DIV_TAB_TEXT_SIZE = "DIV_TAB_TEXT_size";
+DIV_TAB_TEXT_FONT = "DIV_TAB_TEXT_font";
+DIV_TAB_TEXT_SPACING = "DIV_TAB_TEXT_spacing";
+DIV_TAB_TEXT_CHAR_THRESHOLD = "DIV_TAB_TEXT_char_threshold";
 
 DIV_FRAME_HEIGHT = "div_height";
 DIV_FRAME_WIDTH = "div_width";
@@ -230,11 +230,11 @@ function __div_tab_cycle( div ) = __value( div, DIV_TAB_CYCLE, default = 3 );
 
 function __div_total_height( div ) = __div_tab_height( div ) + __div_frame_height( div );
 
-function __div_text ( div ) = __value( div, DIV_TEXT, default = ["001","002", "003" ] );
-function __div_text_size ( div ) = __value( div, DIV_TEXT_SIZE, default = 7 );
-function __div_text_font ( div ) = __value( div, DIV_TEXT_FONT, default = "Stencil Std:style=Bold" );
-function __div_text_spacing ( div ) = __value( div, DIV_TEXT_SPACING, default = 1.1 );
-function __div_text_char_threshold ( div ) = __value( div, DIV_TEXT_CHAR_THRESHOLD, default = 4 );
+function __div_tab_text ( div ) = __value( div, DIV_TAB_TEXT, default = ["001","002", "003" ] );
+function __div_tab_text_size ( div ) = __value( div, DIV_TAB_TEXT_SIZE, default = 7 );
+function __div_tab_text_font ( div ) = __value( div, DIV_TAB_TEXT_FONT, default = "Stencil Std:style=Bold" );
+function __div_tab_text_spacing ( div ) = __value( div, DIV_TAB_TEXT_SPACING, default = 1.1 );
+function __div_tab_text_char_threshold ( div ) = __value( div, DIV_TAB_TEXT_CHAR_THRESHOLD, default = 4 );
 
 function __div_frame_height( div ) = __value( div, DIV_FRAME_HEIGHT, default = 80 );
 function __div_frame_width( div ) = __value( div, DIV_FRAME_WIDTH, default = 80 );
@@ -350,12 +350,12 @@ module MakeDividers( div )
     tab_height = __div_tab_height( div );
     tab_radius = __div_tab_radius( div );
 
-    div_text = __div_text( div );
+    tab_text = __div_tab_text( div );
 
-    font_size = __div_text_size( div );
-    font = __div_text_font( div );
-    font_spacing = __div_text_spacing( div );
-    number_of_letters_before_scale_to_fit = __div_text_char_threshold( div );;
+    font_size = __div_tab_text_size( div );
+    font = __div_tab_text_font( div );
+    font_spacing = __div_tab_text_spacing( div );
+    number_of_letters_before_scale_to_fit = __div_tab_text_char_threshold( div );;
 
     divider_bottom = __div_frame_bottom( div );
     divider_top = __div_frame_bottom( div );
@@ -367,7 +367,7 @@ module MakeDividers( div )
 
     space_between_tabs = (width - tab_width ) / ( number_of_tabs_per_row - 1 );
 
-    for (idx = [ 0 : len( div_text ) - 1 ] ) 
+    for (idx = [ 0 : len( tab_text ) - 1 ] ) 
     {
         tab_idx = idx % number_of_tabs_per_row;
         tab_offset = space_between_tabs * tab_idx;
@@ -376,7 +376,7 @@ module MakeDividers( div )
 
 
         translate( [ 0, y_offset, 0])
-            MakeDivider(title = div_text[idx], tab_offset = tab_offset );
+            MakeDivider(title = tab_text[idx], tab_offset = tab_offset );
     }
 
     module MakeDivider( title, tab_offset  )
