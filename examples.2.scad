@@ -132,7 +132,7 @@ data =
     [ "divider example 1",
         [
             [ TYPE, DIVIDERS ],
-            [ DIV_TAB_TEXT,   ["001","002"]],
+            [ DIV_TAB_TEXT,   ["001","002","003"]],
         ]
     ],
     

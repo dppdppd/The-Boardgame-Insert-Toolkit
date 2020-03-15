@@ -110,6 +110,21 @@ And this is the result:
 ![example2](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/example2.png)
 
 
+### Dividers
+As of v2.04, there is also the ability to create card dividers in addition to boxes. A dividers definition looks like this:
+
+    [ "divider example 1",
+        [
+            [ TYPE, DIVIDERS ],
+            [ DIV_TAB_TEXT,   ["001","002"]],
+            [ DIV_FRAME_NUM_COLUMNS, 2 ]
+        ]
+    ]
+
+And produces something like this:
+![dividers](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/dividers1.png)
+
+
 # Keys
 
 #### `TYPE`

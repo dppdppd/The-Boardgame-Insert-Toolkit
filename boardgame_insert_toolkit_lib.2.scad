@@ -305,7 +305,16 @@ module MakeAll()
 
     if ( __is_element_isolated_for_print() )
     {
-        MakeBox( __value( data, g_isolated_print_box ) );
+        element = __value( data, g_isolated_print_box );
+
+        if ( __type( element ) == BOX )
+        {
+            MakeBox( element );
+        }
+        else if ( __type( element ) == DIVIDERS )
+        {
+            MakeDividers( element );
+        }            
     }
     else
     {
