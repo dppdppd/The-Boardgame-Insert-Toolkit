@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.03";
+VERSION = "2.04";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://www.thingiverse.com/thing:3405465\n\n\tCopyright 2020 MysteryDough\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn=100;
@@ -25,10 +25,33 @@ _RIGHT = 3;
 t = true;
 f = false;
 
-
-
 ///////////////////////
 // PARAMETER KEYWORDS
+
+TYPE = "type";
+BOX = "box";
+DIVIDERS = "dividers";
+
+DIV_THICKNESS = "div_thickness";
+
+DIV_TAB_WIDTH = "div_tab_width";
+DIV_TAB_HEIGHT = "div_tab_height";
+DIV_TAB_RADIUS = "div_tab_radius";
+DIV_TAB_CYCLE = "div_tab_cycle";
+
+DIV_TEXT = "div_text";
+DIV_TEXT_SIZE = "div_text_size";
+DIV_TEXT_FONT = "div_text_font";
+DIV_TEXT_SPACING = "div_text_spacing";
+DIV_TEXT_CHAR_THRESHOLD = "div_text_char_threshold";
+
+DIV_FRAME_HEIGHT = "div_height";
+DIV_FRAME_WIDTH = "div_width";
+DIV_FRAME_TOP = "div_frame_top";
+DIV_FRAME_BOTTOM = "div_frame_bottom";
+DIV_FRAME_COLUMN = "div_frame_column";
+DIV_FRAME_RADIUS = "div_frame_radius";
+DIV_FRAME_NUM_COLUMNS = "div_frame_num_columns";
 
 // BOX PARAMETERS
 BOX_DIMENSIONS = "box_dimensions";
@@ -58,6 +81,8 @@ LBL_SIZE = "size";
 LBL_PLACEMENT = "placement";
 LBL_FONT = "font";
 LBL_DEPTH = "depth";
+LBL_SPACING = "spacing";
+//LBL_AUTO_CHAR_COUNT = "char_auto";
 
 LABEL = "label";
 
@@ -175,20 +200,49 @@ module MirrorAboutPoint( v, pt)
                 children();   
 }
 
-function __box( i ) = data[ i ][1];
-function __num_boxes() = len( data );
 
-function __is_box_isolated_for_print() = __index_of_key( data, g_isolated_print_box ) != [];
-function __is_box_enabled( box ) = __value( box, ENABLED, default = true);
+function __element( i ) = data[ i ][1];
+function __num_elements() = len( data );
 
-function __box_dimensions( box ) = __value( box, BOX_DIMENSIONS, default = undef );
+function __type( lmnt ) = __value( lmnt, TYPE, default = BOX);
 
-function __box_position_x( i ) = __box( i - 1 ) == undef ? 0 : __is_box_enabled( __box( i - 1 ) ) ? __box_dimensions( __box( i - 1 ) )[ _X ] + __box_position_x( i - 1 ) + DISTANCE_BETWEEN_PARTS : __box_position_x( i - 2 );
+function __is_element_isolated_for_print() = __index_of_key( data, g_isolated_print_box ) != [];
+
+function __is_element_enabled( lmnt ) = __value( lmnt, ENABLED, default = true);
+
+function __element_dimensions( lmnt ) = __type( lmnt ) == BOX ?
+                                 __value( lmnt, BOX_DIMENSIONS, default = [ 100, 100] ) :
+                                    __type( lmnt ) == DIVIDERS ?
+                                    [ __div_frame_width( lmnt ),  __div_total_height( lmnt ) ] : [0,0];
+
+function __element_position_x( i ) = __element( i - 1 ) == undef ? 0 : __is_element_enabled( __element( i - 1 ) ) ? __element_dimensions( __element( i - 1 ) )[ _X ] + __element_position_x( i - 1 ) + DISTANCE_BETWEEN_PARTS : __element_position_x( i - 2 );
 
 //vis
 function __box_vis_data( box ) = __value( box, BOX_VISUALIZATION, default = "");
 function __box_vis_position( box ) = __value( __box_vis_data( box ), POSITION );
 function __box_vis_rotation( box ) = __value( __box_vis_data( box ), ROTATION );
+
+function __div_thickness( div ) = __value( div, DIV_THICKNESS, default = 0.5 );
+function __div_tab_width( div ) = __value( div, DIV_TAB_WIDTH, default = 32 );
+function __div_tab_height( div ) = __value( div, DIV_TAB_HEIGHT, default = 14 );
+function __div_tab_radius( div ) = __value( div, DIV_TAB_RADIUS, default = 4 );
+function __div_tab_cycle( div ) = __value( div, DIV_TAB_CYCLE, default = 3 );
+
+function __div_total_height( div ) = __div_tab_height( div ) + __div_frame_height( div );
+
+function __div_text ( div ) = __value( div, DIV_TEXT, default = ["001","002", "003" ] );
+function __div_text_size ( div ) = __value( div, DIV_TEXT_SIZE, default = 7 );
+function __div_text_font ( div ) = __value( div, DIV_TEXT_FONT, default = "Stencil Std:style=Bold" );
+function __div_text_spacing ( div ) = __value( div, DIV_TEXT_SPACING, default = 1.1 );
+function __div_text_char_threshold ( div ) = __value( div, DIV_TEXT_CHAR_THRESHOLD, default = 4 );
+
+function __div_frame_height( div ) = __value( div, DIV_FRAME_HEIGHT, default = 80 );
+function __div_frame_width( div ) = __value( div, DIV_FRAME_WIDTH, default = 80 );
+function __div_frame_top( div ) = __value( div, DIV_FRAME_TOP, default = 10 );
+function __div_frame_bottom( div ) = __value( div, DIV_FRAME_BOTTOM, default = 10 );
+function __div_frame_column( div ) = __value( div, DIV_FRAME_COLUMN, default = 7 );
+function __div_frame_radius( div ) = __value( div, DIV_FRAME_RADIUS, default = 15 );
+function __div_frame_num_columns( div ) = __value( div, DIV_FRAME_NUM_COLUMNS, default = -1 );
 
 // is the text a string or a list of strings?
 function __is_multitext( label ) = !is_string( __value( label, LBL_TEXT ) ) && is_list(__value( label, LBL_TEXT ));
@@ -215,6 +269,7 @@ function __label_placement_is_wall( label ) =
 
 function __label_offset( label ) = __value( label, POSITION, default = [0,0] );
 function __label_font( label ) = __value( label, LBL_FONT, default = "Liberation Sans:style=Bold" );
+function __label_spacing( label ) = __value( label, LBL_SPACING, default = 1 );
 function __label_scale_magic_factor( label ) = 1.2 + (1 * abs(tan( __label_rotation( label ) % 90 )) );
 function __label_auto_width( label, x, y) = __label_size_is_auto( label ) ? 
             ( cos( __label_rotation( label ) ) * ( x/__label_scale_magic_factor( label ) )) + 
@@ -248,26 +303,36 @@ module MakeAll()
 {
     echo( str( "\n\n\n", COPYRIGHT_INFO, "\n\n\tVersion ", VERSION, "\n\n" ));
 
-    if ( __is_box_isolated_for_print() )
+    if ( __is_element_isolated_for_print() )
     {
         MakeBox( __value( data, g_isolated_print_box ) );
     }
     else
     {
-        for( i = [ 0: __num_boxes() - 1 ] )
+        for( i = [ 0: __num_elements() - 1 ] )
         {
-            box = __box( i );
+            element = __element( i );
 
-            box_position = ( g_b_vis_actual && __box_vis_position( box ) != [] ) ? __box_vis_position( box ) : [ __box_position_x( i ), 0, 0 ];
-            box_rotation = ( g_b_vis_actual && __box_vis_rotation( box ) != undef ) ? __box_vis_rotation( box ) : 0;
+            element_position = ( g_b_vis_actual && __box_vis_position( element ) != [] ) ? __box_vis_position( element ) : [ __element_position_x( i ), 0, 0 ];
+            element_rotation = ( g_b_vis_actual && __box_vis_rotation( element ) != undef ) ? __box_vis_rotation( element ) : 0;
             
-            translate( box_position )
-                RotateAndMoveBackToOrigin( box_rotation, __box_dimensions( i ) )
+            translate( element_position )
+                RotateAndMoveBackToOrigin( element_rotation, __element_dimensions( i ) )
                 {
-                    if ( __is_box_enabled( box ) )
+                    if ( __is_element_enabled( element ) )
                     {
                         Colorize()
-                            MakeBox( box );
+                        {
+                            echo( __type( element ) );
+                            if ( __type( element ) == BOX )
+                            {
+                                MakeBox( element );
+                            }
+                            else if ( __type( element ) == DIVIDERS )
+                            {
+                                MakeDividers( element );
+                            }
+                        }
                     }
                 }
         }
@@ -275,9 +340,101 @@ module MakeAll()
 
 }
 
+module MakeDividers( div )
+{
+    height = __div_frame_height( div );
+    width = __div_frame_width( div );
+    depth = __div_thickness( div );
+
+    tab_width = __div_tab_width( div );
+    tab_height = __div_tab_height( div );
+    tab_radius = __div_tab_radius( div );
+
+    div_text = __div_text( div );
+
+    font_size = __div_text_size( div );
+    font = __div_text_font( div );
+    font_spacing = __div_text_spacing( div );
+    number_of_letters_before_scale_to_fit = __div_text_char_threshold( div );;
+
+    divider_bottom = __div_frame_bottom( div );
+    divider_top = __div_frame_bottom( div );
+    divider_column = __div_frame_column( div );
+    divider_corner_radius = __div_frame_radius( div );
+    num_columns = __div_frame_num_columns( div );
+
+    number_of_tabs_per_row = __div_tab_cycle( div );
+
+    space_between_tabs = (width - tab_width ) / ( number_of_tabs_per_row - 1 );
+
+    for (idx = [ 0 : len( div_text ) - 1 ] ) 
+    {
+        tab_idx = idx % number_of_tabs_per_row;
+        tab_offset = space_between_tabs * tab_idx;
+
+        y_offset = idx * ( height + tab_height + DISTANCE_BETWEEN_PARTS );
+
+
+        translate( [ 0, y_offset, 0])
+            MakeDivider(title = div_text[idx], tab_offset = tab_offset );
+    }
+
+    module MakeDivider( title, tab_offset  )
+    {
+
+        column_height = height - tab_height/2;
+
+        gap_size = ( width - ( ( 2 + num_columns ) * divider_column ) ) / ( num_columns + 1 );
+
+        difference()
+        {
+            MakeRoundedCube( [ width, height, depth ], 4);
+
+            if ( num_columns != -1 )
+            for (c = [ 0 : num_columns ] ) 
+            {
+                translate( [ divider_column + (divider_column + gap_size) * c, divider_bottom, 0])
+                    MakeRoundedCube( [ gap_size, height - divider_bottom - divider_top, depth ], 4);
+            }
+
+        }
+
+        // TAB
+        difference()
+        {
+            height_overlap = tab_radius;
+            title_pos = [ tab_offset, height - height_overlap, 0];
+
+            // tab shape
+            translate( title_pos )
+            {
+                MakeRoundedCube( [ tab_width, tab_height + height_overlap, depth], 4 ); 
+            }
+
+            // words
+            text_pos = title_pos + [ tab_width/2, font_size * 2, 0 ];
+
+            text_width = len(title) > number_of_letters_before_scale_to_fit ? tab_width * 0.8 : 0;
+
+            translate( text_pos)
+                resize([ text_width,0, 0 ], auto=[ true, true, false])
+                    linear_extrude( depth )
+                        text(text = title, 
+                            font = font, 
+                            size = font_size, 
+                            valign = "top",
+                            halign = "center", 
+                            spacing = font_spacing,
+                            $fn=1);
+        }
+
+        
+    }
+}
+
 module MakeBox( box )
 {
-    m_box_dimensions = __box_dimensions( box );
+    m_box_dimensions = __element_dimensions( box );
 
     m_components =  __value( box, BOX_COMPONENTS );
 
@@ -443,7 +600,7 @@ module MakeBox( box )
 
         function __partitions_num( D )= __compartments_num( D ) - 1 + ( __component_has_margin( D )[0] ? 1 : 0 ) + ( __component_has_margin( D )[1] ? 1 : 0 );
 
-        // calculated __box local dimensions
+        // calculated __element local dimensions
         function __component_size( D )= ( D == _Z ) ? __compartment_size( _Z ) : 
                                                 ( __compartment_size( D )* __compartments_num( D )) + ( __partitions_num( D )* __component_padding( D ));
 
@@ -785,6 +942,7 @@ module MakeBox( box )
                                             text(text = str( __label_text( m_box_label ) ), 
                                                 font = __label_font( m_box_label ),  
                                                 size = __label_size( m_box_label ), 
+                                                spacing = __label_spacing( m_box_label ),
                                                 valign = CENTER, 
                                                 halign = CENTER, 
                                                 $fn=1);
@@ -799,7 +957,7 @@ module MakeBox( box )
                     // lid edge
                     difference() 
                     {
-                        // main __box
+                        // main __element
                         cube([__lid_external_size( _X ), __lid_external_size( _Y ), __lid_external_size( _Z )]);
                         
                         MoveToLidInterior()
@@ -951,26 +1109,6 @@ module MakeBox( box )
                 }
             } 
         }
-
- 
-    module MakeRoundedCube( vec3, radius){
-        hull()
-        {
-            h = vec3[_Z];
-
-            translate( [ radius, radius, 0 ])
-                cylinder(r=radius, h=h);
-
-            translate( [ vec3[_X] - radius, radius, 0 ])
-                cylinder(r=radius, h=h);
-
-            translate( [ radius, vec3[_Y] - radius, 0 ])
-                cylinder(r=radius, h=h);
-
-            translate( [ vec3[_X] - radius, vec3[_Y] - radius, 0 ])
-                cylinder(r=radius, h=h);                
-        }
-    }             
 
         module MakeFingerCutout( side )
         {
@@ -1191,6 +1329,7 @@ module MakeBox( box )
                                             text(text = str( __label_text( m_component_label, x, text_y_reverse) ), 
                                                 font = __label_font( m_component_label ), 
                                                 size = __label_size( m_component_label ), 
+                                                spacing = __label_spacing( m_component_label ),
                                                 valign = CENTER, 
                                                 halign = CENTER, 
                                                 $fn=1);
@@ -1303,6 +1442,24 @@ module MakeBox( box )
 
 }
 
+module MakeRoundedCube( vec3, radius){
+    hull()
+    {
+        h = vec3[_Z];
+
+        translate( [ radius, radius, 0 ])
+            cylinder(r=radius, h=h);
+
+        translate( [ vec3[_X] - radius, radius, 0 ])
+            cylinder(r=radius, h=h);
+
+        translate( [ radius, vec3[_Y] - radius, 0 ])
+            cylinder(r=radius, h=h);
+
+        translate( [ vec3[_X] - radius, vec3[_Y] - radius, 0 ])
+            cylinder(r=radius, h=h);                
+    }
+} 
 
 
 

@@ -44,7 +44,17 @@ data =
                 ]
             ]
         ]
-    ],    
+    ],
+    [ "divider example",
+        [
+            [ TYPE, DIVIDERS ],
+            [ DIV_TEXT,   ["001","002","RIVER"]],
+            [ DIV_TAB_WIDTH, 30],
+            [ DIV_TAB_HEIGHT, 15],
+            [ DIV_TEXT_SIZE, 8],
+            [ DIV_FRAME_NUM_COLUMNS, 1],
+        ]
+    ],
     [   "example 1",
         [
             [ BOX_DIMENSIONS,                             [110.0, 180.0, 22.0] ],             // outside dimensions of the box
