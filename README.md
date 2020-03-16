@@ -16,7 +16,7 @@ This OpenSCAD library was designed to for quick design and iteration on board ga
 - If you post it on Thingiverse, make it a _remix_ of [BIT](https://www.thingiverse.com/thing:3405465) and I'll get notified and eventually add it to the list of game inserts. 
 
 ### Pay attention to your dimensions.
-- Note that the box dimensions (BOX_DIMENSIONS) are _exterior_ dimensions and are as such to guarantee that the box you're defining fits inside the game's cardboard box.
+- Note that the box dimensions (BOX_SIZE_XYZ) are _exterior_ dimensions and are as such to guarantee that the box you're defining fits inside the game's cardboard box.
 - Also note that the compartment dimensions are _interior_ dimensions and are as such to guarantee that the game pieces will fit inside them.
 - This means that you'll want to make sure that those exterior and interior values don't get too close to each other or your box walls will be thin and/or nonexistant.
 - By default you'll want to leave 3mm in depth and length, and 2mm in height, when designing your inserts.
@@ -27,13 +27,13 @@ Everything in BIT is defined using key-value pairs, i.e. [ _key_ , _value_ ]. So
 
     [   "example 0: minimal",                                   // our box
         [
-            [ BOX_DIMENSIONS, [46.5, 46.5, 15.0] ],             // one kv pair specifying the x, y, and z of our box exterior.
+            [ BOX_SIZE_XYZ, [46.5, 46.5, 15.0] ],             // one kv pair specifying the x, y, and z of our box exterior.
             [ BOX_COMPONENTS,                                   // this is where our components will go.
                 [
                     [   "my chits",                             // our first component.
                         [
-                            [CMP_NUM_COMPARTMENTS, [4,4]],
-                            [CMP_COMPARTMENT_SIZE, [ 10, 10, 13.0] ],
+                            [CMP_NUM_COMPARTMENTS_XY, [4,4]],
+                            [CMP_COMPARTMENT_SIZE_XYZ, [ 10, 10, 13.0] ],
                         ]
                     ]
                 ]
@@ -54,18 +54,18 @@ Here is an example of some compartments designed to hold cards, with holes to ge
 
     [   "example 1",
         [
-            [ BOX_DIMENSIONS,                             [110.0, 180.0, 22.0] ],             
-            [ ENABLED,                                    t],
-            [ BOX_LID_NOTCHES,                                f],
+            [ BOX_SIZE_XYZ,                             [110.0, 180.0, 22.0] ],             
+            [ ENABLED_B,                                    t],
+            [ BOX_LID_NOTCHES_B,                                f],
             [ BOX_LID_HEX_RADIUS,                             8.0],
-            [ BOX_LID_FIT_UNDER,                              f],
+            [ BOX_LID_FIT_UNDER_B,                              f],
 
             [ LABEL,
                 [
                     [ LBL_TEXT,   "Example title"],
                     [ LBL_SIZE,   AUTO ],
                     [ ROTATION, 45 ],
-                    [ POSITION, [ -4,-2]],
+                    [ POSITION_XY, [ -4,-2]],
                 ]
             ],
 
@@ -73,17 +73,17 @@ Here is an example of some compartments designed to hold cards, with holes to ge
                 [
                     [   "my chits",
                         [
-                            [CMP_COMPARTMENT_SIZE,                [ 22, 60.0, 20.0] ],    
-                            [CMP_NUM_COMPARTMENTS,                [2,2] ],                
+                            [CMP_COMPARTMENT_SIZE_XYZ,                [ 22, 60.0, 20.0] ],    
+                            [CMP_NUM_COMPARTMENTS_XY,                [2,2] ],                
                             [CMP_SHAPE,                           SQUARE],                
-                            [CMP_SHAPE_ROTATED,                f],                     
-                            [CMP_SHAPE_VERTICAL,                  f],                     
-                            [CMP_PADDING,                         [15,12]],               
-                            [CMP_PADDING_HEIGHT_ADJUST,           [-5, 0] ],             
-                            [CMP_MARGIN,                          [t,f,f,f]],             
-                            [CMP_CUTOUT_SIDES,                    [f,f,f,t]],             
+                            [CMP_SHAPE_ROTATED_B,                f],                     
+                            [CMP_SHAPE_VERTICAL_B,                  f],                     
+                            [CMP_PADDING_XY,                         [15,12]],               
+                            [CMP_PADDING_HEIGHT_ADJUST_XY,           [-5, 0] ],             
+                            [CMP_MARGIN_4B,                          [t,f,f,f]],             
+                            [CMP_CUTOUT_SIDES_4B,                    [f,f,f,t]],             
                             [ROTATION,                        5 ],                    
-                            [POSITION,                        [CENTER,CENTER]],   
+                            [POSITION_XY,                        [CENTER,CENTER]],   
                             [LABEL,               
                                 [
                                     [LBL_TEXT,        [   
@@ -94,7 +94,7 @@ Here is an example of some compartments designed to hold cards, with holes to ge
                                     [LBL_PLACEMENT,   FRONT],                           
                                     [ ROTATION,  10],
                                     [ LBL_SIZE, AUTO],
-                                    [ POSITION, [ -4,-2]],
+                                    [ POSITION_XY, [ -4,-2]],
                                     [ LBL_FONT, "Times New Roman:style=bold italic"],
 
                                 ]
@@ -135,10 +135,10 @@ a box.
 a set of dividers.
 
 ### Box keys
-#### `BOX_DIMENSIONS`
+#### `BOX_SIZE_XYZ`
 value is expected to be an array of 3 numbers, and determines the exterior dimensions
 of the box as width, depth, height.  
-e.g. `[ BOX_DIMENSIONS, [ 140, 250, 80 ] ]`
+e.g. `[ BOX_SIZE_XYZ, [ 140, 250, 80 ] ]`
 
 #### `BOX_COMPONENTS`
 value is expected to be an array of components.
@@ -146,15 +146,15 @@ value is expected to be an array of components.
 #### `BOX_VISUALIZATION`
 describe me
 
-#### `BOX_LID_NOTCHES`
+#### `BOX_LID_NOTCHES_B`
 value is expected to be a bool, "true", "false", "t", or "f", and determines whether the box will have notches that make pulling the lid off easier.  
-e.g. `[ BOX_LID_NOTCHES, f ]`
+e.g. `[ BOX_LID_NOTCHES_B, f ]`
 
 #### `BOX_LID_HEX_RADIUS`
 value is expected to be a number, and determines the radius of the hexes in the lid.  
 e.g. `[ BOX_LID_HEX_RADIUS, 5 ]`
 
-#### `BOX_LID_FIT_UNDER`
+#### `BOX_LID_FIT_UNDER_B`
 value is expected to be a bool, and determines whether the box bottom is formed to allow the box to sit in the lid when open. Note that this requires a printer that can handle printing 45 degrees outward without supports.
 
 #### `BOX_LID`
@@ -221,13 +221,13 @@ value is expected to be a number, and determines the letter spacing of the tab t
 value is expected to be a number, and determines the number of characters above which the size of the font should be determined automatically.
 
 ### Compartment keys
-#### `CMP_NUM_COMPARTMENTS`
+#### `CMP_NUM_COMPARTMENTS_XY`
 value is expected to be an array of 2 numbers, and determines how many compartments this component will have in the width and depth direction.  
-e.g. `[ CMP_NUM_COMPARTMENTS, [ 4, 6 ] ]`
+e.g. `[ CMP_NUM_COMPARTMENTS_XY, [ 4, 6 ] ]`
 
-#### `CMP_COMPARTMENT_SIZE`
+#### `CMP_COMPARTMENT_SIZE_XYZ`
 value is expected to be an array of 3 numbers, and determines the interior dimensions of each compartment within the component.  
-e.g. `[ CMP_COMPARTMENT_SIZE, [ 10, 20, 5 ] ]`
+e.g. `[ CMP_COMPARTMENT_SIZE_XYZ, [ 10, 20, 5 ] ]`
 
 #### `CMP_SHAPE`
 value is expected to be one of the following:
@@ -248,28 +248,28 @@ a square compartment with rounded bottoms
 
 e.g. `[ CMP_SHAPE, HEX2 ]`
 
-#### `CMP_SHAPE_ROTATED`
+#### `CMP_SHAPE_ROTATED_B`
 value is expected to be a bool, and determines whether the shape is rotated along the Z axis. That is, whether it goes back and forth or side to side.
 
-#### `CMP_SHAPE_VERTICAL`
+#### `CMP_SHAPE_VERTICAL_B`
 value is expected to be a bool, and determines whether the shape is rotated for vertical stacks of pieces.
 
-#### `CMP_PADDING`
+#### `CMP_PADDING_XY`
 value is expected to be an array of 3 numbers, and determines how far apart the compartments in a component are, in the width and depth direction.  
-e.g. `[ CMP_PADDING, [ 2.5, 1.3 ] ]`
+e.g. `[ CMP_PADDING_XY, [ 2.5, 1.3 ] ]`
 
-#### `CMP_PADDING_HEIGHT_ADJUST`
+#### `CMP_PADDING_HEIGHT_ADJUST_XY`
 value is expected to be an array of 2 numbers, and determines how much to modify the height of the padding between compartments. These should typically
 be negative values.  
-e.g. `[ CMP_PADDING_HEIGHT_ADJUST, [ -3, 0 ] ]`
+e.g. `[ CMP_PADDING_HEIGHT_ADJUST_XY, [ -3, 0 ] ]`
 
-#### `CMP_MARGIN`
+#### `CMP_MARGIN_4B`
 value is expected to be an array of 4 bools, and determines whether padding is also added to the outside of the compartment array. The values represent [front, back, left, right ].  
-e.g. `[ CMP_MARGIN, [ t, f, t, f ] ]`
+e.g. `[ CMP_MARGIN_4B, [ t, f, t, f ] ]`
 
-#### `CMP_CUTOUT_SIDES`
+#### `CMP_CUTOUT_SIDES_4B`
 value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the compartments. The values represent [front, back, left, right ].  
-e.g. `[ CMP_CUTOUT_SIDES, [ t, t, f, f ] ]`
+e.g. `[ CMP_CUTOUT_SIDES_4B, [ t, t, f, f ] ]`
 
 #### `CMP_SHEAR`
 value is expected to be an array of 2 numbers, and determines the degrees to which the component should be sheared in the direction of width and depth.  
@@ -328,16 +328,16 @@ e.g. `[ LBL_DEPTH, 0.5 ]`
 value is expected to be a number, and determines the degree to which the component or label is to be rotated.  
 e.g. `[ ROTATION, 45 ]`
 
-#### `POSITION`
+#### `POSITION_XY`
 value is expected to be an array of 2 numbers, although `MAX` is also valid, and determines the position of the label or component. 
 - When used on a label, the values are relative to reasonable centers and can be used to adjust the positioning of the text.
 - When used on a component, it is always relative to the origin of the box, and almost always needs to be present.
 - When used on a component, the value `MAX` essentially aligns that value to opposite end, so 'right' when placed in the x position, and 'back' when placed in the y position.  
-e.g. `[ POSITION, [ 20, MAX ] ]`
+e.g. `[ POSITION_XY, [ 20, MAX ] ]`
 
-#### `ENABLED`
+#### `ENABLED_B`
 value is expected to be a bool, and determines whether the box, component, or label, is used. This allows for easily turning features off temporarily or permanently without needing to delete lots of content.  
-e.g. `[ ENABLED, f ]`
+e.g. `[ ENABLED_B, f ]`
 
 
 # Published inserts:

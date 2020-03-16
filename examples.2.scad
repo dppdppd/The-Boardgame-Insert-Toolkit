@@ -32,13 +32,13 @@ data =
 [
     [   "example 0: minimal",
         [
-            [ BOX_DIMENSIONS,                             [46.5, 46.5, 15.0] ],             // outside dimensions of the box
+            [ BOX_SIZE_XYZ,                                     [46.5, 46.5, 15.0] ],             // outside dimensions of the box
             [ BOX_COMPONENTS,
                 [
                     [   "my chits",
                         [
-                            [CMP_NUM_COMPARTMENTS,                [4,4]],
-                            [CMP_COMPARTMENT_SIZE,                [ 10, 10, 13.0] ],    // size of each compartment in x,y,z
+                            [CMP_NUM_COMPARTMENTS_XY,   [4,4]],
+                            [CMP_COMPARTMENT_SIZE_XYZ,  [ 10, 10, 13.0] ],    // size of each compartment in x,y,z
                         ]
                     ],                  
                 ]
@@ -47,18 +47,18 @@ data =
     ],
     [   "example 1",
         [
-            [ BOX_DIMENSIONS,                             [110.0, 180.0, 22.0] ],             // outside dimensions of the box
-            [ ENABLED,                                    t],
-            [ BOX_LID_NOTCHES,                                f],
-            [ BOX_LID_HEX_RADIUS,                             8.0],
-            [ BOX_LID_FIT_UNDER,                              f],
+            [ BOX_SIZE_XYZ,             [110.0, 180.0, 22.0] ],             // outside dimensions of the box
+            [ ENABLED_B,                t],
+            [ BOX_LID_NOTCHES_B,        f],
+            [ BOX_LID_HEX_RADIUS,       8.0],
+            [ BOX_LID_FIT_UNDER_B,      f],
 
             [ LABEL,
                 [
-                    [ LBL_TEXT,   "Example title"],
-                    [ LBL_SIZE,   AUTO ],
-                    [ ROTATION, 45 ],
-                    [ POSITION, [ -4,-2]],
+                    [ LBL_TEXT,     "Example title"],
+                    [ LBL_SIZE,     AUTO ],
+                    [ ROTATION,     45 ],
+                    [ POSITION_XY, [ -4,-2]],
                 ]
             ],
 
@@ -66,17 +66,17 @@ data =
                 [
                     [   "my chits",
                         [
-                            [CMP_COMPARTMENT_SIZE,                [ 22, 60.0, 20.0] ],    // size of each compartment in x,y,z
-                            [CMP_NUM_COMPARTMENTS,                [2,2] ],                // number of compartments [vertically, horizontally]
-                            [CMP_SHAPE,                           SQUARE],                // one of several presets: HEX | HEX2 | ROUND | SQUARE | OCT | OCT2
-                            [CMP_SHAPE_ROTATED,                f],                     // rotate shape on Z axis
-                            [CMP_SHAPE_VERTICAL,                  f],                     // use shape vertically
-                            [CMP_PADDING,                         [15,12]],               // Determines space between compartments (and margins) in mm
-                            [CMP_PADDING_HEIGHT_ADJUST,           [-5, 0] ],             // Vertical, Horizontal
-                            [CMP_MARGIN,                          [t,f,f,f]],             // front,back,left,right
-                            [CMP_CUTOUT_SIDES,                    [f,f,f,t]],             // front,back,left,right                                                             
-                            [ROTATION,                        5 ],                    // rotate the whole component.
-                            [POSITION,                        [CENTER,CENTER]],   // x,y in mm | CENTER | MAX
+                            [CMP_COMPARTMENT_SIZE_XYZ,              [ 22, 60.0, 20.0] ],    // size of each compartment in x,y,z
+                            [CMP_NUM_COMPARTMENTS_XY,               [2,2] ],                // number of compartments [vertically, horizontally]
+                            [CMP_SHAPE,                             SQUARE],                // one of several presets: HEX | HEX2 | ROUND | SQUARE | OCT | OCT2
+                            [CMP_SHAPE_ROTATED_B,                   f],                     // rotate shape on Z axis
+                            [CMP_SHAPE_VERTICAL_B,                  f],                     // use shape vertically
+                            [CMP_PADDING_XY,                        [15,12]],               // Determines space between compartments (and margins) in mm
+                            [CMP_PADDING_HEIGHT_ADJUST_XY,          [-5, 0] ],             // Vertical, Horizontal
+                            [CMP_MARGIN_4B,                         [t,f,f,f]],             // front,back,left,right
+                            [CMP_CUTOUT_SIDES_4B,                   [f,f,f,t]],             // front,back,left,right                                                             
+                            [ROTATION,                              5 ],                    // rotate the whole component.
+                            [POSITION_XY,                           [CENTER,CENTER]],   // x,y in mm | CENTER | MAX
                             [LABEL,               
                                 [
                                     [LBL_TEXT,        [   
@@ -84,11 +84,11 @@ data =
                                                         ["frontleft", "frontright"],
                                                     ]
                                     ],
-                                    [LBL_PLACEMENT,   FRONT],                           // CENTER | FRONT | BACK | LEFT | RIGHT |  FRONT_WALL | BACK_WALL | LEFT_WALL | RIGHT_WALL
-                                    [ ROTATION,  10],
-                                    [ LBL_SIZE, AUTO],
-                                    [ POSITION, [ -4,-2]],
-                                    [ LBL_FONT, "Times New Roman:style=bold italic"],
+                                    [LBL_PLACEMENT,     FRONT],                           // CENTER | FRONT | BACK | LEFT | RIGHT |  FRONT_WALL | BACK_WALL | LEFT_WALL | RIGHT_WALL
+                                    [ ROTATION,         10],
+                                    [ LBL_SIZE,         AUTO],
+                                    [ POSITION_XY,      [ -4,-2]],
+                                    [ LBL_FONT,         "Times New Roman:style=bold italic"],
 
                                 ]
                             ],  
@@ -100,15 +100,15 @@ data =
     ],
     [   "example 2: card tray, shear example",
         [
-            [ BOX_DIMENSIONS,                             [50.0, 50.0, 20.0] ],             // outside dimensions of the box
+            [ BOX_SIZE_XYZ,                             [50.0, 50.0, 20.0] ],             // outside dimensions of the box
             [ BOX_COMPONENTS,
                 [
                     [   "my chits",
                         [
-                            [CMP_NUM_COMPARTMENTS,                [2,4]],
-                            [CMP_COMPARTMENT_SIZE,                [ 20, 5.0, 5.0] ],    // size of each compartment in x,y,z
-                            [CMP_SHAPE_VERTICAL,                  t],
-                            [CMP_SHEAR,                           [0,45]],
+                            [CMP_NUM_COMPARTMENTS_XY,       [2,4]],
+                            [CMP_COMPARTMENT_SIZE_XYZ,      [ 20, 5.0, 5.0] ],    // size of each compartment in x,y,z
+                            [CMP_SHAPE_VERTICAL_B,          t],
+                            [CMP_SHEAR,                     [0,45]],
                             [LABEL,               
                                 [
                                     [LBL_TEXT,        [   
@@ -138,20 +138,18 @@ data =
     
     [ "divider example 2",
         [
-            [ TYPE, DIVIDERS ],
+            [ TYPE,                     DIVIDERS ],
 
-            [ DIV_TAB_TEXT,   ["001","002","PASS","004","010101"]],
+            [ DIV_TAB_TEXT,             ["001","002","PASS","004","010101"]],
 
-            [ DIV_TAB_TEXT_SIZE, 6],
+            [ DIV_TAB_TEXT_SIZE,        6],
 
-            [ DIV_TAB_WIDTH, 30],
-            [ DIV_TAB_HEIGHT, 12],
-            [ DIV_TAB_CYCLE, 5],
+            [ DIV_TAB_SIZE_XY,          [30, 12]],
+            [ DIV_TAB_CYCLE,            5],
 
-            [ DIV_FRAME_NUM_COLUMNS, 2],
-            [ DIV_FRAME_WIDTH, 120],
-            [ DIV_FRAME_HEIGHT, 50],
-            [ DIV_FRAME_COLUMN, 7],
+            [ DIV_FRAME_NUM_COLUMNS,    2],
+            [ DIV_FRAME_SIZE_XY,        [120, 50]],
+            [ DIV_FRAME_COLUMN,         7],
 
 
         ]
