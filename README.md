@@ -55,16 +55,16 @@ Here is an example of some compartments designed to hold cards, with holes to ge
     [   "example 1",
         [
             [ BOX_SIZE_XYZ,                             [110.0, 180.0, 22.0] ],             
-            [ ENABLED_B,                                    t],
-            [ BOX_LID_NOTCHES_B,                                f],
-            [ BOX_LID_HEX_RADIUS,                             8.0],
-            [ BOX_LID_FIT_UNDER_B,                              f],
+            [ ENABLED_B,                                t],
+            [ BOX_LID_NOTCHES_B,                        f],
+            [ BOX_LID_HEX_RADIUS,                       8.0],
+            [ BOX_LID_FIT_UNDER_B,                      f],
 
             [ LABEL,
                 [
-                    [ LBL_TEXT,   "Example title"],
-                    [ LBL_SIZE,   AUTO ],
-                    [ ROTATION, 45 ],
+                    [ LBL_TEXT,     "Example title"],
+                    [ LBL_SIZE,     AUTO ],
+                    [ ROTATION,     45 ],
                     [ POSITION_XY, [ -4,-2]],
                 ]
             ],
@@ -73,17 +73,17 @@ Here is an example of some compartments designed to hold cards, with holes to ge
                 [
                     [   "my chits",
                         [
-                            [CMP_COMPARTMENT_SIZE_XYZ,                [ 22, 60.0, 20.0] ],    
-                            [CMP_NUM_COMPARTMENTS_XY,                [2,2] ],                
-                            [CMP_SHAPE,                           SQUARE],                
-                            [CMP_SHAPE_ROTATED_B,                f],                     
+                            [CMP_COMPARTMENT_SIZE_XYZ,              [ 22, 60.0, 20.0] ],    
+                            [CMP_NUM_COMPARTMENTS_XY,               [2,2] ],                
+                            [CMP_SHAPE,                             SQUARE],                
+                            [CMP_SHAPE_ROTATED_B,                   f],                     
                             [CMP_SHAPE_VERTICAL_B,                  f],                     
-                            [CMP_PADDING_XY,                         [15,12]],               
-                            [CMP_PADDING_HEIGHT_ADJUST_XY,           [-5, 0] ],             
-                            [CMP_MARGIN_4B,                          [t,f,f,f]],             
-                            [CMP_CUTOUT_SIDES_4B,                    [f,f,f,t]],             
-                            [ROTATION,                        5 ],                    
-                            [POSITION_XY,                        [CENTER,CENTER]],   
+                            [CMP_PADDING_XY,                        [15,12]],               
+                            [CMP_PADDING_HEIGHT_ADJUST_XY,          [-5, 0] ],             
+                            [CMP_MARGIN_4B,                         [t,f,f,f]],             
+                            [CMP_CUTOUT_SIDES_4B,                   [f,f,f,t]],             
+                            [ROTATION,                              5 ],                    
+                            [POSITION_XY,                           [CENTER,CENTER]],   
                             [LABEL,               
                                 [
                                     [LBL_TEXT,        [   
@@ -91,11 +91,11 @@ Here is an example of some compartments designed to hold cards, with holes to ge
                                                         ["frontleft", "frontright"],
                                                     ]
                                     ],
-                                    [LBL_PLACEMENT,   FRONT],                           
-                                    [ ROTATION,  10],
-                                    [ LBL_SIZE, AUTO],
-                                    [ POSITION_XY, [ -4,-2]],
-                                    [ LBL_FONT, "Times New Roman:style=bold italic"],
+                                    [LBL_PLACEMENT,     FRONT],                           
+                                    [ ROTATION,         10],
+                                    [ LBL_SIZE,         AUTO],
+                                    [ POSITION_XY,      [ -4,-2]],
+                                    [ LBL_FONT,         "Times New Roman:style=bold italic"],
 
                                 ]
                             ],  
@@ -115,9 +115,9 @@ As of v2.04, there is also the ability to create card dividers in addition to bo
 
     [ "divider example 1",
         [
-            [ TYPE, DIVIDERS ],
-            [ DIV_TAB_TEXT,   ["001","002","003"]],
-            [ DIV_FRAME_NUM_COLUMNS, 2 ]
+            [ TYPE,                     DIVIDERS ],
+            [ DIV_TAB_TEXT,             ["001","002","003"]],
+            [ DIV_FRAME_NUM_COLUMNS,    2 ]
         ]
     ]
 
@@ -163,18 +163,14 @@ value is expected to be a bool, and determines whether a lid is constructed and 
 #### `BOX_THIN_LID`
 describe me
 
-### Dividers
+### Dividers keys
 as of v2.04, in addition to boxes, one can also create card dividers.
 
-### Dividers keys
 #### `DIV_THICKNESS`
 value is expected to be a number, and determines the thickness of each divider.
 
-#### `DIV_FRAME_HEIGHT`
-value is expected to be a number, and determines the height of each divider without the tab.
-
-#### `DIV_FRAME_WIDTH`
-value is expected to be a number, and determines the width of each divider.
+#### `DIV_FRAME_SIZE_XY`
+value is expected to be an array of 2 numbers, and determines the width and height of each divider (without the tab).
 
 #### `DIV_FRAME_TOP`
 value is expected to be a number, and determines the height of the top bar of the divider.
@@ -191,11 +187,8 @@ value is expected to be a number, and determines the radius of the frame corners
 #### `DIV_FRAME_NUM_COLUMNS`
 value is expected to be a number, and determines the number of columns in the middle of the frame of the divider. 0 makes for a frame that has no middle columns. -1 makes for a solid divider with no holes.
 
-#### `DIV_TAB_WIDTH`
-value is expected to be a number, and determines the width of the tab on the divider.
-
-#### `DIV_TAB_HEIGHT`
-value is expected to be a number, and determines the height of the tab on the divider.
+#### `DIV_TAB_SIZE_XY`
+value is expected to be an array of 2 numbers, and determines the width and height of each divider's tab.
 
 #### `DIV_TAB_RADIUS`
 value is expected to be a number, and determines the radius of the corner of the tab on the divider.
@@ -259,8 +252,7 @@ value is expected to be an array of 3 numbers, and determines how far apart the 
 e.g. `[ CMP_PADDING_XY, [ 2.5, 1.3 ] ]`
 
 #### `CMP_PADDING_HEIGHT_ADJUST_XY`
-value is expected to be an array of 2 numbers, and determines how much to modify the height of the padding between compartments. These should typically
-be negative values.  
+value is expected to be an array of 2 numbers, and determines how much to modify the height of the x and y padding between compartments. These should typically be negative values.  
 e.g. `[ CMP_PADDING_HEIGHT_ADJUST_XY, [ -3, 0 ] ]`
 
 #### `CMP_MARGIN_4B`
@@ -298,7 +290,7 @@ value is expected to either be `AUTO` or a number. `AUTO` will attempt to scale 
 e.g. `[ LBL_SIZE, 12 ]`
 
 #### `LBL_SPACING`
-value is expected to either be a number, and determines the letter spacing. 
+value is expected to be a number, and determines the letter spacing. 
 e.g. `[ LBL_SPACING, 1.1 ]`
 
 
