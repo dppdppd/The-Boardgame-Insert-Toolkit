@@ -8,8 +8,8 @@ This OpenSCAD library was designed to for quick design and iteration on board ga
 - Download [Openscad](https://www.openscad.org).
 - Create a new directory for the board game you're working on. It's best to keep the BIT file with the board game file because future BIT versions may not be backwards compatible and this way you will always be able to recreate the STLs.
 - Put _boardgame_insert_toolkit_library.2.scad_ and a copy of _example.2.scad_ in the directory.
-- You'll be working intirely in your copy of the example.
-- The first line should be __include <boardgame_insert_toolkit_lib.2.scad>;__ and the last should be __MakeAll();__ All of your 'code' goes inbetween.
+- You'll be working entirely in your copy of the example.
+- The first line should be __include <boardgame_insert_toolkit_lib.2.scad>;__ and the last should be __MakeAll();__ All of your 'code' goes in-between.
 - Open your new scad file in your favorite text editor and also in Openscad.
 - In Openscad, set "Automatic Reload and Preview" _on_ in the Design menu. Now openscad will update the display whenever you save the scad file in the text editor.
 - Measure, build, measure again.
