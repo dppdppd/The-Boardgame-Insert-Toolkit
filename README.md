@@ -1,60 +1,5 @@
-  
-* [Why](#why)  
-   * [How](#how)  
-         * [Pay attention to your dimensions.](#pay-attention-to-your-dimensions)  
-      * [Key Values](#key-values)  
-         * [Some Explanation](#some-explanation)  
-         * [Dividers](#dividers)  
-   * [Keys](#keys)  
-            * [TYPE](#type)  
-         * [Box keys](#box-keys)  
-            * [BOX_SIZE_XYZ](#box_size_xyz)  
-            * [BOX_COMPONENTS](#box_components)  
-            * [BOX_VISUALIZATION](#box_visualization)  
-            * [BOX_LID_NOTCHES_B](#box_lid_notches_b)  
-            * [BOX_LID_HEX_RADIUS](#box_lid_hex_radius)  
-            * [BOX_LID_FIT_UNDER_B](#box_lid_fit_under_b)  
-            * [BOX_LID](#box_lid)  
-            * [BOX_THIN_LID](#box_thin_lid)  
-         * [Dividers keys](#dividers-keys)  
-            * [DIV_THICKNESS](#div_thickness)  
-            * [DIV_FRAME_SIZE_XY](#div_frame_size_xy)  
-            * [DIV_FRAME_TOP](#div_frame_top)  
-            * [DIV_FRAME_BOTTOM](#div_frame_bottom)  
-            * [DIV_FRAME_COLUMN](#div_frame_column)  
-            * [DIV_FRAME_RADIUS](#div_frame_radius)  
-            * [DIV_FRAME_NUM_COLUMNS](#div_frame_num_columns)  
-            * [DIV_TAB_SIZE_XY](#div_tab_size_xy)  
-            * [DIV_TAB_RADIUS](#div_tab_radius)  
-            * [DIV_TAB_CYCLE](#div_tab_cycle)  
-            * [DIV_TAB_TEXT](#div_tab_text)  
-            * [DIV_TAB_TEXT_SIZE](#div_tab_text_size)  
-            * [DIV_TAB_TEXT_FONT](#div_tab_text_font)  
-            * [DIV_TAB_TEXT_SPACING](#div_tab_text_spacing)  
-            * [DIV_TAB_TEXT_CHAR_THRESHOLD](#div_tab_text_char_threshold)  
-         * [Compartment keys](#compartment-keys)  
-            * [CMP_NUM_COMPARTMENTS_XY](#cmp_num_compartments_xy)  
-            * [CMP_COMPARTMENT_SIZE_XYZ](#cmp_compartment_size_xyz)  
-            * [CMP_SHAPE](#cmp_shape)  
-            * [CMP_SHAPE_ROTATED_B](#cmp_shape_rotated_b)  
-            * [CMP_SHAPE_VERTICAL_B](#cmp_shape_vertical_b)  
-            * [CMP_PADDING_XY](#cmp_padding_xy)  
-            * [CMP_PADDING_HEIGHT_ADJUST_XY](#cmp_padding_height_adjust_xy)  
-            * [CMP_MARGIN_4B](#cmp_margin_4b)  
-            * [CMP_CUTOUT_SIDES_4B](#cmp_cutout_sides_4b)  
-            * [CMP_SHEAR](#cmp_shear)  
-            * [LABEL](#label)  
-         * [Label keys](#label-keys)  
-            * [LBL_TEXT](#lbl_text)  
-            * [LBL_SIZE](#lbl_size)  
-            * [LBL_SPACING](#lbl_spacing)  
-            * [LBL_PLACEMENT](#lbl_placement)  
-            * [LBL_FONT](#lbl_font)  
-            * [LBL_DEPTH](#lbl_depth)  
-            * [ROTATION](#rotation)  
-            * [POSITION_XY](#position_xy)  
-            * [ENABLED_B](#enabled_b)  
-   * [Published inserts:](#published-inserts)  
+<!--ts-->
+<!--te-->
 
 # Why
 This OpenSCAD library was designed to for quick design and iteration on board game inserts--specifically ones with lids. There are lots of great printable inserts out there, but very few for us vertical storers.
@@ -217,8 +162,18 @@ value is expected to be a bool, and determines whether the box bottom is formed 
 #### `BOX_LID`
 value is expected to be a bool, and determines whether a lid is constructed and whether the box has the inset lip to support one.
 
-#### `BOX_THIN_LID`
+#### `BOX_LID_THIN_B`
 describe me
+
+### `BOX_LID_SOLID_B`
+value is expected to be a bool, and determines whether the lid is a hex mesh or solid.
+
+### `BOX_LID_HEIGHT`
+value is expected to be a number, and determines whether how deep the lid is.
+
+### `BOX_LID_CUTOUT_SIDES_4B`
+value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the lid. This allows the lid to be used as a card tray during play. The values represent [front, back, left, right ].  
+e.g. `[ BOX_LID_CUTOUT_SIDES_4B, [ t, t, f, f ] ]`
 
 ### Dividers keys
 as of v2.04, in addition to boxes, one can also create card dividers.
@@ -303,6 +258,9 @@ value is expected to be a bool, and determines whether the shape is rotated alon
 
 #### `CMP_SHAPE_VERTICAL_B`
 value is expected to be a bool, and determines whether the shape is rotated for vertical stacks of pieces.
+
+#### `CMP_FILLET_RADIUS`
+value is expected to be a number, and determines the radius of the fillet, if shape is fillet.
 
 #### `CMP_PADDING_XY`
 value is expected to be an array of 3 numbers, and determines how far apart the compartments in a component are, in the width and depth direction.  
