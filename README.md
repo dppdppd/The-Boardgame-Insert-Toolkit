@@ -165,13 +165,13 @@ value is expected to be a bool, and determines whether a lid is constructed and 
 #### `BOX_LID_THIN_B`
 describe me
 
-### `BOX_LID_SOLID_B`
+#### `BOX_LID_SOLID_B`
 value is expected to be a bool, and determines whether the lid is a hex mesh or solid.
 
-### `BOX_LID_HEIGHT`
+#### `BOX_LID_HEIGHT`
 value is expected to be a number, and determines whether how deep the lid is.
 
-### `BOX_LID_CUTOUT_SIDES_4B`
+#### `BOX_LID_CUTOUT_SIDES_4B`
 value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the lid. This allows the lid to be used as a card tray during play. The values represent [front, back, left, right ].  
 e.g. `[ BOX_LID_CUTOUT_SIDES_4B, [ t, t, f, f ] ]`
 
