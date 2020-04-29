@@ -30,14 +30,10 @@ Everything in BIT is defined using key-value pairs, i.e. [ _key_ , _value_ ]. So
     [   "example 0: minimal",                                   // our box
         [
             [ BOX_SIZE_XYZ, [46.5, 46.5, 15.0] ],             // one kv pair specifying the x, y, and z of our box exterior.
-            [ BOX_COMPONENTS,                                   // this is where our components will go.
+            [ BOX_COMPONENT,                                    // our first component.
                 [
-                    [   "my chits",                             // our first component.
-                        [
-                            [CMP_NUM_COMPARTMENTS_XY, [4,4]],
-                            [CMP_COMPARTMENT_SIZE_XYZ, [ 10, 10, 13.0] ],
-                        ]
-                    ]
+                    [CMP_NUM_COMPARTMENTS_XY, [4,4]],
+                    [CMP_COMPARTMENT_SIZE_XYZ, [ 10, 10, 13.0] ],
                 ]
             ]
         ]
@@ -48,7 +44,7 @@ That made this:
 ![example1](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/example1.png)
 
 ### Some Explanation
-The first key-value pair is [ "example 0: minimal", _one_big_array_of_keyvalues_ ], and its value is an array of all of the details of the box. One of those children key-value pairs is `BOX_COMPONENTS`, which holds all of the individual components. It's key-values all the way down. See https://www.thingiverse.com/thing:3435429 for an example of lots of compartments of lots of components in lots of boxes.
+The first key-value pair is [ "example 0: minimal", _one_big_array_of_keyvalues_ ], and its value is an array of all of the details of the box. Two of those children key-value pairs are `BOX_COMPONENT` and they each represent distinct groups of compartments. It's key-values all the way down. See https://www.thingiverse.com/thing:3435429 for an example of lots of compartments of lots of components in lots of boxes.
 
 
 Here is an example of some compartments designed to hold cards, with holes to get our fingers in on the side. Many of these parameters are just the default values and are not necessary, but are included for easy modification:
@@ -62,49 +58,62 @@ Here is an example of some compartments designed to hold cards, with holes to ge
             [ BOX_LID_HEX_RADIUS,                       8.0],
             [ BOX_LID_FIT_UNDER_B,                      f],
 
+
             [ LABEL,
                 [
-                    [ LBL_TEXT,     "Example title"],
+                    [ LBL_TEXT,     "Skull     and"],
                     [ LBL_SIZE,     AUTO ],
                     [ ROTATION,     45 ],
-                    [ POSITION_XY, [ -4,-2]],
+                    [ POSITION_XY, [ 2,-2]],
                 ]
             ],
 
-            [   BOX_COMPONENTS,
+            [ LABEL,
                 [
-                    [   "my chits",
-                        [
-                            [CMP_COMPARTMENT_SIZE_XYZ,              [ 22, 60.0, 20.0] ],    
-                            [CMP_NUM_COMPARTMENTS_XY,               [2,2] ],                
-                            [CMP_SHAPE,                             SQUARE],                
-                            [CMP_SHAPE_ROTATED_B,                   f],                     
-                            [CMP_SHAPE_VERTICAL_B,                  f],                     
-                            [CMP_PADDING_XY,                        [15,12]],               
-                            [CMP_PADDING_HEIGHT_ADJUST_XY,          [-5, 0] ],             
-                            [CMP_MARGIN_4B,                         [t,f,f,f]],             
-                            [CMP_CUTOUT_SIDES_4B,                   [f,f,f,t]],             
-                            [ROTATION,                              5 ],                    
-                            [POSITION_XY,                           [CENTER,CENTER]],   
-                            [LABEL,               
-                                [
-                                    [LBL_TEXT,        [   
-                                                        ["backleft", "backright"],        
-                                                        ["frontleft", "frontright"],
-                                                    ]
-                                    ],
-                                    [LBL_PLACEMENT,     FRONT],                           
-                                    [ ROTATION,         10],
-                                    [ LBL_SIZE,         AUTO],
-                                    [ POSITION_XY,      [ -4,-2]],
-                                    [ LBL_FONT,         "Times New Roman:style=bold italic"],
-
-                                ]
-                            ],  
-                        ]
-                    ],                  
+                    [ LBL_TEXT,     "Crossbones"],
+                    [ LBL_SIZE,     AUTO ],
+                    [ ROTATION,     -45 ],
+                    [ POSITION_XY, [ -4,-0]],
                 ]
-            ]
+            ],
+
+            [   BOX_COMPONENT,
+                [
+                    [CMP_COMPARTMENT_SIZE_XYZ,              [ 22, 60.0, 20.0] ],    
+                    [CMP_NUM_COMPARTMENTS_XY,               [2,2] ],                
+                    [CMP_SHAPE,                             SQUARE],                
+                    [CMP_SHAPE_ROTATED_B,                   f],                     
+                    [CMP_SHAPE_VERTICAL_B,                  f],                     
+                    [CMP_PADDING_XY,                        [15,12]],               
+                    [CMP_PADDING_HEIGHT_ADJUST_XY,          [-5, 0] ],             
+                    [CMP_MARGIN_4B,                         [t,f,f,f]],             
+                    [CMP_CUTOUT_SIDES_4B,                   [f,f,f,t]],             
+                    [ROTATION,                              5 ],                    
+                    [POSITION_XY,                           [CENTER,CENTER]],   
+                    [LABEL,               
+                        [
+                            [LBL_TEXT,        [   
+                                                ["backleft", "backright"],        
+                                                ["frontleft", "frontright"],
+                                            ]
+                            ],
+                            [LBL_PLACEMENT,     FRONT],                           
+                            [ ROTATION,         10],
+                            [ LBL_SIZE,         AUTO],
+                            [ POSITION_XY,      [ -4,-2]],
+                            [ LBL_FONT,         "Times New Roman:style=bold italic"],
+
+                        ]
+                    ],  
+                ]
+            ],
+            [ BOX_COMPONENT,
+                [
+                    [CMP_NUM_COMPARTMENTS_XY,       [1,1]],
+                    [CMP_COMPARTMENT_SIZE_XYZ,      [ 60.0, 10.0, 5.0] ],
+                    [POSITION_XY,                   [CENTER,2]],
+                ]
+            ],                
         ]
     ],
 
@@ -142,8 +151,8 @@ value is expected to be an array of 3 numbers, and determines the exterior dimen
 of the box as width, depth, height.  
 e.g. `[ BOX_SIZE_XYZ, [ 140, 250, 80 ] ]`
 
-#### `BOX_COMPONENTS`
-value is expected to be an array of components.
+#### `BOX_COMPONENT`
+value is expected to be an array of components key-value pairs. Box can have as many of these as desired.
 
 #### `BOX_VISUALIZATION`
 describe me
@@ -283,7 +292,7 @@ value is expected to be an array of 2 numbers, and determines the degrees to whi
 e.g. `[ CMP_SHEAR, [ 45, 0 ] ]`
 
 #### `LABEL`
-value is expected to be an array of key-values that define the label. A Label can be defined at the box-level for the label that will appear on the lid, or at the component label for the labels that will appear on the compartments.
+value is expected to be an array of key-values that define a label. Labels can be defined at the box-level for labels that will appear on the lid, or at the component label for the labels that will appear on the compartments. Components can have one label. Boxes can have as many as desired.
 
 
 ### Label keys

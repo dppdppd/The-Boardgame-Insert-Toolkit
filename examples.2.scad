@@ -29,16 +29,12 @@ data =
     [   "example 0: minimal",
         [
             [ BOX_SIZE_XYZ,                                     [46.5, 46.5, 15.0] ],
-            [ BOX_COMPONENTS,
+            [ BOX_COMPONENT,
                 [
-                    [   "my chits",
-                        [
-                            [CMP_NUM_COMPARTMENTS_XY,   [4,4]],
-                            [CMP_COMPARTMENT_SIZE_XYZ,  [ 10, 10, 13.0] ],
-                        ]
-                    ],                  
+                    [CMP_NUM_COMPARTMENTS_XY,   [4,4]],
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 10, 10, 13.0] ],
                 ]
-            ]
+            ],                  
         ]
     ],
     [   "example 1",
@@ -53,79 +49,89 @@ data =
 
             [ LABEL,
                 [
-                    [ LBL_TEXT,     "Example title"],
+                    [ LBL_TEXT,     "Skull     and"],
                     [ LBL_SIZE,     AUTO ],
                     [ ROTATION,     45 ],
-                    [ POSITION_XY, [ -4,-2]],
+                    [ POSITION_XY, [ 2,-2]],
                 ]
             ],
 
-            [   BOX_COMPONENTS,
+            [ LABEL,
                 [
-                    [   "my chits",
-                        [
-                            [CMP_COMPARTMENT_SIZE_XYZ,              [ 22, 60.0, 20.0] ],
-                            [CMP_NUM_COMPARTMENTS_XY,               [2,2] ],
-                            [CMP_SHAPE,                             SQUARE],
-                            [CMP_SHAPE_ROTATED_B,                   f],
-                            [CMP_SHAPE_VERTICAL_B,                  f],
-                            [CMP_PADDING_XY,                        [15,12]],
-                            [CMP_PADDING_HEIGHT_ADJUST_XY,          [-5, 0] ],
-                            [CMP_MARGIN_4B,                         [t,f,f,f]],
-                            [CMP_CUTOUT_SIDES_4B,                   [f,f,f,t]],
-                            [ROTATION,                              5 ],
-                            [POSITION_XY,                           [CENTER,CENTER]],
-                            [LABEL,               
-                                [
-                                    [LBL_TEXT,        [   
-                                                        ["backleft", "backright"],
-                                                        ["frontleft", "frontright"],
-                                                    ]
-                                    ],
-                                    [LBL_PLACEMENT,     FRONT],
-                                    [ ROTATION,         10],
-                                    [ LBL_SIZE,         AUTO],
-                                    [ POSITION_XY,      [ -4,-2]],
-                                    [ LBL_FONT,         "Times New Roman:style=bold italic"],
-
-                                ]
-                            ],  
-                        ]
-                    ],                  
+                    [ LBL_TEXT,     "Crossbones"],
+                    [ LBL_SIZE,     AUTO ],
+                    [ ROTATION,     -45 ],
+                    [ POSITION_XY, [ -4,-0]],
                 ]
-            ]
+            ],        
+
+
+            [   BOX_COMPONENT,
+                [
+                    [CMP_COMPARTMENT_SIZE_XYZ,              [ 22, 60.0, 20.0] ],
+                    [CMP_NUM_COMPARTMENTS_XY,               [2,2] ],
+                    [CMP_SHAPE,                             SQUARE],
+                    [CMP_SHAPE_ROTATED_B,                   f],
+                    [CMP_SHAPE_VERTICAL_B,                  f],
+                    [CMP_PADDING_XY,                        [15,12]],
+                    [CMP_PADDING_HEIGHT_ADJUST_XY,          [-5, 0] ],
+                    [CMP_MARGIN_4B,                         [t,f,f,f]],
+                    [CMP_CUTOUT_SIDES_4B,                   [f,f,f,t]],
+                    [ROTATION,                              5 ],
+                    [POSITION_XY,                           [CENTER,CENTER]],
+                    [LABEL,               
+                        [
+                            [LBL_TEXT,        [   
+                                                ["backleft", "backright"],
+                                                ["frontleft", "frontright"],
+                                            ]
+                            ],
+                            [LBL_PLACEMENT,     FRONT],
+                            [ ROTATION,         10],
+                            [ LBL_SIZE,         AUTO],
+                            [ POSITION_XY,      [ -4,-2]],
+                            [ LBL_FONT,         "Times New Roman:style=bold italic"],
+
+                        ]
+                    ],  
+                ]
+            ],
+           [ BOX_COMPONENT,
+                [
+                    [CMP_NUM_COMPARTMENTS_XY,       [1,1]],
+                    [CMP_COMPARTMENT_SIZE_XYZ,      [ 60.0, 10.0, 5.0] ],
+                    [POSITION_XY,                   [CENTER,2]],
+                ]
+            ],                              
+
         ]
     ],
     [   "example 2: card tray, shear example",
         [
             [ BOX_SIZE_XYZ,                             [50.0, 50.0, 20.0] ],
             [ BOX_LID_HEX_RADIUS,       10.0],
-            [ BOX_COMPONENTS,
+            [ BOX_COMPONENT,
                 [
-                    [   "my chits",
+                    [CMP_NUM_COMPARTMENTS_XY,       [2,4]],
+                    [CMP_COMPARTMENT_SIZE_XYZ,      [ 20, 5.0, 5.0] ],
+                    [CMP_SHAPE_VERTICAL_B,          t],
+                    [CMP_SHEAR,                     [0,45]],
+                    [LABEL,               
                         [
-                            [CMP_NUM_COMPARTMENTS_XY,       [2,4]],
-                            [CMP_COMPARTMENT_SIZE_XYZ,      [ 20, 5.0, 5.0] ],
-                            [CMP_SHAPE_VERTICAL_B,          t],
-                            [CMP_SHEAR,                     [0,45]],
-                            [LABEL,               
-                                [
-                                    [LBL_TEXT,        [   
-                                                        [ "1",  "2" ],
-                                                        [ "3",  "4" ],
-                                                        [ "4",  "5" ],
-                                                        [ "6",  "7" ]
-                                                    ]
-                                    ],
-                                    [LBL_PLACEMENT,   BACK_WALL],
-                                    [LBL_SIZE,        2],
-                                    
-                                ]
-                            ],  
+                            [LBL_TEXT,        [   
+                                                [ "1",  "2" ],
+                                                [ "3",  "4" ],
+                                                [ "4",  "5" ],
+                                                [ "6",  "7" ]
+                                            ]
+                            ],
+                            [LBL_PLACEMENT,   BACK_WALL],
+                            [LBL_SIZE,        2],
+                            
                         ]
-                    ],                  
+                    ],  
                 ]
-            ]
+            ],                              
         ]
     ],
     [ "divider example 1",
