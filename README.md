@@ -34,13 +34,13 @@ This OpenSCAD library was designed to for quick design and iteration on board ga
 ## Key Values
 Everything in BIT is defined using key-value pairs, i.e. [ _key_ , _value_ ]. Sometimes the _value_ is an array of other key-value pairs, so it's important to use indentation to keep track of the pairing. That's where a good text editor comes in handy. See the following example.
 
-    [   "example 0: minimal",                                   // our box
+    [   "example 0: minimal",                            // our box. name is just for code organization.
         [
-            [ BOX_SIZE_XYZ, [46.5, 46.5, 15.0] ],             // one kv pair specifying the x, y, and z of our box exterior.
-            [ BOX_COMPONENT,                                    // our first component.
+            [ BOX_SIZE_XYZ, [46.5, 46.5, 15.0] ],        // one kv pair specifying the x, y, and z of our box exterior.
+            [ BOX_COMPONENT,                             // our first component.
                 [
-                    [CMP_NUM_COMPARTMENTS_XY, [4,4]],
-                    [CMP_COMPARTMENT_SIZE_XYZ, [ 10, 10, 13.0] ],
+                    [CMP_NUM_COMPARTMENTS_XY, [4,4]],               // it's a grid of 4 x 4
+                    [CMP_COMPARTMENT_SIZE_XYZ, [ 10, 10, 13.0] ],   // each compartment is 10mm x 10mm x 13mm
                 ]
             ]
         ]
