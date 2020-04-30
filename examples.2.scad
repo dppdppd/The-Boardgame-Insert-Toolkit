@@ -8,7 +8,7 @@ g_b_print_lid = true;
 g_b_print_box = true; 
 
 // Focus on one box
-g_isolated_print_box = ""; 
+g_isolated_print_box = "example 1"; 
 
 // Used to visualize how all of the boxes fit together. 
 g_b_visualization = false;          
@@ -44,7 +44,7 @@ data =
             [ BOX_LID_NOTCHES_B,        f],
             [ BOX_LID_FIT_UNDER_B,      f],
             [ BOX_LID_CUTOUT_SIDES_4B, [f,f,t,t]],
-            [ BOX_LID_SOLID_B, t],
+            [ BOX_LID_SOLID_B, f],
             [ BOX_LID_HEIGHT, 15 ],
 
             [ LABEL,

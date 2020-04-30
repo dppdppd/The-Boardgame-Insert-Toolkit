@@ -59,12 +59,13 @@ Here is an example of some compartments designed to hold cards, with holes to ge
 
     [   "example 1",
         [
-            [ BOX_SIZE_XYZ,                             [110.0, 180.0, 22.0] ],             
-            [ ENABLED_B,                                t],
-            [ BOX_LID_NOTCHES_B,                        f],
-            [ BOX_LID_HEX_RADIUS,                       8.0],
-            [ BOX_LID_FIT_UNDER_B,                      f],
-
+            [ BOX_SIZE_XYZ,             [110.0, 180.0, 22.0] ],
+            [ ENABLED_B,                t],
+            [ BOX_LID_NOTCHES_B,        f],
+            [ BOX_LID_FIT_UNDER_B,      f],
+            [ BOX_LID_CUTOUT_SIDES_4B, [f,f,t,t]],
+            [ BOX_LID_SOLID_B, f],
+            [ BOX_LID_HEIGHT, 15 ],
 
             [ LABEL,
                 [
@@ -79,32 +80,33 @@ Here is an example of some compartments designed to hold cards, with holes to ge
                 [
                     [ LBL_TEXT,     "Crossbones"],
                     [ LBL_SIZE,     AUTO ],
-                    [ ROTATION,     -45 ],
+                    [ ROTATION,     315 ],
                     [ POSITION_XY, [ -4,-0]],
                 ]
-            ],
+            ],        
+
 
             [   BOX_COMPONENT,
                 [
-                    [CMP_COMPARTMENT_SIZE_XYZ,              [ 22, 60.0, 20.0] ],    
-                    [CMP_NUM_COMPARTMENTS_XY,               [2,2] ],                
-                    [CMP_SHAPE,                             SQUARE],                
-                    [CMP_SHAPE_ROTATED_B,                   f],                     
-                    [CMP_SHAPE_VERTICAL_B,                  f],                     
-                    [CMP_PADDING_XY,                        [15,12]],               
-                    [CMP_PADDING_HEIGHT_ADJUST_XY,          [-5, 0] ],             
-                    [CMP_MARGIN_4B,                         [t,f,f,f]],             
-                    [CMP_CUTOUT_SIDES_4B,                   [f,f,f,t]],             
-                    [ROTATION,                              5 ],                    
-                    [POSITION_XY,                           [CENTER,CENTER]],   
+                    [CMP_COMPARTMENT_SIZE_XYZ,              [ 22, 60.0, 20.0] ],
+                    [CMP_NUM_COMPARTMENTS_XY,               [2,2] ],
+                    [CMP_SHAPE,                             SQUARE],
+                    [CMP_SHAPE_ROTATED_B,                   f],
+                    [CMP_SHAPE_VERTICAL_B,                  f],
+                    [CMP_PADDING_XY,                        [15,12]],
+                    [CMP_PADDING_HEIGHT_ADJUST_XY,          [-5, 0] ],
+                    [CMP_MARGIN_4B,                         [t,f,f,f]],
+                    [CMP_CUTOUT_SIDES_4B,                   [f,f,f,t]],
+                    [ROTATION,                              5 ],
+                    [POSITION_XY,                           [CENTER,CENTER]],
                     [LABEL,               
                         [
                             [LBL_TEXT,        [   
-                                                ["backleft", "backright"],        
+                                                ["backleft", "backright"],
                                                 ["frontleft", "frontright"],
                                             ]
                             ],
-                            [LBL_PLACEMENT,     FRONT],                           
+                            [LBL_PLACEMENT,     FRONT],
                             [ ROTATION,         10],
                             [ LBL_SIZE,         AUTO],
                             [ POSITION_XY,      [ -4,-2]],
@@ -114,15 +116,16 @@ Here is an example of some compartments designed to hold cards, with holes to ge
                     ],  
                 ]
             ],
-            [ BOX_COMPONENT,
+           [ BOX_COMPONENT,
                 [
                     [CMP_NUM_COMPARTMENTS_XY,       [1,1]],
                     [CMP_COMPARTMENT_SIZE_XYZ,      [ 60.0, 10.0, 5.0] ],
                     [POSITION_XY,                   [CENTER,2]],
                 ]
-            ],                
+            ],                              
+
         ]
-    ],
+    ]
 
 And this is the result:
 ![example2](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/example2.png)
