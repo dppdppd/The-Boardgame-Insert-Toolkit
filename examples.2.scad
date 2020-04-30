@@ -60,7 +60,7 @@ data =
                 [
                     [ LBL_TEXT,     "Crossbones"],
                     [ LBL_SIZE,     AUTO ],
-                    [ ROTATION,     -45 ],
+                    [ ROTATION,     315 ],
                     [ POSITION_XY, [ -4,-0]],
                 ]
             ],        

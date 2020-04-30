@@ -1,6 +1,13 @@
 <!--ts-->
 <!--te-->
 
+# What
+
+This:
+
+![Mice n Mystics 1](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/IMG_1455.jpeg)
+![Mice n Mystics 2](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/IMG_1453.jpeg)
+
 # Why
 This OpenSCAD library was designed to for quick design and iteration on board game inserts--specifically ones with lids. There are lots of great printable inserts out there, but very few for us vertical storers.
 
@@ -44,7 +51,7 @@ That made this:
 ![example1](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/example1.png)
 
 ### Some Explanation
-The first key-value pair is [ "example 0: minimal", _one_big_array_of_keyvalues_ ], and its value is an array of all of the details of the box. Two of those children key-value pairs are `BOX_COMPONENT` and they each represent distinct groups of compartments. It's key-values all the way down. See https://www.thingiverse.com/thing:3435429 for an example of lots of compartments of lots of components in lots of boxes.
+The first key-value pair is [ "example 0: minimal", _one_big_array_of_keyvalues_ ], and its value is an array of all of the details of the box. One of those key-pairs is `BOX_COMPONENT` which represents a grid of one type of compartment. It's key-values all the way down. See https://www.thingiverse.com/thing:3435429 for an example of lots of compartments of lots of components in lots of boxes.
 
 
 Here is an example of some compartments designed to hold cards, with holes to get our fingers in on the side. Many of these parameters are just the default values and are not necessary, but are included for easy modification:
