@@ -39,8 +39,8 @@ Everything in BIT is defined using key-value pairs, i.e. [ _key_ , _value_ ]. So
             [ BOX_SIZE_XYZ, [46.5, 46.5, 15.0] ],        // one kv pair specifying the x, y, and z of our box exterior.
             [ BOX_COMPONENT,                             // our first component.
                 [
-                    [CMP_NUM_COMPARTMENTS_XY, [4,4]],               // it's a grid of 4 x 4
-                    [CMP_COMPARTMENT_SIZE_XYZ, [ 10, 10, 13.0] ],   // each compartment is 10mm x 10mm x 13mm
+                    [ CMP_NUM_COMPARTMENTS_XY, [4, 4] ],               // it's a grid of 4 x 4
+                    [ CMP_COMPARTMENT_SIZE_XYZ, [ 10, 10, 13.0] ],   // each compartment is 10mm x 10mm x 13mm
                 ]
             ]
         ]
