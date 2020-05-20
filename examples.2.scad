@@ -41,11 +41,11 @@ data =
         [
             [ BOX_SIZE_XYZ,             [110.0, 180.0, 22.0] ],
             [ ENABLED_B,                t],
-            [ BOX_LID_NOTCHES_B,        f],
-            [ BOX_LID_FIT_UNDER_B,      f],
-            [ BOX_LID_CUTOUT_SIDES_4B, [f,f,t,t]],
-            [ BOX_LID_SOLID_B, f],
-            [ BOX_LID_HEIGHT, 15 ],
+            [ LID_NOTCHES_B,        f],
+            [ LID_FIT_UNDER_B,      f],
+            [ LID_CUTOUT_SIDES_4B, [f,f,t,t]],
+            [ LID_SOLID_B, f],
+            [ LID_HEIGHT, 15 ],
 
             [ LABEL,
                 [
@@ -109,7 +109,7 @@ data =
     [   "example 2: card tray, shear example",
         [
             [ BOX_SIZE_XYZ,                             [50.0, 50.0, 20.0] ],
-            [ BOX_LID_HEX_RADIUS,       10.0],
+            [ LID_PATTERN_RADIUS,       10.0],
             [ BOX_COMPONENT,
                 [
                     [CMP_NUM_COMPARTMENTS_XY,       [2,4]],

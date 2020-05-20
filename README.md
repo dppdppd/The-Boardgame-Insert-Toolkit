@@ -61,11 +61,11 @@ Here is an example of some compartments designed to hold cards, with holes to ge
         [
             [ BOX_SIZE_XYZ,             [110.0, 180.0, 22.0] ],
             [ ENABLED_B,                t],
-            [ BOX_LID_NOTCHES_B,        f],
-            [ BOX_LID_FIT_UNDER_B,      f],
-            [ BOX_LID_CUTOUT_SIDES_4B, [f,f,t,t]],
-            [ BOX_LID_SOLID_B, f],
-            [ BOX_LID_HEIGHT, 15 ],
+            [ LID_NOTCHES_B,        f],
+            [ LID_FIT_UNDER_B,      f],
+            [ LID_CUTOUT_SIDES_4B, [f,f,t,t]],
+            [ LID_SOLID_B, f],
+            [ LID_HEIGHT, 15 ],
 
             [ LABEL,
                 [
@@ -156,6 +156,7 @@ a box.
 a set of dividers.
 
 ### Box keys
+
 #### `BOX_SIZE_XYZ`
 value is expected to be an array of 3 numbers, and determines the exterior dimensions
 of the box as width, depth, height.  
@@ -167,32 +168,59 @@ value is expected to be an array of components key-value pairs. Box can have as 
 #### `BOX_VISUALIZATION`
 describe me
 
-#### `BOX_LID_NOTCHES_B`
-value is expected to be a bool, "true", "false", "t", or "f", and determines whether the box will have notches that make pulling the lid off easier.  
-e.g. `[ BOX_LID_NOTCHES_B, f ]`
-
-#### `BOX_LID_HEX_RADIUS`
-value is expected to be a number, and determines the radius of the hexes in the lid.  
-e.g. `[ BOX_LID_HEX_RADIUS, 5 ]`
-
-#### `BOX_LID_FIT_UNDER_B`
-value is expected to be a bool, and determines whether the box bottom is formed to allow the box to sit in the lid when open. Note that this requires a printer that can handle printing 45 degrees outward without supports.
+### Lid keys
+as of v2.09, all lid parameters are specified in a BOX_LID container. This makes it easy to reuse box lid parameters across multiple boxes.
 
 #### `BOX_LID`
-value is expected to be a bool, and determines whether a lid is constructed and whether the box has the inset lip to support one.
+value is expected to be an array of lid key-value pairs.
 
-#### `BOX_LID_THIN_B`
+#### `LID_NOTCHES_B`
+value is expected to be a bool, "true", "false", "t", or "f", and determines whether the box will have notches that make pulling the lid off easier.  
+e.g. `[ LID_NOTCHES_B, f ]`
+
+#### `LID_PATTERN_RADIUS`
+value is expected to be a number, and determines the radius of the hexes in the lid.  
+e.g. `[ LID_PATTERN_RADIUS, 5 ]`
+
+#### `LID_PATTERN_N1`
+value is expected to be a number, and determines the number of sides that the pattern outer shape has.  
+
+#### `LID_PATTERN_N2`
+value is expected to be a number, and determines the number of sides that the pattern inner shape has. 
+
+#### `LID_PATTERN_ANGLE`
+value is expected to be a number, and determines the angle of the pattern shape. 
+
+#### `LID_PATTERN_ROW_OFFSET`
+value is expected to be a number, and determines the percent of height that each row will offset from each other. 
+
+#### `LID_PATTERN_COL_OFFSET`
+value is expected to be a number, and determines the percent of width that each column will offset from each other. 
+
+#### `LID_PATTERN_THICKNESS`
+value is expected to be a number, and determines the thickness of the shape, i.e. the difference between the inner and outer shapes` radius. 
+
+#### `LID_FIT_UNDER_B`
+value is expected to be a bool, and determines whether the box bottom is formed to allow the box to sit in the lid when open. Note that this requires a printer that can handle printing 45 degrees outward without supports.
+
+#### `BOX_NO_LID_B`
+value is expected to be a bool, and determines whether a lid is ommitted. If ommitted, the box will not form an inset lip to support a lid.
+
+#### `LID_THIN_B`
 describe me
 
-#### `BOX_LID_SOLID_B`
+#### `LID_SOLID_B`
 value is expected to be a bool, and determines whether the lid is a hex mesh or solid.
 
-#### `BOX_LID_HEIGHT`
+#### 'LID_LABELS_BG_B'
+value is expected to be a bool, and determines whether the lid labels have a grid background that is different from the lid pattern. Useful for making the label more legible.
+
+#### `LID_HEIGHT`
 value is expected to be a number, and determines whether how deep the lid is.
 
-#### `BOX_LID_CUTOUT_SIDES_4B`
+#### `LID_CUTOUT_SIDES_4B`
 value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the lid. This allows the lid to be used as a card tray during play. The values represent [front, back, left, right ].  
-e.g. `[ BOX_LID_CUTOUT_SIDES_4B, [ t, t, f, f ] ]`
+e.g. `[ LID_CUTOUT_SIDES_4B, [ t, t, f, f ] ]`
 
 ### Dividers keys
 as of v2.04, in addition to boxes, one can also create card dividers.
@@ -304,8 +332,8 @@ e.g. `[ CMP_SHEAR, [ 45, 0 ] ]`
 #### `LABEL`
 value is expected to be an array of key-values that define a label. Labels can be defined at the box-level for labels that will appear on the lid, or at the component label for the labels that will appear on the compartments. Components can have one label. Boxes can have as many as desired.
 
-
 ### Label keys
+Key-pairs that are expected in a LABEL container.
 
 #### `LBL_TEXT`
 value is expected to either be a string, or an array of strings matching the structure of the compartments. A single string will label every compartment with that string while an array will label each compartment with its respective string.  

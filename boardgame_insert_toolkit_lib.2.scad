@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.08";
+VERSION = "2.09";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 25 : 100;
@@ -31,6 +31,9 @@ f = false;
 TYPE = "type";
 BOX = "box";
 DIVIDERS = "dividers";
+SPACER = "spacer";
+
+BOX_LID = "box_lid";
 
 DIV_THICKNESS = "div_thickness";
 
@@ -57,14 +60,24 @@ DIV_FRAME_NUM_COLUMNS = "div_frame_num_columns";
 BOX_SIZE_XYZ = "box_size";
 BOX_COMPONENT = "component";
 BOX_VISUALIZATION = "visualization";
-BOX_LID_NOTCHES_B = "lid_notches";
-BOX_LID_HEX_RADIUS = "lid_hex_radius";
-BOX_LID_FIT_UNDER_B = "fit_lid_under";
-BOX_LID = "lid";
-BOX_LID_THIN_B = "thin_lid";
-BOX_LID_SOLID_B = "box_lid_solid";
-BOX_LID_HEIGHT = "lid_height";
-BOX_LID_CUTOUT_SIDES_4B = "lid_cutout_sides";
+
+BOX_NO_LID_B = "no_lid";
+
+LID_NOTCHES_B = "lid_notches";
+LID_FIT_UNDER_B = "fit_lid_under";
+LID_THIN_B = "thin_lid";
+LID_SOLID_B = "box_lid_solid";
+LID_HEIGHT = "lid_height";
+LID_CUTOUT_SIDES_4B = "lid_cutout_sides";
+LID_LABELS_BG_B = "lid_label_has_bg";
+
+LID_PATTERN_RADIUS = "lid_hex_radius";
+LID_PATTERN_N1 = "lid_pattern_n1";
+LID_PATTERN_N2 = "lid_pattern_n2";
+LID_PATTERN_ANGLE = "lid_pattern_angle";
+LID_PATTERN_ROW_OFFSET = "lid_pattern_row_offset";
+LID_PATTERN_COL_OFFSET = "lid_pattern_col_offset";
+LID_PATTERN_THICKNESS = "lid_pattern_thickness";
 
 // COMPARTMENT PARAMETERS
 CMP_NUM_COMPARTMENTS_XY = "num_compartments";
@@ -206,14 +219,13 @@ function __num_elements() = len( data );
 
 function __type( lmnt ) = __value( lmnt, TYPE, default = BOX);
 
-function __is_element_isolated_for_print() = __index_of_key( data, g_isolated_print_box ) != [];
+function __is_element_isolated_for_print() = g_isolated_print_box != "" && ( __index_of_key( data, g_isolated_print_box ) != [] ) ;
 
 function __is_element_enabled( lmnt ) = __value( lmnt, ENABLED_B, default = true);
 
-function __element_dimensions( lmnt ) = __type( lmnt ) == BOX ?
-                                 __value( lmnt, BOX_SIZE_XYZ, default = [ 100, 100] ) :
-                                    __type( lmnt ) == DIVIDERS ?
-                                    [ __div_frame_size( lmnt )[k_x],  __div_total_height( lmnt ) ] : [0,0];
+function __element_dimensions( lmnt ) = __type( lmnt ) == DIVIDERS ?
+                                    [ __div_frame_size( lmnt )[k_x],  __div_total_height( lmnt ) ] : 
+                                    __value( lmnt, BOX_SIZE_XYZ, default = [ 100, 100] );
 
 function __element_position_x( i ) = __element( i - 1 ) == undef ? 0 : __is_element_enabled( __element( i - 1 ) ) ? __element_dimensions( __element( i - 1 ) )[ k_x ] + __element_position_x( i - 1 ) + DISTANCE_BETWEEN_PARTS : __element_position_x( i - 2 );
 
@@ -307,14 +319,14 @@ module MakeAll()
     {
         element = __value( data, g_isolated_print_box );
 
-        if ( __type( element ) == BOX )
-        {
-            MakeBox( element );
-        }
-        else if ( __type( element ) == DIVIDERS )
+        if ( __type( element ) == DIVIDERS )
         {
             MakeDividers( element );
-        }            
+        }
+        else
+        {
+            MakeBox( element );
+        }          
     }
     else
     {
@@ -332,13 +344,13 @@ module MakeAll()
                     {
                         Colorize()
                         {
-                            if ( __type( element ) == BOX )
-                            {
-                                MakeBox( element );
-                            }
-                            else if ( __type( element ) == DIVIDERS )
+                           if ( __type( element ) == DIVIDERS )
                             {
                                 MakeDividers( element );
+                            }
+                            else
+                            {
+                                MakeBox( element );
                             }
                         }
                     }
@@ -448,24 +460,34 @@ module MakeBox( box )
 
     m_box_label = __value( box, LABEL, default = "");
 
-    // FIXME
-    m_box_is_spacer = __value( box, "type") == "layer_spacer";
+    m_box_is_spacer = __type( box )  == SPACER;
+    m_box_has_lid = !__value( box, BOX_NO_LID_B, default = false );
 
-    m_box_has_thin_lid = __value( box, BOX_LID_THIN_B, default = false );
-    m_box_has_lid = __value( box, BOX_LID, default = true );
-    m_box_has_lid_notches = __value( box, BOX_LID_NOTCHES_B, default = true );
-    m_box_fit_lid_under = __value( box, BOX_LID_FIT_UNDER_B, default = true );
-    m_box_solid_lid = __value( box, BOX_LID_SOLID_B, default = false );
-    m_box_lid_height = __value( box, BOX_LID_HEIGHT, default = 5.0 );
-    m_box_lid_cutout_sides = __value( box, BOX_LID_CUTOUT_SIDES_4B, default = [f,f,f,f]);
+    m_lid = __value( box, BOX_LID, default = [] );
+
+    m_box_has_thin_lid = __value( m_lid, LID_THIN_B, default = false );
+    m_lid_notches = __value( m_lid, LID_NOTCHES_B, default = true );
+    m_lid_fit_under = __value( m_lid, LID_FIT_UNDER_B, default = true );
+    m_lid_solid = __value( m_lid, LID_SOLID_B, default = false );
+
+    m_lid_height = __value( m_lid, LID_HEIGHT, default = 5.0 );
+    m_lid_cutout_sides = __value( m_lid, LID_CUTOUT_SIDES_4B, default = [f,f,f,f]);
+    m_lid_has_bg = __value( m_lid, LID_LABELS_BG_B, default = true );
     
+    m_lid_pattern_n1 = __value( m_lid, LID_PATTERN_N1, default = 6 );
+    m_lid_pattern_n2 = __value( m_lid, LID_PATTERN_N2, default = 6 );
+    m_lid_pattern_angle = __value( m_lid, LID_PATTERN_ANGLE, default = 30 );
+    m_lid_pattern_row_offset = __value( m_lid, LID_PATTERN_ROW_OFFSET, default = 50 );
+    m_lid_pattern_col_offset = __value( m_lid, LID_PATTERN_COL_OFFSET, default = 100 );
+    m_lid_pattern_thickness = __value( m_lid, LID_PATTERN_THICKNESS, default = 0.5 );
+
+    m_lid_pattern_radius = __value( m_lid, LID_PATTERN_RADIUS, default = 4.0 );
 
     // FIXME
     m_box_wall_thickness = __value( box, "wall_thickness", default = g_wall_thickness ); // needs work to change if no lid
 
     m_wall_thickness = m_box_wall_thickness;
 
-    m_lid_hex_radius = __value( box, BOX_LID_HEX_RADIUS, default = 4.0 );
 
     m_wall_underside_lid_storage_depth = 7;
 
@@ -619,13 +641,13 @@ module MakeBox( box )
 
         m_lid_thickness = ( m_box_has_thin_lid ? 0.6 : g_lid_thickness ) - g_tolerance;
 
-        function __lid_external_size( D )= D == k_z ? m_lid_thickness + m_box_lid_height : 
+        function __lid_external_size( D )= D == k_z ? m_lid_thickness + m_lid_height : 
                                                     m_box_size[ D ];
 
         function __lid_internal_size( D )= D == k_z ? __lid_external_size( k_z ) - m_lid_thickness : 
                                                     __lid_external_size( D ) - m_wall_thickness + ( g_tolerance * 2);
 
-        function __has_simple_lid() = m_box_solid_lid || g_b_vis_actual;
+        function __has_solid_lid() = m_lid_solid || g_b_vis_actual;
 
         module ContainWithinBox()
         {
@@ -689,11 +711,11 @@ module MakeBox( box )
             {
                 cube( [  m_box_size[ k_x ] - ( 2 * offset ),
                         __lid_notch_depth() + depth, 
-                        m_box_lid_height + height ] );   
+                        m_lid_height + height ] );   
 
                 cube( [  __lid_notch_depth() + depth,
                         m_box_size[ k_y ] - ( 2 * offset ),
-                        m_box_lid_height + height ] ); 
+                        m_lid_height + height ] ); 
             }
         }
 
@@ -803,13 +825,13 @@ module MakeBox( box )
             else if ( m_is_lid_subtractions && m_box_has_lid )
             {
 
-                notch_pos_z =  m_box_size[ k_z ] - m_box_lid_height ;
+                notch_pos_z =  m_box_size[ k_z ] - m_lid_height ;
                 
                 translate( [ 0,0, notch_pos_z ] )
                     MakeLidNotches();
 
                 // outer, shorter wall
-                if ( m_box_fit_lid_under )
+                if ( m_lid_fit_under )
                 {
                     // we need to carve out angles so we won't need supports.
                     difference()
@@ -820,10 +842,10 @@ module MakeBox( box )
 
                         hull()
                         {
-                            translate( [ 0, 0, m_box_lid_height + vertical_clearance] )
+                            translate( [ 0, 0, m_lid_height + vertical_clearance] )
                                 MakeLidNotches();
 
-                            translate( [ 0, 0, m_box_lid_height - 1 + vertical_clearance] )
+                            translate( [ 0, 0, m_lid_height - 1 + vertical_clearance] )
                                 MakeLidNotches( offset = __lid_notch_depth() + g_tolerance );
 
                         }
@@ -833,7 +855,7 @@ module MakeBox( box )
 
                 notch_pos_z_corner = notch_pos_z - m_notch_height ;
 
-                if ( m_box_has_lid_notches )
+                if ( m_lid_notches )
                     translate([ 0, 0, notch_pos_z_corner]) 
                         MakeLidCornerNotches();
                     
@@ -920,6 +942,29 @@ module MakeBox( box )
             }
         }
 
+        module Make2DPattern( x = 200, y = 200, R = 1, t = 0.5 )
+        {
+            r = cos( m_lid_pattern_angle ) * R;
+
+            dx = r * ( 1 + m_lid_pattern_col_offset / 100 ) - t;
+            dy = R * ( 1 + ( m_lid_pattern_row_offset / 100 ) ) - t;
+
+            x_count = x / dx;
+            y_count = y / dy;
+
+            for( j = [ 0: y_count ] )
+                translate( [ ( j % 2 ) * (r - t/2), 0, 0 ] )
+                    for( i = [ -1: x_count ] )
+                        translate( [ i * dx, j * dy, 0 ] )
+                            rotate( a = m_lid_pattern_angle, v=[ 0, 0, 1 ] )
+                            {
+                                difference()
+                                {
+                                    circle( r = R, $fn = m_lid_pattern_n1  );
+                                    circle( r = R - t, $fn = m_lid_pattern_n2 );
+                                }
+                            }
+        }
 
 
 ///////////////////////
@@ -1003,8 +1048,8 @@ module MakeBox( box )
                             // honeycomb
                             linear_extrude( m_lid_thickness )
                             {
-                                R = m_lid_hex_radius;
-                                t = 0.5;
+                                R = m_lid_pattern_radius;
+                                t = m_lid_pattern_thickness;
 
                                 intersection()
                                 {
@@ -1013,35 +1058,37 @@ module MakeBox( box )
                                             [ __lid_external_size( k_x ), __lid_external_size( k_y )],
                                             [ __lid_external_size( k_x ), 0] ]);   
                                     
-                                    if ( !__has_simple_lid() )
+                                    if ( !__has_solid_lid() )
                                     {
-                                        MakeHexGrid( x = __lid_external_size( k_x ), y = __lid_external_size( k_y ), R = R, t = t )
-                                        {
-                                            Hex( R = R, t = t );
-                                        }
+                                        // MakeHexGrid( x = __lid_external_size( k_x ), y = __lid_external_size( k_y ), R = R, t = t )
+                                        // {
+                                        //     Hex( R = R, t = t );
+                                        // }
+
+                                        Make2DPattern( x = __lid_external_size( k_x ), y = __lid_external_size( k_y ), R = R, t = t );
                                     }
                                 }
                             }
 
                             // stencil out the text
-                            if ( !__has_simple_lid() )
+                            if ( !__has_solid_lid() && m_lid_has_bg )
                             {
                                 MakeAllLidTexts( use_text_offset = true);
                             }
-                            else if ( !m_box_has_thin_lid )
+                            else if ( __has_solid_lid() )
                             {
-                                MakeAllLidTexts( thickness = m_lid_thickness / 2 );
+                                    MakeAllLidTexts( thickness = m_lid_thickness / 2 );
                             }
                             
                         }
-                        
 
-                        if ( !__has_simple_lid() )
+                        //make the grid background                       
+                        if ( !__has_solid_lid() && m_lid_has_bg)
                         {
                             x = __lid_external_size( k_x );
                             y = __lid_external_size( k_y );
 
-                            //make the grid background
+
                             for( i = [ 0 : len( box ) - 1])
                             {
                                 if ( box[ i ][ k_key ] == LABEL )
@@ -1063,11 +1110,11 @@ module MakeBox( box )
                         }
 
                         // make the actual lid label
-                        if ( !__has_simple_lid() )
+                        if ( !__has_solid_lid() )
                             MakeAllLidTexts( );
 
                         // make the background edge
-                        if ( !__has_simple_lid() )
+                        if ( !__has_solid_lid() && m_lid_has_bg )
                         {
                             difference()
                             {
@@ -1075,17 +1122,25 @@ module MakeBox( box )
                                 MakeAllLidTexts( use_text_offset = true, offset = - 1 );
                             }
                         }
+                        else if ( false )
+                        {
+                            difference()
+                            {
+                                MakeAllLidTexts( offset = 2 );
+                                MakeAllLidTexts( offset = 0 );
+                            }                            
+                        }
                     }
-                    if ( m_box_lid_cutout_sides[ k_front ])
+                    if ( m_lid_cutout_sides[ k_front ])
                         MakeFingerCutout( k_front );
 
-                    if ( m_box_lid_cutout_sides[ k_back ])
+                    if ( m_lid_cutout_sides[ k_back ])
                         MakeFingerCutout( k_back );
 
-                    if ( m_box_lid_cutout_sides[ k_right ])
+                    if ( m_lid_cutout_sides[ k_right ])
                         MakeFingerCutout( k_right );
 
-                    if ( m_box_lid_cutout_sides[ k_left ])
+                    if ( m_lid_cutout_sides[ k_left ])
                         MakeFingerCutout( k_left );
 
                 }
@@ -1169,7 +1224,7 @@ module MakeBox( box )
 
         module MakeFingerCutout( side )
         {
-            function __cutout_z() = ( m_is_lid ? m_box_lid_height + m_lid_thickness : m_box_size[ k_z ] );
+            function __cutout_z() = ( m_is_lid ? m_lid_height + m_lid_thickness : m_box_size[ k_z ] );
             function __padding( D ) = m_is_lid ? 0 : __component_padding( D );
             function __size( D ) = m_is_lid ? __lid_internal_size( D ) : __compartment_size( D );
             function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : __compartment_size( k_z ) - __cutout_z();
