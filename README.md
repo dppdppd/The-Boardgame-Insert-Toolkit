@@ -301,10 +301,10 @@ value is expected to be a bool, and determines whether the lid is a hex mesh or 
 #### `LID_SOLID_LABELS_DEPTH`
 value is expected to be a number, and if the lid is solid, determines how deep the label cut is.
 
-### `LID_LABELS_INVERT_B`
+#### `LID_LABELS_INVERT_B`
 value is expected to be a bool, and determines whether the lid label is a positive or negative shape.
 
-### `LID_LABELS_BG_THICKNESS`
+#### `LID_LABELS_BG_THICKNESS`
 value is expected to be a number, and determines the thickness of the lid label background.
 
 #### `LID_HEIGHT`
