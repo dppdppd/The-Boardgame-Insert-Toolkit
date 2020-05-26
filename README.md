@@ -61,11 +61,16 @@ Here is an example of some compartments designed to hold cards, with holes to ge
         [
             [ BOX_SIZE_XYZ,             [110.0, 180.0, 22.0] ],
             [ ENABLED_B,                t],
-            [ LID_NOTCHES_B,        f],
-            [ LID_FIT_UNDER_B,      f],
-            [ LID_CUTOUT_SIDES_4B, [f,f,t,t]],
-            [ LID_SOLID_B, f],
-            [ LID_HEIGHT, 15 ],
+
+             [ BOX_LID,
+                [
+                    [ LID_NOTCHES_B,        f],
+                    [ LID_FIT_UNDER_B,      f],
+                    [ LID_CUTOUT_SIDES_4B, [f,f,t,t]],
+                    [ LID_SOLID_B, f],
+                    [ LID_HEIGHT, 15 ],
+                ]
+             ]
 
             [ LABEL,
                 [
@@ -145,6 +150,87 @@ As of v2.04, there is also the ability to create card dividers in addition to bo
 And produces something like this:
 ![dividers](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/dividers1.png)
 
+### Customizable Lid Patterns
+As of v2.10, one can now tweak the lid pattern parameters. The default is still a honeycomb, but here are some alternatives:
+
+
+    [   "lid pattern 1",
+        [
+            [ BOX_SIZE_XYZ,             [50.0, 50.0, 20.0] ],
+            [ BOX_COMPONENT,
+                [
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 47, 47, 18.0] ],
+                ]
+            ],  
+
+             [ BOX_LID,
+                [
+                    [ LID_PATTERN_RADIUS,         10],        
+
+                    [ LID_PATTERN_N1,               3 ],
+                    [ LID_PATTERN_N2,               3 ],
+                    [ LID_PATTERN_ANGLE,            0 ],
+                    [ LID_PATTERN_ROW_OFFSET,       10 ],
+                    [ LID_PATTERN_COL_OFFSET,       140 ],
+                    [ LID_PATTERN_THICKNESS,        1 ]
+                ]
+            ]
+        ]
+    ],   
+
+![lid pattern 1](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/pattern1.png)
+
+    [   "lid pattern 2",
+        [
+            [ BOX_SIZE_XYZ,             [50.0, 50.0, 20.0] ],
+            [ BOX_COMPONENT,
+                [
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 47, 47, 18.0] ],
+                ]
+            ],  
+
+             [ BOX_LID,
+                [
+                    [ LID_PATTERN_RADIUS,         10],        
+                    [ LID_PATTERN_N1,               8 ],
+                    [ LID_PATTERN_N2,               8 ],
+                    [ LID_PATTERN_ANGLE,            22.5 ],
+                    [ LID_PATTERN_ROW_OFFSET,       10 ],
+                    [ LID_PATTERN_COL_OFFSET,       130 ],
+                    [ LID_PATTERN_THICKNESS,        0.6 ]
+                ]
+            ]
+        ]
+    ],
+
+![lid pattern 2](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/pattern2.png)
+
+    [   "lid pattern 3",
+        [
+            [ BOX_SIZE_XYZ,             [50.0, 50.0, 20.0] ],
+            [ BOX_COMPONENT,
+                [
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 47, 47, 18.0] ],
+                ]
+            ],  
+
+             [ BOX_LID,
+                [
+                    [ LID_PATTERN_RADIUS,         10],        
+
+                    [ LID_PATTERN_N1,               6 ],
+                    [ LID_PATTERN_N2,               3 ],
+                    [ LID_PATTERN_ANGLE,            60 ],
+                    [ LID_PATTERN_ROW_OFFSET,       10 ],
+                    [ LID_PATTERN_COL_OFFSET,       140 ],
+                    [ LID_PATTERN_THICKNESS,        0.6 ]
+                ]
+            ]
+        ]
+    ],    
+
+![lid pattern 3](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/pattern3.png)
+
 
 # Keys
 
@@ -212,8 +298,14 @@ describe me
 #### `LID_SOLID_B`
 value is expected to be a bool, and determines whether the lid is a hex mesh or solid.
 
-#### 'LID_LABELS_BG_B'
-value is expected to be a bool, and determines whether the lid labels have a grid background that is different from the lid pattern. Useful for making the label more legible.
+#### `LID_SOLID_LABELS_DEPTH`
+value is expected to be a number, and if the lid is solid, determines how deep the label cut is.
+
+### `LID_LABELS_INVERT_B`
+value is expected to be a bool, and determines whether the lid label is a positive or negative shape.
+
+### `LID_LABELS_BG_THICKNESS`
+value is expected to be a number, and determines the thickness of the lid label background.
 
 #### `LID_HEIGHT`
 value is expected to be a number, and determines whether how deep the lid is.

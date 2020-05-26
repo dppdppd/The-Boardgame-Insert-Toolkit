@@ -8,7 +8,7 @@ g_b_print_lid = true;
 g_b_print_box = true; 
 
 // Focus on one box
-g_isolated_print_box = "example 1"; 
+g_isolated_print_box = "lid pattern 3"; 
 
 // Used to visualize how all of the boxes fit together. 
 g_b_visualization = false;          
@@ -41,11 +41,16 @@ data =
         [
             [ BOX_SIZE_XYZ,             [110.0, 180.0, 22.0] ],
             [ ENABLED_B,                t],
-            [ LID_NOTCHES_B,        f],
-            [ LID_FIT_UNDER_B,      f],
-            [ LID_CUTOUT_SIDES_4B, [f,f,t,t]],
-            [ LID_SOLID_B, f],
-            [ LID_HEIGHT, 15 ],
+
+            [ BOX_LID,
+                [
+                    [ LID_NOTCHES_B,        f],
+                    [ LID_FIT_UNDER_B,      f],
+                    [ LID_CUTOUT_SIDES_4B, [f,f,t,t]],
+                    [ LID_SOLID_B, f],
+                    [ LID_HEIGHT, 15 ],
+                ]
+            ],
 
             [ LABEL,
                 [
@@ -109,7 +114,13 @@ data =
     [   "example 2: card tray, shear example",
         [
             [ BOX_SIZE_XYZ,                             [50.0, 50.0, 20.0] ],
-            [ LID_PATTERN_RADIUS,       10.0],
+
+            [ BOX_LID,
+                [
+                    [ LID_PATTERN_RADIUS,       10.0],
+                ]
+            ],
+
             [ BOX_COMPONENT,
                 [
                     [CMP_NUM_COMPARTMENTS_XY,       [2,4]],
@@ -159,6 +170,81 @@ data =
 
         ]
     ],    
+
+    [   "lid pattern 1",
+        [
+            [ BOX_SIZE_XYZ,             [50.0, 50.0, 20.0] ],
+            [ BOX_COMPONENT,
+                [
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 47, 47, 18.0] ],
+                ]
+            ],  
+
+             [ BOX_LID,
+                [
+                    [ LID_PATTERN_RADIUS,         10],        
+
+                    [ LID_PATTERN_N1,               3 ],
+                    [ LID_PATTERN_N2,               3 ],
+                    [ LID_PATTERN_ANGLE,            0 ],
+                    [ LID_PATTERN_ROW_OFFSET,       10 ],
+                    [ LID_PATTERN_COL_OFFSET,       140 ],
+                    [ LID_PATTERN_THICKNESS,        1 ]
+                ]
+            ]
+        ]
+    ],   
+
+    [   "lid pattern 2",
+        [
+            [ BOX_SIZE_XYZ,             [50.0, 50.0, 20.0] ],
+            [ BOX_COMPONENT,
+                [
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 47, 47, 18.0] ],
+                ]
+            ],  
+
+             [ BOX_LID,
+                [
+                    [ LID_PATTERN_RADIUS,         10],        
+                    [ LID_PATTERN_N1,               8 ],
+                    [ LID_PATTERN_N2,               8 ],
+                    [ LID_PATTERN_ANGLE,            22.5 ],
+                    [ LID_PATTERN_ROW_OFFSET,       10 ],
+                    [ LID_PATTERN_COL_OFFSET,       130 ],
+                    [ LID_PATTERN_THICKNESS,        0.6 ]
+                ]
+            ]
+        ]
+    ],
+
+    [   "lid pattern 3",
+        [
+            [ BOX_SIZE_XYZ,             [50.0, 50.0, 20.0] ],
+            [ BOX_COMPONENT,
+                [
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 47, 47, 18.0] ],
+                ]
+            ],  
+
+             [ BOX_LID,
+                [
+                    [ LID_PATTERN_RADIUS,         10],        
+
+                    [ LID_PATTERN_N1,               6 ],
+                    [ LID_PATTERN_N2,               3 ],
+                    [ LID_PATTERN_ANGLE,            60 ],
+                    [ LID_PATTERN_ROW_OFFSET,       10 ],
+                    [ LID_PATTERN_COL_OFFSET,       140 ],
+                    [ LID_PATTERN_THICKNESS,        0.6 ]
+                ]
+            ]
+        ]
+    ],    
+
+   
+
+
 ];
 
 

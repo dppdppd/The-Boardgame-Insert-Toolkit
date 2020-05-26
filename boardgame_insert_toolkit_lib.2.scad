@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.09";
+VERSION = "2.10";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 25 : 100;
@@ -69,7 +69,10 @@ LID_THIN_B = "thin_lid";
 LID_SOLID_B = "box_lid_solid";
 LID_HEIGHT = "lid_height";
 LID_CUTOUT_SIDES_4B = "lid_cutout_sides";
-LID_LABELS_BG_B = "lid_label_has_bg";
+LID_LABELS_INVERT_B = "lid_label_inverted";
+LID_SOLID_LABELS_DEPTH = "lid_label_depth";
+LID_LABELS_BG_THICKNESS = "lid_label_bg_thickness";
+
 
 LID_PATTERN_RADIUS = "lid_hex_radius";
 LID_PATTERN_N1 = "lid_pattern_n1";
@@ -459,21 +462,42 @@ module MakeBox( box )
     m_num_components =  len( box );
 
     m_box_label = __value( box, LABEL, default = "");
+    m_lid_has_labels = m_box_label != "";
 
     m_box_is_spacer = __type( box )  == SPACER;
     m_box_has_lid = !__value( box, BOX_NO_LID_B, default = false );
 
     m_lid = __value( box, BOX_LID, default = [] );
 
+    function __notch_length( D ) = m_box_size[ D ] / 5.0;
+    function __lid_notch_depth() = m_wall_thickness / 2;
+
+
+    function __lid_external_size( D )= D == k_z ? m_lid_thickness + m_lid_height : 
+                                                m_box_size[ D ];
+
+    function __lid_internal_size( D )= D == k_z ? __lid_external_size( k_z ) - m_lid_thickness : 
+                                                __lid_external_size( D ) - m_wall_thickness + ( g_tolerance * 2);
+
+    function __has_solid_lid() = m_lid_solid || g_b_vis_actual;
+
+
     m_box_has_thin_lid = __value( m_lid, LID_THIN_B, default = false );
+
+    m_lid_thickness = ( m_box_has_thin_lid ? 0.6 : g_lid_thickness ) - g_tolerance;
+
     m_lid_notches = __value( m_lid, LID_NOTCHES_B, default = true );
     m_lid_fit_under = __value( m_lid, LID_FIT_UNDER_B, default = true );
     m_lid_solid = __value( m_lid, LID_SOLID_B, default = false );
 
     m_lid_height = __value( m_lid, LID_HEIGHT, default = 5.0 );
     m_lid_cutout_sides = __value( m_lid, LID_CUTOUT_SIDES_4B, default = [f,f,f,f]);
-    m_lid_has_bg = __value( m_lid, LID_LABELS_BG_B, default = true );
-    
+    m_lid_is_inverted = __value( m_lid, LID_LABELS_INVERT_B, default = false );
+    m_lid_label_depth = __value( m_lid, LID_SOLID_LABELS_DEPTH, default = m_lid_thickness / 2 );
+
+    m_lid_label_bg_thickness = __value( m_lid, LID_LABELS_BG_THICKNESS, default = 5.0 );
+
+
     m_lid_pattern_n1 = __value( m_lid, LID_PATTERN_N1, default = 6 );
     m_lid_pattern_n2 = __value( m_lid, LID_PATTERN_N2, default = 6 );
     m_lid_pattern_angle = __value( m_lid, LID_PATTERN_ANGLE, default = 30 );
@@ -482,6 +506,7 @@ module MakeBox( box )
     m_lid_pattern_thickness = __value( m_lid, LID_PATTERN_THICKNESS, default = 0.5 );
 
     m_lid_pattern_radius = __value( m_lid, LID_PATTERN_RADIUS, default = 4.0 );
+
 
     // FIXME
     m_box_wall_thickness = __value( box, "wall_thickness", default = g_wall_thickness ); // needs work to change if no lid
@@ -636,18 +661,6 @@ module MakeBox( box )
         function __partition_height( D ) = __component_size( k_z ) + __component_padding_height_adjust( D );
         function __smallest_partition_height() = min( __partition_height( k_x ), __partition_height( k_y ) );
 
-        function __notch_length( D ) = m_box_size[ D ] / 5.0;
-        function __lid_notch_depth() = m_wall_thickness / 2;
-
-        m_lid_thickness = ( m_box_has_thin_lid ? 0.6 : g_lid_thickness ) - g_tolerance;
-
-        function __lid_external_size( D )= D == k_z ? m_lid_thickness + m_lid_height : 
-                                                    m_box_size[ D ];
-
-        function __lid_internal_size( D )= D == k_z ? __lid_external_size( k_z ) - m_lid_thickness : 
-                                                    __lid_external_size( D ) - m_wall_thickness + ( g_tolerance * 2);
-
-        function __has_solid_lid() = m_lid_solid || g_b_vis_actual;
 
         module ContainWithinBox()
         {
@@ -867,53 +880,221 @@ module MakeBox( box )
 
 ////////PATTERNS
 
-        module MakeHexGrid( x = 200, y = 200, R = 1, t = 0.2 )
+        module Tri( R = 1, t = 0.2 )
         {
-            r = cos(30) * R;
+            n = 3;
+            a = 2 * ( PI / n) * 180 / PI;
+ 
+            polygon([
+                        [ R * cos(0 * a), R * sin(0 * a) ],
+                        [ R * cos(1 * a), R * sin(1 * a) ],
+                        [ R * cos(2 * a), R * sin(2 * a) ],
 
-            dx = r * 2 - t;
-            dy = R * 1.5 - t;
+                        [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
+                        [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
+                        [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
+                    ],
+                
+                    [
+                        [0,1,2],[3,4,5]
+                    ]
+                );     
+        };   
+
+        module Quad( R = 1, t = 0.2 )
+        {
+            n = 4;
+            a = 2 * ( PI / n) * 180 / PI;
+ 
+            polygon([
+                        [ R * cos(0 * a), R * sin(0 * a) ],
+                        [ R * cos(1 * a), R * sin(1 * a) ],
+                        [ R * cos(2 * a), R * sin(2 * a) ],
+                        [ R * cos(3 * a), R * sin(3 * a) ],
+
+                        [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
+                        [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
+                        [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
+                        [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
+                    ],
+                
+                    [
+                        [0,1,2,3],[4,5,6,7]
+                    ]
+                );     
+        };   
+
+        module Pent( R = 1, t = 0.2 )
+        {
+            n = 5;
+            a = 2 * ( PI / n) * 180 / PI;
+ 
+            polygon([
+                        [ R * cos(0 * a), R * sin(0 * a) ],
+                        [ R * cos(1 * a), R * sin(1 * a) ],
+                        [ R * cos(2 * a), R * sin(2 * a) ],
+                        [ R * cos(3 * a), R * sin(3 * a) ],
+                        [ R * cos(4 * a), R * sin(4 * a) ],
+
+                        [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
+                        [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
+                        [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
+                        [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
+                        [ ( R - t ) * cos(4 * a), ( R - t ) * sin(4 * a) ],
+                    ],
+                
+                    [
+                        [0,1,2,3,4],[5,6,7,8,9]
+                    ]
+                );     
+        };   
+
+        module Hex( R = 1, t = 0.2 )
+        {
+            n = 6;
+            a = 2 * ( PI / n) * 180 / PI;
+
+            polygon([
+                        [ R * cos(0 * a), R * sin(0 * a) ],
+                        [ R * cos(1 * a), R * sin(1 * a) ],
+                        [ R * cos(2 * a), R * sin(2 * a) ],
+                        [ R * cos(3 * a), R * sin(3 * a) ],
+                        [ R * cos(4 * a), R * sin(4 * a) ],
+                        [ R * cos(5 * a), R * sin(5 * a) ],
+
+                        [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
+                        [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
+                        [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
+                        [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
+                        [ ( R - t ) * cos(4 * a), ( R - t ) * sin(4 * a) ],
+                        [ ( R - t ) * cos(5 * a), ( R - t ) * sin(5 * a) ]
+                    ],
+                
+                    [
+                        [0,1,2,3,4,5],[6,7,8,9,10,11]
+                    ]
+                );
+            
+                    
+        };     
+
+        module Sept( R = 1, t = 0.2 )
+        {
+            n = 7;
+            a = 2 * ( PI / n) * 180 / PI;
+ 
+            polygon([
+                        [ R * cos(0 * a), R * sin(0 * a) ],
+                        [ R * cos(1 * a), R * sin(1 * a) ],
+                        [ R * cos(2 * a), R * sin(2 * a) ],
+                        [ R * cos(3 * a), R * sin(3 * a) ],
+                        [ R * cos(4 * a), R * sin(4 * a) ],
+                        [ R * cos(5 * a), R * sin(5 * a) ],
+                        [ R * cos(6 * a), R * sin(6 * a) ],  
+
+                        [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
+                        [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
+                        [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
+                        [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
+                        [ ( R - t ) * cos(4 * a), ( R - t ) * sin(4 * a) ],
+                        [ ( R - t ) * cos(5 * a), ( R - t ) * sin(5 * a) ],
+                        [ ( R - t ) * cos(6 * a), ( R - t ) * sin(6 * a) ],
+                    ],
+                
+                    [
+                        [0,1,2,3,4,5,6],[7,8,9,10,11,12,13]
+                    ]
+                );   
+        };    
+
+        module Oct( R = 1, t = 0.2 )
+        {
+            n = 8;
+            a = 2 * ( PI / n) * 180 / PI;
+ 
+            polygon([
+                        [ R * cos(0 * a), R * sin(0 * a) ],
+                        [ R * cos(1 * a), R * sin(1 * a) ],
+                        [ R * cos(2 * a), R * sin(2 * a) ],
+                        [ R * cos(3 * a), R * sin(3 * a) ],
+                        [ R * cos(4 * a), R * sin(4 * a) ],
+                        [ R * cos(5 * a), R * sin(5 * a) ],
+                        [ R * cos(6 * a), R * sin(6 * a) ],  
+                        [ R * cos(7 * a), R * sin(7 * a) ],                                                
+
+                        [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
+                        [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
+                        [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
+                        [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
+                        [ ( R - t ) * cos(4 * a), ( R - t ) * sin(4 * a) ],
+                        [ ( R - t ) * cos(5 * a), ( R - t ) * sin(5 * a) ],
+                        [ ( R - t ) * cos(6 * a), ( R - t ) * sin(6 * a) ],
+                        [ ( R - t ) * cos(7 * a), ( R - t ) * sin(7 * a) ],                                                                        
+                    ],
+                
+                    [
+                        [0,1,2,3,4,5,6,7],[8,9,10,11,12,13,14,15]
+                    ]
+                );   
+        };    
+
+
+        function AddPoint( R, t, n, i = 0 ) = i == n ? [] : 
+            concat( [[ ( R - t ) * cos( i * 2 * ( PI / n) * 180 / PI ), ( R - t ) * sin( i * 2 * ( PI / n) * 180 / PI ) ]],
+                AddPoint( R, t, n, i + 1 ) );
+
+        function AddOrderIndex( b, e, i = 0 ) = i == e ? [] :
+            concat ( i, AddOrderIndex( b, e, i + 1) );
+
+
+        module Make2dShape( R, t, n1, n2 )
+        {
+ 
+            if ( n1 == 3 && n2 == 3 )
+                Tri( R, t );
+            else if ( n1 == 4 && n2 == 4 )
+                Quad( R, t );                
+            else if ( n1 == 5 && n2 == 5 )
+                Pent( R, t );
+            else if ( n1 == 6 && n1 == 6 )
+                Hex( R, t );
+            else if ( n1 == 7 && n2 == 7 )
+                Sept( R, t );                
+            else if ( n1 == 8 && n2 == 8 )
+                Oct( R, t );
+            else
+            {
+                base = AddPoint( R, 0, n1 );
+                inset = AddPoint( R, t, n2 );
+
+                combined = concat( base, inset );
+
+                order = concat( [ AddOrderIndex( 0, n1)], [AddOrderIndex( n1, n1 + n2, n1 )] );
+
+                polygon( combined, order );     
+            }
+
+        };        
+
+        module Make2DPattern( x = 200, y = 200, R = 1, t = 0.5 )
+        {
+            r = cos( m_lid_pattern_angle ) * R;
+
+            dx = r * ( 1 + m_lid_pattern_col_offset / 100 ) - t;
+            dy = R * ( 1 + ( m_lid_pattern_row_offset / 100 ) ) - t;
 
             x_count = x / dx;
             y_count = y / dy;
 
-            for( j = [ 0: y_count ] )
-            {
-                translate( [ ( j % 2 ) * (r - t/2), 0, 0 ] )
-                {
-                    for( i = [ 0: x_count ] )
-                    {
+            for( j = [ -1: y_count + 1 ] )
+                translate( [ ( j % 2 ) * dx/2 + t, 0, 0 ] )
+                    for( i = [ -1: x_count + 1 ] )
                         translate( [ i * dx, j * dy, 0 ] )
-                            rotate( a=30, v=[ 0, 0, 1 ] )
-                                children();
-                    }
-                }
-            }
-            
+                            rotate( a = m_lid_pattern_angle, v=[ 0, 0, 1 ] )
+                            {
+                                Make2dShape( R, t, m_lid_pattern_n1, m_lid_pattern_n2 );
+                            }
         }
-
-        module Hex( R = 1, t = 0.2 )
-        {
- 
-            polygon([
-                [ R * cos(0 * 2 * ( PI / 6)* 180 / PI), R * sin(0 * 2 * ( PI / 6) * 180 / PI) ],
-                [ R * cos(1 * 2 * ( PI / 6)* 180 / PI), R * sin(1 * 2 * ( PI / 6) * 180 / PI) ],
-                [ R * cos(2 * 2 * ( PI / 6)* 180 / PI), R * sin(2 * 2 * ( PI / 6) * 180 / PI) ],
-                [ R * cos(3 * 2 * ( PI / 6)* 180 / PI), R * sin(3 * 2 * ( PI / 6) * 180 / PI) ],
-                [ R * cos(4 * 2 * ( PI / 6)* 180 / PI), R * sin(4 * 2 * ( PI / 6) * 180 / PI) ],
-                [ R * cos(5 * 2 * ( PI / 6)* 180 / PI), R * sin(5 * 2 * ( PI / 6) * 180 / PI) ],
-                [ ( R - t ) * cos(0 * 2 * ( PI / 6)* 180 / PI), ( R - t ) * sin(0 * 2 * ( PI / 6) * 180 / PI) ],
-                [ ( R - t ) * cos(1 * 2 * ( PI / 6)* 180 / PI), ( R - t ) * sin(1 * 2 * ( PI / 6) * 180 / PI) ],
-                [ ( R - t ) * cos(2 * 2 * ( PI / 6)* 180 / PI), ( R - t ) * sin(2 * 2 * ( PI / 6) * 180 / PI) ],
-                [ ( R - t ) * cos(3 * 2 * ( PI / 6)* 180 / PI), ( R - t ) * sin(3 * 2 * ( PI / 6) * 180 / PI) ],
-                [ ( R - t ) * cos(4 * 2 * ( PI / 6)* 180 / PI), ( R - t ) * sin(4 * 2 * ( PI / 6) * 180 / PI) ],
-                [ ( R - t ) * cos(5 * 2 * ( PI / 6)* 180 / PI), ( R - t ) * sin(5 * 2 * ( PI / 6) * 180 / PI) ]],
-                
-                [[0,1,2,3,4,5],[6,7,8,9,10,11]]
-                );
-            
-                    
-        };
 
         module MakeStripedGrid( x = 200, y = 200, w = 1, dx = 0, dy = 0, depth_ratio = 0.5 )
         {
@@ -942,31 +1123,6 @@ module MakeBox( box )
             }
         }
 
-        module Make2DPattern( x = 200, y = 200, R = 1, t = 0.5 )
-        {
-            r = cos( m_lid_pattern_angle ) * R;
-
-            dx = r * ( 1 + m_lid_pattern_col_offset / 100 ) - t;
-            dy = R * ( 1 + ( m_lid_pattern_row_offset / 100 ) ) - t;
-
-            x_count = x / dx;
-            y_count = y / dy;
-
-            for( j = [ 0: y_count ] )
-                translate( [ ( j % 2 ) * (r - t/2), 0, 0 ] )
-                    for( i = [ -1: x_count ] )
-                        translate( [ i * dx, j * dy, 0 ] )
-                            rotate( a = m_lid_pattern_angle, v=[ 0, 0, 1 ] )
-                            {
-                                difference()
-                                {
-                                    circle( r = R, $fn = m_lid_pattern_n1  );
-                                    circle( r = R - t, $fn = m_lid_pattern_n2 );
-                                }
-                            }
-        }
-
-
 ///////////////////////
 
         module MakeLid() 
@@ -977,13 +1133,7 @@ module MakeBox( box )
                     children();
             }
 
-            module MakeAllLidTextGrids()
-            {
-
-            }
-
-
-            module MakeAllLidTexts( use_text_offset = false, offset = 0, thickness = m_lid_thickness )
+            module MakeAllLidTexts( offset = 0, thickness = m_lid_thickness )
             {
                 for( i = [ 0 : len( box ) - 1])
                 {
@@ -991,12 +1141,7 @@ module MakeBox( box )
                     {
                         label = box[ i ][ k_value ];
 
-                        width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
-                        text_offset = ( width != 0 ? width/15 : __label_size( label ) );
-
-                        offset_to_use = offset + ( use_text_offset ? text_offset : 0 );
-
-                        MakeLidText( label, offset = offset_to_use, thickness = thickness );
+                        MakeLidText( label, offset = offset, thickness = thickness );
                     }
                 }
             }
@@ -1059,78 +1204,68 @@ module MakeBox( box )
                                             [ __lid_external_size( k_x ), 0] ]);   
                                     
                                     if ( !__has_solid_lid() )
-                                    {
-                                        // MakeHexGrid( x = __lid_external_size( k_x ), y = __lid_external_size( k_y ), R = R, t = t )
-                                        // {
-                                        //     Hex( R = R, t = t );
-                                        // }
-
                                         Make2DPattern( x = __lid_external_size( k_x ), y = __lid_external_size( k_y ), R = R, t = t );
-                                    }
                                 }
                             }
 
                             // stencil out the text
-                            if ( !__has_solid_lid() && m_lid_has_bg )
+                            if ( !__has_solid_lid() )
                             {
-                                MakeAllLidTexts( use_text_offset = true);
+                                MakeAllLidTexts( offset = m_lid_label_bg_thickness );
                             }
-                            else if ( __has_solid_lid() )
+                            else
                             {
-                                    MakeAllLidTexts( thickness = m_lid_thickness / 2 );
-                            }
-                            
+                                MakeAllLidTexts( thickness = m_lid_label_depth );
+                            }                          
                         }
 
-                        //make the grid background                       
-                        if ( !__has_solid_lid() && m_lid_has_bg)
+                        if ( m_lid_has_labels )
                         {
-                            x = __lid_external_size( k_x );
-                            y = __lid_external_size( k_y );
-
-
-                            for( i = [ 0 : len( box ) - 1])
+                            if ( !__has_solid_lid() )
                             {
-                                if ( box[ i ][ k_key ] == LABEL )
+                                if ( !m_lid_is_inverted )
                                 {
-                                    label = box[ i ][ k_value ];
+                                    // edge the bg
+                                    if ( m_lid_label_bg_thickness > 0 )
+                                    difference()
+                                    {
+                                        MakeAllLidTexts( offset = m_lid_label_bg_thickness);
+                                        MakeAllLidTexts( offset = m_lid_label_bg_thickness - 0.3 );
+                                    }
 
-                                    width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
-                                    text_offset = ( width != 0 ? width/15 : __label_size( label ) );
-
+                                    // make the grid
                                     intersection()
                                     {
-                                        RotateAboutPoint( - __label_rotation( label ) - 45, [0,0,1], [x/2,y/2,0] )
-                                            MakeStripedGrid( x = x, y = y, w = 0.5, dx = 1, dy = 0, depth_ratio = 0.5 );
+                                        theta = 45;
 
-                                        MakeLidText( label, offset = text_offset );
+                                        x = __lid_external_size( k_x );
+                                        y = __lid_external_size( k_y );
+
+                                        x2 = y*sin(theta) + x*cos(theta);
+                                        y2 = y*cos(theta) + x*sin(theta);                                     
+
+                                        translate( [x/2-x2/2, y/2-y2/2,0])
+                                            RotateAboutPoint( theta, [0,0,1], [x2/2,y2/2,0] )
+                                                MakeStripedGrid( x = x2, y = y2, w = 0.5, dx = 1, dy = 0, depth_ratio = 0.5 );
+
+                                        MakeAllLidTexts( offset = m_lid_label_bg_thickness );
                                     }
+
+                                    MakeAllLidTexts( ); 
                                 }
+                                else
+                                {
+                                    difference()
+                                    {
+                                        MakeAllLidTexts( offset = m_lid_label_bg_thickness );
+                                        MakeAllLidTexts( offset = 0 );
+                                    }    
+                                } 
                             }
                         }
 
-                        // make the actual lid label
-                        if ( !__has_solid_lid() )
-                            MakeAllLidTexts( );
+                    } // end rotateAboutPoint
 
-                        // make the background edge
-                        if ( !__has_solid_lid() && m_lid_has_bg )
-                        {
-                            difference()
-                            {
-                                MakeAllLidTexts( use_text_offset = true );
-                                MakeAllLidTexts( use_text_offset = true, offset = - 1 );
-                            }
-                        }
-                        else if ( false )
-                        {
-                            difference()
-                            {
-                                MakeAllLidTexts( offset = 2 );
-                                MakeAllLidTexts( offset = 0 );
-                            }                            
-                        }
-                    }
                     if ( m_lid_cutout_sides[ k_front ])
                         MakeFingerCutout( k_front );
 
@@ -1142,7 +1277,6 @@ module MakeBox( box )
 
                     if ( m_lid_cutout_sides[ k_left ])
                         MakeFingerCutout( k_left );
-
                 }
             }
         }
