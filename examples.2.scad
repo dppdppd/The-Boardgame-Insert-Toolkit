@@ -8,7 +8,7 @@ g_b_print_lid = true;
 g_b_print_box = true; 
 
 // Focus on one box
-g_isolated_print_box = "lid pattern 3"; 
+g_isolated_print_box = ""; 
 
 // Used to visualize how all of the boxes fit together. 
 g_b_visualization = false;          
