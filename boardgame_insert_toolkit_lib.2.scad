@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.10";
+VERSION = "2.11";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 25 : 100;
@@ -495,7 +495,7 @@ module MakeBox( box )
     m_lid_is_inverted = __value( m_lid, LID_LABELS_INVERT_B, default = false );
     m_lid_label_depth = __value( m_lid, LID_SOLID_LABELS_DEPTH, default = m_lid_thickness / 2 );
 
-    m_lid_label_bg_thickness = __value( m_lid, LID_LABELS_BG_THICKNESS, default = 5.0 );
+    m_lid_label_bg_thickness = __value( m_lid, LID_LABELS_BG_THICKNESS, default = 2.0 );
 
 
     m_lid_pattern_n1 = __value( m_lid, LID_PATTERN_N1, default = 6 );
@@ -1146,6 +1146,19 @@ module MakeBox( box )
                 }
             }
 
+            module Make2dLidText( label, width, offset )
+            {
+                resize([ width,0,0], auto=true )
+                    offset( r = offset )
+                        text(text = str( __label_text( label ) ), 
+                            font = __label_font( label ),  
+                            size = __label_size( label ), 
+                            spacing = __label_spacing( label ),
+                            valign = CENTER, 
+                            halign = CENTER, 
+                            $fn=100);
+            }
+
             module MakeLidText( label, offset = 0, thickness = m_lid_thickness )
             {
                 xpos = __lid_external_size( k_x )/2 + __label_offset( label )[k_x];
@@ -1158,15 +1171,56 @@ module MakeBox( box )
                     translate( [ xpos, ypos, 0 ] )
                         MirrorAboutPoint( [ 1,0,0],[0,0, thickness / 2])
                             RotateAboutPoint( __label_rotation( label ), [0,0,1], [0,0,0] )
-                                resize([ width,0,0], auto=true )
-                                    offset( r = offset )
-                                            text(text = str( __label_text( label ) ), 
-                                                font = __label_font( label ),  
-                                                size = __label_size( label ), 
-                                                spacing = __label_spacing( label ),
-                                                valign = CENTER, 
-                                                halign = CENTER, 
-                                                $fn=100);
+                                Make2dLidText( label, width, offset );
+            }
+
+
+            module MakeAllLidTextFrames( offset = 0, thickness = m_lid_thickness )
+            {
+                for( i = [ 0 : len( box ) - 1])
+                {
+                    if ( box[ i ][ k_key ] == LABEL )
+                    {
+                        label = box[ i ][ k_value ];
+
+                        MakeLidTextFrame( label, offset = offset, thickness = thickness );
+                    }
+                }
+            }
+
+            module MakeLidTextFrame( label, offset = 0, thickness = m_lid_thickness )
+            {
+                xpos = __lid_external_size( k_x )/2 + __label_offset( label )[k_x];
+                ypos = __lid_external_size( k_y )/2 + __label_offset( label )[k_y];
+
+                auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
+                width = auto_width != 0 ? min( 100, auto_width ) + offset : 0;
+
+                linear_extrude( thickness )
+                    translate( [ xpos, ypos, 0 ] )
+                        MirrorAboutPoint( [ 1,0,0],[0,0, thickness / 2])
+                            RotateAboutPoint( __label_rotation( label ), [0,0,1], [0,0,0] )
+                                offset( r = offset )
+                                    intersection()
+                                    {
+                                        hull()
+                                        {
+                                            translate( [ -200,0,0])
+                                                Make2dLidText( label, width, offset );
+
+                                            translate( [ 200,0,0])
+                                                Make2dLidText( label, width, offset );
+                                        }
+                                        hull()
+                                        {
+                                            translate( [ -0,-200,0])
+                                                Make2dLidText( label, width, offset );
+
+                                            translate( [ 0,200,0])
+                                                Make2dLidText( label, width, offset );
+                                        }         
+                                    }    
+                                 
             }
 
             lid_print_position = [0, m_box_size[ k_y ] + DISTANCE_BETWEEN_PARTS, 0 ];
@@ -1176,6 +1230,8 @@ module MakeBox( box )
             {
                 difference()
                 {
+
+
                     RotateAboutPoint( g_b_vis_actual ? 180 : 0, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )
                     {
                         // lid edge
@@ -1188,83 +1244,92 @@ module MakeBox( box )
                                 cube([  __lid_internal_size( k_x ), __lid_internal_size( k_y ),  __lid_external_size( k_z )]);
                         }
 
-                        difference()
+                        // clip to lid extents
+                        intersection()
                         {
-                            // honeycomb
-                            linear_extrude( m_lid_thickness )
-                            {
-                                R = m_lid_pattern_radius;
-                                t = m_lid_pattern_thickness;
+                            cube([  __lid_external_size( k_x ), __lid_external_size( k_y ),  __lid_external_size( k_z )]);
 
-                                intersection()
+                            union()
+                            {
+                                // honeycomb
+                                if ( !__has_solid_lid() )
+                                    difference()
+                                    {
+
+                                        linear_extrude( m_lid_thickness )
+                                        {
+                                            R = m_lid_pattern_radius;
+                                            t = m_lid_pattern_thickness;
+
+                                            if ( !__has_solid_lid() )
+                                                Make2DPattern( x = __lid_external_size( k_x ), y = __lid_external_size( k_y ), R = R, t = t );
+                                        }
+
+                                        // stencil out the text
+                                        if ( m_lid_label_bg_thickness > 0 || m_lid_is_inverted  )
+                                            if ( !__has_solid_lid() )
+                                            {
+                                                MakeAllLidTextFrames( offset = m_lid_label_bg_thickness );
+                                            }
+                                            else
+                                            {
+                                                MakeAllLidTexts( thickness = m_lid_label_depth );
+                                            }                          
+                                    }
+
+                                if ( m_lid_has_labels )
                                 {
-                                    polygon( [[0,0], 
-                                            [0, __lid_external_size( k_y )], 
-                                            [ __lid_external_size( k_x ), __lid_external_size( k_y )],
-                                            [ __lid_external_size( k_x ), 0] ]);   
-                                    
                                     if ( !__has_solid_lid() )
-                                        Make2DPattern( x = __lid_external_size( k_x ), y = __lid_external_size( k_y ), R = R, t = t );
-                                }
-                            }
-
-                            // stencil out the text
-                            if ( !__has_solid_lid() )
-                            {
-                                MakeAllLidTexts( offset = m_lid_label_bg_thickness );
-                            }
-                            else
-                            {
-                                MakeAllLidTexts( thickness = m_lid_label_depth );
-                            }                          
-                        }
-
-                        if ( m_lid_has_labels )
-                        {
-                            if ( !__has_solid_lid() )
-                            {
-                                if ( !m_lid_is_inverted )
-                                {
-                                    // edge the bg
-                                    if ( m_lid_label_bg_thickness > 0 )
-                                    difference()
                                     {
-                                        MakeAllLidTexts( offset = m_lid_label_bg_thickness);
-                                        MakeAllLidTexts( offset = m_lid_label_bg_thickness - 0.3 );
+                                        // grid
+                                        if ( !m_lid_is_inverted )
+                                        {
+                                            // edge
+                                            if ( m_lid_label_bg_thickness > 0 )
+                                            difference()
+                                            {
+                                                MakeAllLidTextFrames( offset = m_lid_label_bg_thickness);
+                                                MakeAllLidTextFrames( offset = m_lid_label_bg_thickness - 0.3 );
+                                            }
+
+                                            // pattern
+                                            if ( m_lid_label_bg_thickness > 0 )
+                                            intersection()
+                                            {
+                                                theta = 45;
+
+                                                x = __lid_external_size( k_x );
+                                                y = __lid_external_size( k_y );
+
+                                                x2 = y*sin(theta) + x*cos(theta);
+                                                y2 = y*cos(theta) + x*sin(theta);                                     
+
+                                                translate( [x/2-x2/2, y/2-y2/2,0])
+                                                    RotateAboutPoint( theta, [0,0,1], [x2/2,y2/2,0] )
+                                                        MakeStripedGrid( x = x2, y = y2, w = 0.5, dx = 1, dy = 0, depth_ratio = 0.5 );
+
+                                                MakeAllLidTextFrames( offset = m_lid_label_bg_thickness );
+                                            }
+
+                                            // positive text
+                                            MakeAllLidTexts( ); 
+                                        }
+                                        else
+                                        {
+                                            // negative text
+                                            difference()
+                                            {
+                                                MakeAllLidTextFrames( offset = m_lid_label_bg_thickness );
+                                                MakeAllLidTexts();
+                                            }    
+                                        } 
                                     }
-
-                                    // make the grid
-                                    intersection()
-                                    {
-                                        theta = 45;
-
-                                        x = __lid_external_size( k_x );
-                                        y = __lid_external_size( k_y );
-
-                                        x2 = y*sin(theta) + x*cos(theta);
-                                        y2 = y*cos(theta) + x*sin(theta);                                     
-
-                                        translate( [x/2-x2/2, y/2-y2/2,0])
-                                            RotateAboutPoint( theta, [0,0,1], [x2/2,y2/2,0] )
-                                                MakeStripedGrid( x = x2, y = y2, w = 0.5, dx = 1, dy = 0, depth_ratio = 0.5 );
-
-                                        MakeAllLidTexts( offset = m_lid_label_bg_thickness );
-                                    }
-
-                                    MakeAllLidTexts( ); 
                                 }
-                                else
-                                {
-                                    difference()
-                                    {
-                                        MakeAllLidTexts( offset = m_lid_label_bg_thickness );
-                                        MakeAllLidTexts( offset = 0 );
-                                    }    
-                                } 
                             }
                         }
 
                     } // end rotateAboutPoint
+                    
 
                     if ( m_lid_cutout_sides[ k_front ])
                         MakeFingerCutout( k_front );
