@@ -5,7 +5,7 @@
 
 This:
 
-![Mice n Mystics 1](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/IMG_1455.jpeg)
+![Dune 1](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/IMG_3294.jpeg)
 ![Mice n Mystics 2](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/IMG_1453.jpeg)
 
 # Why
