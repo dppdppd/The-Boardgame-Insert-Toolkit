@@ -72,6 +72,7 @@ LID_CUTOUT_SIDES_4B = "lid_cutout_sides";
 LID_LABELS_INVERT_B = "lid_label_inverted";
 LID_SOLID_LABELS_DEPTH = "lid_label_depth";
 LID_LABELS_BG_THICKNESS = "lid_label_bg_thickness";
+LID_LABELS_BORDER_THICKNESS = "lid_label_border_thickness";
 
 
 LID_PATTERN_RADIUS = "lid_hex_radius";
@@ -496,7 +497,7 @@ module MakeBox( box )
     m_lid_label_depth = __value( m_lid, LID_SOLID_LABELS_DEPTH, default = m_lid_thickness / 2 );
 
     m_lid_label_bg_thickness = __value( m_lid, LID_LABELS_BG_THICKNESS, default = 2.0 );
-
+    m_lid_label_border_thickness = __value( m_lid, LID_LABELS_BORDER_THICKNESS, default = 0.3 );
 
     m_lid_pattern_n1 = __value( m_lid, LID_PATTERN_N1, default = 6 );
     m_lid_pattern_n2 = __value( m_lid, LID_PATTERN_N2, default = 6 );
@@ -1289,7 +1290,7 @@ module MakeBox( box )
                                             difference()
                                             {
                                                 MakeAllLidTextFrames( offset = m_lid_label_bg_thickness);
-                                                MakeAllLidTextFrames( offset = m_lid_label_bg_thickness - 0.3 );
+                                                MakeAllLidTextFrames( offset = m_lid_label_bg_thickness - m_lid_label_border_thickness );
                                             }
 
                                             // pattern

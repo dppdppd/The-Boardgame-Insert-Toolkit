@@ -307,6 +307,9 @@ value is expected to be a bool, and determines whether the lid label is a positi
 #### `LID_LABELS_BG_THICKNESS`
 value is expected to be a number, and determines the thickness of the lid label background.
 
+#### `LID_LABELS_BORDER_THICKNESS`
+value is expected to be a number, and determines the thickness of the lid label border.  Default is 0.3 mm
+
 #### `LID_HEIGHT`
 value is expected to be a number, and determines whether how deep the lid is.
 
