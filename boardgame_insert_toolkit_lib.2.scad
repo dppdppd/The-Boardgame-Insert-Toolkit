@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.11";
+VERSION = "2.12";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 25 : 100;
@@ -471,7 +471,7 @@ module MakeBox( box )
     m_lid = __value( box, BOX_LID, default = [] );
 
     function __notch_length( D ) = m_box_size[ D ] / 5.0;
-    function __lid_notch_depth() = m_wall_thickness / 2;
+    function __lid_notch_depth() = m_wall_thickness / 2 + g_tolerance;
 
 
     function __lid_external_size( D )= D == k_z ? m_lid_thickness + m_lid_height : 
@@ -852,7 +852,7 @@ module MakeBox( box )
                     {
                         vertical_clearance = 1.0 + g_tolerance;
 
-                        MakeLidNotches( height = vertical_clearance, depth = g_tolerance );
+                        MakeLidNotches( height = vertical_clearance, depth = 0 );
 
                         hull()
                         {
@@ -860,7 +860,7 @@ module MakeBox( box )
                                 MakeLidNotches();
 
                             translate( [ 0, 0, m_lid_height - 1 + vertical_clearance] )
-                                MakeLidNotches( offset = __lid_notch_depth() + g_tolerance );
+                                MakeLidNotches( offset = __lid_notch_depth() );
 
                         }
                     }
@@ -872,8 +872,11 @@ module MakeBox( box )
                 if ( m_lid_notches )
                     translate([ 0, 0, notch_pos_z_corner]) 
                         MakeLidCornerNotches();
-                    
-                
+
+                detent_pos_z_corner = m_box_size[ k_z ] - m_lid_height/2;
+
+                translate([ 0, 0, detent_pos_z_corner]) 
+                    MakeDetents( type = "box" );
             }
         }
 
@@ -1124,10 +1127,12 @@ module MakeBox( box )
             }
         }
 
+
 ///////////////////////
 
         module MakeLid() 
         {
+            
             module MoveToLidInterior()
             {
                 translate([ ( m_wall_thickness )/2 - g_tolerance, ( m_wall_thickness )/2 - g_tolerance, 0]) 
@@ -1231,10 +1236,21 @@ module MakeBox( box )
             {
                 difference()
                 {
-
-
                     RotateAboutPoint( g_b_vis_actual ? 180 : 0, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )
                     {
+
+                        // clip to lid extents
+                        intersection()
+                        {
+                            cube([  __lid_external_size( k_x ), __lid_external_size( k_y ),  __lid_external_size( k_z )]);
+
+                            //detents
+                            detent_pos_z_corner = __lid_internal_size( k_z) / 2 + m_lid_thickness;
+
+                            translate([ 0, 0, detent_pos_z_corner]) 
+                                MakeDetents( type = "lid" );
+                        }
+
                         // lid edge
                         difference() 
                         {
@@ -1253,30 +1269,31 @@ module MakeBox( box )
                             union()
                             {
                                 // honeycomb
-                                if ( !__has_solid_lid() )
-                                    difference()
+                                difference()
+                                {
+
+                                    linear_extrude( m_lid_thickness )
                                     {
+                                        R = m_lid_pattern_radius;
+                                        t = m_lid_pattern_thickness;
 
-                                        linear_extrude( m_lid_thickness )
-                                        {
-                                            R = m_lid_pattern_radius;
-                                            t = m_lid_pattern_thickness;
-
-                                            if ( !__has_solid_lid() )
-                                                Make2DPattern( x = __lid_external_size( k_x ), y = __lid_external_size( k_y ), R = R, t = t );
-                                        }
-
-                                        // stencil out the text
-                                        if ( m_lid_label_bg_thickness > 0 || m_lid_is_inverted  )
-                                            if ( !__has_solid_lid() )
-                                            {
-                                                MakeAllLidTextFrames( offset = m_lid_label_bg_thickness );
-                                            }
-                                            else
-                                            {
-                                                MakeAllLidTexts( thickness = m_lid_label_depth );
-                                            }                          
+                                        if ( !__has_solid_lid() )
+                                            Make2DPattern( x = __lid_external_size( k_x ), y = __lid_external_size( k_y ), R = R, t = t );
+                                        else
+                                            square( [ __lid_external_size( k_x ), __lid_external_size( k_y ) ] );
                                     }
+
+                                    // stencil out the text
+                                    if ( m_lid_label_bg_thickness > 0 || m_lid_is_inverted  )
+                                        if ( !__has_solid_lid() )
+                                        {
+                                            MakeAllLidTextFrames( offset = m_lid_label_bg_thickness );
+                                        }
+                                        else
+                                        {
+                                            MakeAllLidTexts( thickness = m_lid_label_depth );
+                                        }                          
+                                }
 
                                 if ( m_lid_has_labels )
                                 {
@@ -1751,6 +1768,45 @@ module MakeBox( box )
                 MirrorAboutPoint( [0,1,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
                 {
                     MakeLidCornerNotch();    
+                }
+            }
+        }
+
+        module MakeDetents( type /*"lid" | "box"*/ )
+        {
+            module MakeDetent( type )
+            {
+                detent_radius = 1/3 * m_wall_thickness + ( type == "box" ? g_tolerance/2 : 0 ) ;
+
+                sphere( r = detent_radius, $fn = 10 );           
+            }
+
+            module MakeOneSet( type )
+            {
+                translate( [m_box_size[ k_x ]/4, m_wall_thickness/2 - ( type == "lid" ? g_tolerance : 0), 0] )
+                    MakeDetent( type );
+
+                translate( [m_wall_thickness/2 - ( type == "lid" ? g_tolerance : 0), m_box_size[ k_y ]/4, 0] )
+                    MakeDetent( type );
+            }
+
+            MakeOneSet( type );
+
+            MirrorAboutPoint( [1,0,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
+            {
+                MakeOneSet( type );
+            }
+
+            MirrorAboutPoint( [0,1,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
+            {
+                MakeOneSet( type );
+            }
+
+            MirrorAboutPoint( [1,0,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
+            {
+                MirrorAboutPoint( [0,1,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
+                {
+                    MakeOneSet( type );    
                 }
             }
         }

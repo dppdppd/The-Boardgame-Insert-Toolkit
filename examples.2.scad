@@ -20,12 +20,30 @@ g_wall_thickness = 1.5;
 // tolerance for fittings. This is the gap between fitting pieces,
 // such as lids and boxes. Increase to loosen the fit and decrease to
 // tighten it.
-// Default = 0.1mm
-g_tolerance = 0.1; 
+// Default = 0.2mm
+g_tolerance = 0.2; 
 
  
 data =
 [
+    [   "simple box",
+        [
+            [ BOX_SIZE_XYZ,                                     [45, 45, 15.0] ],
+            [ BOX_LID,
+                [
+                    [ LID_SOLID_B, t],
+                    [ LID_NOTCHES_B,        f],
+                    [ LID_FIT_UNDER_B,      f],                    
+                ]
+            ],
+            [ BOX_COMPONENT,
+                [
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 42, 42, 13.0] ],
+                ]
+            ],                            
+        ]
+    ],
+
     [   "example 0: minimal",
         [
             [ BOX_SIZE_XYZ,                                     [46.5, 46.5, 15.0] ],
