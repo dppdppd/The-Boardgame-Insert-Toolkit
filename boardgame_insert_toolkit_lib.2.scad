@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.12";
+VERSION = "2.13";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 25 : 100;
@@ -21,6 +21,11 @@ k_front = 0;
 k_back = 1;
 k_left = 2;
 k_right = 3;
+
+//k_front_left = 0;
+//k_back_right = 1;
+//k_back_left = 2;
+//k_front_right = 3;
 
 t = true;
 f = false;
@@ -93,6 +98,7 @@ CMP_PADDING_XY = "padding";
 CMP_PADDING_HEIGHT_ADJUST_XY = "padding_height_adjust";
 CMP_MARGIN_4B = "margin";
 CMP_CUTOUT_SIDES_4B = "cutout_sides";
+//CMP_CUTOUT_CORNERS_4B = "cutout_corners";
 CMP_SHEAR = "shear";
 CMP_FILLET_RADIUS = "fillet_radius";
 
@@ -599,9 +605,16 @@ module MakeBox( box )
         function __component_margin( D ) = [ __component_has_margin( D )[0] ? __component_padding( D ) : 0,
                                             __component_has_margin( D )[1] ? __component_padding( D ) : 0];
 
-        function __component_cutout_sides() = __value( component, CMP_CUTOUT_SIDES_4B, default = [0,0,0,0] );
-        function __component_cutout_side( side ) = __component_cutout_sides()[ side ];
-        function __component_has_cutout() = __component_cutout_sides() != [0,0,0,0];
+        function __component_cutout_side( side ) = __value( component, CMP_CUTOUT_SIDES_4B, default = [f, f, f, f] )[ side ];
+//        function __component_cutout_corner( corner ) = __value( component, CMP_CUTOUT_CORNERS_4B, default = [f, f, f, f] )[ corner ];
+
+        function __component_has_exactly_one_cutout() = 
+            (__component_cutout_side( k_front )?1:0) +
+            (__component_cutout_side( k_back )?1:0) +
+            (__component_cutout_side( k_left )?1:0) +
+            (__component_cutout_side( k_right )?1:0) == 1;
+
+
 
         function __component_padding( D ) = __value( component, CMP_PADDING_XY, default = [1.0, 1.0] )[ D ];
         function __component_padding_height_adjust( D ) = __value( component, CMP_PADDING_HEIGHT_ADJUST_XY, default = [0.0, 0.0] )[ D ];
@@ -653,7 +666,8 @@ module MakeBox( box )
 
         function __compartment_smallest_dimension() = ( __compartment_size( k_x ) < __compartment_size( k_y ) ) ? __compartment_size( k_x ) : __compartment_size( k_y );
 
-        function __partitions_num( D )= __compartments_num( D ) - 1 + ( __component_has_margin( D )[0] ? 1 : 0 ) + ( __component_has_margin( D )[1] ? 1 : 0 );
+        function __partitions_num_no_margins( D ) = __compartments_num( D ) - 1;
+        function __partitions_num( D )= __partitions_num_no_margins( D ) + ( __component_has_margin( D )[0] ? 1 : 0 ) + ( __component_has_margin( D )[1] ? 1 : 0 );
 
         // calculated __element local dimensions
         function __component_size( D )= ( D == k_z ) ? __compartment_size( k_z ) : 
@@ -812,23 +826,13 @@ module MakeBox( box )
                 
                 InEachCompartment( )
                 {
-                    if ( __component_cutout_side( k_front ))
-                        MakeFingerCutout( k_front );
-
-                    if ( __component_cutout_side( k_back ))
-                        MakeFingerCutout( k_back );
-
-                    if ( __component_cutout_side( k_left ))
-                        MakeFingerCutout( k_left );
-
-                    if ( __component_cutout_side( k_right ))
-                        MakeFingerCutout( k_right );   
+                    for ( side = [ k_front:k_right ])
+                        if ( __component_cutout_side( side ))
+                            MakeFingerCutout( side );
 
                     if ( !__component_is_square() && !__component_is_fillet() )
-                    {
                         __ColorComponent()
                             MakeCompartmentShape( "subtractive");
-                    }
                 }
 
                 if ( __req_label() && !g_b_no_labels_actual)
@@ -1348,38 +1352,30 @@ module MakeBox( box )
 
                     } // end rotateAboutPoint
                     
-
-                    if ( m_lid_cutout_sides[ k_front ])
-                        MakeFingerCutout( k_front );
-
-                    if ( m_lid_cutout_sides[ k_back ])
-                        MakeFingerCutout( k_back );
-
-                    if ( m_lid_cutout_sides[ k_right ])
-                        MakeFingerCutout( k_right );
-
-                    if ( m_lid_cutout_sides[ k_left ])
-                        MakeFingerCutout( k_left );
+                    for ( side = [ k_front:k_right ])
+                    {
+                        if ( m_lid_cutout_sides[ side ])
+                            MakeFingerCutout( side );
+                    }
                 }
             }
         }
 
-        module ForEachPartition( D )
+        module ForEachPartition( D, include_margins = true )
         {
             start = 0;
-            end = __partitions_num( D ) - 1;
+            end = ( include_margins ? __partitions_num( D ) : __partitions_num_no_margins( D ) ) - 1;
 
             if ( end >= start )
             {
+                firstpos = ( __component_has_margin(D)[0] && include_margins ) ? 0 : __compartment_size( D );
+
                 for ( a = [ start : end  ] )
                 {
-                    pos = ( __component_has_margin(D)[0] ? 0 : __compartment_size( D ) ) +
-                    ( __compartment_size( D ) + __component_padding( D )) * a ;
+                    pos = firstpos + ( __compartment_size( D ) + __component_padding( D )) * a ;
 
                     translate( [ D == k_x ? pos : 0 ,  D == k_y ? pos : 0 , 0 ] )
-                    {
                         children();
-                    }
                 }
             }
         }
@@ -1441,59 +1437,80 @@ module MakeBox( box )
 
         module MakeFingerCutout( side )
         {
+
             function __cutout_z() = ( m_is_lid ? m_lid_height + m_lid_thickness : m_box_size[ k_z ] );
             function __padding( D ) = m_is_lid ? 0 : __component_padding( D );
             function __size( D ) = m_is_lid ? __lid_internal_size( D ) : __compartment_size( D );
             function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : __compartment_size( k_z ) - __cutout_z();
 
-            radius = 3;
+            inset_into_compartment_fraction = 1/5;
 
-            if ( side == k_back || side == k_front )
-            {
-                cutout_y = min( __padding(k_y)*2, __size(k_y)/2 )  + 10;
-                cutout_x = max( 10, __size( k_x )/3 );
+            // main and perpendicular dimensions
+            main_d = ( side == k_back || side == k_front ) ? k_y : k_x; 
+            perp_d = ( side == k_back || side == k_front ) ? k_x : k_y;
 
-                pos_x = __size( k_x )/2  - cutout_x/2;
-                pos_y = - __padding( k_y ) - m_wall_thickness - radius;
+            // main and perpendicular size of hole
+            //  main dimension intrudes into the compartment by some fraction ( e.g. 1/5 )
+            main_size = __padding( main_d )/2 + __size( main_d ) * inset_into_compartment_fraction;
 
-                if ( side == k_front )
-                {
-                    translate( [ pos_x, pos_y, __finger_cutouts_bottom() ] )
-                        MakeRoundedCube( [ cutout_x , cutout_y, __cutout_z() ], radius );
-                        //cube([ cutout_x , cutout_y, cutout_z ]);
-                }
-                else if ( side == k_back )
-                {
-                    pos_y2 =  __size( k_y ) + __padding( k_y )/2 - cutout_y + m_wall_thickness + radius;
+            //  perp dimension is a third of the width but no less than 1cm and no more than 3cm
+            perp_size = max( 10, min( 30, __size( perp_d )/3 )); // 10mm <= y <= 30mm
 
-                    translate( [ pos_x, pos_y2, __finger_cutouts_bottom() ] )
-                        MakeRoundedCube( [ cutout_x , cutout_y, __cutout_z() ], radius );
-                        //cube([ cutout_x , cutout_y, cutout_z ]);
-                }                
-            }  
-            else if ( side == k_left || side == k_right )
-            {
-                cutout_x = min( __padding(k_x)*2, __size(k_x)/2) + 10;
-                cutout_y = max( 10, __size( k_y )/3 );
+            max_radius = 3;
+            radius = min( main_size/2, perp_size/2, max_radius);
 
-                pos_x = - __padding( k_x ) - m_wall_thickness -radius;
-                pos_y = __size( k_y )/2  - cutout_y/2;
+            pos = [
+                // front
+                [  
+                    __size( k_x )/2  - perp_size/2,       
+                    - __padding( k_y )/2,               
+                    __finger_cutouts_bottom() 
+                ], 
+                // back
+                [  
+                    __size( k_x )/2  - perp_size/2,                     
+                    __size( k_y ) * (1 - inset_into_compartment_fraction), 
+                    __finger_cutouts_bottom() 
+                ],
+                // left
+                [   
+                    - __padding( k_x )/2, 
+                    __size( k_y )/2  - perp_size/2, 
+                    __finger_cutouts_bottom() 
+                ],
+                // right
+                [   
+                    __size( k_x ) * (1 - inset_into_compartment_fraction), 
+                    __size( k_y )/2  - perp_size/2, 
+                    __finger_cutouts_bottom()
+                ], 
+            ];
 
-                if ( side == k_left )
-                {
-                    translate( [ pos_x, pos_y, __finger_cutouts_bottom() ] )
-                        MakeRoundedCube( [ cutout_x , cutout_y, __cutout_z() ], radius );
-                        //cube([ cutout_x , cutout_y, cutout_z ]);
-                }   
-                else if ( side == k_right )
-                {
-                    pos_x2 =  __size( k_x ) + __padding( k_x )/2 - cutout_x + m_wall_thickness + radius;
+            size = [
 
-                   translate( [ pos_x2, pos_y, __finger_cutouts_bottom() ] )
-                        MakeRoundedCube( [ cutout_x , cutout_y, __cutout_z() ], radius );
-                        //cube([ cutout_x , cutout_y, cutout_z ]);
-                }                    
-            }    
+                [ perp_size, main_size, __cutout_z() ], // front
+                [ perp_size, main_size, __cutout_z() ], // back
+                [ main_size , perp_size, __cutout_z() ], // left 
+                [ main_size , perp_size, __cutout_z() ] // right
+            ];
+
+            shape = [
+                //front
+                [ !__component_cutout_side( k_back ),!__component_cutout_side( k_back ),t,t ],
+
+                //back
+                [ t,t,!__component_cutout_side( k_front ),!__component_cutout_side( k_front )],
+
+                //left
+                [ !__component_cutout_side( k_right ),t,!__component_cutout_side( k_right ),t ],
+
+                //right
+                [ t,!__component_cutout_side( k_left ),t,!__component_cutout_side( k_left )],
+            ];
+
+            translate( pos[ side ] )
+                MakeRoundedCube( size[ side ], radius, shape[ side ] );
+
         }
 
         // this rounds out the bottoms regardless of the size of the compartment
@@ -1570,7 +1587,7 @@ module MakeBox( box )
                          MakeVerticalShape(h = __compartment_size( k_z ), r = r, r1 = r, r2 = r, z_offset = 0 );
                     }
                 }
-                else if ( __component_has_cutout())
+                else if ( __component_has_exactly_one_cutout() )
                 {
                     underbase = m_box_size[ k_z ] - __compartment_size( k_z ) + m_wall_thickness;
                     
@@ -1814,22 +1831,36 @@ module MakeBox( box )
 
 }
 
-module MakeRoundedCube( vec3, radius){
+module MakeRoundedCube( vec3, radius, vecRounded = [ t, t, t, t ] ){
+ 
+    radii = 
+    [
+        vecRounded[ 0 ] ? radius : .001,
+        vecRounded[ 1 ] ? radius : .001,
+        vecRounded[ 2 ] ? radius : .001,
+        vecRounded[ 3 ] ? radius : .001,
+    ];
+
+    pos = 
+    [
+        [ radii[0], radii[0], 0 ],
+        [ vec3[k_x] - radii[1], radii[1], 0 ],
+        [ radii[2], vec3[k_y] - radii[2], 0 ],
+        [ vec3[k_x] - radii[3], vec3[k_y] - radii[3], 0 ]
+    ] ;
+ 
     hull()
     {
         h = vec3[k_z];
 
-        translate( [ radius, radius, 0 ])
-            cylinder(r=radius, h=h);
+        for ( idx = [ 0 : 3] ) 
+        {
+            // collapse the cylinder if we're approximating a point
+            fn = radii[ idx ] >= 1 ? $fn: 4;
 
-        translate( [ vec3[k_x] - radius, radius, 0 ])
-            cylinder(r=radius, h=h);
-
-        translate( [ radius, vec3[k_y] - radius, 0 ])
-            cylinder(r=radius, h=h);
-
-        translate( [ vec3[k_x] - radius, vec3[k_y] - radius, 0 ])
-            cylinder(r=radius, h=h);                
+            translate( pos[ idx ])
+                cylinder(r=radii[ idx ], h=h, $fn = fn); 
+        }
     }
 } 
 

@@ -46,6 +46,8 @@ data =
 
     [   "example 0: minimal",
         [
+            [ ENABLED_B,                t],
+
             [ BOX_SIZE_XYZ,                                     [46.5, 46.5, 15.0] ],
             [ BOX_COMPONENT,
                 [
@@ -55,10 +57,36 @@ data =
             ],                  
         ]
     ],
+    [   "hex tiles",
+        [
+            [ BOX_SIZE_XYZ,                                     [50, 50, 10.0] ],
+            [ BOX_LID,
+                [            
+                    [ LID_SOLID_B, t],
+                ],
+            ],
+            [ BOX_COMPONENT,
+                [
+                    [CMP_NUM_COMPARTMENTS_XY,   [2,2]],
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 20, 20, 8.0] ],
+                    [CMP_SHAPE,                             HEX],
+                    [CMP_SHAPE_VERTICAL_B,                  t],    
+                    [CMP_PADDING_XY,                        [5,5]],
+                    [CMP_MARGIN_4B,                         [t,t,t,t]],
+
+//                    [CMP_CUTOUT_SIDES_4B,                   [t,f,f,f]], // one side
+//                    [CMP_CUTOUT_SIDES_4B,                   [t,t,f,f]], // opposite sides  
+                    [CMP_CUTOUT_SIDES_4B,                   [t,t,t,t]], // all sides
+              
+
+                ]
+            ],                  
+        ]
+    ],    
     [   "example 1",
         [
-            [ BOX_SIZE_XYZ,             [110.0, 180.0, 22.0] ],
             [ ENABLED_B,                t],
+            [ BOX_SIZE_XYZ,             [110.0, 180.0, 22.0] ],
 
             [ BOX_LID,
                 [
