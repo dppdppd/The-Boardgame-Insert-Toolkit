@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.13";
+VERSION = "2.14";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 25 : 100;
@@ -1443,7 +1443,7 @@ module MakeBox( box )
             function __size( D ) = m_is_lid ? __lid_internal_size( D ) : __compartment_size( D );
             function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : __compartment_size( k_z ) - __cutout_z();
 
-            inset_into_compartment_fraction = 1/5;
+            inset_into_compartment_fraction = 1/3;
 
             // main and perpendicular dimensions
             main_d = ( side == k_back || side == k_front ) ? k_y : k_x; 
@@ -1451,7 +1451,7 @@ module MakeBox( box )
 
             // main and perpendicular size of hole
             //  main dimension intrudes into the compartment by some fraction ( e.g. 1/5 )
-            main_size = __padding( main_d )/2 + __size( main_d ) * inset_into_compartment_fraction;
+            main_size = __padding( main_d )/2  + __size( main_d ) * inset_into_compartment_fraction;
 
             //  perp dimension is a third of the width but no less than 1cm and no more than 3cm
             perp_size = max( 10, min( 30, __size( perp_d )/3 )); // 10mm <= y <= 30mm
@@ -1463,24 +1463,24 @@ module MakeBox( box )
                 // front
                 [  
                     __size( k_x )/2  - perp_size/2,       
-                    - __padding( k_y )/2,               
+                    - __padding( k_y )/2 - g_wall_thickness,               
                     __finger_cutouts_bottom() 
                 ], 
                 // back
                 [  
                     __size( k_x )/2  - perp_size/2,                     
-                    __size( k_y ) * (1 - inset_into_compartment_fraction), 
+                    __size( k_y ) * (1 - inset_into_compartment_fraction) + g_wall_thickness, 
                     __finger_cutouts_bottom() 
                 ],
                 // left
                 [   
-                    - __padding( k_x )/2, 
+                    - __padding( k_x )/2 - g_wall_thickness, 
                     __size( k_y )/2  - perp_size/2, 
                     __finger_cutouts_bottom() 
                 ],
                 // right
                 [   
-                    __size( k_x ) * (1 - inset_into_compartment_fraction), 
+                    __size( k_x ) * (1 - inset_into_compartment_fraction) + g_wall_thickness, 
                     __size( k_y )/2  - perp_size/2, 
                     __finger_cutouts_bottom()
                 ], 
@@ -1509,7 +1509,7 @@ module MakeBox( box )
             ];
 
             translate( pos[ side ] )
-                MakeRoundedCube( size[ side ], radius, shape[ side ] );
+                MakeRoundedCube( size[ side ], radius, shape[ side ]);
 
         }
 
