@@ -417,8 +417,12 @@ value is expected to be an array of 4 bools, and determines whether padding is a
 e.g. `[ CMP_MARGIN_4B, [ t, f, t, f ] ]`
 
 #### `CMP_CUTOUT_SIDES_4B`
-value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the compartments. The values represent [front, back, left, right ].  
+value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the compartments on the sides. The values represent [front, back, left, right ].  
 e.g. `[ CMP_CUTOUT_SIDES_4B, [ t, t, f, f ] ]`
+
+#### `CMP_CUTOUT_CORNERS_4B`
+value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the compartments on the corners. The values represent [front-left, back-right, back-left, front-right ].  
+e.g. `[ CMP_CUTOUT_CORNERS_4B, [ t, t, f, f ] ]`
 
 #### `CMP_SHEAR`
 value is expected to be an array of 2 numbers, and determines the degrees to which the component should be sheared in the direction of width and depth.  

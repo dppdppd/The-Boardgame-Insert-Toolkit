@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.14";
+VERSION = "2.15";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 25 : 100;
@@ -22,10 +22,10 @@ k_back = 1;
 k_left = 2;
 k_right = 3;
 
-//k_front_left = 0;
-//k_back_right = 1;
-//k_back_left = 2;
-//k_front_right = 3;
+k_front_left = 0;
+k_back_right = 1;
+k_back_left = 2;
+k_front_right = 3;
 
 t = true;
 f = false;
@@ -79,7 +79,6 @@ LID_SOLID_LABELS_DEPTH = "lid_label_depth";
 LID_LABELS_BG_THICKNESS = "lid_label_bg_thickness";
 LID_LABELS_BORDER_THICKNESS = "lid_label_border_thickness";
 
-
 LID_PATTERN_RADIUS = "lid_hex_radius";
 LID_PATTERN_N1 = "lid_pattern_n1";
 LID_PATTERN_N2 = "lid_pattern_n2";
@@ -98,7 +97,7 @@ CMP_PADDING_XY = "padding";
 CMP_PADDING_HEIGHT_ADJUST_XY = "padding_height_adjust";
 CMP_MARGIN_4B = "margin";
 CMP_CUTOUT_SIDES_4B = "cutout_sides";
-//CMP_CUTOUT_CORNERS_4B = "cutout_corners";
+CMP_CUTOUT_CORNERS_4B = "cutout_corners";
 CMP_SHEAR = "shear";
 CMP_FILLET_RADIUS = "fillet_radius";
 
@@ -605,8 +604,8 @@ module MakeBox( box )
         function __component_margin( D ) = [ __component_has_margin( D )[0] ? __component_padding( D ) : 0,
                                             __component_has_margin( D )[1] ? __component_padding( D ) : 0];
 
-        function __component_cutout_side( side ) = __value( component, CMP_CUTOUT_SIDES_4B, default = [f, f, f, f] )[ side ];
-//        function __component_cutout_corner( corner ) = __value( component, CMP_CUTOUT_CORNERS_4B, default = [f, f, f, f] )[ corner ];
+        function __component_cutout_side( side ) = __value( component, CMP_CUTOUT_SIDES_4B, default = [false, false, false, false] )[ side ];
+        function __component_cutout_corner( corner ) = __value( component, CMP_CUTOUT_CORNERS_4B, default = [false, false, false, false] )[ corner ];
 
         function __component_has_exactly_one_cutout() = 
             (__component_cutout_side( k_front )?1:0) +
@@ -828,7 +827,11 @@ module MakeBox( box )
                 {
                     for ( side = [ k_front:k_right ])
                         if ( __component_cutout_side( side ))
-                            MakeFingerCutout( side );
+                            MakeSideCutouts( side );
+
+                    for ( side = [ k_front_left:k_front_right ])
+                        if ( __component_cutout_corner( side ))
+                            MakeCornerCutouts( side );                            
 
                     if ( !__component_is_square() && !__component_is_fillet() )
                         __ColorComponent()
@@ -837,7 +840,8 @@ module MakeBox( box )
 
                 if ( __req_label() && !g_b_no_labels_actual)
                 {
-                    color([0,0,1])LabelEachCompartment();
+                    color([0,0,1])
+                        LabelEachCompartment();
                 }
             }
             else if ( m_is_lid_subtractions && m_box_has_lid )
@@ -1353,10 +1357,8 @@ module MakeBox( box )
                     } // end rotateAboutPoint
                     
                     for ( side = [ k_front:k_right ])
-                    {
                         if ( m_lid_cutout_sides[ side ])
-                            MakeFingerCutout( side );
-                    }
+                            MakeSideCutouts( side );
                 }
             }
         }
@@ -1435,7 +1437,7 @@ module MakeBox( box )
             } 
         }
 
-        module MakeFingerCutout( side )
+        module MakeSideCutouts( side )
         {
 
             function __cutout_z() = ( m_is_lid ? m_lid_height + m_lid_thickness : m_box_size[ k_z ] );
@@ -1453,8 +1455,8 @@ module MakeBox( box )
             //  main dimension intrudes into the compartment by some fraction ( e.g. 1/5 )
             main_size = __padding( main_d )/2  + __size( main_d ) * inset_into_compartment_fraction;
 
-            //  perp dimension is a third of the width but no less than 1cm and no more than 3cm
-            perp_size = max( 10, min( 30, __size( perp_d )/3 )); // 10mm <= y <= 30mm
+            //  perp dimension is a half of the width and no more than 3cm
+            perp_size = min( 30, __size( perp_d )/2 );
 
             max_radius = 3;
             radius = min( main_size/2, perp_size/2, max_radius);
@@ -1510,6 +1512,94 @@ module MakeBox( box )
 
             translate( pos[ side ] )
                 MakeRoundedCube( size[ side ], radius, shape[ side ]);
+
+        }
+
+        module MakeCornerCutouts( corner )
+        {
+            function __cutout_z() = ( m_is_lid ? m_lid_height + m_lid_thickness : m_box_size[ k_z ] );
+            function __padding( D ) = m_is_lid ? 0 : __component_padding( D );
+            function __size( D ) = m_is_lid ? __lid_internal_size( D ) : __compartment_size( D );
+            function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : __compartment_size( k_z ) - __cutout_z();
+
+            inset_into_compartment_fraction = 1/3;
+            inverse_inset = 1 - inset_into_compartment_fraction;
+
+            // k_front_left = 0;
+            // k_back_right = 1;
+            // k_back_left = 2;
+            // k_front_right = 3;
+
+            pos = [
+                    // k_front_left
+                    [  
+                        - __padding( k_x )/2,       
+                        - __padding( k_y )/2,                
+                        __finger_cutouts_bottom() 
+                    ], 
+                    // k_back_right
+                    [  
+                        __size( k_x ) * inverse_inset,                     
+                        __size( k_y ) * inverse_inset, 
+                        __finger_cutouts_bottom() 
+                    ],
+                    // k_back_left
+                    [   
+                        __size( k_x ) * inverse_inset, 
+                        - __padding( k_y )/2, 
+                        __finger_cutouts_bottom()                        
+
+                    ],
+                    // k_front_right
+                    [   
+                        - __padding( k_x )/2,  
+                        __size( k_y ) * inverse_inset,                        
+
+                        __finger_cutouts_bottom() 
+                    ], 
+                ];
+
+            shape = [
+                        //k_front_left
+                        [ 
+                            !__component_cutout_corner( k_back_left ) && !__component_cutout_corner( k_front_right ),
+                            !__component_cutout_corner( k_front_right  ),
+                            !__component_cutout_corner( k_back_left ),
+                            t
+                        ],
+
+                        //k_back_right
+                        [ 
+                            t,
+                            !__component_cutout_corner( k_front_right ),
+                            !__component_cutout_corner( k_back_left  ),
+                            !__component_cutout_corner( k_back_left ) && !__component_cutout_corner( k_front_right ),
+
+                        ],
+
+                        //k_back_left
+                        [  
+                            !__component_cutout_corner( k_front_left ),
+                            !__component_cutout_corner( k_front_left ) && !__component_cutout_corner( k_back_right ),
+                            t,
+                            !__component_cutout_corner( k_back_right ),
+                        ],
+
+                        //k_front_right
+                        [ 
+                            !__component_cutout_corner( k_back_right ),
+                            t,
+                            !__component_cutout_corner( k_front_left ) && !__component_cutout_corner( k_back_right ),
+                            !__component_cutout_corner( k_front_left  ),
+
+                        ],            
+                    ];
+
+            size = [ __padding( k_x )/2  + __size( k_x ) * inset_into_compartment_fraction, __padding( k_y )/2 + __size( k_y ) * inset_into_compartment_fraction, __cutout_z() ];
+
+            translate( pos[ corner ] )
+                MakeRoundedCube( size, 3, shape[ corner]);
+
 
         }
 

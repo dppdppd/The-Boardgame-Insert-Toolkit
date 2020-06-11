@@ -69,10 +69,10 @@ data =
                 [
                     [CMP_NUM_COMPARTMENTS_XY,   [2,2]],
                     [CMP_COMPARTMENT_SIZE_XYZ,  [ 25, 25, 8.0] ],
-                    [CMP_SHAPE,                             HEX2],
+                    [CMP_SHAPE,                             HEX],
                     [CMP_SHAPE_VERTICAL_B,                  t],    
                     [CMP_PADDING_XY,                        [5,5]],
-                    [CMP_PADDING_HEIGHT_ADJUST_XY,          [-3, -2] ],
+                    [CMP_PADDING_HEIGHT_ADJUST_XY,          [-1, -1] ],
 
 //                    [CMP_CUTOUT_SIDES_4B,                   [t,f,f,f]], // one side
 //                    [CMP_CUTOUT_SIDES_4B,                   [t,t,f,f]], // opposite sides  
@@ -83,6 +83,27 @@ data =
             ],                  
         ]
     ],    
+    [   "hex tiles 2",
+        [
+            [ BOX_SIZE_XYZ,                                     [58, 58, 10.0] ],
+            [ BOX_LID,
+                [            
+                    [ LID_SOLID_B, t],
+                ],
+            ],
+            [ BOX_COMPONENT,
+                [
+                    [CMP_NUM_COMPARTMENTS_XY,               [2,2]],
+                    [CMP_COMPARTMENT_SIZE_XYZ,              [ 25, 25, 8.0] ],
+                    [CMP_SHAPE,                             HEX2],
+                    [CMP_SHAPE_VERTICAL_B,                  t],    
+                    [CMP_CUTOUT_CORNERS_4B,                 [t,t,t,t]]
+              
+
+                ]
+            ],                  
+        ]
+    ],        
     [   "example 1",
         [
             [ ENABLED_B,                t],
