@@ -317,6 +317,9 @@ value is expected to be a number, and determines whether how deep the lid is.
 value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the lid. This allows the lid to be used as a card tray during play. The values represent [front, back, left, right ].  
 e.g. `[ LID_CUTOUT_SIDES_4B, [ t, t, f, f ] ]`
 
+#### `LID_SIDES_DETENTS`
+value is expected to be an array of 4 integers, and determines how many detents should be added for each side of the lid.  The values represent [front, back, left, right ].  The default is [2, 2, 2, 2].
+
 ### Dividers keys
 as of v2.04, in addition to boxes, one can also create card dividers.
 

@@ -78,6 +78,7 @@ LID_LABELS_INVERT_B = "lid_label_inverted";
 LID_SOLID_LABELS_DEPTH = "lid_label_depth";
 LID_LABELS_BG_THICKNESS = "lid_label_bg_thickness";
 LID_LABELS_BORDER_THICKNESS = "lid_label_border_thickness";
+LID_SIDES_DETENTS = "lid_sides_detents";
 
 LID_PATTERN_RADIUS = "lid_hex_radius";
 LID_PATTERN_N1 = "lid_pattern_n1";
@@ -500,6 +501,7 @@ module MakeBox( box )
     m_lid_cutout_sides = __value( m_lid, LID_CUTOUT_SIDES_4B, default = [f,f,f,f]);
     m_lid_is_inverted = __value( m_lid, LID_LABELS_INVERT_B, default = false );
     m_lid_label_depth = __value( m_lid, LID_SOLID_LABELS_DEPTH, default = m_lid_thickness / 2 );
+    m_lid_sides_detents = __value( m_lid, LID_SIDES_DETENTS, default = [2,2,2,2]);
 
     m_lid_label_bg_thickness = __value( m_lid, LID_LABELS_BG_THICKNESS, default = 2.0 );
     m_lid_label_border_thickness = __value( m_lid, LID_LABELS_BORDER_THICKNESS, default = 0.3 );
@@ -1888,34 +1890,41 @@ module MakeBox( box )
                 sphere( r = detent_radius, $fn = 10 );           
             }
 
-            module MakeOneSet( type )
+            module MakeOneSet( type, side )
             {
-                translate( [m_box_size[ k_x ]/4, m_wall_thickness/2 - ( type == "lid" ? g_tolerance : 0), 0] )
-                    MakeDetent( type );
-
-                translate( [m_wall_thickness/2 - ( type == "lid" ? g_tolerance : 0), m_box_size[ k_y ]/4, 0] )
-                    MakeDetent( type );
-            }
-
-            MakeOneSet( type );
-
-            MirrorAboutPoint( [1,0,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
-            {
-                MakeOneSet( type );
-            }
-
-            MirrorAboutPoint( [0,1,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
-            {
-                MakeOneSet( type );
-            }
-
-            MirrorAboutPoint( [1,0,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
-            {
-                MirrorAboutPoint( [0,1,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
+                detent_count = m_lid_sides_detents[side];
+                wall_offset = m_wall_thickness/2 - ( type == "lid" ? g_tolerance : 0);
+                for( i = [1: detent_count ] )
                 {
-                    MakeOneSet( type );    
-                }
+                    if ( side == k_front )
+                    {
+                        d_spacing = m_box_size[ k_x ] / detent_count ;
+                        translate( [( d_spacing * i ) - ( d_spacing / 2), wall_offset, 0] )
+                            MakeDetent( type );
+                    }
+                    else if ( side == k_back)
+                    {
+                        d_spacing = m_box_size[ k_x ] / detent_count ;
+                        translate( [( d_spacing * i ) - ( d_spacing / 2), m_box_size[ k_y ] - wall_offset, 0] )
+                            MakeDetent( type );
+                    }
+                    else if ( side == k_left )
+                    {
+                        d_spacing = m_box_size[ k_y ] / detent_count ;
+                        translate( [wall_offset, ( d_spacing * i ) - ( d_spacing / 2), 0] )
+                            MakeDetent( type );
+                    }
+                    else if ( side == k_right )
+                    {
+                        d_spacing = m_box_size[ k_y ] / detent_count ;
+                        translate( [m_box_size[ k_x ] - wall_offset, ( d_spacing * i ) - ( d_spacing / 2), 0] )
+                            MakeDetent( type );
+                    }
+                } 
             }
+
+            for ( side = [ k_front:k_right ])
+              MakeOneSet( type, side );
         }
     }
 
