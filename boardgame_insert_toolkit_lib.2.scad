@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.15";
+VERSION = "2.16";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 25 : 100;
@@ -171,6 +171,11 @@ g_b_simple_lids = f;
 
 // default = 1.5
 g_wall_thickness = 1.5; 
+
+// thickness of detent/ball as ratio of wall thickness
+g_detent_wall_thickness_ratio = 1/3;
+
+g_detent_spacing = 2;
 
 // default = g_wall_thickness
 g_lid_thickness = g_wall_thickness; 
@@ -1445,7 +1450,7 @@ module MakeBox( box )
             function __size( D ) = m_is_lid ? __lid_internal_size( D ) : __compartment_size( D );
             function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : __compartment_size( k_z ) - __cutout_z();
 
-            inset_into_compartment_fraction = 1/3;
+            inset_into_compartment_fraction = 1/4;
 
             // main and perpendicular dimensions
             main_d = ( side == k_back || side == k_front ) ? k_y : k_x; 
@@ -1883,18 +1888,31 @@ module MakeBox( box )
         {
             module MakeDetent( type )
             {
-                detent_radius = 1/3 * m_wall_thickness + ( type == "box" ? g_tolerance/2 : 0 ) ;
+                detent_radius = g_detent_wall_thickness_ratio * m_wall_thickness + ( type == "box" ? g_tolerance/2 : 0 ) ;
 
-                sphere( r = detent_radius, $fn = 10 );           
+                sphere( r = detent_radius, $fn = 10 ); 
             }
 
             module MakeOneSet( type )
             {
-                translate( [m_box_size[ k_x ]/4, m_wall_thickness/2 - ( type == "lid" ? g_tolerance : 0), 0] )
+                num_detents = 2;
+
+                for ( i = [ 1 : num_detents ] )
+                {
+                translate( [ m_wall_thickness/2 + g_detent_spacing * i, m_wall_thickness/2 - ( type == "lid" ? g_tolerance : 0), 0] )
                     MakeDetent( type );
 
-                translate( [m_wall_thickness/2 - ( type == "lid" ? g_tolerance : 0), m_box_size[ k_y ]/4, 0] )
+                translate( [m_wall_thickness/2 - ( type == "lid" ? g_tolerance : 0), m_wall_thickness/2 + g_detent_spacing * i, 0] )
                     MakeDetent( type );
+
+
+                translate( [ m_box_size[ k_x]/4 + g_detent_spacing * i , m_wall_thickness/2 - ( type == "lid" ? g_tolerance : 0), 0] )
+                    MakeDetent( type );
+
+                translate( [m_wall_thickness/2 - ( type == "lid" ? g_tolerance : 0), m_box_size[ k_y]/4 + g_detent_spacing * i, 0] )
+                    MakeDetent( type );                                        
+                }
+                
             }
 
             MakeOneSet( type );

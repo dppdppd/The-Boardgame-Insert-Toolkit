@@ -1,4 +1,3 @@
-
 include <boardgame_insert_toolkit_lib.2.scad>;
 
 // determines whether lids are output.
@@ -43,6 +42,26 @@ data =
             ],                            
         ]
     ],
+
+    // [   "detent",
+    //     [
+    //         [ BOX_SIZE_XYZ,                                     [90, 90, 15.0] ],
+    //         [ BOX_LID,
+    //             [
+    //                 [ LID_SOLID_B, t],
+    //     //            [ LID_NOTCHES_B,        f],
+    //     //            [ LID_FIT_UNDER_B,      f],                    
+    //             ]
+    //         ],
+    //         [ BOX_COMPONENT,
+    //             [
+    //                 [CMP_COMPARTMENT_SIZE_XYZ,  [ 87, 87, 13.0] ],
+    //                 [CMP_CUTOUT_SIDES_4B,                   [t,t,f,f]], // all sides
+
+    //             ]
+    //         ],                            
+    //     ]
+    // ],
 
     [   "example 0: minimal",
         [
