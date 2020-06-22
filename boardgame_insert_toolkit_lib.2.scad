@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.16";
+VERSION = "2.17";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 25 : 100;
@@ -864,7 +864,6 @@ module MakeBox( box )
                     difference()
                     {
                         vertical_clearance = 1.0 + g_tolerance;
-
                         MakeLidNotches( height = vertical_clearance, depth = 0 );
 
                         hull()
@@ -877,6 +876,10 @@ module MakeBox( box )
 
                         }
                     }
+
+                    detent_pos_z_corner = __lid_internal_size( k_z) / 2;
+                    translate([ 0, 0, detent_pos_z_corner]) 
+                        MakeDetents( type = "box" );
 
                 }
 
