@@ -64,7 +64,6 @@ Here is an example of some compartments designed to hold cards, with holes to ge
 
              [ BOX_LID,
                 [
-                    [ LID_NOTCHES_B,        f],
                     [ LID_FIT_UNDER_B,      f],
                     [ LID_CUTOUT_SIDES_4B, [f,f,t,t]],
                     [ LID_SOLID_B, f],
@@ -254,14 +253,24 @@ value is expected to be an array of components key-value pairs. Box can have as 
 #### `BOX_VISUALIZATION`
 describe me
 
+#### `BOX_STACKABLE_B`
+value is expected to be a bool and determines whether the base of the box is cut to fit on top of an identically sized box. Note that this requires a printer that can print a 45 degree overhang without supports.
+
 ### Lid keys
 as of v2.09, all lid parameters are specified in a BOX_LID container. This makes it easy to reuse box lid parameters across multiple boxes.
 
 #### `BOX_LID`
 value is expected to be an array of lid key-value pairs.
 
+#### `LID_INSET_B`
+value is expected to be a bool and determines whether the box will have an inset lid or a cap lid.
+Considerations:
+- Inset lids are required if the boxes are intended to snap fit as a stack ( BOX_STACKABLE_B true ).
+- Cap lid is preferred for printers that are sloppier, since the cap lid is more forgiving.
+- Cap lid is preferred if the cap will be used to hold pieces during play, since the inset lid does not have walls.
+
 #### `LID_NOTCHES_B`
-value is expected to be a bool, "true", "false", "t", or "f", and determines whether the box will have notches that make pulling the lid off easier.  
+value is expected to be a bool, "true", "false", "t", or "f", and determines whether the box will have notches that make pulling the lid off easier.  Only applies to cap lids ( LID_INSET_B false )
 e.g. `[ LID_NOTCHES_B, f ]`
 
 #### `LID_PATTERN_RADIUS`
@@ -287,13 +296,10 @@ value is expected to be a number, and determines the percent of width that each 
 value is expected to be a number, and determines the thickness of the shape, i.e. the difference between the inner and outer shapes` radius. 
 
 #### `LID_FIT_UNDER_B`
-value is expected to be a bool, and determines whether the box bottom is formed to allow the box to sit in the lid when open. Note that this requires a printer that can handle printing 45 degrees outward without supports.
+value is expected to be a bool, and determines whether the box bottom is formed to allow the box to sit in the lid when open. Note that this requires a printer that can print a 45 degree overhang without supports.
 
 #### `BOX_NO_LID_B`
 value is expected to be a bool, and determines whether a lid is ommitted. If ommitted, the box will not form an inset lip to support a lid.
-
-#### `LID_THIN_B`
-describe me
 
 #### `LID_SOLID_B`
 value is expected to be a bool, and determines whether the lid is a hex mesh or solid.
@@ -311,7 +317,7 @@ value is expected to be a number, and determines the thickness of the lid label 
 value is expected to be a number, and determines the thickness of the lid label border.  Default is 0.3 mm
 
 #### `LID_HEIGHT`
-value is expected to be a number, and determines whether how deep the lid is.
+value is expected to be a number, and determines whether how deep the lid is. Default is 1mm for inset lids, and 2mm for cap lids.
 
 #### `LID_CUTOUT_SIDES_4B`
 value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the lid. This allows the lid to be used as a card tray during play. The values represent [front, back, left, right ].  

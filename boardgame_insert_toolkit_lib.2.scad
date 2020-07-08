@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.17";
+VERSION = "2.20";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 25 : 100;
@@ -67,10 +67,9 @@ BOX_COMPONENT = "component";
 BOX_VISUALIZATION = "visualization";
 
 BOX_NO_LID_B = "no_lid";
+BOX_STACKABLE_B = "stackable";
 
-LID_NOTCHES_B = "lid_notches";
 LID_FIT_UNDER_B = "fit_lid_under";
-LID_THIN_B = "thin_lid";
 LID_SOLID_B = "box_lid_solid";
 LID_HEIGHT = "lid_height";
 LID_CUTOUT_SIDES_4B = "lid_cutout_sides";
@@ -78,6 +77,7 @@ LID_LABELS_INVERT_B = "lid_label_inverted";
 LID_SOLID_LABELS_DEPTH = "lid_label_depth";
 LID_LABELS_BG_THICKNESS = "lid_label_bg_thickness";
 LID_LABELS_BORDER_THICKNESS = "lid_label_border_thickness";
+LID_INSET_B = "lid_inset";
 
 LID_PATTERN_RADIUS = "lid_hex_radius";
 LID_PATTERN_N1 = "lid_pattern_n1";
@@ -172,16 +172,23 @@ g_b_simple_lids = f;
 // default = 1.5
 g_wall_thickness = 1.5; 
 
-// thickness of detent/ball as ratio of wall thickness
-g_detent_wall_thickness_ratio = 1/3;
+// thickness of detent. For a looser snap fit, reduce this. For a tighter snap fit, increase it.  ( recommended 0.05 increments )
+//
+//loose fit
+//g_detent_thickness = 0.10;
+//
+//normal fit
+g_detent_thickness = 0.15;
+//
+//tight fit
+//g_detent_thickness = 0.20;
 
-g_detent_spacing = 2;
+g_detent_spacing = 1;
+
+g_detent_dist_from_corner = 1;
 
 // default = g_wall_thickness
 g_lid_thickness = g_wall_thickness; 
-
-// default = 5.0
-g_lid_lip_height = 5.0; 
 
 // give each compartment a different color. Useful for development
 g_b_colorize = true;
@@ -189,13 +196,21 @@ g_b_colorize = true;
 // tolerance for fittings. This is the gap between fitting pieces,
 // such as lids and boxes. Increase to loosen the fit and decrease to
 // tighten it.
-g_tolerance = 0.1; 
+g_tolerance = 0.15;
 
+// this adjusts the position of the lid detents downwards. 
+// The larger the value, the bigger the gap between the lid and the box.
+g_tolerance_detent_pos = 0.1;
 
-module debug()
+module debug( w = 0.2, l = 100 )
 {
-    #translate( [ -.5, -.5, -50])
-        cube( [ 1 , 1, 100 ] );
+    #translate( [ -w/2, -w/2, -l/2])
+        cube( [ w , w, l ] );
+    #translate( [ -w/2, -l/2, -w/2])
+        cube( [ w , l, w ] );
+    #translate( [ -l/2, -w/2, -w/2])
+        cube( [ l , w, w ] );                
+
 }
 
 module RotateAndMoveBackToOrigin(a, extents ) 
@@ -422,13 +437,13 @@ module MakeDividers( div )
 
         difference()
         {
-            MakeRoundedCube( [ width, height, depth ], 4);
+            MakeRoundedCubeZ( [ width, height, depth ], 4);
 
             if ( num_columns != -1 )
             for (c = [ 0 : num_columns ] ) 
             {
                 translate( [ divider_column + (divider_column + gap_size) * c, divider_bottom, 0])
-                    MakeRoundedCube( [ gap_size, height - divider_bottom - divider_top, depth ], 4);
+                    MakeRoundedCubeZ( [ gap_size, height - divider_bottom - divider_top, depth ], 4);
             }
 
         }
@@ -442,7 +457,7 @@ module MakeDividers( div )
             // tab shape
             translate( title_pos )
             {
-                MakeRoundedCube( [ tab_width, tab_height + height_overlap, depth], 4 ); 
+                MakeRoundedCubeZ( [ tab_width, tab_height + height_overlap, depth], 4 ); 
             }
 
             // words
@@ -476,32 +491,36 @@ module MakeBox( box )
     m_lid_has_labels = m_box_label != "";
 
     m_box_is_spacer = __type( box )  == SPACER;
+    m_box_is_stackable = __value( box, BOX_STACKABLE_B, default = false );
+
+    m_wall_thickness = __value( box, "wall_thickness", default = g_wall_thickness ); // needs work to change if no lid
+
     m_box_has_lid = !__value( box, BOX_NO_LID_B, default = false );
 
     m_lid = __value( box, BOX_LID, default = [] );
 
     function __notch_length( D ) = m_box_size[ D ] / 5.0;
-    function __lid_notch_depth() = m_wall_thickness / 2 + g_tolerance;
 
+    function __lid_notch_depth() = m_wall_thickness / 2;
 
-    function __lid_external_size( D )= D == k_z ? m_lid_thickness + m_lid_height : 
+    m_lid_thickness = m_wall_thickness;
+
+    function __lid_external_size( D )= D == k_z ? m_lid_thickness + m_lid_wall_height : 
                                                 m_box_size[ D ];
-
-    function __lid_internal_size( D )= D == k_z ? __lid_external_size( k_z ) - m_lid_thickness : 
-                                                __lid_external_size( D ) - m_wall_thickness + ( g_tolerance * 2);
 
     function __has_solid_lid() = m_lid_solid || g_b_vis_actual;
 
-
-    m_box_has_thin_lid = __value( m_lid, LID_THIN_B, default = false );
-
-    m_lid_thickness = ( m_box_has_thin_lid ? 0.6 : g_lid_thickness ) - g_tolerance;
-
-    m_lid_notches = __value( m_lid, LID_NOTCHES_B, default = true );
     m_lid_fit_under = __value( m_lid, LID_FIT_UNDER_B, default = true );
     m_lid_solid = __value( m_lid, LID_SOLID_B, default = false );
+    m_lid_inset = __value( m_lid, LID_INSET_B, default = true );
 
-    m_lid_height = __value( m_lid, LID_HEIGHT, default = 5.0 );
+    // the part of the lid that overlaps the box
+    m_lid_wall_height = __value( m_lid, LID_HEIGHT, default = m_lid_inset ? 1.0 : 2.0 );
+    m_lid_wall_thickness = m_lid_inset ? 2*m_wall_thickness : m_wall_thickness/2;
+
+    function __lid_internal_size( D )= D == k_z ? m_lid_wall_height : 
+                                                __lid_external_size( D ) - 2*m_lid_wall_thickness;
+
     m_lid_cutout_sides = __value( m_lid, LID_CUTOUT_SIDES_4B, default = [f,f,f,f]);
     m_lid_is_inverted = __value( m_lid, LID_LABELS_INVERT_B, default = false );
     m_lid_label_depth = __value( m_lid, LID_SOLID_LABELS_DEPTH, default = m_lid_thickness / 2 );
@@ -518,17 +537,38 @@ module MakeBox( box )
 
     m_lid_pattern_radius = __value( m_lid, LID_PATTERN_RADIUS, default = 4.0 );
 
+    m_tab_width_x = max( m_box_size[ k_x ]/4, g_detent_spacing * 2 );
+    m_tab_width_y = max( m_box_size[ k_y ]/4, g_detent_spacing * 2 );
 
-    // FIXME
-    m_box_wall_thickness = __value( box, "wall_thickness", default = g_wall_thickness ); // needs work to change if no lid
-
-    m_wall_thickness = m_box_wall_thickness;
-
-
+    m_tab_corner_gap = 4;
     m_wall_underside_lid_storage_depth = 7;
+    m_corner_width = 4;
+
+    m_lid_notch_height = 2.0;
+    m_lid_notches = true;
+
+    m_lid_tab = [ max( m_box_size[ k_x ]/4, g_detent_spacing * 2 ), m_wall_thickness,  __lid_external_size( k_z ) * 2];    
 
     m_box_inner_position_min = [ m_wall_thickness, m_wall_thickness, m_wall_thickness ];
     m_box_inner_position_max = m_box_size - m_box_inner_position_min;
+
+        module MakeCorners( mod = 0 )
+        {
+            difference()
+            {
+                cube([  m_box_size[ k_x ], m_box_size[ k_y ],  m_box_size[ k_z ] + __lid_external_size( k_z ) ]); // outer box
+
+                translate( [ 0, m_corner_width + mod , 0])
+                    cube([ m_box_size[ k_x ], m_box_size[ k_y ] - 2*( m_corner_width + mod ), m_box_size[ k_z ] + __lid_external_size( k_z ) ]); // middle y
+
+                translate( [ m_corner_width  + mod, 0, 0])
+                    cube([ m_box_size[ k_x ] - 2*( m_corner_width + mod ), m_box_size[ k_y ], m_box_size[ k_z ] + __lid_external_size( k_z ) ]);// middle x
+
+                translate( [ m_wall_thickness, m_wall_thickness, 0]) // innerbox
+                    cube([  m_box_size[ k_x ] - 2*m_wall_thickness, m_box_size[ k_y ] - 2*m_wall_thickness,  m_box_size[ k_z ] + __lid_external_size( k_z ) ]);      
+
+            }
+        }
 
     if ( m_box_is_spacer )
     {
@@ -551,23 +591,29 @@ module MakeBox( box )
                 {
                     MakeLayer( layer = "outerbox" );
 
-
-                    // create a negative of the component
-                    for( i = [ 0: m_num_components - 1 ] )
+                    difference() // we want to preserve the corners regardless
                     {
-                        if ( box[ i ][ k_key ] == BOX_COMPONENT )
+                        // create a negative of the component
+                        for( i = [ 0: m_num_components - 1 ] )
                         {
-                            component = box[ i ][ k_value ];
-                            union()
+                            if ( box[ i ][ k_key ] == BOX_COMPONENT )
                             {
-                                difference()
+                                component = box[ i ][ k_value ];
+                                union()
                                 {
-                                    MakeLayer( component , layer = "component_subtractions");
-                                    MakeLayer( component, layer = "component_additions" );     
+                                    difference()
+                                    {
+
+                                        MakeLayer( component , layer = "component_subtractions");
+                                        MakeLayer( component, layer = "component_additions" ); 
+                                    }
+                                    MakeLayer( component, layer = "final_component_subtractions" );
+
                                 }
-                                MakeLayer( component, layer = "final_component_subtractions" );
                             }
                         }
+
+                        MakeCorners();    
                     }
                 }
                 // lid carve outs
@@ -643,13 +689,6 @@ module MakeBox( box )
     
         function __partition_height_scale( D ) = D == __Y2() ? __req_lower_partitions() ? 0.5 : 1.00 : 1.00;
 
-        // Amount of curvature represented as a percentage of the __wall height.
-        m_curve_height_scale = 0.50;
-
-        m_b_corner_notch = true;
-
-        m_notch_height = 3.0;
-
         // DERIVED VARIABLES
 
         ///////// __component_position helpers
@@ -708,16 +747,16 @@ module MakeBox( box )
 /////////////////////////////////////////
 
 
-    module __ColorComponent()
-    {
-        r = !g_b_colorize ? 0.7 : pow( sin( pow( __component_position(k_x),5) ), 0.5);
-        g = !g_b_colorize ? 0.8 :pow( sin( pow( __component_position(k_y), 5) ), 0.3);
-        b = !g_b_colorize ? 0.5 :pow( cos( pow( __component_size(k_z), 5) ), 0.5);
+        module __ColorComponent()
+        {
+            r = !g_b_colorize ? 0.7 : pow( sin( pow( __component_position(k_x),5) ), 0.5);
+            g = !g_b_colorize ? 0.8 :pow( sin( pow( __component_position(k_y), 5) ), 0.3);
+            b = !g_b_colorize ? 0.5 :pow( cos( pow( __component_size(k_z), 5) ), 0.5);
 
 
-        color( [r, g, b] )
-            children();
-    }
+            color( [r, g, b] )
+                children();
+        }
 
 /////////////////////////////////////////
 
@@ -737,30 +776,169 @@ module MakeBox( box )
             }
         }
 
-        module MakeLidNotch( height = 0, depth = 0, offset = 0 )
+        module MakeLidBase_Inset( tolerance = 0, tolerance_detent_pos = 0, omit_detents = false )
+        {
+            difference() 
+                {
+                    // main __element
+                    cube([__lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z )]);
+                    
+                    // lid exterior lip
+            
+                    translate( [ 0, 0, __lid_external_size( k_z )/2 ])
+                    {
+                        cube([ __lid_external_size( k_x ), __lid_notch_depth() + tolerance, __lid_external_size( k_z )/2]);   
+                        cube([ __lid_notch_depth() + tolerance, __lid_external_size( k_y ), __lid_external_size( k_z )/2]);   
+
+                        MirrorAboutPoint( v=[0,1,0], pt= [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, m_lid_wall_height/2 ] )
+                            MirrorAboutPoint( v=[1,0,0], pt= [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, m_lid_wall_height/2 ] )
+                            {
+                                cube([ __lid_external_size( k_x ), __lid_notch_depth() + tolerance, __lid_external_size( k_z )/2]);   
+                                cube([ __lid_notch_depth() + tolerance, __lid_external_size( k_y ), __lid_external_size( k_z )/2]);   
+                            }
+                    }
+
+                    difference()
+                    {
+                        MakeLidEdges( extra_depth = tolerance, extra_height = __lid_external_size( k_z ) );
+
+                        translate( [ 0, 0, 0 ] )
+                            MirrorAboutPoint( v=[0,0,1], pt= [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )
+                                hull()
+                                {
+                                    MakeLidEdges( extra_depth = tolerance );
+
+                                    translate( [ 0, 0, -__lid_notch_depth() ] )
+                                        MakeLidEdges( offset = m_wall_thickness/2 + tolerance, extra_depth = tolerance);
+
+                                }
+                    }  
+                }
+                    //detents
+                    if ( !omit_detents )
+                    {
+                        detent_height = __lid_external_size( k_z )/2 + tolerance_detent_pos;
+                        translate([ 0, 0, detent_height ]) // lower because tolerance
+                                MakeDetents( mod = -tolerance, offset = tolerance ); 
+                    }                             
+
+        }
+
+        module MakeLidBase_Cap( tolerance = 0, tolerance_detent_pos = 0, omit_detents = false )
+        {
+            difference()
+            {
+                    // main __element
+                cube([__lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z )]);
+                    
+                // #TODO: modulize this!
+                translate( [ 0, 0, __lid_external_size( k_z ) - __lid_notch_depth() ] )
+                    hull()
+                    {
+                        translate( [ __lid_notch_depth() , __lid_notch_depth(), 0 ] )
+                            cube([__lid_internal_size( k_x ), __lid_internal_size( k_y ), 1]);
+
+                        translate( [ 0, 0, __lid_notch_depth() ] )
+                            cube([__lid_external_size( k_x ), __lid_external_size( k_y ), 0.01]);
+                    }
+
+                // big hollow
+                translate( [ __lid_notch_depth() - tolerance, __lid_notch_depth() - tolerance, 0 ])
+                    cube([  __lid_internal_size( k_x ) + 2*tolerance, __lid_internal_size( k_y ) + 2*tolerance,  __lid_external_size( k_z)]);
+            }
+
+            //detents
+            if ( !omit_detents )
+            {
+                detent_height = ( m_lid_wall_height - __lid_notch_depth() )/2 + m_lid_thickness + tolerance_detent_pos;
+                translate([ 0, 0, detent_height ]) // lower because tolerance
+                        MakeDetents( mod = 0, offset = -tolerance );      
+            }
+
+        }
+
+
+
+
+        module MakeLidEdge( extra_height = 0, extra_depth = 0, offset = 0 )
         {
             translate( [ offset, offset, 0 ] )
             {
                 cube( [  m_box_size[ k_x ] - ( 2 * offset ),
-                        __lid_notch_depth() + depth, 
-                        m_lid_height + height ] );   
+                        __lid_notch_depth() + extra_depth, 
+                        m_lid_wall_height + extra_height ] );   
 
-                cube( [  __lid_notch_depth() + depth,
+                cube( [  __lid_notch_depth() + extra_depth,
                         m_box_size[ k_y ] - ( 2 * offset ),
-                        m_lid_height + height ] ); 
+                        m_lid_wall_height + extra_height ] ); 
             }
         }
 
-        module MakeLidNotches( height = 0, depth = 0, offset = 0 )
+        module MakeLidEdges( extra_height = 0, extra_depth = 0, offset = 0 )
         {
-                MakeLidNotch( height = height, depth = depth, offset = offset );
-
-                center = [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0];
+                MakeLidEdge( extra_height = extra_height, extra_depth = extra_depth, offset = offset );
 
                 MirrorAboutPoint( [1,0,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
                     MirrorAboutPoint( [0,1,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
-                        MakeLidNotch( height = height, depth = depth, offset = offset );
+                        MakeLidEdge( extra_height = extra_height, extra_depth = extra_depth, offset = offset );
 
+        }
+
+        module MakeLidTabs( mod = 0 )
+        {
+            // tabs
+            translate( [ 0, m_tab_corner_gap - mod , 0])
+                cube([ m_box_size[ k_x ], m_tab_width_y + 2*mod, m_lid_wall_height]);
+
+            translate( [ m_tab_corner_gap - mod, 0, 0])
+                cube([ m_tab_width_x + 2*mod, m_box_size[ k_y ], m_lid_wall_height]);  
+
+            translate( [ 0,  m_box_size[ k_y ] - m_tab_width_y - m_tab_corner_gap - mod, 0])
+                cube([ m_box_size[ k_x ], m_tab_width_y + 2*mod, m_lid_wall_height]);
+
+            translate( [ m_box_size[ k_x ] - m_tab_width_x - m_tab_corner_gap - mod, 0, 0])
+                cube([ m_tab_width_x + 2*mod, m_box_size[ k_y ], m_lid_wall_height]);                 
+        }
+
+        module MakeBoxShell()
+        {
+            cube([  m_box_size[ k_x ], 
+                    m_box_size[ k_y ], 
+                    m_box_size[ k_z ]]);
+                    
+        }
+
+        module MakeBoxShellWithNewLidBits()
+        {
+            difference()
+            {
+                union()
+                {
+                    MakeBoxShell();
+
+                    if ( m_box_has_lid )
+                    {
+                        // create the structure above the box that holds the lid
+                        translate([ 0, 0, m_box_size[ k_z ] ])
+                            intersection( )
+                            {
+                                difference()
+                                {
+                                    cube( [ m_box_size[ k_x ], m_box_size[ k_y ], __lid_external_size( k_z )]);
+
+                                    MirrorAboutPoint( v=[0,0,1], pt=[0,0,__lid_external_size(k_z)/2])
+                                        MakeLidBase_Inset();
+                                }
+
+                                MakeCorners();
+                            }
+                    }
+                }
+                    
+                // subtract tabs
+                    translate( [ 0, 0, m_box_size[ k_z ] - m_lid_tab[ k_y ] - 1 ])
+                        MakeLidTabs( mod = 0.5, square = true ); // this needs to be wide 
+            }  
         }
 
         module InnerLayer()
@@ -780,9 +958,15 @@ module MakeBox( box )
                 // 'outerbox' is the insert. It may contain one or more 'components' that each
                 // define a repeated compartment type.
                 //
-                cube([  m_box_size[ k_x ], 
-                        m_box_size[ k_y ], 
-                        m_box_size[ k_z ]]);
+
+                if ( !m_lid_inset )
+                {
+
+                    MakeBoxShell();
+                    
+                }
+                else
+                    MakeBoxShellWithNewLidBits();
             }
             else if ( m_is_lid )
             {
@@ -797,7 +981,7 @@ module MakeBox( box )
                 {
                     cube([  __component_size( k_x ), 
                             __component_size( k_y ), 
-                            __component_size( k_z )]);
+                            __component_size( k_z ) + m_lid_wall_height]);
                 }
             }
             else if ( m_is_component_additions )
@@ -849,50 +1033,49 @@ module MakeBox( box )
                         LabelEachCompartment();
                 }
             }
-            else if ( m_is_lid_subtractions && m_box_has_lid )
+            else if ( m_is_lid_subtractions )
             {
 
-                notch_pos_z =  m_box_size[ k_z ] - m_lid_height ;
-                
-                translate( [ 0,0, notch_pos_z ] )
-                    MakeLidNotches();
-
-                // outer, shorter wall
-                if ( m_lid_fit_under )
+                // box top lid accommodation
+                if ( !m_lid_inset )
                 {
-                    // we need to carve out angles so we won't need supports.
-                    difference()
-                    {
-                        vertical_clearance = 1.0 + g_tolerance;
-                        MakeLidNotches( height = vertical_clearance, depth = 0 );
+                    translate( [ 0,0, m_box_size[ k_z ] - __lid_internal_size( k_z ) ] )
+                        MirrorAboutPoint( v=[0,0,1], pt=[0,0,__lid_external_size(k_z)/2])
+                            MakeLidBase_Cap();
 
-                        hull()
-                        {
-                            translate( [ 0, 0, m_lid_height + vertical_clearance] )
-                                MakeLidNotches();
+                    notch_pos_z =  m_box_size[ k_z ] - m_lid_wall_height + __lid_notch_depth();                    
 
-                            translate( [ 0, 0, m_lid_height - 1 + vertical_clearance] )
-                                MakeLidNotches( offset = __lid_notch_depth() );
-
-                        }
-                    }
-
-                    detent_pos_z_corner = __lid_internal_size( k_z) / 2;
-                    translate([ 0, 0, detent_pos_z_corner]) 
-                        MakeDetents( type = "box" );
-
+                    if ( m_lid_notches )
+                     translate([ 0, 0, notch_pos_z]) 
+                            MakeLidCornerNotches();                              
                 }
 
-                notch_pos_z_corner = notch_pos_z - m_notch_height ;
+                // bottom of the box
+                if ( m_lid_inset && m_box_is_stackable )
+                {
+                    difference()
+                    {
+                        cube( [ m_box_size[ k_x ], m_box_size[ k_y ], __lid_external_size(k_z) ]);
 
-                if ( m_lid_notches )
-                    translate([ 0, 0, notch_pos_z_corner]) 
-                        MakeLidCornerNotches();
+                        MirrorAboutPoint( v=[0,0,1], pt=[0,0,__lid_external_size(k_z)/2])
+                            MakeLidBase_Inset( tolerance = g_tolerance, tolerance_detent_pos = g_tolerance_detent_pos, omit_detents = !m_lid_inset );
 
-                detent_pos_z_corner = m_box_size[ k_z ] - m_lid_height/2;
+                    }            
+                }
+                
+                if ( m_lid_fit_under )
+                {
+                    if ( m_lid_inset )
+                        translate( [ 0, 0, - __lid_external_size( k_z) ] ) // move it down
+                            MakeLidTabs( mod = 0 );    
+                    else
+                    {
+                        translate( [ 0, 0, - m_lid_thickness ] )
+                                MakeLidBase_Cap( omit_detents = true );
+                    }
+ 
+                }     
 
-                translate([ 0, 0, detent_pos_z_corner]) 
-                    MakeDetents( type = "box" );
             }
         }
 
@@ -1146,15 +1329,15 @@ module MakeBox( box )
 
 ///////////////////////
 
+        module MoveToLidInterior( tolerance = 0)
+        {
+            translate([ m_lid_wall_thickness + tolerance , m_lid_wall_thickness + tolerance, 0]) 
+                children();
+        }
+
         module MakeLid() 
         {
             
-            module MoveToLidInterior()
-            {
-                translate([ ( m_wall_thickness )/2 - g_tolerance, ( m_wall_thickness )/2 - g_tolerance, 0]) 
-                    children();
-            }
-
             module MakeAllLidTexts( offset = 0, thickness = m_lid_thickness )
             {
                 for( i = [ 0 : len( box ) - 1])
@@ -1183,8 +1366,8 @@ module MakeBox( box )
 
             module MakeLidText( label, offset = 0, thickness = m_lid_thickness )
             {
-                xpos = __lid_external_size( k_x )/2 + __label_offset( label )[k_x];
-                ypos = __lid_external_size( k_y )/2 + __label_offset( label )[k_y];
+                xpos = __lid_internal_size( k_x )/2 + __label_offset( label )[k_x];
+                ypos = __lid_internal_size( k_y )/2 + __label_offset( label )[k_y];
 
                 auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
                 width = auto_width != 0 ? min( 100, auto_width ) + offset : 0;
@@ -1212,8 +1395,8 @@ module MakeBox( box )
 
             module MakeLidTextFrame( label, offset = 0, thickness = m_lid_thickness )
             {
-                xpos = __lid_external_size( k_x )/2 + __label_offset( label )[k_x];
-                ypos = __lid_external_size( k_y )/2 + __label_offset( label )[k_y];
+                xpos = __lid_internal_size( k_x )/2 + __label_offset( label )[k_x];
+                ypos = __lid_internal_size( k_y )/2 + __label_offset( label )[k_y];
 
                 auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
                 width = auto_width != 0 ? min( 100, auto_width ) + offset : 0;
@@ -1245,130 +1428,146 @@ module MakeBox( box )
                                  
             }
 
+
+            module MakeLidSurface()
+            {
+                // pattern
+                difference()
+                {
+                    linear_extrude( m_lid_thickness )
+                    {
+                        R = m_lid_pattern_radius;
+                        t = m_lid_pattern_thickness;
+
+                        if ( !__has_solid_lid() )
+                            Make2DPattern( x = __lid_internal_size( k_x ), y = __lid_internal_size( k_y ), R = R, t = t );
+                        else
+                            square( [ __lid_external_size( k_x ), __lid_external_size( k_y ) ] );
+                    }
+
+                    // stencil out the text
+                    if ( m_lid_label_bg_thickness > 0 || m_lid_is_inverted  )
+                        if ( !__has_solid_lid() )
+                        {
+                            MakeAllLidTextFrames( offset = m_lid_label_bg_thickness );
+                        }
+                        else
+                        {
+                            MakeAllLidTexts( thickness = m_lid_label_depth );
+                        }                          
+                }
+
+                if ( m_lid_has_labels )
+                {
+                    if ( !__has_solid_lid() )
+                    {
+                        // grid
+                        if ( !m_lid_is_inverted )
+                        {
+                            // edge
+                            if ( m_lid_label_bg_thickness > 0 )
+                                difference()
+                                {
+                                    MakeAllLidTextFrames( offset = m_lid_label_bg_thickness);
+                                    MakeAllLidTextFrames( offset = m_lid_label_bg_thickness - m_lid_label_border_thickness );
+                                }
+
+                            // pattern
+                            if ( m_lid_label_bg_thickness > 0 )
+                                intersection()
+                                {
+                                    theta = 45;
+
+                                    x = __lid_external_size( k_x );
+                                    y = __lid_external_size( k_y );
+
+                                    x2 = y*sin(theta) + x*cos(theta);
+                                    y2 = y*cos(theta) + x*sin(theta);                                     
+
+                                    translate( [x/2-x2/2, y/2-y2/2,0])
+                                        RotateAboutPoint( theta, [0,0,1], [x2/2,y2/2,0] )
+                                            MakeStripedGrid( x = x2, y = y2, w = 0.5, dx = 1, dy = 0, depth_ratio = 0.5 );
+
+                                    MakeAllLidTextFrames( offset = m_lid_label_bg_thickness );
+                                }
+
+                            // positive text
+                            MakeAllLidTexts( ); 
+                        }
+                        else
+                        {
+                            // negative text
+                            difference()
+                            {
+                                MakeAllLidTextFrames( offset = m_lid_label_bg_thickness );
+                                MakeAllLidTexts();
+                            }    
+                        } 
+                    }
+                }
+                
+            }
+
+            module Helper__BuildLid()
+            {
+                tolerance = g_tolerance;
+
+                if ( !m_lid_inset )
+                {
+                    MakeLidBase_Cap( tolerance = g_tolerance, tolerance_detent_pos = g_tolerance_detent_pos );
+                }
+                else // new lid
+                {             
+                    if ( m_lid_inset )
+                    {
+                        // main structure of lid minus center
+                        difference( tolerance = g_tolerance )
+                        {
+                            MakeLidBase_Inset( tolerance = g_tolerance, tolerance_detent_pos = g_tolerance_detent_pos );
+
+                            // hollow the center
+                            MoveToLidInterior()
+                                cube([  __lid_internal_size( k_x ), __lid_internal_size( k_y ),  __lid_external_size( k_z )]);
+                        }
+                        
+                        // add the flat notch tabs to the sides
+                        difference()
+                        {
+                            cube( [ __lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z )/2 ]   );
+
+                            MakeCorners( mod = 1 );
+                        }
+
+                        // add tabs
+                        MakeLidTabs( mod = -tolerance );
+                    }
+                }
+
+                // lid surface ( pattern and labels )
+                MoveToLidInterior( tolerance = -tolerance )
+                    intersection() // clip to lid extents
+                    {
+                        cube([  __lid_internal_size( k_x ) + 2*tolerance, __lid_internal_size( k_y ) + 2*tolerance,  __lid_external_size( k_z)]);
+                        MakeLidSurface();
+                    }
+            }
+
+
             lid_print_position = [0, m_box_size[ k_y ] + DISTANCE_BETWEEN_PARTS, 0 ];
             lid_vis_position = [ 0, 0, m_box_size[ k_z ] + m_lid_thickness ];
           
             translate( g_b_vis_actual ? lid_vis_position : lid_print_position ) 
-            {
-                difference()
-                {
-                    RotateAboutPoint( g_b_vis_actual ? 180 : 0, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )
+                RotateAboutPoint( g_b_vis_actual ? 180 : 0, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )
+                    difference()
                     {
+                        Helper__BuildLid();
 
-                        // clip to lid extents
-                        intersection()
-                        {
-                            cube([  __lid_external_size( k_x ), __lid_external_size( k_y ),  __lid_external_size( k_z )]);
-
-                            //detents
-                            detent_pos_z_corner = __lid_internal_size( k_z) / 2 + m_lid_thickness;
-
-                            translate([ 0, 0, detent_pos_z_corner]) 
-                                MakeDetents( type = "lid" );
-                        }
-
-                        // lid edge
-                        difference() 
-                        {
-                            // main __element
-                            cube([__lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z )]);
-                            
-                            MoveToLidInterior()
-                                cube([  __lid_internal_size( k_x ), __lid_internal_size( k_y ),  __lid_external_size( k_z )]);
-                        }
-
-                        // clip to lid extents
-                        intersection()
-                        {
-                            cube([  __lid_external_size( k_x ), __lid_external_size( k_y ),  __lid_external_size( k_z )]);
-
-                            union()
-                            {
-                                // honeycomb
-                                difference()
-                                {
-
-                                    linear_extrude( m_lid_thickness )
-                                    {
-                                        R = m_lid_pattern_radius;
-                                        t = m_lid_pattern_thickness;
-
-                                        if ( !__has_solid_lid() )
-                                            Make2DPattern( x = __lid_external_size( k_x ), y = __lid_external_size( k_y ), R = R, t = t );
-                                        else
-                                            square( [ __lid_external_size( k_x ), __lid_external_size( k_y ) ] );
-                                    }
-
-                                    // stencil out the text
-                                    if ( m_lid_label_bg_thickness > 0 || m_lid_is_inverted  )
-                                        if ( !__has_solid_lid() )
-                                        {
-                                            MakeAllLidTextFrames( offset = m_lid_label_bg_thickness );
-                                        }
-                                        else
-                                        {
-                                            MakeAllLidTexts( thickness = m_lid_label_depth );
-                                        }                          
-                                }
-
-                                if ( m_lid_has_labels )
-                                {
-                                    if ( !__has_solid_lid() )
-                                    {
-                                        // grid
-                                        if ( !m_lid_is_inverted )
-                                        {
-                                            // edge
-                                            if ( m_lid_label_bg_thickness > 0 )
-                                            difference()
-                                            {
-                                                MakeAllLidTextFrames( offset = m_lid_label_bg_thickness);
-                                                MakeAllLidTextFrames( offset = m_lid_label_bg_thickness - m_lid_label_border_thickness );
-                                            }
-
-                                            // pattern
-                                            if ( m_lid_label_bg_thickness > 0 )
-                                            intersection()
-                                            {
-                                                theta = 45;
-
-                                                x = __lid_external_size( k_x );
-                                                y = __lid_external_size( k_y );
-
-                                                x2 = y*sin(theta) + x*cos(theta);
-                                                y2 = y*cos(theta) + x*sin(theta);                                     
-
-                                                translate( [x/2-x2/2, y/2-y2/2,0])
-                                                    RotateAboutPoint( theta, [0,0,1], [x2/2,y2/2,0] )
-                                                        MakeStripedGrid( x = x2, y = y2, w = 0.5, dx = 1, dy = 0, depth_ratio = 0.5 );
-
-                                                MakeAllLidTextFrames( offset = m_lid_label_bg_thickness );
-                                            }
-
-                                            // positive text
-                                            MakeAllLidTexts( ); 
-                                        }
-                                        else
-                                        {
-                                            // negative text
-                                            difference()
-                                            {
-                                                MakeAllLidTextFrames( offset = m_lid_label_bg_thickness );
-                                                MakeAllLidTexts();
-                                            }    
-                                        } 
-                                    }
-                                }
-                            }
-                        }
-
-                    } // end rotateAboutPoint
-                    
-                    for ( side = [ k_front:k_right ])
-                        if ( m_lid_cutout_sides[ side ])
-                            MakeSideCutouts( side );
-                }
-            }
+                        // if lid is going to be used to hold cards (e.g. discard pile)
+                        if ( !m_lid_inset )
+                            for ( side = [ k_front:k_right ])
+                                if ( m_lid_cutout_sides[ side ])
+                                    MakeSideCutouts( side );
+                    }        
         }
 
         module ForEachPartition( D, include_margins = true )
@@ -1448,10 +1647,10 @@ module MakeBox( box )
         module MakeSideCutouts( side )
         {
 
-            function __cutout_z() = ( m_is_lid ? m_lid_height + m_lid_thickness : m_box_size[ k_z ] );
+            function __cutout_z() = ( m_is_lid ? m_lid_wall_height + m_lid_thickness : m_box_size[ k_z ] + m_lid_wall_height );
             function __padding( D ) = m_is_lid ? 0 : __component_padding( D );
             function __size( D ) = m_is_lid ? __lid_internal_size( D ) : __compartment_size( D );
-            function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : __compartment_size( k_z ) - __cutout_z();
+            function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : __compartment_size( k_z ) - __cutout_z() + m_lid_wall_height;
 
             inset_into_compartment_fraction = 1/4;
 
@@ -1519,13 +1718,13 @@ module MakeBox( box )
             ];
 
             translate( pos[ side ] )
-                MakeRoundedCube( size[ side ], radius, shape[ side ]);
+                MakeRoundedCubeZ( size[ side ], radius, shape[ side ]);
 
         }
 
         module MakeCornerCutouts( corner )
         {
-            function __cutout_z() = ( m_is_lid ? m_lid_height + m_lid_thickness : m_box_size[ k_z ] );
+            function __cutout_z() = ( m_is_lid ? m_lid_wall_height + m_lid_thickness : m_box_size[ k_z ] + m_lid_wall_height );
             function __padding( D ) = m_is_lid ? 0 : __component_padding( D );
             function __size( D ) = m_is_lid ? __lid_internal_size( D ) : __compartment_size( D );
             function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : __compartment_size( k_z ) - __cutout_z();
@@ -1606,7 +1805,7 @@ module MakeBox( box )
             size = [ __padding( k_x )/2  + __size( k_x ) * inset_into_compartment_fraction, __padding( k_y )/2 + __size( k_y ) * inset_into_compartment_fraction, __cutout_z() ];
 
             translate( pos[ corner ] )
-                MakeRoundedCube( size, 3, shape[ corner]);
+                MakeRoundedCubeZ( size, 3, shape[ corner]);
 
 
         }
@@ -1856,16 +2055,19 @@ module MakeBox( box )
             }
         }
 
-        module MakeLidCornerNotch()
-        {
-            {
-                cube([ __notch_length( k_x ), __lid_notch_depth(), m_notch_height ]);
-                cube([__lid_notch_depth(), __notch_length( k_y ), m_notch_height]);
-            }
-        }
-
         module MakeLidCornerNotches()
         {
+            module MakeLidCornerNotch()
+            {
+                {
+                    translate( [ 0, 0, -m_lid_notch_height ])
+                    {
+                        cube([ __notch_length( k_x ), __lid_notch_depth(), m_lid_notch_height ]);
+                        cube([__lid_notch_depth(), __notch_length( k_y ), m_lid_notch_height]);
+                    }
+                }
+            }
+
             MakeLidCornerNotch();
 
             MirrorAboutPoint( [1,0,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
@@ -1887,54 +2089,102 @@ module MakeBox( box )
             }
         }
 
-        module MakeDetents( type /*"lid" | "box"*/ )
+        module MakeLidTabs( mod = 0.0, square = false )
         {
-            module MakeDetent( type )
+            module MakeLidTab( mod )
             {
-                detent_radius = g_detent_wall_thickness_ratio * m_wall_thickness + ( type == "box" ? g_tolerance/2 : 0 ) ;
+
+                x = m_lid_tab[ k_x ] + mod;
+                y = m_lid_tab[ k_y ] + mod;
+
+                // square part
+                translate( [ -x/2, 0, 0])
+                    cube( [ x, y,  __lid_external_size( k_z ) ], center = false );
+
+                if ( square )
+                {
+                    translate( [ -x/2, 0, __lid_external_size( k_z ) ])
+                        cube( [ x, y, y ], center = false );
+                }
+               else
+                    // prism part
+                    translate( [ -x/2, 0, __lid_external_size( k_z ) ])
+                    {
+                        hull()
+                        {
+                         cube( [ x, y, 0.01 ], center = false );
+
+                            translate( [0, 0, y  ])
+                                rotate( v=[ 0,1,0], a=90)
+                                    cylinder( h= x, r=0.01);
+
+                        }
+                    }       
+            }            
+
+            translate( [ ( m_box_size[ k_x ])/2, 0, 0])
+            {
+                MakeLidTab( mod );
+
+                MirrorAboutPoint( [0,1,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
+                    MakeLidTab( mod );
+            }
+
+
+            translate( [ 0, ( m_box_size[ k_y ])/2, 0])
+            {
+               rotate( -90 )
+                    MakeLidTab( mod );
+
+                MirrorAboutPoint( [1,0,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
+                    rotate( -90 )
+                        MakeLidTab( mod );
+            }
+
+        }
+
+        module MakeDetents( mod = 0, offset = 0 )
+        {
+            module MakeDetent( mod )
+            {
+                detent_radius = g_detent_thickness + mod/2 ;
 
                 sphere( r = detent_radius, $fn = 10 ); 
             }
 
-            module MakeOneSet( type )
+            module MakeOneSet( mod )
             {
                 num_detents = 2;
 
-                for ( i = [ 1 : num_detents ] )
-                {
-                translate( [ m_wall_thickness/2 + g_detent_spacing * i, m_wall_thickness/2 - ( type == "lid" ? g_tolerance : 0), 0] )
-                    MakeDetent( type );
-
-                translate( [m_wall_thickness/2 - ( type == "lid" ? g_tolerance : 0), m_wall_thickness/2 + g_detent_spacing * i, 0] )
-                    MakeDetent( type );
-
-
-                translate( [ m_box_size[ k_x]/4 + g_detent_spacing * i , m_wall_thickness/2 - ( type == "lid" ? g_tolerance : 0), 0] )
-                    MakeDetent( type );
-
-                translate( [m_wall_thickness/2 - ( type == "lid" ? g_tolerance : 0), m_box_size[ k_y]/4 + g_detent_spacing * i, 0] )
-                    MakeDetent( type );                                        
-                }
-                
+                translate( [0, offset ,0 ])
+                hull()
+                    for ( i = [ 0 : num_detents - 1 ] )
+                        translate( [ m_wall_thickness/2 + g_detent_spacing * i + g_detent_dist_from_corner, m_wall_thickness/2, 0] )
+                            MakeDetent( mod );
+                translate( [offset, 0 ,0 ])
+                hull()
+                    for ( i = [ 0 : num_detents - 1 ] )
+                        translate( [m_wall_thickness/2, m_wall_thickness/2 + g_detent_spacing * i + g_detent_dist_from_corner, 0] )
+                            MakeDetent( mod );                                    
             }
 
-            MakeOneSet( type );
+            MakeOneSet( mod );
 
             MirrorAboutPoint( [1,0,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
             {
-                MakeOneSet( type );
+                MakeOneSet( mod );
             }
 
             MirrorAboutPoint( [0,1,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
             {
-                MakeOneSet( type );
+                MakeOneSet( mod );
             }
 
             MirrorAboutPoint( [1,0,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
             {
                 MirrorAboutPoint( [0,1,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
                 {
-                    MakeOneSet( type );    
+                    MakeOneSet( mod );    
                 }
             }
         }
@@ -1942,7 +2192,7 @@ module MakeBox( box )
 
 }
 
-module MakeRoundedCube( vec3, radius, vecRounded = [ t, t, t, t ] ){
+module MakeRoundedCubeZ( vec3, radius, vecRounded = [ t, t, t, t ] ){
  
     radii = 
     [
@@ -1971,6 +2221,50 @@ module MakeRoundedCube( vec3, radius, vecRounded = [ t, t, t, t ] ){
 
             translate( pos[ idx ])
                 cylinder(r=radii[ idx ], h=h, $fn = fn); 
+        }
+    }
+} 
+
+
+module MakeRoundedCubeall( vecCube, radius, axis = k_z, vecRounded = [ t, t, t, t ] ){
+ 
+    radii = 
+    [
+        vecRounded[ 0 ] ? radius : .001,
+        vecRounded[ 1 ] ? radius : .001,
+        vecRounded[ 2 ] ? radius : .001,
+        vecRounded[ 3 ] ? radius : .001,
+    ];
+
+    vecCube2 = axis == k_z ? vecCube :
+        axis == k_y ? [ vecCube[2], vecCube[1], vecCube[0] ] :
+        [ vecCube[0], vecCube[2], vecCube[1] ];
+
+    pos = 
+    [
+        [ radii[0], radii[0], 0 ],
+        [ vecCube2[k_x] - radii[1], radii[1], 0 ],
+        [ radii[2], vecCube2[k_y] - radii[2], 0 ],
+        [ vecCube2[k_x] - radii[3], vecCube2[k_y] - radii[3], 0 ]
+    ] ;
+ 
+    vecCubeCtr = vecCube/2;
+
+ translate( vecCubeCtr )
+    debug();
+
+    RotateAboutPoint( a=90, v=[ axis==k_x?1:0, axis==k_y?1:0, 0 ], pt= vecCubeCtr)
+    hull()
+    {
+        h = vecCube2[ k_z ];
+
+        for ( idx = [ 0 : 3] ) 
+        {
+            // collapse the cylinder if we're approximating a point
+            fn = radii[ idx ] >= 1 ? $fn: 4;
+
+                translate( pos[ idx ])
+                    cylinder(r=radii[ idx ], h=h, $fn = fn); 
         }
     }
 } 

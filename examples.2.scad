@@ -16,13 +16,23 @@ g_b_visualization = false;
 //Default = 1.5mm
 g_wall_thickness = 1.5;
 
-// tolerance for fittings. This is the gap between fitting pieces,
-// such as lids and boxes. Increase to loosen the fit and decrease to
-// tighten it.
-// Default = 0.2mm
-g_tolerance = 0.2; 
+// The tolerance value is extra space put between planes of the lid and box that 
+// fit together, such as the lip of the lid.
+// Increase the tolerance to loosen the fit and decrease it to tighten it.
+//
+// Note that the tolerance is applied exclusively to the lid.
+// So if the lid is too tight or too loose, change this value ( up for looser fit, down for tighter fit ) and 
+// you only need to reprint the lid.
+// 
+// The exception is the stackable box, where the bottom of the box is the lid of the box below,
+// in which case the tolerance also affects that box bottom.
+//
+g_tolerance = 0.15;
 
- 
+// This adjusts the position of the lid detents downwards. 
+// The larger the value, the bigger the gap between the lid and the box.
+g_tolerance_detents_pos = 0.1;
+
 data =
 [
     [   "simple box",
@@ -31,8 +41,6 @@ data =
             [ BOX_LID,
                 [
                     [ LID_SOLID_B, t],
-                    [ LID_NOTCHES_B,        f],
-                    [ LID_FIT_UNDER_B,      f],                    
                 ]
             ],
             [ BOX_COMPONENT,
@@ -43,25 +51,40 @@ data =
         ]
     ],
 
-    // [   "detent",
-    //     [
-    //         [ BOX_SIZE_XYZ,                                     [90, 90, 15.0] ],
-    //         [ BOX_LID,
-    //             [
-    //                 [ LID_SOLID_B, t],
-    //     //            [ LID_NOTCHES_B,        f],
-    //     //            [ LID_FIT_UNDER_B,      f],                    
-    //             ]
-    //         ],
-    //         [ BOX_COMPONENT,
-    //             [
-    //                 [CMP_COMPARTMENT_SIZE_XYZ,  [ 87, 87, 13.0] ],
-    //                 [CMP_CUTOUT_SIDES_4B,                   [t,t,f,f]], // all sides
+    [   "simple stacking box",
+        [
+            [ BOX_SIZE_XYZ,                                     [45, 45, 15.0] ],
+            [ BOX_STACKABLE_B, t],
+            [ BOX_LID,
+                [
+                    [ LID_SOLID_B, t],
+                ]
+            ],
+            [ BOX_COMPONENT,
+                [
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 42, 42, 13.0] ],
+                ]
+            ],                            
+        ]
+    ],
+    [   "simple box cap lid",
+        [
+            [ BOX_SIZE_XYZ,                                     [45, 45, 15.0] ],
+            [ BOX_LID,
+                [
+                    [ LID_SOLID_B, t],
+                    [ LID_INSET_B, f],
+                    [ LID_FIT_UNDER_B, f],
+                ]
+            ],
+            [ BOX_COMPONENT,
+                [
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 42, 42, 13.0] ],
+                ]
+            ],                            
+        ]
+    ],    
 
-    //             ]
-    //         ],                            
-    //     ]
-    // ],
 
     [   "example 0: minimal",
         [
@@ -104,7 +127,7 @@ data =
     ],    
     [   "hex tiles 2",
         [
-            [ BOX_SIZE_XYZ,                                     [58, 58, 10.0] ],
+            [ BOX_SIZE_XYZ,                                     [52, 55, 10.0] ],
             [ BOX_LID,
                 [            
                     [ LID_SOLID_B, t],
@@ -130,11 +153,11 @@ data =
 
             [ BOX_LID,
                 [
-                    [ LID_NOTCHES_B,        f],
                     [ LID_FIT_UNDER_B,      f],
                     [ LID_CUTOUT_SIDES_4B, [f,f,t,t]],
-                    [ LID_SOLID_B, f],
+                    [ LID_SOLID_B, t],
                     [ LID_HEIGHT, 15 ],
+                    [ LID_INSET_B, f],
                 ]
             ],
 
