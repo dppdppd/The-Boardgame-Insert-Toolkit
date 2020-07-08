@@ -16,8 +16,7 @@ g_b_visualization = false;
 //Default = 1.5mm
 g_wall_thickness = 1.5;
 
-// The tolerance value is extra space put between planes of the lid and box that 
-// fit together, such as the lip of the lid.
+// The tolerance value is extra space put between planes of the lid and box that fit together.
 // Increase the tolerance to loosen the fit and decrease it to tighten it.
 //
 // Note that the tolerance is applied exclusively to the lid.
