@@ -28,7 +28,7 @@ g_wall_thickness = 1.5;
 //
 g_tolerance = 0.15;
 
-// This adjusts the position of the lid detents downwards. 
+// This adjusts the position of the lid detents downward. 
 // The larger the value, the bigger the gap between the lid and the box.
 g_tolerance_detents_pos = 0.1;
 
