@@ -273,6 +273,9 @@ Considerations:
 value is expected to be a bool, "true", "false", "t", or "f", and determines whether the box will have notches that make pulling the lid off easier.  Only applies to cap lids ( LID_INSET_B false )
 e.g. `[ LID_NOTCHES_B, f ]`
 
+#### `LID_TABS_4B`
+value is expected to be an array of 4 bools, and determines on what sides the lid will have tabs. The default is [ t,t,t,t ].
+
 #### `LID_PATTERN_RADIUS`
 value is expected to be a number, and determines the radius of the hexes in the lid.  
 e.g. `[ LID_PATTERN_RADIUS, 5 ]`

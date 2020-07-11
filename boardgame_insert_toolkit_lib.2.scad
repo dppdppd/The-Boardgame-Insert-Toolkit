@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.21";
+VERSION = "2.23";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 25 : 100;
@@ -78,6 +78,7 @@ LID_SOLID_LABELS_DEPTH = "lid_label_depth";
 LID_LABELS_BG_THICKNESS = "lid_label_bg_thickness";
 LID_LABELS_BORDER_THICKNESS = "lid_label_border_thickness";
 LID_INSET_B = "lid_inset";
+LID_TABS_4B = "lid_tabs";
 
 LID_PATTERN_RADIUS = "lid_hex_radius";
 LID_PATTERN_N1 = "lid_pattern_n1";
@@ -512,7 +513,7 @@ module MakeBox( box )
 
     m_lid_fit_under = __value( m_lid, LID_FIT_UNDER_B, default = true );
     m_lid_solid = __value( m_lid, LID_SOLID_B, default = false );
-    m_lid_inset = __value( m_lid, LID_INSET_B, default = true );
+    m_lid_inset = __value( m_lid, LID_INSET_B, default = false );
 
     // the part of the lid that overlaps the box
     m_lid_wall_height = __value( m_lid, LID_HEIGHT, default = m_lid_inset ? 1.0 : 2.0 );
@@ -524,6 +525,8 @@ module MakeBox( box )
     m_lid_cutout_sides = __value( m_lid, LID_CUTOUT_SIDES_4B, default = [f,f,f,f]);
     m_lid_is_inverted = __value( m_lid, LID_LABELS_INVERT_B, default = false );
     m_lid_label_depth = __value( m_lid, LID_SOLID_LABELS_DEPTH, default = m_lid_thickness / 2 );
+
+    m_lid_tab_sides = __value( m_lid, LID_TABS_4B, default = [t,t,t,t]);
 
     m_lid_label_bg_thickness = __value( m_lid, LID_LABELS_BG_THICKNESS, default = 2.0 );
     m_lid_label_border_thickness = __value( m_lid, LID_LABELS_BORDER_THICKNESS, default = 0.3 );
@@ -882,22 +885,6 @@ module MakeBox( box )
                     MirrorAboutPoint( [0,1,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
                         MakeLidEdge( extra_height = extra_height, extra_depth = extra_depth, offset = offset );
 
-        }
-
-        module MakeLidTabs( mod = 0 )
-        {
-            // tabs
-            translate( [ 0, m_tab_corner_gap - mod , 0])
-                cube([ m_box_size[ k_x ], m_tab_width_y + 2*mod, m_lid_wall_height]);
-
-            translate( [ m_tab_corner_gap - mod, 0, 0])
-                cube([ m_tab_width_x + 2*mod, m_box_size[ k_y ], m_lid_wall_height]);  
-
-            translate( [ 0,  m_box_size[ k_y ] - m_tab_width_y - m_tab_corner_gap - mod, 0])
-                cube([ m_box_size[ k_x ], m_tab_width_y + 2*mod, m_lid_wall_height]);
-
-            translate( [ m_box_size[ k_x ] - m_tab_width_x - m_tab_corner_gap - mod, 0, 0])
-                cube([ m_tab_width_x + 2*mod, m_box_size[ k_y ], m_lid_wall_height]);                 
         }
 
         module MakeBoxShell()
@@ -2128,21 +2115,25 @@ module MakeBox( box )
 
             translate( [ ( m_box_size[ k_x ])/2, 0, 0])
             {
-                MakeLidTab( mod );
-
-                MirrorAboutPoint( [0,1,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
+;                if ( m_lid_tab_sides[ k_front ] )
                     MakeLidTab( mod );
+
+                if ( m_lid_tab_sides[ k_back ] )
+                 MirrorAboutPoint( [0,1,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
+                        MakeLidTab( mod );
             }
 
 
             translate( [ 0, ( m_box_size[ k_y ])/2, 0])
             {
-               rotate( -90 )
-                    MakeLidTab( mod );
-
-                MirrorAboutPoint( [1,0,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
-                    rotate( -90 )
+                if ( m_lid_tab_sides[ k_left ] )
+                rotate( -90 )
                         MakeLidTab( mod );
+
+                if ( m_lid_tab_sides[ k_right ] )
+                    MirrorAboutPoint( [1,0,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
+                        rotate( -90 )
+                            MakeLidTab( mod );
             }
 
         }
