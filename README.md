@@ -274,7 +274,7 @@ value is expected to be a bool, "true", "false", "t", or "f", and determines whe
 e.g. `[ LID_NOTCHES_B, f ]`
 
 #### `LID_TABS_4B`
-value is expected to be an array of 4 bools, and determines on what sides the lid will have tabs. The default is [ t,t,t,t ].
+value is expected to be an array of 4 bools, and determines on what sides the lid will have tabs when the lid is inset. The default is [ t,t,t,t ].
 
 #### `LID_PATTERN_RADIUS`
 value is expected to be a number, and determines the radius of the hexes in the lid.  

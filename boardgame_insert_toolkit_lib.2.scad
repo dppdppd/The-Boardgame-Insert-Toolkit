@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.23";
+VERSION = "2.24";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 25 : 100;
@@ -174,19 +174,11 @@ g_b_simple_lids = f;
 g_wall_thickness = 1.5; 
 
 // thickness of detent. For a looser snap fit, reduce this. For a tighter snap fit, increase it.  ( recommended 0.05 increments )
-//
-//loose fit
-//g_detent_thickness = 0.10;
-//
-//normal fit
-g_detent_thickness = 0.15;
-//
-//tight fit
-//g_detent_thickness = 0.20;
+g_detent_thickness = 0.25;
 
-g_detent_spacing = 1;
+g_detent_spacing = 2;
 
-g_detent_dist_from_corner = 1;
+g_detent_dist_from_corner = 1.5;
 
 // default = g_wall_thickness
 g_lid_thickness = g_wall_thickness; 
@@ -197,11 +189,20 @@ g_b_colorize = true;
 // tolerance for fittings. This is the gap between fitting pieces,
 // such as lids and boxes. Increase to loosen the fit and decrease to
 // tighten it.
-g_tolerance = 0.15;
+g_tolerance = 0.1;
 
 // this adjusts the position of the lid detents downwards. 
 // The larger the value, the bigger the gap between the lid and the box.
 g_tolerance_detent_pos = 0.1;
+
+
+m_tab_corner_gap = 4;
+m_wall_underside_lid_storage_depth = 7;
+m_corner_width = 6;
+
+m_lid_notch_height = 2.0;
+m_lid_notches = true;
+
 
 module debug( w = 0.2, l = 100 )
 {
@@ -516,7 +517,7 @@ module MakeBox( box )
     m_lid_inset = __value( m_lid, LID_INSET_B, default = false );
 
     // the part of the lid that overlaps the box
-    m_lid_wall_height = __value( m_lid, LID_HEIGHT, default = m_lid_inset ? 1.0 : 2.0 );
+    m_lid_wall_height = __value( m_lid, LID_HEIGHT, default = m_lid_inset ? 2.0 : 2.0 );
     m_lid_wall_thickness = m_lid_inset ? 2*m_wall_thickness : m_wall_thickness/2;
 
     function __lid_internal_size( D )= D == k_z ? m_lid_wall_height : 
@@ -542,13 +543,6 @@ module MakeBox( box )
 
     m_tab_width_x = max( m_box_size[ k_x ]/4, g_detent_spacing * 2 );
     m_tab_width_y = max( m_box_size[ k_y ]/4, g_detent_spacing * 2 );
-
-    m_tab_corner_gap = 4;
-    m_wall_underside_lid_storage_depth = 7;
-    m_corner_width = 4;
-
-    m_lid_notch_height = 2.0;
-    m_lid_notches = true;
 
     m_lid_tab = [ max( m_box_size[ k_x ]/4, g_detent_spacing * 2 ), m_wall_thickness,  __lid_external_size( k_z ) * 2];    
 
@@ -820,7 +814,7 @@ module MakeBox( box )
                     //detents
                     if ( !omit_detents )
                     {
-                        detent_height = __lid_external_size( k_z )/2 + tolerance_detent_pos;
+                        detent_height = ( __lid_external_size( k_z ) + __lid_notch_depth() )/2 + tolerance_detent_pos;
                         translate([ 0, 0, detent_height ]) // lower because tolerance
                                 MakeDetents( mod = -tolerance, offset = tolerance ); 
                     }                             
@@ -2142,9 +2136,8 @@ module MakeBox( box )
         {
             module MakeDetent( mod )
             {
-                detent_radius = g_detent_thickness + mod/2 ;
-
-                sphere( r = detent_radius, $fn = 10 ); 
+                resize( [g_detent_thickness*2 + mod, 1, 1.0])
+                    sphere( r = 1, $fn = 12 ); 
             }
 
             module MakeOneSet( mod )
@@ -2155,7 +2148,9 @@ module MakeBox( box )
                 hull()
                     for ( i = [ 0 : num_detents - 1 ] )
                         translate( [ m_wall_thickness/2 + g_detent_spacing * i + g_detent_dist_from_corner, m_wall_thickness/2, 0] )
-                            MakeDetent( mod );
+                            rotate( 90 )
+                                MakeDetent( mod );
+
                 translate( [offset, 0 ,0 ])
                 hull()
                     for ( i = [ 0 : num_detents - 1 ] )
