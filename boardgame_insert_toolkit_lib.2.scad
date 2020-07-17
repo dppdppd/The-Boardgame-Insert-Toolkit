@@ -4,10 +4,10 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.24";
+VERSION = "2.25";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
-$fn = $preview ? 25 : 100;
+$fn = $preview ? 5 : 100;
 
 // constants
 k_key = 0;
@@ -154,6 +154,9 @@ g_b_print_lid = t;
 
 // determines whether boxes are output.
 g_b_print_box = t; 
+
+// determines whether to output everything as placeholders.
+g_b_fit_test = f;
 
 // Focus on one box
 g_isolated_print_box = ""; 
@@ -475,8 +478,7 @@ module MakeDividers( div )
                             size = font_size, 
                             valign = "top",
                             halign = "center", 
-                            spacing = font_spacing,
-                            $fn=1);
+                            spacing = font_spacing);
         }
 
         
@@ -485,40 +487,50 @@ module MakeDividers( div )
 
 module MakeBox( box )
 {
-    m_box_size = __element_dimensions( box );
-
     m_num_components =  len( box );
 
     m_box_label = __value( box, LABEL, default = "");
     m_lid_has_labels = m_box_label != "";
 
-    m_box_is_spacer = __type( box )  == SPACER;
+    m_box_is_spacer = ( __type( box )  == SPACER ) || g_b_fit_test;
+
     m_box_is_stackable = __value( box, BOX_STACKABLE_B, default = false );
 
-    m_wall_thickness = __value( box, "wall_thickness", default = g_wall_thickness ); // needs work to change if no lid
+    m_wall_thickness = g_b_fit_test ? 0.5 : __value( box, "wall_thickness", default = g_wall_thickness ); // needs work to change if no lid
+    m_lid_thickness = m_wall_thickness;
+
+    m_lid = __value( box, BOX_LID, default = [] );
+
+    m_lid_fit_under = __value( m_lid, LID_FIT_UNDER_B, default = true );
+    m_lid_solid = __value( m_lid, LID_SOLID_B, default = false );
+    m_lid_inset = __value( m_lid, LID_INSET_B, default = false );    
+
+    // the part of the lid that overlaps the box
+    m_lid_wall_height = __value( m_lid, LID_HEIGHT, default = m_lid_inset ? 2.0 : 2.0 );
+    m_lid_wall_thickness = m_lid_inset ? 2*m_wall_thickness : m_wall_thickness/2;    
 
     m_box_has_lid = !__value( box, BOX_NO_LID_B, default = false );
 
-    m_lid = __value( box, BOX_LID, default = [] );
+    m_box_size = ( g_b_fit_test && m_box_has_lid ) ?
+            [   __element_dimensions( box )[ k_x ], 
+                __element_dimensions( box )[ k_y ], 
+                __element_dimensions( box )[ k_z ] + __lid_external_size( k_z )
+            ] :
+            __element_dimensions( box );
+
+
 
     function __notch_length( D ) = m_box_size[ D ] / 5.0;
 
     function __lid_notch_depth() = m_wall_thickness / 2;
 
-    m_lid_thickness = m_wall_thickness;
 
     function __lid_external_size( D )= D == k_z ? m_lid_thickness + m_lid_wall_height : 
                                                 m_box_size[ D ];
 
     function __has_solid_lid() = m_lid_solid || g_b_vis_actual;
 
-    m_lid_fit_under = __value( m_lid, LID_FIT_UNDER_B, default = true );
-    m_lid_solid = __value( m_lid, LID_SOLID_B, default = false );
-    m_lid_inset = __value( m_lid, LID_INSET_B, default = false );
 
-    // the part of the lid that overlaps the box
-    m_lid_wall_height = __value( m_lid, LID_HEIGHT, default = m_lid_inset ? 2.0 : 2.0 );
-    m_lid_wall_thickness = m_lid_inset ? 2*m_wall_thickness : m_wall_thickness/2;
 
     function __lid_internal_size( D )= D == k_z ? m_lid_wall_height : 
                                                 __lid_external_size( D ) - 2*m_lid_wall_thickness;
@@ -544,7 +556,7 @@ module MakeBox( box )
     m_tab_width_x = max( m_box_size[ k_x ]/4, g_detent_spacing * 2 );
     m_tab_width_y = max( m_box_size[ k_y ]/4, g_detent_spacing * 2 );
 
-    m_lid_tab = [ max( m_box_size[ k_x ]/4, g_detent_spacing * 2 ), m_wall_thickness,  __lid_external_size( k_z ) * 2];    
+    m_lid_tab = [ max( m_box_size[ k_x ]/4, g_detent_spacing * 2 ), m_wall_thickness,  __lid_external_size( k_z ) + 1];    
 
     m_box_inner_position_min = [ m_wall_thickness, m_wall_thickness, m_wall_thickness ];
     m_box_inner_position_max = m_box_size - m_box_inner_position_min;
@@ -608,9 +620,7 @@ module MakeBox( box )
 
                                 }
                             }
-                        }
-
-                        MakeCorners();    
+                        }          
                     }
                 }
                 // lid carve outs
@@ -784,14 +794,14 @@ module MakeBox( box )
             
                     translate( [ 0, 0, __lid_external_size( k_z )/2 ])
                     {
-                        cube([ __lid_external_size( k_x ), __lid_notch_depth() + tolerance, __lid_external_size( k_z )/2]);   
-                        cube([ __lid_notch_depth() + tolerance, __lid_external_size( k_y ), __lid_external_size( k_z )/2]);   
+                        cube([ __lid_external_size( k_x ), __lid_notch_depth() + tolerance, __lid_external_size( k_z )/1]);   
+                        cube([ __lid_notch_depth() + tolerance, __lid_external_size( k_y ), __lid_external_size( k_z )/1]);   
 
                         MirrorAboutPoint( v=[0,1,0], pt= [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, m_lid_wall_height/2 ] )
                             MirrorAboutPoint( v=[1,0,0], pt= [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, m_lid_wall_height/2 ] )
                             {
-                                cube([ __lid_external_size( k_x ), __lid_notch_depth() + tolerance, __lid_external_size( k_z )/2]);   
-                                cube([ __lid_notch_depth() + tolerance, __lid_external_size( k_y ), __lid_external_size( k_z )/2]);   
+                                cube([ __lid_external_size( k_x ), __lid_notch_depth() + tolerance, __lid_external_size( k_z )/1]);   
+                                cube([ __lid_notch_depth() + tolerance, __lid_external_size( k_y ), __lid_external_size( k_z )/1]);   
                             }
                     }
 
@@ -897,27 +907,22 @@ module MakeBox( box )
                 {
                     MakeBoxShell();
 
-                    if ( m_box_has_lid )
+                    if ( m_box_has_lid || m_box_is_stackable )
                     {
                         // create the structure above the box that holds the lid
                         translate([ 0, 0, m_box_size[ k_z ] ])
-                            intersection( )
+                            difference()
                             {
-                                difference()
-                                {
-                                    cube( [ m_box_size[ k_x ], m_box_size[ k_y ], __lid_external_size( k_z )]);
+                                cube( [ m_box_size[ k_x ], m_box_size[ k_y ], __lid_external_size( k_z )]);
 
-                                    MirrorAboutPoint( v=[0,0,1], pt=[0,0,__lid_external_size(k_z)/2])
-                                        MakeLidBase_Inset();
-                                }
-
-                                MakeCorners();
-                            }
+                                MirrorAboutPoint( v=[0,0,1], pt=[0,0,__lid_external_size(k_z)/2])
+                                    MakeLidBase_Inset();
+                            }     
                     }
                 }
                     
                 // subtract tabs
-                    translate( [ 0, 0, m_box_size[ k_z ] - m_lid_tab[ k_y ] - 1 ])
+                    translate( [ 0, 0, m_box_size[ k_z ] - m_lid_tab[ k_z ] + 1 ])
                         MakeLidTabs( mod = 0.5, square = true ); // this needs to be wide 
             }  
         }
@@ -962,7 +967,7 @@ module MakeBox( box )
                 {
                     cube([  __component_size( k_x ), 
                             __component_size( k_y ), 
-                            __component_size( k_z ) + m_lid_wall_height]);
+                            __component_size( k_z ) + __lid_external_size(k_z)]);
                 }
             }
             else if ( m_is_component_additions )
@@ -1341,8 +1346,7 @@ module MakeBox( box )
                             size = __label_size( label ), 
                             spacing = __label_spacing( label ),
                             valign = CENTER, 
-                            halign = CENTER, 
-                            $fn=100);
+                            halign = CENTER);
             }
 
             module MakeLidText( label, offset = 0, thickness = m_lid_thickness )
@@ -1512,7 +1516,7 @@ module MakeBox( box )
                         }
                         
                         // add the flat notch tabs to the sides
-                        difference()
+                  *      difference()
                         {
                             cube( [ __lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z )/2 ]   );
 
@@ -1632,10 +1636,10 @@ module MakeBox( box )
         module MakeSideCutouts( side )
         {
 
-            function __cutout_z() = ( m_is_lid ? m_lid_wall_height + m_lid_thickness : m_box_size[ k_z ] + m_lid_wall_height );
+            function __cutout_z() = ( m_is_lid ? m_lid_wall_height + m_lid_thickness : m_box_size[ k_z ] + __lid_external_size( k_z ) );
             function __padding( D ) = m_is_lid ? 0 : __component_padding( D );
             function __size( D ) = m_is_lid ? __lid_internal_size( D ) : __compartment_size( D );
-            function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : __compartment_size( k_z ) - __cutout_z() + m_lid_wall_height;
+            function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : __compartment_size( k_z ) - __cutout_z() + __lid_external_size( k_z );
 
             inset_into_compartment_fraction = 1/4;
 
@@ -1963,8 +1967,7 @@ module MakeBox( box )
                                                 size = __label_size( m_component_label ), 
                                                 spacing = __label_spacing( m_component_label ),
                                                 valign = CENTER, 
-                                                halign = CENTER, 
-                                                $fn=1);
+                                                halign = CENTER);
             }
 
         module MakeLabel( x = 0, y = 0 )
@@ -2081,19 +2084,20 @@ module MakeBox( box )
 
                 x = m_lid_tab[ k_x ] + mod;
                 y = m_lid_tab[ k_y ] + mod;
+                z = m_lid_tab[ k_z ] + mod;
 
                 // square part
                 translate( [ -x/2, 0, 0])
-                    cube( [ x, y,  __lid_external_size( k_z ) ], center = false );
+                    cube( [ x, y, z  ], center = false );
 
                 if ( square )
                 {
-                    translate( [ -x/2, 0, __lid_external_size( k_z ) ])
-                        cube( [ x, y, y ], center = false );
+                    translate( [ -x/2, 0, z ])
+                        cube( [ x, y, y + __lid_notch_depth() ], center = false );
                 }
                else
                     // prism part
-                    translate( [ -x/2, 0, __lid_external_size( k_z ) ])
+                    translate( [ -x/2, 0, z ])
                     {
                         hull()
                         {
