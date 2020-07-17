@@ -7,7 +7,7 @@ g_b_print_lid = true;
 g_b_print_box = true; 
 
 // Focus on one box
-g_isolated_print_box = "simple box"; 
+g_isolated_print_box = ""; 
 
 // Used to visualize how all of the boxes fit together. 
 g_b_visualization = false;          
@@ -57,6 +57,7 @@ data =
             [ BOX_LID,
                 [
                     [ LID_SOLID_B, t],
+                    [ LID_INSET_B, t],
                 ]
             ],
             [ BOX_COMPONENT,
@@ -66,24 +67,6 @@ data =
             ],                            
         ]
     ],
-    [   "simple box cap lid",
-        [
-            [ BOX_SIZE_XYZ,                                     [45, 45, 15.0] ],
-            [ BOX_LID,
-                [
-                    [ LID_SOLID_B, t],
-                    [ LID_INSET_B, f],
-                    [ LID_FIT_UNDER_B, f],
-                ]
-            ],
-            [ BOX_COMPONENT,
-                [
-                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 42, 42, 13.0] ],
-                ]
-            ],                            
-        ]
-    ],    
-
 
     [   "example 0: minimal",
         [
