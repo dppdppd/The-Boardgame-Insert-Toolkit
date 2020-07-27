@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.25";
+VERSION = "2.26";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 5 : 100;
@@ -2093,7 +2093,7 @@ module MakeBox( box )
                 if ( square )
                 {
                     translate( [ -x/2, 0, z ])
-                        cube( [ x, y, y + __lid_notch_depth() ], center = false );
+                        cube( [ x, y, y + m_lid_wall_height ], center = false );
                 }
                else
                     // prism part
