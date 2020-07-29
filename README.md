@@ -526,3 +526,4 @@ e.g. `[ ENABLED_B, f ]`
 - [V Commandos]( https://www.thingiverse.com/thing:4319308 )
 - [Dune]( https://www.thingiverse.com/thing:4403586 )
 - [Orleans]( https://www.thingiverse.com/thing:4493482 )
+- [Empyreal Spells & Steam]( https://www.thingiverse.com/thing:4554217 )
