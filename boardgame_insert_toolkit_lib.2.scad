@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.29";
+VERSION = "2.30";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 10 : 100;
@@ -198,6 +198,12 @@ g_tolerance = 0.1;
 // this adjusts the position of the lid detents downwards. 
 // The larger the value, the bigger the gap between the lid and the box.
 g_tolerance_detent_pos = 0.1;
+
+// This determines whether the default single material version is output, or, if printing in multiple materials, 
+// which layer to output.
+//
+g_print_mmu_layer = "default"; // [ "default" | "mmu_box_layer" | "mmu_label_layer" ]
+
 
 
 m_tab_corner_gap = 4;
@@ -770,9 +776,37 @@ module MakeBox( box )
 
 /////////////////////////////////////////
 
+        module PositionInnerLayer()
+        {
+            ContainWithinBox()
+                RotateAboutPoint( __component_rotation(), [0,0,1], [__component_position( k_x ) + __component_size( k_x )/2, __component_position( k_y )+ __component_size( k_y )/2, 0] ) 
+                    translate( [ __component_position( k_x ), __component_position( k_y ), m_wall_thickness ] )
+                        Shear( __component_shear( k_x ), __component_shear( k_y ) )
+                            children();
+        }
+
+
+
         if ( __is_component_enabled() )
         {
-            if ( m_is_spacer )
+            // we only want the labels for an mmu pass
+            if ( g_print_mmu_layer == "mmu_label_layer" )
+            {
+                if ( m_is_lid )
+                {
+                    MakeDetachedLidLabels();
+                }
+                else if ( layer == "component_additions" )
+                {
+                    PositionInnerLayer()
+                        if ( __req_label() && !g_b_no_labels_actual)
+                        {
+                            color([0,0,1])
+                                LabelEachCompartment();
+                        }
+                }
+            }
+            else if ( m_is_spacer )
             {
                 MakeSpacer();
             }
@@ -839,11 +873,8 @@ module MakeBox( box )
             
             else
             { 
-                ContainWithinBox()
-                    RotateAboutPoint( __component_rotation(), [0,0,1], [__component_position( k_x ) + __component_size( k_x )/2, __component_position( k_y )+ __component_size( k_y )/2, 0] ) 
-                        translate( [ __component_position( k_x ), __component_position( k_y ), m_wall_thickness ] )
-                            Shear( __component_shear( k_x ), __component_shear( k_y ) )
-                                InnerLayer();   
+                PositionInnerLayer()
+                    InnerLayer();   
             }
         }
 
@@ -1364,99 +1395,107 @@ module MakeBox( box )
                 children();
         }
 
+        module MakeAllLidTexts( offset = 0, thickness = m_lid_thickness )
+        {
+            for( i = [ 0 : len( box ) - 1])
+            {
+                if ( box[ i ][ k_key ] == LABEL )
+                {
+                    label = box[ i ][ k_value ];
+
+                    MakeLidText( label, offset = offset, thickness = thickness );
+                }
+            }
+        }
+
+        module Make2dLidText( label, width, offset )
+        {
+            resize([ width,0,0], auto=true )
+                offset( r = offset )
+                    text(text = str( __label_text( label ) ), 
+                        font = __label_font( label ),  
+                        size = __label_size( label ), 
+                        spacing = __label_spacing( label ),
+                        valign = CENTER, 
+                        halign = CENTER);
+        }
+
+        module MakeLidText( label, offset = 0, thickness = m_lid_thickness )
+        {
+            xpos = __lid_internal_size( k_x )/2 + __label_offset( label )[k_x];
+            ypos = __lid_internal_size( k_y )/2 + __label_offset( label )[k_y];
+
+            auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
+            width = auto_width != 0 ? min( 100, auto_width ) + offset : 0;
+
+            linear_extrude( thickness )
+                translate( [ xpos, ypos, 0 ] )
+                    MirrorAboutPoint( [ 1,0,0],[0,0, thickness / 2])
+                        RotateAboutPoint( __label_rotation( label ), [0,0,1], [0,0,0] )
+                            Make2dLidText( label, width, offset );
+        }
+
+
+        module MakeAllLidTextFrames( offset = 0, thickness = m_lid_thickness )
+        {
+            for( i = [ 0 : len( box ) - 1])
+            {
+                if ( box[ i ][ k_key ] == LABEL )
+                {
+                    label = box[ i ][ k_value ];
+
+                    MakeLidTextFrame( label, offset = offset, thickness = thickness );
+                }
+            }
+        }
+
+        module MakeLidTextFrame( label, offset = 0, thickness = m_lid_thickness )
+        {
+            xpos = __lid_internal_size( k_x )/2 + __label_offset( label )[k_x];
+            ypos = __lid_internal_size( k_y )/2 + __label_offset( label )[k_y];
+
+            auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
+            width = auto_width != 0 ? min( 100, auto_width ) + offset : 0;
+
+            linear_extrude( thickness )
+                translate( [ xpos, ypos, 0 ] )
+                    MirrorAboutPoint( [ 1,0,0],[0,0, thickness / 2])
+                        RotateAboutPoint( __label_rotation( label ), [0,0,1], [0,0,0] )
+                            offset( r = offset )
+                                intersection()
+                                {
+                                    hull()
+                                    {
+                                        translate( [ -200,0,0])
+                                            Make2dLidText( label, width, offset );
+
+                                        translate( [ 200,0,0])
+                                            Make2dLidText( label, width, offset );
+                                    }
+                                    hull()
+                                    {
+                                        translate( [ -0,-200,0])
+                                            Make2dLidText( label, width, offset );
+
+                                        translate( [ 0,200,0])
+                                            Make2dLidText( label, width, offset );
+                                    }         
+                                }    
+                                
+        }
+
+        module MakeDetachedLidLabels()
+        {
+            lid_print_position = [0, m_box_size[ k_y ] + DISTANCE_BETWEEN_PARTS, 0 ];
+
+            MoveToLidInterior( tolerance = -g_tolerance )
+                translate( g_b_vis_actual ? lid_vis_position : lid_print_position ) 
+                    RotateAboutPoint( g_b_vis_actual ? 180 : 0, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )            
+                        MakeAllLidTexts();
+        }
+
         module MakeLid() 
         {
-            
-            module MakeAllLidTexts( offset = 0, thickness = m_lid_thickness )
-            {
-                for( i = [ 0 : len( box ) - 1])
-                {
-                    if ( box[ i ][ k_key ] == LABEL )
-                    {
-                        label = box[ i ][ k_value ];
-
-                        MakeLidText( label, offset = offset, thickness = thickness );
-                    }
-                }
-            }
-
-            module Make2dLidText( label, width, offset )
-            {
-                resize([ width,0,0], auto=true )
-                    offset( r = offset )
-                        text(text = str( __label_text( label ) ), 
-                            font = __label_font( label ),  
-                            size = __label_size( label ), 
-                            spacing = __label_spacing( label ),
-                            valign = CENTER, 
-                            halign = CENTER);
-            }
-
-            module MakeLidText( label, offset = 0, thickness = m_lid_thickness )
-            {
-                xpos = __lid_internal_size( k_x )/2 + __label_offset( label )[k_x];
-                ypos = __lid_internal_size( k_y )/2 + __label_offset( label )[k_y];
-
-                auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
-                width = auto_width != 0 ? min( 100, auto_width ) + offset : 0;
-
-                linear_extrude( thickness )
-                    translate( [ xpos, ypos, 0 ] )
-                        MirrorAboutPoint( [ 1,0,0],[0,0, thickness / 2])
-                            RotateAboutPoint( __label_rotation( label ), [0,0,1], [0,0,0] )
-                                Make2dLidText( label, width, offset );
-            }
-
-
-            module MakeAllLidTextFrames( offset = 0, thickness = m_lid_thickness )
-            {
-                for( i = [ 0 : len( box ) - 1])
-                {
-                    if ( box[ i ][ k_key ] == LABEL )
-                    {
-                        label = box[ i ][ k_value ];
-
-                        MakeLidTextFrame( label, offset = offset, thickness = thickness );
-                    }
-                }
-            }
-
-            module MakeLidTextFrame( label, offset = 0, thickness = m_lid_thickness )
-            {
-                xpos = __lid_internal_size( k_x )/2 + __label_offset( label )[k_x];
-                ypos = __lid_internal_size( k_y )/2 + __label_offset( label )[k_y];
-
-                auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
-                width = auto_width != 0 ? min( 100, auto_width ) + offset : 0;
-
-                linear_extrude( thickness )
-                    translate( [ xpos, ypos, 0 ] )
-                        MirrorAboutPoint( [ 1,0,0],[0,0, thickness / 2])
-                            RotateAboutPoint( __label_rotation( label ), [0,0,1], [0,0,0] )
-                                offset( r = offset )
-                                    intersection()
-                                    {
-                                        hull()
-                                        {
-                                            translate( [ -200,0,0])
-                                                Make2dLidText( label, width, offset );
-
-                                            translate( [ 200,0,0])
-                                                Make2dLidText( label, width, offset );
-                                        }
-                                        hull()
-                                        {
-                                            translate( [ -0,-200,0])
-                                                Make2dLidText( label, width, offset );
-
-                                            translate( [ 0,200,0])
-                                                Make2dLidText( label, width, offset );
-                                        }         
-                                    }    
-                                 
-            }
-
-
             module MakeLidSurface()
             {
                 // pattern
@@ -1502,25 +1541,33 @@ module MakeBox( box )
 
                             // pattern
                             if ( m_lid_label_bg_thickness > 0 )
-                                intersection()
+                                difference()
                                 {
-                                    theta = 45;
+                                    intersection()
+                                    {
+                                        theta = 45;
 
-                                    x = __lid_external_size( k_x );
-                                    y = __lid_external_size( k_y );
+                                        x = __lid_external_size( k_x );
+                                        y = __lid_external_size( k_y );
 
-                                    x2 = y*sin(theta) + x*cos(theta);
-                                    y2 = y*cos(theta) + x*sin(theta);                                     
+                                        x2 = y*sin(theta) + x*cos(theta);
+                                        y2 = y*cos(theta) + x*sin(theta);                                     
 
-                                    translate( [x/2-x2/2, y/2-y2/2,0])
-                                        RotateAboutPoint( theta, [0,0,1], [x2/2,y2/2,0] )
-                                            MakeStripedGrid( x = x2, y = y2, w = 0.5, dx = 1, dy = 0, depth_ratio = 0.5 );
+                                        translate( [x/2-x2/2, y/2-y2/2,0])
+                                            RotateAboutPoint( theta, [0,0,1], [x2/2,y2/2,0] )
+                                                MakeStripedGrid( x = x2, y = y2, w = 0.5, dx = 1, dy = 0, depth_ratio = 0.5 );
 
-                                    MakeAllLidTextFrames( offset = m_lid_label_bg_thickness );
+                                        MakeAllLidTextFrames( offset = m_lid_label_bg_thickness );
+                                    }
+
+                                    // in the case of mmu, we want to cut out the labels
+                                    if ( g_print_mmu_layer == "mmu_box_layer" )
+                                        MakeAllLidTexts( ); 
                                 }
 
                             // positive text
-                            MakeAllLidTexts( ); 
+                            if ( g_print_mmu_layer != "mmu_box_layer" )
+                                MakeAllLidTexts( ); 
                         }
                         else
                         {
@@ -1989,7 +2036,7 @@ module MakeBox( box )
                             translate( [ __label_offset( m_component_label )[k_x], __label_offset( m_component_label )[k_y], 0])
                                 resize( [ width, 0, 0], auto=true)
                                     translate([0,0,-__label_depth( m_component_label )]) 
-                                        linear_extrude( height =  2 * __label_depth( m_component_label ) )
+                                        linear_extrude( height =  __label_depth( m_component_label ) )
                                             text(text = str( __label_text( m_component_label, x, text_y_reverse) ), 
                                                 font = __label_font( m_component_label ), 
                                                 size = __label_size( m_component_label ), 
