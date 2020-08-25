@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.28";
+VERSION = "2.29";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 10 : 100;
@@ -796,7 +796,7 @@ module MakeBox( box )
             else if ( m_is_lid_subtractions )
             {
                // box top lid accommodation
-                if ( !m_lid_inset )
+                if ( !m_lid_inset && m_box_has_lid )
                 {
                     translate( [ 0,0, m_box_size[ k_z ] - __lid_internal_size( k_z ) ] )
                         MirrorAboutPoint( v=[0,0,1], pt=[0,0,__lid_external_size(k_z)/2])
@@ -822,7 +822,7 @@ module MakeBox( box )
                     }            
                 }
                 
-                if ( m_lid_fit_under )
+                if ( m_lid_fit_under && m_box_has_lid )
                 {
                     if ( m_lid_inset )
                         translate( [ 0, 0, - __lid_external_size( k_z) ] ) // move it down

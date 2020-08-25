@@ -54,6 +54,7 @@ data =
         [
             [ BOX_SIZE_XYZ,                                     [45, 45, 15.0] ],
             [ BOX_STACKABLE_B, t],
+
             [ BOX_LID,
                 [
                     [ LID_SOLID_B, t],
