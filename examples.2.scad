@@ -68,6 +68,41 @@ data =
         ]
     ],
 
+    [   "card tray",
+        [
+            [ BOX_SIZE_XYZ,                                     [45, 45, 15.0] ],
+            [ BOX_LID,
+                [
+                    [ LID_SOLID_B, t],
+                ]
+            ],
+            [ BOX_COMPONENT,
+                [
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 42, 42, 8.0] ],
+                    [CMP_CUTOUT_SIDES_4B,                   [t,t,f,f]], // all sides
+
+                ]
+            ],                            
+        ]
+    ],
+
+    [   "card tray 2",
+        [
+            [ BOX_SIZE_XYZ,                                     [45, 45, 15.0] ],
+            [ BOX_LID,
+                [
+                    [ LID_SOLID_B, t],
+                ]
+            ],
+            [ BOX_COMPONENT,
+                [
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 42, 42, 7] ],
+                    [CMP_PEDESTAL_BASE_B,            t],     
+                ]
+            ],                            
+        ]
+    ],    
+
     [   "example 0: minimal",
         [
             [ ENABLED_B,                t],
@@ -77,6 +112,8 @@ data =
                 [
                     [CMP_NUM_COMPARTMENTS_XY,   [4,4]],
                     [CMP_COMPARTMENT_SIZE_XYZ,  [ 10, 10, 13.0] ],
+                    [CMP_PADDING_HEIGHT_ADJUST_XY,          [0, -5] ],
+
                 ]
             ],                  
         ]
@@ -92,11 +129,10 @@ data =
             [ BOX_COMPONENT,
                 [
                     [CMP_NUM_COMPARTMENTS_XY,   [2,2]],
-                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 25, 25, 8.0] ],
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 25, 25, 5.0] ],
                     [CMP_SHAPE,                             HEX],
                     [CMP_SHAPE_VERTICAL_B,                  t],    
                     [CMP_PADDING_XY,                        [5,5]],
-                    [CMP_PADDING_HEIGHT_ADJUST_XY,          [-1, -1] ],
 
 //                    [CMP_CUTOUT_SIDES_4B,                   [t,f,f,f]], // one side
 //                    [CMP_CUTOUT_SIDES_4B,                   [t,t,f,f]], // opposite sides  
@@ -208,15 +244,14 @@ data =
 
             [ BOX_LID,
                 [
-                    [ LID_PATTERN_RADIUS,       10.0],
+                    [ LID_SOLID_B,       t],
                 ]
             ],
 
             [ BOX_COMPONENT,
                 [
                     [CMP_NUM_COMPARTMENTS_XY,       [2,4]],
-                    [CMP_COMPARTMENT_SIZE_XYZ,      [ 20, 5.0, 5.0] ],
-                    [CMP_SHAPE_VERTICAL_B,          t],
+                    [CMP_COMPARTMENT_SIZE_XYZ,      [ 20, 5.0, 4.0] ],
                     [CMP_SHEAR,                     [0,45]],
                     [LABEL,               
                         [
