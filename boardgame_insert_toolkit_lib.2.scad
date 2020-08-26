@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.32";
+VERSION = "2.33";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 10 : 100;
@@ -654,8 +654,6 @@ module MakeBox( box )
         function __compartment_size( D ) = __value( component, CMP_COMPARTMENT_SIZE_XYZ, default = [10.0, 10.0, 10.0] )[ D ];
         function __compartments_num( D ) = __value( component, CMP_NUM_COMPARTMENTS_XY, default = [1,1] )[ D ];
 
-        m_component_label = __value( component, LABEL, default = [] );
-
         function __component_rotation() = __value( component, ROTATION, default = 0 );
         function __is_component_enabled() = __value( component, ENABLED_B, default = true);
 
@@ -696,7 +694,7 @@ module MakeBox( box )
 
         function __component_shear( D ) = __value( component, CMP_SHEAR, default = [0.0, 0.0] )[ D ];
 
-        function __req_label() = m_component_label != "";
+   //     function __req_label() = comp_label != "";
 
 // end delete me
         ///////////
@@ -799,7 +797,7 @@ module MakeBox( box )
                 else if ( layer == "component_additions" )
                 {
                     PositionInnerLayer()
-                        if ( __req_label() && !g_b_no_labels_actual)
+                        if ( !g_b_no_labels_actual)
                         {
                             color([0,0,1])
                                 LabelEachCompartment();
@@ -1131,7 +1129,7 @@ module MakeBox( box )
 
                 }
 
-                if ( __req_label() && !g_b_no_labels_actual)
+                if ( !g_b_no_labels_actual)
                 {
                     color([0,0,1])
                         LabelEachCompartment();
@@ -1717,8 +1715,19 @@ module MakeBox( box )
                     y_pos = __component_margin( k_y )[0] + ( ( __compartment_size( k_y ) ) + __component_padding( k_y ) ) * y;
 
                     translate( [ x_pos ,  y_pos , m_component_base_height ] ) // to compartment origin
-                        MakeLabel( x, y )
-                            Helper_MakeLabel( x, y );
+                    {
+                        for( i = [ 0 : len( component ) - 1])
+                        {
+                            if ( component[ i ][ k_key ] == LABEL )
+                            {
+                                label = component[ i ][ k_value ];
+
+                                MakeLabel( label, x, y )
+                                    Helper_MakeLabel( label, x, y );
+                            }
+                        }
+
+                    }
                 }
             } 
         }
@@ -2008,18 +2017,18 @@ module MakeBox( box )
             }
         }
 
-        module Helper_MakeLabel( x = 0, y = 0 )
+        module Helper_MakeLabel( comp_label, x = 0, y = 0 )
         {
-            label_on_y = __label_placement_is_left( m_component_label ) || __label_placement_is_right( m_component_label );
-            label_on_x = __label_placement_is_back( m_component_label ) || __label_placement_is_front( m_component_label );            
-            label_is_center = __label_placement_is_center( m_component_label );
+            label_on_y = __label_placement_is_left( comp_label ) || __label_placement_is_right( comp_label );
+            label_on_x = __label_placement_is_back( comp_label ) || __label_placement_is_front( comp_label );            
+            label_is_center = __label_placement_is_center( comp_label );
 
-            label_on_side = __label_placement_is_wall( m_component_label );
+            label_on_side = __label_placement_is_wall( comp_label );
 
-            width = __label_auto_width( m_component_label, __compartment_size( k_x ), __compartment_size( k_y ) );
+            width = __label_auto_width( comp_label, __compartment_size( k_x ), __compartment_size( k_y ) );
 
             // since we build from the bottom--up, we need to reverse the order in which we read the text rows
-            text_y_reverse = __is_multitext( m_component_label ) ? len(__value( m_component_label, LBL_TEXT)) - y - 1: 0;
+            text_y_reverse = __is_multitext( comp_label ) ? len(__value( comp_label, LBL_TEXT)) - y - 1: 0;
 
             // max_height = label_on_y ? __component_padding( k_x ) : 
             //             label_on_x ? __component_padding( k_y ) : 0;
@@ -2028,54 +2037,54 @@ module MakeBox( box )
             //             label_on_x ? __component_padding( k_x ) : 0;
 
                 rotate_vector = label_on_side ? [ 0,1,0] : [0,0,1];
-                label_needs_to_be_180ed = __label_placement_is_front( m_component_label) && __label_placement_is_wall( m_component_label);
+                label_needs_to_be_180ed = __label_placement_is_front( comp_label) && __label_placement_is_wall( comp_label);
 
                     RotateAboutPoint( label_needs_to_be_180ed ? 180 : 0, [0,0,1], [0,0,0] )
-                        RotateAboutPoint( __label_rotation( m_component_label ), rotate_vector, [0,0,0] )
+                        RotateAboutPoint( __label_rotation( comp_label ), rotate_vector, [0,0,0] )
                             RotateAboutPoint( label_on_side ? 90:0, [1,0,0], [0,0,0] )
-                                translate( [ __label_offset( m_component_label )[k_x], __label_offset( m_component_label )[k_y], 0])
+                                translate( [ __label_offset( comp_label )[k_x], __label_offset( comp_label )[k_y], 0])
                                     resize( [ width, 0, 0], auto=true)
-                                        translate([0,0,-__label_depth( m_component_label )]) 
-                                            linear_extrude( height =  __label_depth( m_component_label ) )
-                                               text(text = str( __label_text( m_component_label, x, text_y_reverse) ), 
-                                                    font = __label_font( m_component_label ), 
-                                                    size = __label_size( m_component_label ), 
-                                                    spacing = __label_spacing( m_component_label ),
+                                        translate([0,0,-__label_depth( comp_label )]) 
+                                            linear_extrude( height =  __label_depth( comp_label ) )
+                                               text(text = str( __label_text( comp_label, x, text_y_reverse) ), 
+                                                    font = __label_font( comp_label ), 
+                                                    size = __label_size( comp_label ), 
+                                                    spacing = __label_spacing( comp_label ),
                                                     valign = CENTER, 
                                                     halign = CENTER);
                 }
 
-        module MakeLabel( x = 0, y = 0 )
+        module MakeLabel( comp_label, x = 0, y = 0 )
         {
             z_pos = 0;
-            z_pos_vertical = __partition_height( k_y )- __label_size( m_component_label ) + m_component_base_height;
+            z_pos_vertical = __partition_height( k_y )- __label_size( comp_label ) + m_component_base_height;
 
-            if ( __label_placement_is_center( m_component_label) )
+            if ( __label_placement_is_center( comp_label) )
             {
                 translate( [ __compartment_size(k_x)/2, __compartment_size(k_y)/2, z_pos] )
                     children();
             }
-            else if ( __label_placement_is_front( m_component_label) )
+            else if ( __label_placement_is_front( comp_label) )
             {
-                if ( __label_placement_is_wall( m_component_label ) )
+                if ( __label_placement_is_wall( comp_label ) )
                     translate( [ __compartment_size(k_x)/2, 0, z_pos_vertical ] )
                         children();
                 else                
                     translate( [ __compartment_size(k_x)/2, -__component_padding( k_y )/4, __partition_height( k_y ) + z_pos] )
                         children();
             }
-            else if ( __label_placement_is_back( m_component_label) )
+            else if ( __label_placement_is_back( comp_label) )
             {
-                if ( __label_placement_is_wall( m_component_label ) )
+                if ( __label_placement_is_wall( comp_label ) )
                     translate( [ __compartment_size(k_x)/2, __compartment_size(k_y), z_pos_vertical ] )
                         children();
                 else
                     translate( [ __compartment_size(k_x)/2, __compartment_size(k_y) + __component_padding( k_y )/4, __partition_height( k_y ) + z_pos] )
                         children();
             }
-            else if ( __label_placement_is_left( m_component_label) )
+            else if ( __label_placement_is_left( comp_label) )
             {
-                if ( __label_placement_is_wall( m_component_label ) )
+                if ( __label_placement_is_wall( comp_label ) )
                     translate( [ 0, __compartment_size(k_y)/2, z_pos_vertical ] )
                         rotate( 90, [ 0,0,1])
                             rotate( -90, [ 0,1,0])
@@ -2084,9 +2093,9 @@ module MakeBox( box )
                     translate( [ - __component_padding(k_x)/4, __compartment_size(k_y)/2, __partition_height( k_y ) + z_pos] )
                         children();
             }
-            else if ( __label_placement_is_right( m_component_label) )
+            else if ( __label_placement_is_right( comp_label) )
             {            
-                if ( __label_placement_is_wall( m_component_label ) )
+                if ( __label_placement_is_wall( comp_label ) )
                     translate( [ __compartment_size(k_x), __compartment_size(k_y)/2, z_pos_vertical ] )
                         rotate( -90, [ 0,0,1])
                             rotate( 90, [ 0,1,0])

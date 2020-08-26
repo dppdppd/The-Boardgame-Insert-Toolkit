@@ -69,7 +69,7 @@ data =
         ]
     ],
 
-    [   "card tray",
+    [   "card tray - finger cutout",
         [
             [ BOX_SIZE_XYZ,                                     [45, 45, 15.0] ],
             [ BOX_LID,
@@ -87,7 +87,7 @@ data =
         ]
     ],
 
-    [   "card tray 2",
+    [   "card tray - push down",
         [
             [ BOX_SIZE_XYZ,                                     [45, 45, 15.0] ],
             [ BOX_LID,
@@ -116,6 +116,8 @@ data =
                 [
                     [CMP_NUM_COMPARTMENTS_XY,   [2,2]],
                     [CMP_COMPARTMENT_SIZE_XYZ,  [ 10, 10, 8.0] ],
+                    [CMP_PADDING_XY,                        [5,5]],
+
 
                     [LABEL,               
                         [
@@ -124,11 +126,24 @@ data =
                                                 ["frontleft", "frontright"],
                                             ]
                             ],
-                            [LBL_PLACEMENT,     LEFT_WALL],
+                            [LBL_PLACEMENT,     BACK],
                             [ LBL_SIZE,         AUTO],
 
                         ]
-                    ],                                        
+                    ], 
+
+                    [LABEL,               
+                        [
+                            [LBL_TEXT,        [   
+                                                ["backleft", "backright"],
+                                                ["frontleft", "frontright"],
+                                            ]
+                            ],
+                            [LBL_PLACEMENT,     BACK_WALL],
+                            [ LBL_SIZE,         AUTO],
+
+                        ]
+                    ],                                                                
                 ]
             ],                            
         ]
