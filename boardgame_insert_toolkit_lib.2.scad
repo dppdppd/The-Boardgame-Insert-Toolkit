@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.31";
+VERSION = "2.32";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 10 : 100;
@@ -2077,7 +2077,9 @@ module MakeBox( box )
             {
                 if ( __label_placement_is_wall( m_component_label ) )
                     translate( [ 0, __compartment_size(k_y)/2, z_pos_vertical ] )
-                        children();
+                        rotate( 90, [ 0,0,1])
+                            rotate( -90, [ 0,1,0])
+                                children();
                 else
                     translate( [ - __component_padding(k_x)/4, __compartment_size(k_y)/2, __partition_height( k_y ) + z_pos] )
                         children();
@@ -2086,7 +2088,9 @@ module MakeBox( box )
             {            
                 if ( __label_placement_is_wall( m_component_label ) )
                     translate( [ __compartment_size(k_x), __compartment_size(k_y)/2, z_pos_vertical ] )
-                        children();
+                        rotate( -90, [ 0,0,1])
+                            rotate( 90, [ 0,1,0])
+                                children();
                 else
                     translate( [ __compartment_size(k_x) + __component_padding(k_x)/4, __compartment_size(k_y)/2, __partition_height( k_y ) + z_pos] )
                         children();
