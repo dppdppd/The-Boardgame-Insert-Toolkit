@@ -104,6 +104,36 @@ data =
         ]
     ],    
 
+    [   "compartment labels",
+        [
+            [ BOX_SIZE_XYZ,                                     [45, 45, 15.0] ],
+            [ BOX_LID,
+                [
+                    [ LID_SOLID_B, t],
+                ]
+            ],
+            [ BOX_COMPONENT,
+                [
+                    [CMP_NUM_COMPARTMENTS_XY,   [2,2]],
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 10, 10, 8.0] ],
+
+                    [LABEL,               
+                        [
+                            [LBL_TEXT,        [   
+                                                ["backleft", "backright"],
+                                                ["frontleft", "frontright"],
+                                            ]
+                            ],
+                            [LBL_PLACEMENT,     BACK_WALL],
+                            [ LBL_SIZE,         AUTO],
+
+                        ]
+                    ],                                        
+                ]
+            ],                            
+        ]
+    ],
+
     [   "example 0: minimal",
         [
             [ ENABLED_B,                t],

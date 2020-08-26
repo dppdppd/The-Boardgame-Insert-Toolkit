@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.30";
+VERSION = "2.31";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 10 : 100;
@@ -2030,25 +2030,25 @@ module MakeBox( box )
                 rotate_vector = label_on_side ? [ 0,1,0] : [0,0,1];
                 label_needs_to_be_180ed = __label_placement_is_front( m_component_label) && __label_placement_is_wall( m_component_label);
 
-                RotateAboutPoint( label_needs_to_be_180ed ? 180 : 0, [0,0,1], [0,0,0] )
-                    RotateAboutPoint( __label_rotation( m_component_label ), rotate_vector, [0,0,0] )
-                        RotateAboutPoint( label_on_side ? 90:0, [1,0,0], [0,0,0] )
-                            translate( [ __label_offset( m_component_label )[k_x], __label_offset( m_component_label )[k_y], 0])
-                                resize( [ width, 0, 0], auto=true)
-                                    translate([0,0,-__label_depth( m_component_label )]) 
-                                        linear_extrude( height =  __label_depth( m_component_label ) )
-                                            text(text = str( __label_text( m_component_label, x, text_y_reverse) ), 
-                                                font = __label_font( m_component_label ), 
-                                                size = __label_size( m_component_label ), 
-                                                spacing = __label_spacing( m_component_label ),
-                                                valign = CENTER, 
-                                                halign = CENTER);
-            }
+                    RotateAboutPoint( label_needs_to_be_180ed ? 180 : 0, [0,0,1], [0,0,0] )
+                        RotateAboutPoint( __label_rotation( m_component_label ), rotate_vector, [0,0,0] )
+                            RotateAboutPoint( label_on_side ? 90:0, [1,0,0], [0,0,0] )
+                                translate( [ __label_offset( m_component_label )[k_x], __label_offset( m_component_label )[k_y], 0])
+                                    resize( [ width, 0, 0], auto=true)
+                                        translate([0,0,-__label_depth( m_component_label )]) 
+                                            linear_extrude( height =  __label_depth( m_component_label ) )
+                                               text(text = str( __label_text( m_component_label, x, text_y_reverse) ), 
+                                                    font = __label_font( m_component_label ), 
+                                                    size = __label_size( m_component_label ), 
+                                                    spacing = __label_spacing( m_component_label ),
+                                                    valign = CENTER, 
+                                                    halign = CENTER);
+                }
 
         module MakeLabel( x = 0, y = 0 )
         {
             z_pos = 0;
-            z_pos_vertical = __partition_height( k_y )- __label_size( m_component_label );
+            z_pos_vertical = __partition_height( k_y )- __label_size( m_component_label ) + m_component_base_height;
 
             if ( __label_placement_is_center( m_component_label) )
             {
