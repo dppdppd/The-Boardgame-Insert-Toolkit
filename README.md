@@ -442,7 +442,7 @@ value is expected to be an array of 2 numbers, and determines the degrees to whi
 e.g. `[ CMP_SHEAR, [ 45, 0 ] ]`
 
 #### `LABEL`
-value is expected to be an array of key-values that define a label. Labels can be defined at the box-level for labels that will appear on the lid, or at the component label for the labels that will appear on the compartments. Components can have one label. Boxes can have as many as desired.
+value is expected to be an array of key-values that define a label. Labels can be defined at the box level for box labels, inside BOX_LID arrays for labels that will appear on the lid, and inside BOX_COMPONENT arrays for labels that will appear on the compartments. Each supports as many labels as desired.
 
 ### Label keys
 Key-pairs that are expected in a LABEL container.

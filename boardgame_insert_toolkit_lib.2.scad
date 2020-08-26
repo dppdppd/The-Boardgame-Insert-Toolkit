@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.33";
+VERSION = "2.34";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 10 : 100;
@@ -693,10 +693,6 @@ module MakeBox( box )
         function __component_fillet_radius() = __value( component, CMP_FILLET_RADIUS, default = min( __compartment_size( k_z ), 10) );
 
         function __component_shear( D ) = __value( component, CMP_SHEAR, default = [0.0, 0.0] )[ D ];
-
-   //     function __req_label() = comp_label != "";
-
-// end delete me
         ///////////
     
         function __partition_height_scale( D ) = D == __Y2() ? __req_lower_partitions() ? 0.5 : 1.00 : 1.00;
@@ -783,8 +779,6 @@ module MakeBox( box )
                             children();
         }
 
-
-
         if ( __is_component_enabled() )
         {
             // we only want the labels for an mmu pass
@@ -792,7 +786,11 @@ module MakeBox( box )
             {
                 if ( m_is_lid )
                 {
-                    MakeDetachedLidLabels();
+                    color([0,0,1])
+                        MakeDetachedLidLabels();
+
+                    color([0,0,1])
+                        MakeAllBoxLabels();                        
                 }
                 else if ( layer == "component_additions" )
                 {
@@ -817,13 +815,17 @@ module MakeBox( box )
                 // 'outerbox' is the insert. It may contain one or more 'components' that each
                 // define a repeated compartment type.
                 //
-
-                if ( !m_lid_inset )
+                difference()
                 {
-                    MakeBoxShell();
+                    if ( !m_lid_inset )
+                    {
+                        MakeBoxShell();
+                    }
+                    else
+                        MakeBoxShellWithNewLidBits();
+
+                    MakeAllBoxLabels();
                 }
-                else
-                    MakeBoxShellWithNewLidBits();
             }
             else if ( m_is_lid_subtractions )
             {
@@ -1393,20 +1395,37 @@ module MakeBox( box )
                 children();
         }
 
-        module MakeAllLidTexts( offset = 0, thickness = m_lid_thickness )
+        module MakeAllLidLabels( offset = 0, thickness = m_lid_thickness )
         {
+            for( i = [ 0 : len( m_lid ) - 1])
+            {
+                if ( m_lid[ i ][ k_key ] == LABEL )
+                {
+                    label = m_lid[ i ][ k_value ];
+
+                    MakeLidLabel( label, offset = offset, thickness = thickness );
+                }
+            }
+        }
+
+        module MakeAllBoxLabels()
+        {
+            x = m_box_size[ k_x ] / 2;
+            y = m_box_size[ k_y ] / 2;
+
             for( i = [ 0 : len( box ) - 1])
             {
                 if ( box[ i ][ k_key ] == LABEL )
                 {
                     label = box[ i ][ k_value ];
 
-                    MakeLidText( label, offset = offset, thickness = thickness );
+                    MakeBoxLabel( label, x, y )
+                        Helper_MakeBoxLabel( label, x, y );
                 }
             }
-        }
+        }        
 
-        module Make2dLidText( label, width, offset )
+        module Make2dLidLabel( label, width, offset )
         {
             resize([ width,0,0], auto=true )
                 offset( r = offset )
@@ -1418,7 +1437,7 @@ module MakeBox( box )
                         halign = CENTER);
         }
 
-        module MakeLidText( label, offset = 0, thickness = m_lid_thickness )
+        module MakeLidLabel( label, offset = 0, thickness = m_lid_thickness )
         {
             xpos = __lid_internal_size( k_x )/2 + __label_offset( label )[k_x];
             ypos = __lid_internal_size( k_y )/2 + __label_offset( label )[k_y];
@@ -1430,24 +1449,75 @@ module MakeBox( box )
                 translate( [ xpos, ypos, 0 ] )
                     MirrorAboutPoint( [ 1,0,0],[0,0, thickness / 2])
                         RotateAboutPoint( __label_rotation( label ), [0,0,1], [0,0,0] )
-                            Make2dLidText( label, width, offset );
+                            Make2dLidLabel( label, width, offset );
+        }
+
+        module Helper_MakeBoxLabel( label, x = 0, y = 0 )
+        {
+            width = __label_auto_width( label, m_box_size[ k_x ] - m_lid_notch_height , m_box_size[ k_y ] - m_lid_notch_height );
+
+            RotateAboutPoint( __label_rotation( label ), [ 0,1,0], [0,0,0] )
+                RotateAboutPoint( 90, [1,0,0], [0,0,0] )
+                    translate( [ __label_offset( label )[k_x], __label_offset( label )[k_y], 0])
+                        resize( [ width, 0, 0], auto=true)
+                            translate([0,0,-__label_depth( label )]) 
+                                linear_extrude( height =  __label_depth( label ) )
+                                    text(text = str( __label_text( label, x) ), 
+                                        font = __label_font( label ), 
+                                        size = __label_size( label ), 
+                                        spacing = __label_spacing( label ),
+                                        valign = CENTER, 
+                                        halign = CENTER);
+            }
+
+        module MakeBoxLabel( label, x = 0, y = 0 )
+        {
+            z_pos = 0;
+            z_pos_vertical = (m_box_size[ k_z ] - m_lid_notch_height) / 2;
+
+            if ( __label_placement_is_front( label) )
+            {
+                translate( [ m_box_size[k_x]/2, 0, z_pos_vertical ] )
+                    children();
+            }
+            else if ( __label_placement_is_back( label) )
+            {
+                translate( [ m_box_size[k_x]/2, m_box_size[k_y], z_pos_vertical ] )
+                    rotate( 180, [ 0,0,1])
+                        children();
+            }
+            else if ( __label_placement_is_left( label) )
+            {
+                translate( [ 0, m_box_size[k_y]/2, z_pos_vertical ] )
+                    rotate( -90, [ 0,0,1])
+                        rotate( -90, [ 0,1,0])
+                            children();
+            }
+            else if ( __label_placement_is_right( label) )
+            {            
+                translate( [ m_box_size[k_x], m_box_size[k_y]/2, z_pos_vertical ] )
+                    rotate( 90, [ 0,0,1])
+                        rotate( 90, [ 0,1,0])
+                            children();
+            }
         }
 
 
-        module MakeAllLidTextFrames( offset = 0, thickness = m_lid_thickness )
-        {
-            for( i = [ 0 : len( box ) - 1])
-            {
-                if ( box[ i ][ k_key ] == LABEL )
-                {
-                    label = box[ i ][ k_value ];
 
-                    MakeLidTextFrame( label, offset = offset, thickness = thickness );
+        module MakeAllLidLabelFrames( offset = 0, thickness = m_lid_thickness )
+        {
+            for( i = [ 0 : len( m_lid ) - 1])
+            {
+                if ( m_lid[ i ][ k_key ] == LABEL )
+                {
+                    label = m_lid[ i ][ k_value ];
+
+                    MakeLidLabelFrame( label, offset = offset, thickness = thickness );
                 }
             }
         }
 
-        module MakeLidTextFrame( label, offset = 0, thickness = m_lid_thickness )
+        module MakeLidLabelFrame( label, offset = 0, thickness = m_lid_thickness )
         {
             xpos = __lid_internal_size( k_x )/2 + __label_offset( label )[k_x];
             ypos = __lid_internal_size( k_y )/2 + __label_offset( label )[k_y];
@@ -1465,18 +1535,18 @@ module MakeBox( box )
                                     hull()
                                     {
                                         translate( [ -200,0,0])
-                                            Make2dLidText( label, width, offset );
+                                            Make2dLidLabel( label, width, offset );
 
                                         translate( [ 200,0,0])
-                                            Make2dLidText( label, width, offset );
+                                            Make2dLidLabel( label, width, offset );
                                     }
                                     hull()
                                     {
                                         translate( [ -0,-200,0])
-                                            Make2dLidText( label, width, offset );
+                                            Make2dLidLabel( label, width, offset );
 
                                         translate( [ 0,200,0])
-                                            Make2dLidText( label, width, offset );
+                                            Make2dLidLabel( label, width, offset );
                                     }         
                                 }    
                                 
@@ -1489,9 +1559,9 @@ module MakeBox( box )
             MoveToLidInterior( tolerance = -g_tolerance )
                 translate( g_b_vis_actual ? lid_vis_position : lid_print_position ) 
                     RotateAboutPoint( g_b_vis_actual ? 180 : 0, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )            
-                        MakeAllLidTexts();
+                        MakeAllLidLabels();
         }
-
+    
         module MakeLid() 
         {
             module MakeLidSurface()
@@ -1514,11 +1584,11 @@ module MakeBox( box )
                     if ( m_lid_label_bg_thickness > 0 || m_lid_is_inverted  )
                         if ( !__has_solid_lid() )
                         {
-                            MakeAllLidTextFrames( offset = m_lid_label_bg_thickness );
+                            MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness );
                         }
                         else
                         {
-                            MakeAllLidTexts( thickness = m_lid_label_depth );
+                            MakeAllLidLabels( thickness = m_lid_label_depth );
                         }                          
                 }
 
@@ -1533,8 +1603,8 @@ module MakeBox( box )
                             if ( m_lid_label_bg_thickness > 0 )
                                 difference()
                                 {
-                                    MakeAllLidTextFrames( offset = m_lid_label_bg_thickness);
-                                    MakeAllLidTextFrames( offset = m_lid_label_bg_thickness - m_lid_label_border_thickness );
+                                    MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness);
+                                    MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness - m_lid_label_border_thickness );
                                 }
 
                             // pattern
@@ -1555,25 +1625,25 @@ module MakeBox( box )
                                             RotateAboutPoint( theta, [0,0,1], [x2/2,y2/2,0] )
                                                 MakeStripedGrid( x = x2, y = y2, w = 0.5, dx = 1, dy = 0, depth_ratio = 0.5 );
 
-                                        MakeAllLidTextFrames( offset = m_lid_label_bg_thickness );
+                                        MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness );
                                     }
 
                                     // in the case of mmu, we want to cut out the labels
                                     if ( g_print_mmu_layer == "mmu_box_layer" )
-                                        MakeAllLidTexts( ); 
+                                        MakeAllLidLabels( ); 
                                 }
 
                             // positive text
                             if ( g_print_mmu_layer != "mmu_box_layer" )
-                                MakeAllLidTexts( ); 
+                                MakeAllLidLabels( ); 
                         }
                         else
                         {
                             // negative text
                             difference()
                             {
-                                MakeAllLidTextFrames( offset = m_lid_label_bg_thickness );
-                                MakeAllLidTexts();
+                                MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness );
+                                MakeAllLidLabels();
                             }    
                         } 
                     }
@@ -2017,74 +2087,64 @@ module MakeBox( box )
             }
         }
 
-        module Helper_MakeLabel( comp_label, x = 0, y = 0 )
+        module Helper_MakeLabel( label, x = 0, y = 0 )
         {
-            label_on_y = __label_placement_is_left( comp_label ) || __label_placement_is_right( comp_label );
-            label_on_x = __label_placement_is_back( comp_label ) || __label_placement_is_front( comp_label );            
-            label_is_center = __label_placement_is_center( comp_label );
+            label_on_side = __label_placement_is_wall( label );
 
-            label_on_side = __label_placement_is_wall( comp_label );
-
-            width = __label_auto_width( comp_label, __compartment_size( k_x ), __compartment_size( k_y ) );
+            width = __label_auto_width( label, __compartment_size( k_x ), __compartment_size( k_y ) );
 
             // since we build from the bottom--up, we need to reverse the order in which we read the text rows
-            text_y_reverse = __is_multitext( comp_label ) ? len(__value( comp_label, LBL_TEXT)) - y - 1: 0;
+            text_y_reverse = __is_multitext( label ) ? len(__value( label, LBL_TEXT)) - y - 1: 0;
 
-            // max_height = label_on_y ? __component_padding( k_x ) : 
-            //             label_on_x ? __component_padding( k_y ) : 0;
+            rotate_vector = label_on_side ? [ 0,1,0] : [0,0,1];
+            label_needs_to_be_180ed = __label_placement_is_front( label) && __label_placement_is_wall( label);
 
-            // max_width = label_on_y ? __component_padding( k_y ) : 
-            //             label_on_x ? __component_padding( k_x ) : 0;
+                RotateAboutPoint( label_needs_to_be_180ed ? 180 : 0, [0,0,1], [0,0,0] )
+                    RotateAboutPoint( __label_rotation( label ), rotate_vector, [0,0,0] )
+                        RotateAboutPoint( label_on_side ? 90:0, [1,0,0], [0,0,0] )
+                            translate( [ __label_offset( label )[k_x], __label_offset( label )[k_y], 0])
+                                resize( [ width, 0, 0], auto=true)
+                                    translate([0,0,-__label_depth( label )]) 
+                                        linear_extrude( height =  __label_depth( label ) )
+                                            text(text = str( __label_text( label, x, text_y_reverse) ), 
+                                                font = __label_font( label ), 
+                                                size = __label_size( label ), 
+                                                spacing = __label_spacing( label ),
+                                                valign = CENTER, 
+                                                halign = CENTER);
+            }
 
-                rotate_vector = label_on_side ? [ 0,1,0] : [0,0,1];
-                label_needs_to_be_180ed = __label_placement_is_front( comp_label) && __label_placement_is_wall( comp_label);
-
-                    RotateAboutPoint( label_needs_to_be_180ed ? 180 : 0, [0,0,1], [0,0,0] )
-                        RotateAboutPoint( __label_rotation( comp_label ), rotate_vector, [0,0,0] )
-                            RotateAboutPoint( label_on_side ? 90:0, [1,0,0], [0,0,0] )
-                                translate( [ __label_offset( comp_label )[k_x], __label_offset( comp_label )[k_y], 0])
-                                    resize( [ width, 0, 0], auto=true)
-                                        translate([0,0,-__label_depth( comp_label )]) 
-                                            linear_extrude( height =  __label_depth( comp_label ) )
-                                               text(text = str( __label_text( comp_label, x, text_y_reverse) ), 
-                                                    font = __label_font( comp_label ), 
-                                                    size = __label_size( comp_label ), 
-                                                    spacing = __label_spacing( comp_label ),
-                                                    valign = CENTER, 
-                                                    halign = CENTER);
-                }
-
-        module MakeLabel( comp_label, x = 0, y = 0 )
+        module MakeLabel( label, x = 0, y = 0 )
         {
             z_pos = 0;
-            z_pos_vertical = __partition_height( k_y )- __label_size( comp_label ) + m_component_base_height;
+            z_pos_vertical = __partition_height( k_y )- __label_size( label ) + m_component_base_height;
 
-            if ( __label_placement_is_center( comp_label) )
+            if ( __label_placement_is_center( label) )
             {
                 translate( [ __compartment_size(k_x)/2, __compartment_size(k_y)/2, z_pos] )
                     children();
             }
-            else if ( __label_placement_is_front( comp_label) )
+            else if ( __label_placement_is_front( label) )
             {
-                if ( __label_placement_is_wall( comp_label ) )
+                if ( __label_placement_is_wall( label ) )
                     translate( [ __compartment_size(k_x)/2, 0, z_pos_vertical ] )
                         children();
                 else                
                     translate( [ __compartment_size(k_x)/2, -__component_padding( k_y )/4, __partition_height( k_y ) + z_pos] )
                         children();
             }
-            else if ( __label_placement_is_back( comp_label) )
+            else if ( __label_placement_is_back( label) )
             {
-                if ( __label_placement_is_wall( comp_label ) )
+                if ( __label_placement_is_wall( label ) )
                     translate( [ __compartment_size(k_x)/2, __compartment_size(k_y), z_pos_vertical ] )
                         children();
                 else
                     translate( [ __compartment_size(k_x)/2, __compartment_size(k_y) + __component_padding( k_y )/4, __partition_height( k_y ) + z_pos] )
                         children();
             }
-            else if ( __label_placement_is_left( comp_label) )
+            else if ( __label_placement_is_left( label) )
             {
-                if ( __label_placement_is_wall( comp_label ) )
+                if ( __label_placement_is_wall( label ) )
                     translate( [ 0, __compartment_size(k_y)/2, z_pos_vertical ] )
                         rotate( 90, [ 0,0,1])
                             rotate( -90, [ 0,1,0])
@@ -2093,9 +2153,9 @@ module MakeBox( box )
                     translate( [ - __component_padding(k_x)/4, __compartment_size(k_y)/2, __partition_height( k_y ) + z_pos] )
                         children();
             }
-            else if ( __label_placement_is_right( comp_label) )
+            else if ( __label_placement_is_right( label) )
             {            
-                if ( __label_placement_is_wall( comp_label ) )
+                if ( __label_placement_is_wall( label ) )
                     translate( [ __compartment_size(k_x), __compartment_size(k_y)/2, z_pos_vertical ] )
                         rotate( -90, [ 0,0,1])
                             rotate( 90, [ 0,1,0])

@@ -104,14 +104,68 @@ data =
         ]
     ],    
 
-    [   "compartment labels",
+    [   "labels",
         [
             [ BOX_SIZE_XYZ,                                     [45, 45, 15.0] ],
             [ BOX_LID,
                 [
-                    [ LID_SOLID_B, t],
+                    [ LABEL,
+                        [
+                            [ LBL_TEXT,     "Skull     and"],
+                            [ LBL_SIZE,     AUTO ],
+                            [ ROTATION,     45 ],
+                            [ POSITION_XY, [ 2,-2]],
+                        ]
+                    ],
+
+                    [ LABEL,
+                        [
+                            [ LBL_TEXT,     "Crossbones"],
+                            [ LBL_SIZE,     AUTO ],
+                            [ ROTATION,     315 ],
+                            [ POSITION_XY, [ -4,-0]],
+                        ]
+                    ],                      
                 ]
             ],
+
+            [ LABEL,
+                [
+                    [ LBL_TEXT,     "FRONT"],
+                    [ LBL_SIZE,     AUTO ],
+                    [LBL_PLACEMENT,     FRONT],
+
+                ]
+            ],
+
+            [ LABEL,
+                [
+                    [ LBL_TEXT,     "LEFT"],
+                    [ LBL_SIZE,     AUTO ],
+ 
+                    [LBL_PLACEMENT,     LEFT],
+
+                ]
+            ],  
+            [ LABEL,
+                [
+                    [ LBL_TEXT,     "BACK"],
+                    [ LBL_SIZE,     AUTO ],
+                    [LBL_PLACEMENT,     BACK],
+
+                ]
+            ],
+
+            [ LABEL,
+                [
+                    [ LBL_TEXT,     "RIGHT"],
+                    [ LBL_SIZE,     AUTO ],
+ 
+                    [LBL_PLACEMENT,     RIGHT],
+
+                ]
+            ],  
+
             [ BOX_COMPONENT,
                 [
                     [CMP_NUM_COMPARTMENTS_XY,   [2,2]],
