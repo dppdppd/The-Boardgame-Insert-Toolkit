@@ -169,7 +169,7 @@ data =
             [ BOX_COMPONENT,
                 [
                     [CMP_NUM_COMPARTMENTS_XY,   [2,2]],
-                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 10, 10, 8.0] ],
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 10, 10, 3.0] ],
                     [CMP_PADDING_XY,                        [5,5]],
 
 
@@ -338,7 +338,7 @@ data =
 
         ]
     ],
-    [   "example 2: card tray, shear example",
+    [   "shear",
         [
             [ BOX_SIZE_XYZ,                             [50.0, 50.0, 20.0] ],
 
@@ -353,6 +353,7 @@ data =
                     [CMP_NUM_COMPARTMENTS_XY,       [2,4]],
                     [CMP_COMPARTMENT_SIZE_XYZ,      [ 20, 5.0, 4.0] ],
                     [CMP_SHEAR,                     [0,45]],
+
                     [LABEL,               
                         [
                             [LBL_TEXT,        [   
@@ -366,7 +367,7 @@ data =
                             [LBL_SIZE,        2],
                             
                         ]
-                    ],  
+                    ],                                                                              
                 ]
             ],                              
         ]

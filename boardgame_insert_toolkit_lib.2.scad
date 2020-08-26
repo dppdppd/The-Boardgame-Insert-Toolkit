@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.34";
+VERSION = "2.35";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 10 : 100;
@@ -824,7 +824,8 @@ module MakeBox( box )
                     else
                         MakeBoxShellWithNewLidBits();
 
-                    MakeAllBoxLabels();
+                    color([0,0,1])
+                        MakeAllBoxLabels();
                 }
             }
             else if ( m_is_lid_subtractions )
@@ -2117,7 +2118,7 @@ module MakeBox( box )
         module MakeLabel( label, x = 0, y = 0 )
         {
             z_pos = 0;
-            z_pos_vertical = __partition_height( k_y )- __label_size( label ) + m_component_base_height;
+            z_pos_vertical = __compartment_size(k_z)/2 ;
 
             if ( __label_placement_is_center( label) )
             {
