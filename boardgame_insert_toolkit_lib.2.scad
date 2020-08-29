@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.35";
+VERSION = "2.36";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 $fn = $preview ? 10 : 100;
@@ -497,7 +497,6 @@ module MakeBox( box )
     m_num_components =  len( box );
 
     m_box_label = __value( box, LABEL, default = "");
-    m_lid_has_labels = m_box_label != "";
 
     m_box_is_spacer = ( __type( box )  == SPACER ) || g_b_fit_test;
 
@@ -533,8 +532,8 @@ module MakeBox( box )
     function __lid_external_size( D )= D == k_z ? m_lid_thickness + m_lid_wall_height : 
                                                 m_box_size[ D ];
 
-    function __has_solid_lid() = m_lid_solid || g_b_vis_actual;
-
+    m_has_solid_lid = m_lid_solid || g_b_vis_actual;
+    m_lid_has_labels = !!__value( m_lid, LABEL, default = false );
 
 
     function __lid_internal_size( D )= D == k_z ? m_lid_wall_height : 
@@ -718,6 +717,8 @@ module MakeBox( box )
         function __component_position_max( D ) = __component_position( D ) + __component_size( D );
 
         function __compartment_smallest_dimension() = ( __compartment_size( k_x ) < __compartment_size( k_y ) ) ? __compartment_size( k_x ) : __compartment_size( k_y );
+        function __compartment_largest_dimension() = ( __compartment_size( k_x ) > __compartment_size( k_y ) ) ? __compartment_size( k_x ) : __compartment_size( k_y );
+
 
         function __partitions_num_no_margins( D ) = __compartments_num( D ) - 1;
         function __partitions_num( D )= __partitions_num_no_margins( D ) + ( __component_has_margin( D )[0] ? 1 : 0 ) + ( __component_has_margin( D )[1] ? 1 : 0 );
@@ -1044,54 +1045,49 @@ module MakeBox( box )
                 // 'carve-outs' are the big shapes of the 'components.' Each is then subdivided
                 // by adding partitions.
 
-                __ColorComponent()
-                {
-                    // we carve all the way to the bottom and then fill it back up
-                    cube([  __component_size( k_x ), 
-                        __component_size( k_y ), 
-                        m_box_size[ k_z] + __lid_external_size(k_z)]);
-                }
+                // we carve all the way to the bottom and then fill it back up
+                cube([  __component_size( k_x ), 
+                    __component_size( k_y ), 
+                    m_box_size[ k_z] + __lid_external_size(k_z)]);
             }
             else if ( m_is_component_additions )
             {
-                __ColorComponent()
+                MakePartitions();
+
+                InEachCompartment()
                 {
-                    MakePartitions();
-
-                    InEachCompartment()
+                    if ( !__component_is_square() && !__component_is_fillet() )
                     {
-                        if ( !__component_is_square() && !__component_is_fillet() )
+                        difference()
                         {
-                            difference()
-                            {
-                                cube ( [ __compartment_size( k_x ), __compartment_size( k_y ), __smallest_partition_height() + m_component_base_height] );
-                                MakeCompartmentShape();
-                            }
-                        }
-
-                        if ( __component_is_fillet())
-                        {
-                            AddFillets();
+                            cube ( [ __compartment_size( k_x ), __compartment_size( k_y ), __smallest_partition_height() + m_component_base_height] );
+                            MakeCompartmentShape();
                         }
                     }
 
-                    if ( m_push_base && m_component_base_height > 0 )
+                    if ( __component_is_fillet())
                     {
-                        frac = 0.4;
-
-                      InEachCompartment()
-                          translate( [ (__compartment_size( k_x) * (1-frac))/2, (__compartment_size( k_y) * (1-frac))/2, 0 ])
-                                resize( [ 0, 0, m_component_base_height ], auto=false )  // fit it to the base
-                                scale( v = [ frac, frac, 1 ]) // bring in the sides
-                                    MakeCompartmentShape();
-                                                            
-                    }
-                    else
-                    {
-                        // fill in the bottom
-                        cube ( [ __component_size( k_x ), __component_size( k_y ), m_component_base_height ] );
+                        AddFillets();
                     }
                 }
+
+                if ( m_push_base && m_component_base_height > 0 )
+                {
+                    frac = 0.4;
+
+                    InEachCompartment()
+                        translate( [ (__compartment_size( k_x) * (1-frac))/2, (__compartment_size( k_y) * (1-frac))/2, 0 ])
+                            resize( [ 0, 0, m_component_base_height ], auto=false )  // fit it to the base
+                                scale( v = [ frac, frac, 1 ]) // bring in the sides
+                                    MakeCompartmentShape();
+                                                        
+                }
+                else
+                {
+                    // fill in the bottom
+                    cube ( [ __component_size( k_x ), __component_size( k_y ), m_component_base_height ] );
+                }
+                
             }
             else if ( m_is_final_component_subtractions )
             {
@@ -1111,31 +1107,18 @@ module MakeBox( box )
                         if ( __component_cutout_corner( side ))
                             MakeCornerCutouts( side );                            
 
+                    frac = 0.8;
+
                     // this is the finger cutout underneath
                     if ( !__component_is_fillet() && __component_has_exactly_one_cutout() && !m_push_base )
-                        __ColorComponent()
-                        {
-                            frac = 0.8;
-
-                          translate( [ (__compartment_size( k_x) * (1-frac))/2, (__compartment_size( k_y) * (1-frac))/2, -m_wall_thickness ])
-                               scale( v = [ frac, frac, 1 ]) // bring in the sides
+                        translate( [ (__compartment_size( k_x) * (1-frac))/2, (__compartment_size( k_y) * (1-frac))/2, -m_wall_thickness ])
+                            scale( v = [ frac, frac, 1 ]) // bring in the sides
                                 MakeCompartmentShape();
-                        }
-
-                                            // else if ( __component_has_exactly_one_cutout() )
-                // {
-                //     underbase = m_box_size[ k_z ] - __compartment_size( k_z ) + m_wall_thickness;
-                    
-                //     MakeVerticalShape(h = underbase, r = r, r1 = r/1.3, r2 = r/1.3, z_offset = -underbase );
-
-                // }
-
                 }
 
                 if ( !g_b_no_labels_actual)
                 {
-                    color([0,0,1])
-                        LabelEachCompartment();
+                    LabelEachCompartment();
                 }
             }
         }
@@ -1575,7 +1558,7 @@ module MakeBox( box )
                         R = m_lid_pattern_radius;
                         t = m_lid_pattern_thickness;
 
-                        if ( !__has_solid_lid() )
+                        if ( !m_has_solid_lid )
                             Make2DPattern( x = __lid_internal_size( k_x ), y = __lid_internal_size( k_y ), R = R, t = t );
                         else
                             square( [ __lid_external_size( k_x ), __lid_external_size( k_y ) ] );
@@ -1583,7 +1566,7 @@ module MakeBox( box )
 
                     // stencil out the text
                     if ( m_lid_label_bg_thickness > 0 || m_lid_is_inverted  )
-                        if ( !__has_solid_lid() )
+                        if ( !m_has_solid_lid )
                         {
                             MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness );
                         }
@@ -1595,7 +1578,7 @@ module MakeBox( box )
 
                 if ( m_lid_has_labels )
                 {
-                    if ( !__has_solid_lid() )
+                    if ( !m_has_solid_lid )
                     {
                         // grid
                         if ( !m_lid_is_inverted )
@@ -1806,7 +1789,7 @@ module MakeBox( box )
         module MakeSideCutouts( side )
         {
 
-            function __cutout_z() = m_is_lid ? m_lid_wall_height + m_lid_thickness : m_box_size[ k_z ] + __lid_external_size( k_z );
+            function __cutout_z() = m_is_lid ? m_lid_wall_height + m_lid_thickness : m_box_size[ k_z ] + __lid_external_size( k_z ) * 2;
             function __padding( D ) = m_is_lid ? 0 : __component_padding( D );
             function __size( D ) = m_is_lid ? __lid_internal_size( D ) : __compartment_size( D );
             function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : 
@@ -1884,7 +1867,7 @@ module MakeBox( box )
 
         module MakeCornerCutouts( corner )
         {
-            function __cutout_z() = ( m_is_lid ? m_lid_wall_height + m_lid_thickness : m_box_size[ k_z ] + m_lid_wall_height );
+            function __cutout_z() = ( m_is_lid ? m_lid_wall_height + m_lid_thickness : m_box_size[ k_z ] + __lid_external_size( k_z ) * 2 );
             function __padding( D ) = m_is_lid ? 0 : __component_padding( D );
             function __size( D ) = m_is_lid ? __lid_internal_size( D ) : __compartment_size( D );
             function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : 
@@ -2011,19 +1994,19 @@ module MakeBox( box )
             }        
         }
 
-        module MakeVerticalShape( h, r, r1, r2 )
+        module MakeVerticalShape( h, x, r )
         {
             compartment_z_min = m_wall_thickness;
             compartment_internal_z = __compartment_size( k_z ) - compartment_z_min;
 
-            cylinder_translation = [ r , __compartment_size(k_y)/2 , 0 ];
+            cylinder_translation = [ __compartment_size( k_x )/2 , __compartment_size(k_y)/2 , 0 ];
 
             translate( cylinder_translation )
             {
                 angle = __component_is_hex() ? 30 : __component_is_oct() ? 22.5 : 0;
 
                 rotate( a=angle, v=[0, 0, 1] )
-                    cylinder(h, r1, r2, center = false );                      
+                    cylinder(h, r, r, center = false );                      
             }
                 
         }
@@ -2038,9 +2021,10 @@ module MakeBox( box )
             }
             else if ( __component_shape_vertical() )
             {
-                r = __compartment_smallest_dimension()/2;
+                r = __compartment_largest_dimension()/2;
+                x = __component_is_hex()  ? r * sin( 360/ $fn ) : r;
 
-                MakeVerticalShape(h = __compartment_size( k_z ) + m_component_base_height, r = r, r1 = r, r2 = r );
+                MakeVerticalShape(h = __compartment_size( k_z ) + m_component_base_height, x = x, r = r);
             }
             else
             {
