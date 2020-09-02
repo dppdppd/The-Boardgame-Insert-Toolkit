@@ -4,10 +4,12 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.36";
+VERSION = "2.37";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
-$fn = $preview ? 10 : 100;
+fn = $preview ? 10 : 100;
+
+$fn = fn;
 
 // constants
 k_key = 0;
@@ -96,9 +98,11 @@ CMP_SHAPE_ROTATED_B = "shape_rotated_90";
 CMP_SHAPE_VERTICAL_B = "shape_vertical";
 CMP_PADDING_XY = "padding";
 CMP_PADDING_HEIGHT_ADJUST_XY = "padding_height_adjust";
-CMP_MARGIN_4B = "margin";
+CMP_MARGIN_FBLR = "margin_dim";
 CMP_CUTOUT_SIDES_4B = "cutout_sides";
 CMP_CUTOUT_CORNERS_4B = "cutout_corners";
+CMP_CUTOUT_BOTTOM_B = "cutout_bottom";
+CMP_CUTOUT_TYPE = "cutout_type";
 CMP_SHEAR = "shear";
 CMP_FILLET_RADIUS = "fillet_radius";
 CMP_PEDESTAL_BASE_B = "push_base";
@@ -141,6 +145,10 @@ OCT = "oct";
 OCT2 = "oct2";
 ROUND = "round";
 FILLET = "fillet";
+
+INTERIOR = "interior";
+EXTERIOR = "exterior";
+BOTH = "both";
 
 DISTANCE_BETWEEN_PARTS = 2;
 ////////////////////
@@ -342,14 +350,16 @@ module Colorize()
     }
 }
 
-module Shear( x, y)
+module Shear( x, y, height )
 {
-    multmatrix(m =  [
-        [ 1, 0, sin(x), 0],
-        [ 0, 1, sin(y), 0],
-        [ 0, 0, 1, 0]
-                ])
-              children();
+     translate( [0,0,height/2])
+        multmatrix(m =  [
+            [ 1, 0, sin(x), 0],
+            [ 0, 1, sin(y), 0],
+            [ 0, 0, 1, 0]
+                    ])
+            translate( [0,0,-height/2])
+                children();
 }
 
 module MakeAll()
@@ -485,7 +495,8 @@ module MakeDividers( div )
                             size = font_size, 
                             valign = "top",
                             halign = "center", 
-                            spacing = font_spacing);
+                            spacing = font_spacing,
+                            $fn = fn);
         }
 
         
@@ -503,7 +514,6 @@ module MakeBox( box )
     m_box_is_stackable = __value( box, BOX_STACKABLE_B, default = false );
 
     m_wall_thickness = g_b_fit_test ? 0.5 : __value( box, "wall_thickness", default = g_wall_thickness ); // needs work to change if no lid
-    m_lid_thickness = m_wall_thickness;
 
     m_lid = __value( box, BOX_LID, default = [] );
 
@@ -512,8 +522,10 @@ module MakeBox( box )
     m_lid_inset = __value( m_lid, LID_INSET_B, default = false );    
 
     // the part of the lid that overlaps the box
-    m_lid_wall_height = __value( m_lid, LID_HEIGHT, default = m_lid_inset ? 2.0 : 2.0 );
+    m_lid_wall_height = __value( m_lid, LID_HEIGHT, default = m_lid_inset ? 2.0 : 4.0 );
     m_lid_wall_thickness = m_lid_inset ? 2*m_wall_thickness : m_wall_thickness/2;    
+
+    m_lid_thickness = m_wall_thickness;
 
     m_box_has_lid = !__value( box, BOX_NO_LID_B, default = false );
 
@@ -658,24 +670,39 @@ module MakeBox( box )
 
         /////////
 
-        function __c_m_s( side ) = __value( component, CMP_MARGIN_4B, default = [f,f,f,f] )[ side ];
-        function __component_has_margin( D ) = D == k_x ?
-                [ __c_m_s( k_left ), __c_m_s( k_right ) ] :
-                [ __c_m_s( k_front ), __c_m_s( k_back )];
+        m_component_margin_side = __value( component, CMP_MARGIN_FBLR, default = [0,0,0,0] );
 
-        function __component_margin( D ) = [ __component_has_margin( D )[0] ? __component_padding( D ) : 0,
-                                            __component_has_margin( D )[1] ? __component_padding( D ) : 0];
+        function __component_margin_start_axis( D ) = D == k_x ? m_component_margin_side[ k_left ] :
+                                                        D == k_y ? m_component_margin_side[ k_front ] :
+                                                        0;
 
-        function __component_cutout_side( side ) = __value( component, CMP_CUTOUT_SIDES_4B, default = [false, false, false, false] )[ side ];
-        function __component_cutout_corner( corner ) = __value( component, CMP_CUTOUT_CORNERS_4B, default = [false, false, false, false] )[ corner ];
+        function __component_margins_sum( D ) = D == k_x ? m_component_margin_side[ k_left ] + m_component_margin_side[ k_right ] :
+                                                D == k_y ? m_component_margin_side[ k_front ] + m_component_margin_side[ k_back ] :
+                                                0;
 
-        function __component_has_exactly_one_cutout() = 
-            (__component_cutout_side( k_front )?1:0) +
-            (__component_cutout_side( k_back )?1:0) +
-            (__component_cutout_side( k_left )?1:0) +
-            (__component_cutout_side( k_right )?1:0) == 1;
+        m_component_cutout_side = __value( component, CMP_CUTOUT_SIDES_4B, default = [false, false, false, false] );
+
+        m_component_has_side_cutouts = m_component_cutout_side[ k_front ] || 
+                                        m_component_cutout_side[ k_back ] ||
+                                        m_component_cutout_side[ k_left ] ||
+                                        m_component_cutout_side[ k_right ];
 
 
+        m_component_cutout_corner = __value( component, CMP_CUTOUT_CORNERS_4B, default = [false, false, false, false] );
+
+        m_component_cutout_type = __value( component, CMP_CUTOUT_TYPE, default = BOTH );
+        m_component_cutout_bottom = __value( component, CMP_CUTOUT_BOTTOM_B, default = false );
+
+        m_actually_cutout_the_bottom = !__component_is_fillet() && m_component_cutout_bottom && !m_push_base;
+
+        m_component_has_exactly_one_cutout = 
+            (m_component_cutout_side[ k_front ]?1:0) +
+            (m_component_cutout_side[ k_back ]?1:0) +
+            (m_component_cutout_side[ k_left ]?1:0) +
+            (m_component_cutout_side[ k_right ]?1:0) == 1;
+
+        m_cutout_size_frac_aligned = 1/4;
+        m_cutout_size_frac_perpindicular = 1/2;
 
         function __component_padding( D ) = __value( component, CMP_PADDING_XY, default = [1.0, 1.0] )[ D ];
         function __component_padding_height_adjust( D ) = __value( component, CMP_PADDING_HEIGHT_ADJUST_XY, default = [0.0, 0.0] )[ D ];
@@ -719,13 +746,13 @@ module MakeBox( box )
         function __compartment_smallest_dimension() = ( __compartment_size( k_x ) < __compartment_size( k_y ) ) ? __compartment_size( k_x ) : __compartment_size( k_y );
         function __compartment_largest_dimension() = ( __compartment_size( k_x ) > __compartment_size( k_y ) ) ? __compartment_size( k_x ) : __compartment_size( k_y );
 
-
-        function __partitions_num_no_margins( D ) = __compartments_num( D ) - 1;
-        function __partitions_num( D )= __partitions_num_no_margins( D ) + ( __component_has_margin( D )[0] ? 1 : 0 ) + ( __component_has_margin( D )[1] ? 1 : 0 );
+        function __partitions_num( D )= __compartments_num( D ) - 1;
 
         // calculated __element local dimensions
         function __component_size( D )= ( D == k_z ) ? __compartment_size( k_z ) : 
-                                                ( __compartment_size( D )* __compartments_num( D )) + ( __partitions_num( D )* __component_padding( D ));
+                                                ( __compartment_size( D ) * __compartments_num( D )) + 
+                                                ( __partitions_num( D ) * __component_padding( D ) 
+                                                + __component_margins_sum( D ));
 
         function __partition_height( D ) = __component_size( k_z ) + __component_padding_height_adjust( D );
         function __smallest_partition_height() = min( __partition_height( k_x ), __partition_height( k_y ) );
@@ -776,7 +803,7 @@ module MakeBox( box )
             ContainWithinBox()
                 RotateAboutPoint( __component_rotation(), [0,0,1], [__component_position( k_x ) + __component_size( k_x )/2, __component_position( k_y )+ __component_size( k_y )/2, 0] ) 
                     translate( [ __component_position( k_x ), __component_position( k_y ), m_wall_thickness ] )
-                        Shear( __component_shear( k_x ), __component_shear( k_y ) )
+                        Shear( __component_shear( k_x ), __component_shear( k_y ), __component_size( k_z ) )
                             children();
         }
 
@@ -1020,7 +1047,7 @@ module MakeBox( box )
                     
                 // subtract tabs
                     translate( [ 0, 0, m_box_size[ k_z ] - m_lid_tab[ k_z ] + 1 ])
-                        MakeLidTabs( mod = 0.5, square = true ); // this needs to be wide 
+                        MakeLidTabs( mod = 0, square = true ); // this needs to be wide 
             }  
         }
 
@@ -1095,22 +1122,56 @@ module MakeBox( box )
                 // need to be done at the end because they substract from the 
                 // entire box.
 
-                // finger cutouts
+                if ( m_component_has_side_cutouts )
+                {
+                    // finger cutouts
+                    insetx = m_cutout_size_frac_aligned * __compartment_size( k_x ) + m_component_margin_side[ k_left];
+                    insety = m_cutout_size_frac_aligned * __compartment_size( k_y ) + m_component_margin_side[ k_front];
+
+                    sizex = __component_size( k_x) - 2 * m_cutout_size_frac_aligned * __compartment_size( k_x ) - __component_margins_sum( k_x );
+                    sizey = __component_size( k_y) - 2 * m_cutout_size_frac_aligned * __compartment_size( k_y ) - __component_margins_sum( k_y );
                 
+                    if ( m_component_cutout_type == BOTH )
+                    {
+                        MakeAllBoxSideCutouts();
+                    }
+                    else if ( m_component_cutout_type == INTERIOR )
+                    {
+                        intersection()
+                        {
+
+                            translate( [ insetx, insety, -m_wall_thickness ] )
+                                cube ( [ sizex, sizey, m_box_size[ k_z]]);
+
+                            MakeAllBoxSideCutouts();
+                        }                    
+                    }
+                    else if ( m_component_cutout_type == EXTERIOR )
+                    {
+                        intersection()
+                        {
+                            difference()
+                            {
+                                translate( [ -__component_position(k_x),-__component_position(k_y), -m_wall_thickness ] )
+                                    cube( [ m_box_size[ k_x], m_box_size[ k_y], m_box_size[ k_z]]);
+
+                                translate( [ insetx, insety, -m_wall_thickness ] )
+                                    cube ( [ sizex, sizey, m_box_size[ k_z]]);
+                            }
+
+                            MakeAllBoxSideCutouts();
+                        }                       
+                    }
+                }
+
+                MakeAllBoxCornerCutouts();
+
                 InEachCompartment( )
                 {
-                    for ( side = [ k_front:k_right ])
-                        if ( __component_cutout_side( side ))
-                            MakeSideCutouts( side );
-
-                    for ( side = [ k_front_left:k_front_right ])
-                        if ( __component_cutout_corner( side ))
-                            MakeCornerCutouts( side );                            
-
                     frac = 0.8;
 
                     // this is the finger cutout underneath
-                    if ( !__component_is_fillet() && __component_has_exactly_one_cutout() && !m_push_base )
+                    if ( m_actually_cutout_the_bottom )
                         translate( [ (__compartment_size( k_x) * (1-frac))/2, (__compartment_size( k_y) * (1-frac))/2, -m_wall_thickness ])
                             scale( v = [ frac, frac, 1 ]) // bring in the sides
                                 MakeCompartmentShape();
@@ -1121,6 +1182,45 @@ module MakeBox( box )
                     LabelEachCompartment();
                 }
             }
+        }
+
+        module MakeAllBoxSideCutouts()
+        {
+
+            ForEachCompartment( k_x )
+            {
+                    if ( m_component_cutout_side[ k_front ])
+                        MakeSideCutouts( k_front, margin = true );
+
+                    if ( m_component_cutout_side[ k_back ])    
+                        MakeSideCutouts( k_back, margin = true );
+            }
+
+            ForEachCompartment( k_y )
+            {
+                    if ( m_component_cutout_side[ k_left ])    
+                        MakeSideCutouts( k_left, margin = true );
+
+                    if ( m_component_cutout_side[ k_right ])    
+                        MakeSideCutouts( k_right, margin = true );
+            }   
+
+            InEachCompartment( )
+            {
+                for ( side = [ k_front:k_right ])
+                    if ( m_component_cutout_side[ side ])
+                        MakeSideCutouts( side );                     
+            }                
+        }
+
+        module MakeAllBoxCornerCutouts()
+        {
+            InEachCompartment( )
+            {
+                for ( side = [ k_front_left:k_front_right ])
+                    if ( m_component_cutout_corner[ side ])
+                        MakeCornerCutouts( side );                            
+            }        
         }
 
 
@@ -1418,7 +1518,8 @@ module MakeBox( box )
                         size = __label_size( label ), 
                         spacing = __label_spacing( label ),
                         valign = CENTER, 
-                        halign = CENTER);
+                        halign = CENTER,
+                        $fn = fn);
         }
 
         module MakeLidLabel( label, offset = 0, thickness = m_lid_thickness )
@@ -1451,7 +1552,8 @@ module MakeBox( box )
                                         size = __label_size( label ), 
                                         spacing = __label_spacing( label ),
                                         valign = CENTER, 
-                                        halign = CENTER);
+                                        halign = CENTER,
+                                        $fn = fn);
             }
 
         module MakeBoxLabel( label, x = 0, y = 0 )
@@ -1553,7 +1655,11 @@ module MakeBox( box )
                 // pattern
                 difference()
                 {
-                    linear_extrude( m_lid_thickness )
+                    // if it's in an inset lid then we want the pattern all the way down so it's flush
+                    // and holds pieces in place.
+                    thickness = m_lid_inset ? m_lid_thickness + m_lid_wall_height - 2* g_tolerance : m_lid_thickness;
+
+                    linear_extrude( thickness )
                     {
                         R = m_lid_pattern_radius;
                         t = m_lid_pattern_thickness;
@@ -1658,16 +1764,16 @@ module MakeBox( box )
                         }
                         
                         // add the flat notch tabs to the sides
-                  *      difference()
-                        {
-                            cube( [ __lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z )/2 ]   );
+                        // difference()
+                        // {
+                        //     cube( [ __lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z )/2 ]   );
 
-                            // hollow the center
-                            MoveToLidInterior()
-                                cube([  __lid_internal_size( k_x ), __lid_internal_size( k_y ),  __lid_external_size( k_z )]);                            
+                        //     // hollow the center
+                        //     MoveToLidInterior()
+                        //         cube([  __lid_internal_size( k_x ), __lid_internal_size( k_y ),  __lid_external_size( k_z )]);                            
 
-                            MakeCorners( mod = 1 );
-                        }
+                        //     MakeCorners( mod = 1 );
+                        // }
 
                         // add tabs
                         MakeLidTabs( mod = -tolerance );
@@ -1701,14 +1807,14 @@ module MakeBox( box )
                     }        
         }
 
-        module ForEachPartition( D, include_margins = true )
+        module ForEachPartition( D,  )
         {
             start = 0;
-            end = ( include_margins ? __partitions_num( D ) : __partitions_num_no_margins( D ) ) - 1;
+            end = __partitions_num( D ) - 1;
 
             if ( end >= start )
             {
-                firstpos = ( __component_has_margin(D)[0] && include_margins ) ? 0 : __compartment_size( D );
+                firstpos = __compartment_size( D ) + __component_margin_start_axis( D );
 
                 for ( a = [ start : end  ] )
                 {
@@ -1728,7 +1834,8 @@ module MakeBox( box )
             {
                 for ( a = [ start: end  ] )
                 {
-                    dim1 = __component_margin( D )[0] + ( __component_padding( D ) + __compartment_size( D )) * a ;
+                    side = D == k_x ? k_left : k_front;
+                    dim1 = m_component_margin_side[ side ] + ( __component_padding( D ) + __compartment_size( D )) * a ;
 
                     translate( [ D == k_x ? dim1 : 0 ,  D == k_y ? dim1 : 0 , 0 ] )
                     children();
@@ -1743,11 +1850,11 @@ module MakeBox( box )
 
             for ( x = [ 0: n_x - 1] )
             {
-                x_pos = __component_margin( k_x )[0] + ( __compartment_size( k_x ) + __component_padding( k_x ) ) * x;
+                x_pos = m_component_margin_side[ k_left ] + ( __compartment_size( k_x ) + __component_padding( k_x ) ) * x;
 
                 for ( y = [ 0: n_y - 1] )
                 {
-                    y_pos = __component_margin( k_y )[0] + ( ( __compartment_size( k_y ) ) + __component_padding( k_y ) ) * y;
+                    y_pos = m_component_margin_side[ k_front ] + ( ( __compartment_size( k_y ) ) + __component_padding( k_y ) ) * y;
 
                     translate( [ x_pos ,  y_pos , 0 ] )
                         children();
@@ -1762,11 +1869,11 @@ module MakeBox( box )
 
             for ( x = [ 0: n_x - 1] )
             {
-                x_pos = __component_margin( k_x )[0] + ( __compartment_size( k_x ) + __component_padding( k_x ) ) * x;
+                x_pos = m_component_margin_side[ k_left ] + ( __compartment_size( k_x ) + __component_padding( k_x ) ) * x;
 
                 for ( y = [ 0: n_y - 1] )
                 {
-                    y_pos = __component_margin( k_y )[0] + ( ( __compartment_size( k_y ) ) + __component_padding( k_y ) ) * y;
+                    y_pos = m_component_margin_side[ k_front ] + ( ( __compartment_size( k_y ) ) + __component_padding( k_y ) ) * y;
 
                     translate( [ x_pos ,  y_pos , m_component_base_height ] ) // to compartment origin
                     {
@@ -1786,57 +1893,88 @@ module MakeBox( box )
             } 
         }
 
-        module MakeSideCutouts( side )
+
+        module MakeSideCutouts( side, margin = false )
         {
 
             function __cutout_z() = m_is_lid ? m_lid_wall_height + m_lid_thickness : m_box_size[ k_z ] + __lid_external_size( k_z ) * 2;
             function __padding( D ) = m_is_lid ? 0 : __component_padding( D );
-            function __size( D ) = m_is_lid ? __lid_internal_size( D ) : __compartment_size( D );
+            function __size( D ) = m_is_lid ? __lid_external_size( D ) : __compartment_size( D );
             function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : 
                                                 - __lid_external_size( k_z );
-
-            inset_into_compartment_fraction = 1/4;
 
             // main and perpendicular dimensions
             main_d = ( side == k_back || side == k_front ) ? k_y : k_x; 
             perp_d = ( side == k_back || side == k_front ) ? k_x : k_y;
 
+            max_radius = 3;
+            radius = max_radius;
+
             // main and perpendicular size of hole
             //  main dimension intrudes into the compartment by some fraction ( e.g. 1/5 )
-            main_size = __padding( main_d )/2  + __size( main_d ) * inset_into_compartment_fraction;
+            main_size = margin ? m_component_margin_side[ side ] + g_wall_thickness + radius : 
+                        __padding( main_d )/2  + __size( main_d ) * m_cutout_size_frac_aligned;
 
             //  perp dimension is a half of the width and no more than 3cm
-            perp_size = min( 30, __size( perp_d )/2 );
+            perp_size = min( 30, __size( perp_d ) * m_cutout_size_frac_perpindicular );
 
-            max_radius = 3;
-            radius = min( main_size/2, perp_size/2, max_radius);
-
-            pos = [
+            pos_standard = [
                 // front
                 [  
                     __size( k_x )/2  - perp_size/2,       
-                    - __padding( k_y )/2 - g_wall_thickness,               
+                    - __padding( k_y )/2,               
                     __finger_cutouts_bottom() 
                 ], 
                 // back
                 [  
                     __size( k_x )/2  - perp_size/2,                     
-                    __size( k_y ) * (1 - inset_into_compartment_fraction) + g_wall_thickness, 
+                    __size( main_d ) - main_size + __padding( k_y )/2, 
                     __finger_cutouts_bottom() 
                 ],
                 // left
                 [   
-                    - __padding( k_x )/2 - g_wall_thickness, 
+                    - __padding( k_x )/2, 
                     __size( k_y )/2  - perp_size/2, 
                     __finger_cutouts_bottom() 
                 ],
                 // right
                 [   
-                    __size( k_x ) * (1 - inset_into_compartment_fraction) + g_wall_thickness, 
+                    __size( main_d ) - main_size + __padding( k_x )/2, 
                     __size( k_y )/2  - perp_size/2, 
                     __finger_cutouts_bottom()
                 ], 
             ];
+
+            pos_margin = [
+                // front
+                [  
+                    __size( k_x )/2  - perp_size/2,       
+                    -__padding( main_d )/2 - g_wall_thickness,               
+                    __finger_cutouts_bottom() 
+                ], 
+                // back
+                [  
+                    __size( k_x )/2  - perp_size/2,                     
+                    __component_size( k_y) - m_component_margin_side[ k_back] + __padding( main_d )/2 - radius, 
+                    __finger_cutouts_bottom() 
+                ],
+                // left
+                [   
+                    -__padding( main_d )/2 - g_wall_thickness,  
+                    __size( k_y )/2  - perp_size/2, 
+                    __finger_cutouts_bottom() 
+                ],
+                // right
+                [   
+                    __component_size( k_x ) - m_component_margin_side[ k_right ] + __padding( main_d )/2 - radius,  
+                    __size( k_y )/2  - perp_size/2, 
+                    __finger_cutouts_bottom()
+                ], 
+
+
+            ];
+
+            pos = margin ? pos_margin : pos_standard;
 
             size = [
 
@@ -1846,22 +1984,46 @@ module MakeBox( box )
                 [ main_size , perp_size, __cutout_z() ] // right
             ];
 
-            shape = [
+            cutouts = m_is_lid ?
+                [
+                    m_lid_cutout_sides[ k_front ],
+                    m_lid_cutout_sides[ k_back ],
+                    m_lid_cutout_sides[ k_left ],
+                    m_lid_cutout_sides[ k_right ],
+                ] :
+                [
+                    m_component_cutout_side[ k_front ],
+                    m_component_cutout_side[ k_back ],
+                    m_component_cutout_side[ k_left ],
+                    m_component_cutout_side[ k_right ],
+                ];
+
+
+            shape_standard =
+            [
                 //front
-                [ !__component_cutout_side( k_back ),!__component_cutout_side( k_back ),t,t ],
+                [ !cutouts[ k_back ],!cutouts[ k_back ],t,t ],
 
                 //back
-                [ t,t,!__component_cutout_side( k_front ),!__component_cutout_side( k_front )],
+                [ t,t,!cutouts[ k_front ],!cutouts[ k_front ]],
 
                 //left
-                [ !__component_cutout_side( k_right ),t,!__component_cutout_side( k_right ),t ],
+                [ !cutouts[ k_right ],t,!cutouts[ k_right ],t ],
 
                 //right
-                [ t,!__component_cutout_side( k_left ),t,!__component_cutout_side( k_left )],
+                [ t,!cutouts[ k_left ],t,!cutouts[ k_left ]],
             ];
 
-            translate( pos[ side ] )
-                MakeRoundedCubeZ( size[ side ], radius, shape[ side ]);
+            shape_square = [ f,f,f,f];
+
+            shape = margin || m_actually_cutout_the_bottom ? shape_square : shape_standard[ side ];
+
+            if ( side == k_back && !margin )
+             translate( pos[ side ] )
+                    MakeRoundedCubeZ( size[ side ], radius, shape);
+            else
+             translate( pos[ side ] )
+                   MakeRoundedCubeZ( size[ side ], radius, shape);            
 
         }
 
@@ -1873,7 +2035,7 @@ module MakeBox( box )
             function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : 
                                                 - __lid_external_size( k_z );
 
-            inset_into_compartment_fraction = 1/3;
+            inset_into_compartment_fraction = 1/4;
             inverse_inset = 1 - inset_into_compartment_fraction;
 
             // k_front_left = 0;
@@ -1884,27 +2046,27 @@ module MakeBox( box )
             pos = [
                     // k_front_left
                     [  
-                        - __padding( k_x )/2,       
-                        - __padding( k_y )/2,                
+                        - __padding( k_x )/2 ,       
+                        - __padding( k_y )/2  ,                
                         __finger_cutouts_bottom() 
                     ], 
                     // k_back_right
                     [  
                         __size( k_x ) * inverse_inset,                     
-                        __size( k_y ) * inverse_inset, 
+                        __size( k_y ) * inverse_inset , 
                         __finger_cutouts_bottom() 
                     ],
                     // k_back_left
                     [   
-                        __size( k_x ) * inverse_inset, 
-                        - __padding( k_y )/2, 
+                        __size( k_x ) * inverse_inset , 
+                        - __padding( k_y )/2  , 
                         __finger_cutouts_bottom()                        
 
                     ],
                     // k_front_right
                     [   
                         - __padding( k_x )/2,  
-                        __size( k_y ) * inverse_inset,                        
+                        __size( k_y ) * inverse_inset ,                        
 
                         __finger_cutouts_bottom() 
                     ], 
@@ -1913,40 +2075,42 @@ module MakeBox( box )
             shape = [
                         //k_front_left
                         [ 
-                            !__component_cutout_corner( k_back_left ) && !__component_cutout_corner( k_front_right ),
-                            !__component_cutout_corner( k_front_right  ),
-                            !__component_cutout_corner( k_back_left ),
+                            !m_component_cutout_corner[ k_back_left ] && !m_component_cutout_corner[ k_front_right ],
+                            !m_component_cutout_corner[ k_front_right ],
+                            !m_component_cutout_corner[ k_back_left ],
                             t
                         ],
 
                         //k_back_right
                         [ 
                             t,
-                            !__component_cutout_corner( k_front_right ),
-                            !__component_cutout_corner( k_back_left  ),
-                            !__component_cutout_corner( k_back_left ) && !__component_cutout_corner( k_front_right ),
+                            !m_component_cutout_corner[ k_front_right ],
+                            !m_component_cutout_corner[ k_back_left ],
+                            !m_component_cutout_corner[ k_back_left ] && !m_component_cutout_corner[ k_front_right ],
 
                         ],
 
                         //k_back_left
                         [  
-                            !__component_cutout_corner( k_front_left ),
-                            !__component_cutout_corner( k_front_left ) && !__component_cutout_corner( k_back_right ),
+                            !m_component_cutout_corner[ k_back_right ],
+                            !m_component_cutout_corner[ k_front_left ] && !m_component_cutout_corner[ k_back_right ],
                             t,
-                            !__component_cutout_corner( k_back_right ),
+                            !m_component_cutout_corner[ k_front_left ],
                         ],
 
                         //k_front_right
                         [ 
-                            !__component_cutout_corner( k_back_right ),
+                            !m_component_cutout_corner[ k_back_right ],
                             t,
-                            !__component_cutout_corner( k_front_left ) && !__component_cutout_corner( k_back_right ),
-                            !__component_cutout_corner( k_front_left  ),
+                            !m_component_cutout_corner[ k_front_left ] && !m_component_cutout_corner[ k_back_right ],
+                            !m_component_cutout_corner[ k_front_left ],
 
                         ],            
                     ];
 
-            size = [ __padding( k_x )/2  + __size( k_x ) * inset_into_compartment_fraction, __padding( k_y )/2 + __size( k_y ) * inset_into_compartment_fraction, __cutout_z() ];
+            size = [ __padding( k_x )/2  + __size( k_x ) * inset_into_compartment_fraction, 
+                    __padding( k_y )/2 + __size( k_y ) * inset_into_compartment_fraction, 
+                    __cutout_z() ];
 
             translate( pos[ corner ] )
                 MakeRoundedCubeZ( size, 3, shape[ corner]);
@@ -2096,7 +2260,8 @@ module MakeBox( box )
                                                 size = __label_size( label ), 
                                                 spacing = __label_spacing( label ),
                                                 valign = CENTER, 
-                                                halign = CENTER);
+                                                halign = CENTER,
+                                                $fn = fn);
             }
 
         module MakeLabel( label, x = 0, y = 0 )
@@ -2114,7 +2279,7 @@ module MakeBox( box )
                 if ( __label_placement_is_wall( label ) )
                     translate( [ __compartment_size(k_x)/2, 0, z_pos_vertical ] )
                         children();
-                else                
+               else               
                     translate( [ __compartment_size(k_x)/2, -__component_padding( k_y )/4, __partition_height( k_y ) + z_pos] )
                         children();
             }
@@ -2153,15 +2318,37 @@ module MakeBox( box )
 
         module MakePartitions()
         {
+            MakeMargin( side = k_front );
+            MakeMargin( side = k_back );     
+            MakeMargin( side = k_left );
+            MakeMargin( side = k_right );
+
             ForEachPartition( k_x )   
             {
                 MakePartition( axis = k_x );  
             }
 
+
             ForEachPartition( k_y )  
             {
                 MakePartition( axis = k_y );  
             }
+            
+        }
+
+        module MakeMargin( side )
+        {
+            if ( side == k_left )
+                cube ( [ m_component_margin_side[ k_left ], __component_size( k_y ), __partition_height( k_x ) + m_component_base_height  ] );
+            else if ( side == k_right )
+                translate( [ __component_size( k_x ) - m_component_margin_side[ k_right ] , 0 , 0])
+                   cube ( [ m_component_margin_side[ k_right ], __component_size( k_y ), __partition_height( k_x ) + m_component_base_height  ] );
+            else if ( side == k_front )
+                cube ( [  __component_size( k_x ), m_component_margin_side[ k_front ], __partition_height( k_x ) + m_component_base_height  ] );
+            else if ( side == k_back )
+                translate( [ 0, __component_size( k_y ) - m_component_margin_side[ k_back ], 0])
+                    cube ( [ __component_size( k_x ), m_component_margin_side[ k_back ], __partition_height( k_x ) + m_component_base_height  ] );
+
         }
 
         module MakePartition( axis )
@@ -2215,7 +2402,7 @@ module MakeBox( box )
             module MakeLidTab( mod )
             {
 
-                x = m_lid_tab[ k_x ] + mod;
+                x = m_lid_tab[ k_x ] + 4 * mod;
                 y = m_lid_tab[ k_y ] + mod;
                 z = m_lid_tab[ k_z ] + mod;
 

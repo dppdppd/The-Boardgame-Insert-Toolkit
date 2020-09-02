@@ -81,7 +81,6 @@ data =
                 [
                     [CMP_COMPARTMENT_SIZE_XYZ,  [ 42, 42, 8.0] ],
                     [CMP_CUTOUT_SIDES_4B,                   [t,t,f,f]], // all sides
-
                 ]
             ],                            
         ]
@@ -172,7 +171,6 @@ data =
                     [CMP_COMPARTMENT_SIZE_XYZ,  [ 10, 10, 3.0] ],
                     [CMP_PADDING_XY,                        [5,5]],
 
-
                     [LABEL,               
                         [
                             [LBL_TEXT,        [   
@@ -203,12 +201,11 @@ data =
         ]
     ],
 
-    [   "example 0: minimal",
+    [   "minimal",
         [
             [ ENABLED_B,                t],
 
-            [ BOX_SIZE_XYZ,                                     [46.5, 46.5, 15.0] ],
-            [ BOX_COMPONENT,
+            [ BOX_SIZE_XYZ,                                     [46.5, 46.5, 15.0] ],            [ BOX_COMPONENT,
                 [
                     [CMP_NUM_COMPARTMENTS_XY,   [4,4]],
                     [CMP_COMPARTMENT_SIZE_XYZ,  [ 10, 10, 13.0] ],
@@ -218,6 +215,7 @@ data =
             ],                  
         ]
     ],
+
     [   "hex tiles",
         [
             [ BOX_SIZE_XYZ,                                     [58, 58, 10.0] ],
@@ -228,15 +226,15 @@ data =
             ],
             [ BOX_COMPONENT,
                 [
-                    [CMP_NUM_COMPARTMENTS_XY,   [2,2]],
-                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 25, 25, 5.0] ],
+                    [CMP_NUM_COMPARTMENTS_XY,               [2,2]],
+                    [CMP_COMPARTMENT_SIZE_XYZ,              [ 25, 25, 8.0] ],
                     [CMP_SHAPE,                             HEX],
                     [CMP_SHAPE_VERTICAL_B,                  t],    
                     [CMP_PADDING_XY,                        [5,5]],
-
-//                    [CMP_CUTOUT_SIDES_4B,                   [t,f,f,f]], // one side
-//                    [CMP_CUTOUT_SIDES_4B,                   [t,t,f,f]], // opposite sides  
-                    [CMP_CUTOUT_SIDES_4B,                   [t,t,t,t]], // all sides
+                    [CMP_CUTOUT_TYPE,                      EXTERIOR],
+                    [CMP_CUTOUT_SIDES_4B,                   [f,f,t,t]], // all sides
+                    [CMP_CUTOUT_BOTTOM_B,                   t]
+                    
               
 
                 ]
@@ -245,7 +243,7 @@ data =
     ],    
     [   "hex tiles 2",
         [
-            [ BOX_SIZE_XYZ,                                     [52, 55, 10.0] ],
+            [ BOX_SIZE_XYZ,                                     [55, 55, 10.0] ],
             [ BOX_LID,
                 [            
                     [ LID_SOLID_B, t],
@@ -267,7 +265,7 @@ data =
     [   "example 1",
         [
             [ ENABLED_B,                t],
-            [ BOX_SIZE_XYZ,             [110.0, 180.0, 22.0] ],
+            [ BOX_SIZE_XYZ,             [140.0, 180.0, 22.0] ],
 
             [ BOX_LID,
                 [
@@ -307,10 +305,10 @@ data =
                     [CMP_SHAPE_VERTICAL_B,                  f],
                     [CMP_PADDING_XY,                        [15,12]],
                     [CMP_PADDING_HEIGHT_ADJUST_XY,          [-5, 0] ],
-                    [CMP_MARGIN_4B,                         [t,f,f,f]],
-                    [CMP_CUTOUT_SIDES_4B,                   [f,f,f,t]],
+                    [CMP_MARGIN_FBLR,                       [0,0,15,15]],
+                    [CMP_CUTOUT_SIDES_4B,                   [f,f,t,t]],
+                    [CMP_CUTOUT_TYPE,                       EXTERIOR],
                     [ROTATION,                              5 ],
-                    [POSITION_XY,                           [CENTER,CENTER]],
                     [LABEL,               
                         [
                             [LBL_TEXT,        [   
@@ -328,14 +326,7 @@ data =
                     ],  
                 ]
             ],
-           [ BOX_COMPONENT,
-                [
-                    [CMP_NUM_COMPARTMENTS_XY,       [1,1]],
-                    [CMP_COMPARTMENT_SIZE_XYZ,      [ 60.0, 10.0, 5.0] ],
-                    [POSITION_XY,                   [CENTER,2]],
-                ]
-            ],                              
-
+                            
         ]
     ],
     [   "shear",

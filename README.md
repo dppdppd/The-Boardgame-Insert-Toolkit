@@ -425,20 +425,28 @@ e.g. `[ CMP_PADDING_XY, [ 2.5, 1.3 ] ]`
 value is expected to be an array of 2 numbers, and determines how much to modify the height of the x and y padding between compartments. These should typically be negative values.  
 e.g. `[ CMP_PADDING_HEIGHT_ADJUST_XY, [ -3, 0 ] ]`
 
-#### `CMP_MARGIN_4B`
-value is expected to be an array of 4 bools, and determines whether padding is also added to the outside of the compartment array. The values represent [front, back, left, right ].  
-e.g. `[ CMP_MARGIN_4B, [ t, f, t, f ] ]`
+#### `CMP_MARGIN_FBLR`
+value is expected to be an array of 4 floats, and determines the front, back, left, and right margins, respectively.  
+e.g. `[ CMP_MARGIN_FBLR, [ 1, 10, 0, 20 ] ]`
 
 #### `CMP_CUTOUT_SIDES_4B`
 value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the compartments on the sides. The values represent [front, back, left, right ].  
 e.g. `[ CMP_CUTOUT_SIDES_4B, [ t, t, f, f ] ]`
+
+#### `CMP_CUTOUT_TYPE`
+value is expected to be one of the following keywords: BOTH, INTERIOR, or EXTERIOR, and determines whether where on the component the cutouts are applied.
+e.g. `[ CMP_CUTOUT_TYPE, INTERIOR ]`
+
+#### `CMP_CUTOUT_BOTTOM_B`
+value is expected to be a bool and determines whether the bottom of the compartment is cut out. Note that this is ignored if CMP_PEDESTAL_BASE_B is true or if CMP_SHAPE is set to FILLET.
+e.g. `[ CMP_CUTOUT_BOTTOM, true ]`
 
 #### `CMP_CUTOUT_CORNERS_4B`
 value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the compartments on the corners. The values represent [front-left, back-right, back-left, front-right ].  
 e.g. `[ CMP_CUTOUT_CORNERS_4B, [ t, t, f, f ] ]`
 
 #### `CMP_SHEAR`
-value is expected to be an array of 2 numbers, and determines the degrees to which the component should be sheared in the direction of width and depth.  
+value is expected to be an array of 2 numbers, and determines the degrees to which the component should be sheared in the direction of width and depth. The shearing pivots around the center of the component. 
 e.g. `[ CMP_SHEAR, [ 45, 0 ] ]`
 
 #### `LABEL`
