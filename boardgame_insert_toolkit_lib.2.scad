@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.37";
+VERSION = "2.38";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 fn = $preview ? 10 : 100;
@@ -1153,10 +1153,10 @@ module MakeBox( box )
                             difference()
                             {
                                 translate( [ -__component_position(k_x),-__component_position(k_y), -m_wall_thickness ] )
-                                    cube( [ m_box_size[ k_x], m_box_size[ k_y], m_box_size[ k_z]]);
+                                    cube( [ m_box_size[ k_x], m_box_size[ k_y], m_box_size[ k_z] + __lid_external_size(k_z)]);
 
                                 translate( [ insetx, insety, -m_wall_thickness ] )
-                                    cube ( [ sizex, sizey, m_box_size[ k_z]]);
+                                    cube ( [ sizex, sizey, m_box_size[ k_z] + __lid_external_size(k_z)]);
                             }
 
                             MakeAllBoxSideCutouts();
@@ -1443,10 +1443,10 @@ module MakeBox( box )
                             }
         }
 
-        module MakeStripedGrid( x = 200, y = 200, w = 1, dx = 0, dy = 0, depth_ratio = 0.5 )
+        module MakeStripedGrid( x = 200, y = 200, w = 1, dx = 0, dy = 0, depth_ratio = 0.5, thickness = m_lid_thickness )
         {
 
-            thickness = max( 0.6, m_lid_thickness * depth_ratio );
+            _thickness = thickness * depth_ratio;
 
             x_count = x / ( w + dx );
             y_count = y / ( w + dy );
@@ -1455,8 +1455,8 @@ module MakeBox( box )
             {
                 for( j = [ 0: x_count ] )
                 {
-                    translate( [ j * ( w + dx ), 0, m_lid_thickness - thickness ] )
-                        cube( [ w, y, thickness]);
+                    translate( [ j * ( w + dx ), 0, thickness - _thickness ] )
+                        cube( [ w, y, _thickness]);
                 }
             }
 
@@ -1464,8 +1464,8 @@ module MakeBox( box )
             {
                 for( j = [ 0: y_count ] )
                 {
-                    translate( [ 0, j * ( w + dy ), m_lid_thickness - thickness  ] )
-                        cube( [ x, w, thickness ]);
+                    translate( [ 0, j * ( w + dy ), thickness - _thickness  ] )
+                        cube( [ x, w, _thickness ]);
                 }
             }
         }
@@ -1652,12 +1652,14 @@ module MakeBox( box )
         {
             module MakeLidSurface()
             {
+                thickness = m_lid_inset ? m_lid_thickness + m_lid_wall_height - 2* g_tolerance : m_lid_thickness;
+
                 // pattern
                 difference()
                 {
                     // if it's in an inset lid then we want the pattern all the way down so it's flush
                     // and holds pieces in place.
-                    thickness = m_lid_inset ? m_lid_thickness + m_lid_wall_height - 2* g_tolerance : m_lid_thickness;
+
 
                     linear_extrude( thickness )
                     {
@@ -1674,7 +1676,7 @@ module MakeBox( box )
                     if ( m_lid_label_bg_thickness > 0 || m_lid_is_inverted  )
                         if ( !m_has_solid_lid )
                         {
-                            MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness );
+                            MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness, thickness = thickness );
                         }
                         else
                         {
@@ -1693,8 +1695,8 @@ module MakeBox( box )
                             if ( m_lid_label_bg_thickness > 0 )
                                 difference()
                                 {
-                                    MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness);
-                                    MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness - m_lid_label_border_thickness );
+                                    MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness, thickness = thickness);
+                                    MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness - m_lid_label_border_thickness, thickness = thickness );
                                 }
 
                             // pattern
@@ -1711,11 +1713,11 @@ module MakeBox( box )
                                         x2 = y*sin(theta) + x*cos(theta);
                                         y2 = y*cos(theta) + x*sin(theta);                                     
 
-                                        translate( [x/2-x2/2, y/2-y2/2,0])
+                                        translate( [x/2-x2/2, y/2-y2/2, 0])
                                             RotateAboutPoint( theta, [0,0,1], [x2/2,y2/2,0] )
-                                                MakeStripedGrid( x = x2, y = y2, w = 0.5, dx = 1, dy = 0, depth_ratio = 0.5 );
+                                                MakeStripedGrid( x = x2, y = y2, w = 0.5, dx = 1, dy = 0, depth_ratio = 0.5, thickness = thickness );
 
-                                        MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness );
+                                        MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness, thickness = thickness );
                                     }
 
                                     // in the case of mmu, we want to cut out the labels
@@ -2402,7 +2404,7 @@ module MakeBox( box )
             module MakeLidTab( mod )
             {
 
-                x = m_lid_tab[ k_x ] + 4 * mod;
+                x = m_lid_tab[ k_x ] + 10 * mod;
                 y = m_lid_tab[ k_y ] + mod;
                 z = m_lid_tab[ k_z ] + mod;
 
