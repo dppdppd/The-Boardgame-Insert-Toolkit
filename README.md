@@ -540,3 +540,4 @@ e.g. `[ ENABLED_B, f ]`
 - [Orleans]( https://www.thingiverse.com/thing:4493482 )
 - [Empyreal Spells & Steam]( https://www.thingiverse.com/thing:4554217 )
 - [Tyrants of the Underdark]( https://www.thingiverse.com/thing:4570276 )
+- [Space Hulk Death Angel](https://www.thingiverse.com/thing:4592270)
