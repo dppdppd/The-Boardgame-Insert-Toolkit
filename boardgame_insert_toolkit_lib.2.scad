@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.38";
+VERSION = "2.39";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 fn = $preview ? 10 : 100;
@@ -519,7 +519,7 @@ module MakeBox( box )
 
     m_lid_fit_under = __value( m_lid, LID_FIT_UNDER_B, default = true );
     m_lid_solid = __value( m_lid, LID_SOLID_B, default = false );
-    m_lid_inset = __value( m_lid, LID_INSET_B, default = false );    
+    m_lid_inset = m_box_is_stackable || __value( m_lid, LID_INSET_B, default = false ); 
 
     // the part of the lid that overlaps the box
     m_lid_wall_height = __value( m_lid, LID_HEIGHT, default = m_lid_inset ? 2.0 : 4.0 );
@@ -1046,6 +1046,7 @@ module MakeBox( box )
                 }
                     
                 // subtract tabs
+
                     translate( [ 0, 0, m_box_size[ k_z ] - m_lid_tab[ k_z ] + 1 ])
                         MakeLidTabs( mod = 0, square = true ); // this needs to be wide 
             }  
@@ -1783,10 +1784,14 @@ module MakeBox( box )
                 }
 
                 // lid surface ( pattern and labels )
-                MoveToLidInterior( tolerance = -tolerance )
                     intersection() // clip to lid extents
                     {
-                        cube([  __lid_internal_size( k_x ) + 2*tolerance, __lid_internal_size( k_y ) + 2*tolerance,  __lid_external_size( k_z)]);
+                        if ( m_lid_inset )
+                            MoveToLidInterior( tolerance = -tolerance )
+                                cube([  __lid_internal_size( k_x ) + 2*tolerance, __lid_internal_size( k_y ) + 2*tolerance,  __lid_external_size( k_z)]);
+                        else
+                            cube([  __lid_external_size( k_x ), __lid_external_size( k_y ),  __lid_external_size( k_z)]);
+
                         MakeLidSurface();
                     }
             }
