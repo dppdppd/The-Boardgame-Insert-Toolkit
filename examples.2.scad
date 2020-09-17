@@ -497,6 +497,32 @@ data =
             ]
         ]
     ],    
+    [   "lid label stencil",
+        [
+            [ BOX_SIZE_XYZ,             [50.0, 50.0, 20.0] ],
+            [ BOX_COMPONENT,
+                [
+                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 47, 47, 18.0] ],
+                ]
+            ],  
+
+               [ BOX_LID,
+                [
+                    [ LID_PATTERN_RADIUS,         2],        
+
+                    [LID_LABELS_INVERT_B,t],
+                    [LID_LABELS_BG_THICKNESS, 0],
+                    [LID_LABELS_BORDER_THICKNESS, 1],
+                    [ LABEL,
+                        [
+                            [ LBL_TEXT,     "STENCIL"],
+                        ]
+                    ],                        
+                ]
+            ],
+        ]
+    ],    
+
 
    
 

@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.39";
+VERSION = "2.40";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 fn = $preview ? 10 : 100;
@@ -329,7 +329,7 @@ function __label_placement_is_wall( label ) =
     __label_placement_raw( label ) == RIGHT_WALL ;
 
 function __label_offset( label ) = __value( label, POSITION_XY, default = [0,0] );
-function __label_font( label ) = __value( label, LBL_FONT, default = "Liberation Sans:style=Bold" );
+function __label_font( label ) = __value( label, LBL_FONT, default = "Stencil Std:style=Bold" );
 function __label_spacing( label ) = __value( label, LBL_SPACING, default = 1 );
 function __label_scale_magic_factor( label ) = 1.2 + (1 * abs(tan( __label_rotation( label ) % 90 )) );
 function __label_auto_width( label, x, y) = __label_size_is_auto( label ) ? 
@@ -1525,8 +1525,8 @@ module MakeBox( box )
 
         module MakeLidLabel( label, offset = 0, thickness = m_lid_thickness )
         {
-            xpos = __lid_internal_size( k_x )/2 + __label_offset( label )[k_x];
-            ypos = __lid_internal_size( k_y )/2 + __label_offset( label )[k_y];
+            xpos = __lid_external_size( k_x )/2 + __label_offset( label )[k_x];
+            ypos = __lid_external_size( k_y )/2 + __label_offset( label )[k_y];
 
             auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
             width = auto_width != 0 ? min( 100, auto_width ) + offset : 0;
@@ -1606,8 +1606,8 @@ module MakeBox( box )
 
         module MakeLidLabelFrame( label, offset = 0, thickness = m_lid_thickness )
         {
-            xpos = __lid_internal_size( k_x )/2 + __label_offset( label )[k_x];
-            ypos = __lid_internal_size( k_y )/2 + __label_offset( label )[k_y];
+            xpos = __lid_external_size( k_x )/2 + __label_offset( label )[k_x];
+            ypos = __lid_external_size( k_y )/2 + __label_offset( label )[k_y];
 
             auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
             width = auto_width != 0 ? min( 100, auto_width ) + offset : 0;
@@ -1651,6 +1651,22 @@ module MakeBox( box )
     
         module MakeLid() 
         {
+
+            module MakeMesh( thickness )
+            {
+
+                linear_extrude( thickness )
+                {
+                    R = m_lid_pattern_radius;
+                    t = m_lid_pattern_thickness;
+
+                    if ( !m_has_solid_lid )
+                        Make2DPattern( x = __lid_internal_size( k_x ), y = __lid_internal_size( k_y ), R = R, t = t );
+                    else
+                        square( [ __lid_external_size( k_x ), __lid_external_size( k_y ) ] );
+                }
+            }
+
             module MakeLidSurface()
             {
                 thickness = m_lid_inset ? m_lid_thickness + m_lid_wall_height - 2* g_tolerance : m_lid_thickness;
@@ -1662,28 +1678,19 @@ module MakeBox( box )
                     // and holds pieces in place.
 
 
-                    linear_extrude( thickness )
+                    MakeMesh( thickness = thickness );
+
+                        // stencil out the text
+                    
+                    union()
                     {
-                        R = m_lid_pattern_radius;
-                        t = m_lid_pattern_thickness;
 
-                        if ( !m_has_solid_lid )
-                            Make2DPattern( x = __lid_internal_size( k_x ), y = __lid_internal_size( k_y ), R = R, t = t );
-                        else
-                            square( [ __lid_external_size( k_x ), __lid_external_size( k_y ) ] );
-                    }
-
-                    // stencil out the text
-                    if ( m_lid_label_bg_thickness > 0 || m_lid_is_inverted  )
-                        if ( !m_has_solid_lid )
-                        {
+                        if ( m_lid_label_bg_thickness > 0 && !m_has_solid_lid )
                             MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness, thickness = thickness );
-                        }
-                        else
-                        {
-                            MakeAllLidLabels( thickness = m_lid_label_depth );
-                        }                          
-                }
+
+                            MakeAllLidLabels( thickness = thickness );
+                    }       
+                } 
 
                 if ( m_lid_has_labels )
                 {
@@ -1730,15 +1737,27 @@ module MakeBox( box )
                             if ( g_print_mmu_layer != "mmu_box_layer" )
                                 MakeAllLidLabels( ); 
                         }
-                        else
-                        {
+                        else if ( m_lid_label_bg_thickness > 0 )
+                        {  
                             // negative text
                             difference()
                             {
-                                MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness );
-                                MakeAllLidLabels();
+                                {
+                                    MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness );
+                                    MakeAllLidLabels();
+                                }
                             }    
-                        } 
+                        }
+                        else
+                        {
+                            difference()
+                            {
+                                {
+                                    MakeAllLidLabels( offset = m_lid_label_border_thickness );
+                                    MakeAllLidLabels();
+                                }
+                            }                             
+                        }
                     }
                 }
                 
