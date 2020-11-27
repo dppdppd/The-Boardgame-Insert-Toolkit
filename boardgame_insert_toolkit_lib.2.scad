@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.40";
+VERSION = "2.41";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 fn = $preview ? 10 : 100;
@@ -1095,7 +1095,8 @@ module MakeBox( box )
 
                     if ( __component_is_fillet())
                     {
-                        AddFillets();
+                        translate( [0, 0, m_component_base_height])
+                            AddFillets();
                     }
                 }
 
