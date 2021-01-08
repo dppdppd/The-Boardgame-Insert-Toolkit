@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.41";
+VERSION = "2.42";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 fn = $preview ? 10 : 100;
@@ -128,6 +128,7 @@ BACK_WALL = "back-wall";
 LEFT_WALL = "left-wall";
 RIGHT_WALL = "right-wall";
 CENTER = "center";
+BOTTOM = "bottom";
 ///
 
 AUTO = "auto";
@@ -322,6 +323,7 @@ function __label_placement_is_back( label ) = __label_placement_raw( label ) == 
 function __label_placement_is_front( label ) = __label_placement_raw( label ) == FRONT || __label_placement_raw( label ) == FRONT_WALL;
 function __label_placement_is_left( label ) = __label_placement_raw( label ) == LEFT || __label_placement_raw( label ) == LEFT_WALL;
 function __label_placement_is_right( label ) = __label_placement_raw( label ) == RIGHT || __label_placement_raw( label ) == RIGHT_WALL;
+function __label_placement_is_bottom( label ) = __label_placement_raw( label ) == BOTTOM;
 function __label_placement_is_wall( label ) = 
     __label_placement_raw( label ) == BACK_WALL ||
     __label_placement_raw( label ) == FRONT_WALL ||
@@ -1588,6 +1590,12 @@ module MakeBox( box )
                         rotate( 90, [ 0,1,0])
                             children();
             }
+            else if ( __label_placement_is_bottom( label) )
+            {
+                translate( [ m_box_size[k_x]/2, m_box_size[k_y]/2, 0 ] )
+                    rotate( 90, [ 1,0,0])
+                        children();
+            }            
         }
 
 

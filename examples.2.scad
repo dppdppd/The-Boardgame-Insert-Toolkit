@@ -139,6 +139,15 @@ data =
 
             [ LABEL,
                 [
+                    [ LBL_TEXT,     "BOTTOM"],
+                    [ LBL_SIZE,     AUTO ],
+                    [LBL_PLACEMENT,     BOTTOM],
+
+                ]
+            ],            
+
+            [ LABEL,
+                [
                     [ LBL_TEXT,     "LEFT"],
                     [ LBL_SIZE,     AUTO ],
  

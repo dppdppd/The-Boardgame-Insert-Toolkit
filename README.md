@@ -486,9 +486,10 @@ value is expected to be one of the following:
 - `BACK_WALL`
 - `LEFT_WALL`
 - `RIGHT_WALL`
-- `CENTER`  
+- `CENTER`
+- `BOTTOM`  
 
-Front, back, left, and right, will place the label on the top surface, while the _wall values will place the label inside, on the compartment wall. Center will place the label on the compartment floor.
+Front, back, left, and right, will place the label on the top surface, while the _wall values will place the label inside, on the compartment wall. Center will place the label on the compartment floor. Bottom is for labeling the bottom of the box.
 
 #### `LBL_FONT`
 value is expected to be a string that determines what font to use for the label. More [here](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Text#Using_Fonts_&_Styles).  
