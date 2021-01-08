@@ -467,8 +467,12 @@ or
         ]
     ]
 
+#### `LBL_IMAGE`
+value is expected to be a string specifying an SVG filename. `LBL_TEXT` takes priority over `LBL_IMAGE`, so if both are provided, only the string will be used. **Warning:** this option will slow things down considerably.
+e.g. `[ LBL_IMAGE, "image.svg" ]`
+
 #### `LBL_SIZE`
-value is expected to either be `AUTO` or a number. `AUTO` will attempt to scale the label to fit in the space according to _width_. This does not work will with very short words. A number will specify the font size.  
+value is expected to either be `AUTO` or a number. `AUTO` will attempt to scale the label to fit in the space according to _width_. This does not work will with very short words. A number will specify the font size (if `LBL_TEXT`) or the image width (if `LBL_IMAGE`).
 e.g. `[ LBL_SIZE, 12 ]`
 
 #### `LBL_SPACING`
