@@ -109,6 +109,7 @@ CMP_PEDESTAL_BASE_B = "push_base";
 
 // LABEL PARAMETERS
 LBL_TEXT = "text";
+LBL_IMAGE = "image";
 LBL_SIZE = "size";
 LBL_PLACEMENT = "placement";
 LBL_FONT = "font";
@@ -307,9 +308,16 @@ function __div_frame_radius( div ) = __value( div, DIV_FRAME_RADIUS, default = 1
 function __div_frame_num_columns( div ) = __value( div, DIV_FRAME_NUM_COLUMNS, default = -1 );
 
 // is the text a string or a list of strings?
-function __is_multitext( label ) = !is_string( __value( label, LBL_TEXT ) ) && is_list(__value( label, LBL_TEXT ));
+function __is_text( label ) = is_string( __value( label, LBL_TEXT ) ) || is_list(__value( label, LBL_TEXT ) );
+function __is_multitext( label ) = is_list(__value( label, LBL_TEXT ));
+function __is_multiimage( label ) = is_list(__value( label, LBL_IMAGE ));
 
-function __label_text( label, r = 0, c = 0 ) = __is_multitext( label ) ?  __value( label, LBL_TEXT, default = "" )[c][r] : __value( label, LBL_TEXT, default = "" );
+function __label_text( label, r = 0, c = 0 ) = __is_text( label ) ?
+    ( __is_multitext( label ) ?  __value( label, LBL_TEXT, default = "" )[c][r] : __value( label, LBL_TEXT, default = "" ) ) :
+    "";
+function __label_image( label, r = 0, c = 0 ) = !__is_text( label ) ?
+    ( __is_multiimage( label ) ?  __value( label, LBL_IMAGE, default = "" )[c][r] : __value( label, LBL_IMAGE, default = "" ) ) :
+    "";
 function __label_size_raw( label ) = __value( label , LBL_SIZE, default = AUTO );
 function __label_size_is_auto( label ) = __label_size_raw( label ) == AUTO;
 function __label_size( label ) = __label_size_is_auto( label ) ? 10 : __label_size_raw( label);
@@ -337,7 +345,7 @@ function __label_scale_magic_factor( label ) = 1.2 + (1 * abs(tan( __label_rotat
 function __label_auto_width( label, x, y) = __label_size_is_auto( label ) ? 
             (  cos( __label_rotation( label ) ) * ( x/__label_scale_magic_factor( label ) )) + 
             ( abs( sin( __label_rotation( label ) ) ) * ( y/__label_scale_magic_factor( label ) )) :
-            0;
+            __is_text( label ) ? 0 : __label_size( label );
 
 module Colorize()
 {
@@ -1517,13 +1525,21 @@ module MakeBox( box )
         {
             resize([ width,0,0], auto=true )
                 offset( r = offset )
-                    text(text = str( __label_text( label ) ), 
-                        font = __label_font( label ),  
-                        size = __label_size( label ), 
-                        spacing = __label_spacing( label ),
-                        valign = CENTER, 
-                        halign = CENTER,
-                        $fn = fn);
+                    if ( __is_text( label ) )
+                    {
+                        text(text = str( __label_text( label ) ),
+                            font = __label_font( label ),
+                            size = __label_size( label ),
+                            spacing = __label_spacing( label ),
+                            valign = CENTER,
+                            halign = CENTER,
+                            $fn = fn);
+                    }
+                    else
+                    {
+                        import(str( __label_image( label ) ),
+                            center = true);
+                    }
         }
 
         module MakeLidLabel( label, offset = 0, thickness = m_lid_thickness )
@@ -1551,13 +1567,21 @@ module MakeBox( box )
                         resize( [ width, 0, 0], auto=true)
                             translate([0,0,-__label_depth( label )]) 
                                 linear_extrude( height =  __label_depth( label ) )
-                                    text(text = str( __label_text( label, x) ), 
-                                        font = __label_font( label ), 
-                                        size = __label_size( label ), 
-                                        spacing = __label_spacing( label ),
-                                        valign = CENTER, 
-                                        halign = CENTER,
-                                        $fn = fn);
+                                    if ( __is_text( label ) )
+                                    {
+                                        text(text = str( __label_text( label, x) ),
+                                            font = __label_font( label ),
+                                            size = __label_size( label ),
+                                            spacing = __label_spacing( label ),
+                                            valign = CENTER,
+                                            halign = CENTER,
+                                            $fn = fn);
+                                    }
+                                    else
+                                    {
+                                        import(str( __label_image( label, x ) ),
+                                            center = true);
+                                    }
             }
 
         module MakeBoxLabel( label, x = 0, y = 0 )
@@ -2277,8 +2301,11 @@ module MakeBox( box )
 
             width = __label_auto_width( label, __compartment_size( k_x ), __compartment_size( k_y ) );
 
-            // since we build from the bottom--up, we need to reverse the order in which we read the text rows
-            text_y_reverse = __is_multitext( label ) ? len(__value( label, LBL_TEXT)) - y - 1: 0;
+            // since we build from the bottom--up, we need to reverse the order in which we read the label rows
+            label_y_reverse = ( __is_text( label ) && __is_multitext( label )) ?
+                len(__value( label, LBL_TEXT)) - y - 1:
+                ( !__is_text( label ) && __is_multiimage( label )) ?
+                    len(__value( label, LBL_IMAGE)) - y - 1: 0;
 
             rotate_vector = label_on_side ? [ 0,1,0] : [0,0,1];
             label_needs_to_be_180ed = __label_placement_is_front( label) && __label_placement_is_wall( label);
@@ -2290,13 +2317,21 @@ module MakeBox( box )
                                 resize( [ width, 0, 0], auto=true)
                                     translate([0,0,-__label_depth( label )]) 
                                         linear_extrude( height =  __label_depth( label ) )
-                                            text(text = str( __label_text( label, x, text_y_reverse) ), 
-                                                font = __label_font( label ), 
-                                                size = __label_size( label ), 
-                                                spacing = __label_spacing( label ),
-                                                valign = CENTER, 
-                                                halign = CENTER,
-                                                $fn = fn);
+                                            if ( __is_text( label ) )
+                                            {
+                                                text(text = str( __label_text( label, x, label_y_reverse) ),
+                                                    font = __label_font( label ),
+                                                    size = __label_size( label ),
+                                                    spacing = __label_spacing( label ),
+                                                    valign = CENTER,
+                                                    halign = CENTER,
+                                                    $fn = fn);
+                                            }
+                                            else
+                                            {
+                                                import(str( __label_image( label, x, label_y_reverse ) ),
+                                                    center = true);
+                                            }
             }
 
         module MakeLabel( label, x = 0, y = 0 )
