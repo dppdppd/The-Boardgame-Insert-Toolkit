@@ -427,6 +427,7 @@ data =
 
             [ DIV_TAB_SIZE_XY,          [30, 12]],
             [ DIV_TAB_CYCLE,            5],
+            [ DIV_TAB_CYCLE_START,      2],
 
             [ DIV_FRAME_NUM_COLUMNS,    2],
             [ DIV_FRAME_SIZE_XY,        [120, 50]],
