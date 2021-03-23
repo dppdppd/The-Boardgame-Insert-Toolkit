@@ -359,6 +359,9 @@ value is expected to be a number, and determines the radius of the corner of the
 #### `DIV_TAB_CYCLE`
 value is expected to be a number, and determines over how many dividers should the tab drift from left to right.
 
+#### `DIV_TAB_CYCLE_START`
+value is expected to be a number, and determines the starting position of the first divider.  Default is 1.
+
 #### `DIV_TAB_TEXT`
 value is expected to be an array of strings, and determines what dividers get created.
 e.g. `[ DIV_TAB_TEXT, [ "Tab-1", "Tab-2", "Tab-3", "Tab-4" ] ]`

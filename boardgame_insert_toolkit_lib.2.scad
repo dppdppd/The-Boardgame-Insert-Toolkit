@@ -48,6 +48,7 @@ DIV_TAB_SIZE_XY = "div_tab_size";
 
 DIV_TAB_RADIUS = "div_tab_radius";
 DIV_TAB_CYCLE = "div_tab_cycle";
+DIV_TAB_CYCLE_START = "div_tab_cycle_start";
 
 DIV_TAB_TEXT = "div_tab_text";
 DIV_TAB_TEXT_SIZE = "DIV_TAB_TEXT_size";
@@ -289,6 +290,7 @@ function __div_thickness( div ) = __value( div, DIV_THICKNESS, default = 0.5 );
 function __div_tab_size( div ) = __value( div, DIV_TAB_SIZE_XY, default = [32, 14] );
 function __div_tab_radius( div ) = __value( div, DIV_TAB_RADIUS, default = 4 );
 function __div_tab_cycle( div ) = __value( div, DIV_TAB_CYCLE, default = 3 );
+function __div_tab_cycle_start( div ) = __value( div, DIV_TAB_CYCLE_START, default = 1 );
 
 function __div_total_height( div ) = __div_tab_size( div )[k_y] + __div_frame_size( div )[k_y];
 
@@ -445,12 +447,13 @@ module MakeDividers( div )
     num_columns = __div_frame_num_columns( div );
 
     number_of_tabs_per_row = __div_tab_cycle( div );
+    tab_starting_position = __div_tab_cycle_start( div );
 
     space_between_tabs = (width - tab_width ) / ( number_of_tabs_per_row - 1 );
 
     for (idx = [ 0 : len( tab_text ) - 1 ] ) 
     {
-        tab_idx = idx % number_of_tabs_per_row;
+        tab_idx = (idx + tab_starting_position - 1) % number_of_tabs_per_row;
         tab_offset = space_between_tabs * tab_idx;
 
         y_offset = idx * ( height + tab_height + DISTANCE_BETWEEN_PARTS );
