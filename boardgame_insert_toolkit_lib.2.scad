@@ -4,7 +4,7 @@
 // Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
 // https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 
-VERSION = "2.43";
+VERSION = "2.45";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/IdoMagal/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 fn = $preview ? 10 : 100;
@@ -102,6 +102,9 @@ CMP_PADDING_HEIGHT_ADJUST_XY = "padding_height_adjust";
 CMP_MARGIN_FBLR = "margin_dim";
 CMP_CUTOUT_SIDES_4B = "cutout_sides";
 CMP_CUTOUT_CORNERS_4B = "cutout_corners";
+CMP_CUTOUT_HEIGHT_PCT = "cutout_height_percent";
+CMP_CUTOUT_DEPTH_PCT = "cutout_depth_percent";
+CMP_CUTOUT_WIDTH_PCT = "cutout_width_percent";
 CMP_CUTOUT_BOTTOM_B = "cutout_bottom";
 CMP_CUTOUT_TYPE = "cutout_type";
 CMP_SHEAR = "shear";
@@ -713,9 +716,10 @@ module MakeBox( box )
             (m_component_cutout_side[ k_back ]?1:0) +
             (m_component_cutout_side[ k_left ]?1:0) +
             (m_component_cutout_side[ k_right ]?1:0) == 1;
-
-        m_cutout_size_frac_aligned = 1/4;
-        m_cutout_size_frac_perpindicular = 1/2;
+        
+        m_cutout_height_pct = __value( component, CMP_CUTOUT_HEIGHT_PCT, default = 100 ) / 100;
+        m_cutout_size_frac_aligned = __value( component, CMP_CUTOUT_DEPTH_PCT, default = 25 ) / 100;
+        m_cutout_size_frac_perpindicular = __value( component, CMP_CUTOUT_WIDTH_PCT, default = 50 ) / 100;
 
         function __component_padding( D ) = __value( component, CMP_PADDING_XY, default = [1.0, 1.0] )[ D ];
         function __component_padding_height_adjust( D ) = __value( component, CMP_PADDING_HEIGHT_ADJUST_XY, default = [0.0, 0.0] )[ D ];
@@ -1496,7 +1500,7 @@ module MakeBox( box )
 
         module MakeAllLidLabels( offset = 0, thickness = m_lid_thickness )
         {
-            for( i = [ 0 : len( m_lid ) - 1])
+            for( i = [ 0 : max(len( m_lid ) - 1, 0)])
             {
                 if ( m_lid[ i ][ k_key ] == LABEL )
                 {
@@ -1629,7 +1633,7 @@ module MakeBox( box )
 
         module MakeAllLidLabelFrames( offset = 0, thickness = m_lid_thickness )
         {
-            for( i = [ 0 : len( m_lid ) - 1])
+            for( i = [ 0 : max(len( m_lid ) - 1, 0)])
             {
                 if ( m_lid[ i ][ k_key ] == LABEL )
                 {
@@ -1900,7 +1904,7 @@ module MakeBox( box )
                     dim1 = m_component_margin_side[ side ] + ( __component_padding( D ) + __compartment_size( D )) * a ;
 
                     translate( [ D == k_x ? dim1 : 0 ,  D == k_y ? dim1 : 0 , 0 ] )
-                    children();
+                        children();
                 }
             }
         }
@@ -1959,12 +1963,13 @@ module MakeBox( box )
         module MakeSideCutouts( side, margin = false )
         {
 
-            function __cutout_z() = m_is_lid ? m_lid_wall_height + m_lid_thickness : m_box_size[ k_z ] + __lid_external_size( k_z ) * 2;
+            function __cutout_z() = m_is_lid ? m_lid_wall_height + m_lid_thickness : 
+                                    m_box_size[ k_z ] + __lid_external_size( k_z ) * 2 * m_cutout_height_pct; 
             function __padding( D ) = m_is_lid ? 0 : __component_padding( D );
             function __size( D ) = m_is_lid ? __lid_external_size( D ) : __compartment_size( D );
             function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : 
-                                                - __lid_external_size( k_z );
-
+                                                - __lid_external_size( k_z ) + (m_box_size[ k_z ] * (1-m_cutout_height_pct));
+            function __round_bottom() = __finger_cutouts_bottom() > m_box_size[ k_z ] - __size( k_z );
             // main and perpendicular dimensions
             main_d = ( side == k_back || side == k_front ) ? k_y : k_x; 
             perp_d = ( side == k_back || side == k_front ) ? k_x : k_y;
@@ -2060,7 +2065,6 @@ module MakeBox( box )
                     m_component_cutout_side[ k_right ],
                 ];
 
-
             shape_standard =
             [
                 //front
@@ -2078,15 +2082,18 @@ module MakeBox( box )
 
             shape_square = [ f,f,f,f];
 
-            shape = margin || m_actually_cutout_the_bottom ? shape_square : shape_standard[ side ];
-
-            if ( side == k_back && !margin )
-             translate( pos[ side ] )
+            shape = __round_bottom() ? [ t,t,t,t] : 
+                m_actually_cutout_the_bottom ? shape_square : shape_standard[ side ];
+            
+            translate( pos[ side ] )
+                if ( __round_bottom() ) {
+                    if ( side == k_back || side == k_front )
+                        MakeRoundedCubeX( size[ side ], radius, shape);
+                    else
+                        MakeRoundedCubeY( size[ side ], radius, shape);
+                }
+                else
                     MakeRoundedCubeZ( size[ side ], radius, shape);
-            else
-             translate( pos[ side ] )
-                   MakeRoundedCubeZ( size[ side ], radius, shape);            
-
         }
 
         module MakeCornerCutouts( corner )
@@ -2578,6 +2585,72 @@ module MakeBox( box )
     }
 
 }
+
+module MakeRoundedCubeX( vec3, radius, vecRounded = [ t, t, t, t ] ){
+    radii = 
+    [
+        vecRounded[ 0 ] ? radius : .001,
+        vecRounded[ 1 ] ? radius : .001,
+        vecRounded[ 2 ] ? radius : .001,
+        vecRounded[ 3 ] ? radius : .001,
+    ];
+
+    pos = 
+    [
+        [ radii[0], 0,  radii[0] ],
+        [ vec3[k_x] - radii[1], 0, radii[1] ],
+        [ radii[0], 0, vec3[k_z] - radii[0] ],
+        [ vec3[k_x] - radii[1], 0, vec3[k_z] - radii[1] ],
+    ] ;
+ 
+    hull()
+    {
+        h = vec3[k_y];
+
+        for ( idx = [ 0 : 3] ) 
+        {
+            // collapse the cylinder if we're approximating a point
+            fn = radii[ idx ] >= 1 ? $fn: 4;
+
+            translate( pos[ idx ])
+                rotate([270,0,0])
+                    cylinder(r=radii[ idx ], h=h, $fn = fn); 
+        }
+    }
+} 
+
+module MakeRoundedCubeY( vec3, radius, vecRounded = [ t, t, t, t ] ){
+    radii = 
+    [
+        vecRounded[ 0 ] ? radius : .001,
+        vecRounded[ 1 ] ? radius : .001,
+        vecRounded[ 2 ] ? radius : .001,
+        vecRounded[ 3 ] ? radius : .001,
+    ];
+
+    pos = 
+    [
+        [ 0, radii[0], radii[0] ],
+        [ 0, vec3[k_y] - radii[1], radii[1] ],
+        [ 0, radii[0], vec3[k_z] - radii[0] ],
+        [ 0, vec3[k_y] - radii[1], vec3[k_z] - radii[1] ],
+    ] ;
+ 
+    hull()
+    {
+        h = vec3[k_y];
+
+        for ( idx = [ 0 : 3] ) 
+        {
+            // collapse the cylinder if we're approximating a point
+            fn = radii[ idx ] >= 1 ? $fn: 4;
+
+            translate( pos[ idx ])
+                rotate([0,90,0])
+                    cylinder(r=radii[ idx ], h=h, $fn = fn); 
+        }
+    }
+} 
 
 module MakeRoundedCubeZ( vec3, radius, vecRounded = [ t, t, t, t ] ){
  

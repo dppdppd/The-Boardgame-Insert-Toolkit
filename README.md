@@ -419,7 +419,6 @@ value is expected to be a number, and determines the radius of the fillet, if sh
 #### `CMP_PEDESTAL_BASE_B`
 value is expected to be a bool, and determines whether the base of the compartment is a pedestal. This allows for cards or tiles to be extracted by pushing down on one of the sides. Ideal for short stacks and for compartments that are interior and where finger cutouts aren't possible or ideal. 
 
-
 #### `CMP_PADDING_XY`
 value is expected to be an array of 3 numbers, and determines how far apart the compartments in a component are, in the width and depth direction.  
 e.g. `[ CMP_PADDING_XY, [ 2.5, 1.3 ] ]`
@@ -435,6 +434,18 @@ e.g. `[ CMP_MARGIN_FBLR, [ 1, 10, 0, 20 ] ]`
 #### `CMP_CUTOUT_SIDES_4B`
 value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the compartments on the sides. The values represent [front, back, left, right ].  
 e.g. `[ CMP_CUTOUT_SIDES_4B, [ t, t, f, f ] ]`
+
+#### `CMP_CUTOUT_HEIGHT_PCT`
+value is expected to be an float between 0 and 100, and determines what percent of the box height is removed for finger cutouts, starting from the top.  The default is 100. 
+e.g. `[ CMP_CUTOUT_HEIGHT_PCT, 100 ]`
+
+#### `CMP_CUTOUT_DEPTH_PCT`
+value is expected to be an float between 0 and 100, and determines what percent of the box depth is removed for finger cutouts, when the cutout goes into the base of the box.  The default is 25. 
+e.g. `[ CMP_CUTOUT_DEPTH_PCT, 25 ]`
+
+#### `CMP_CUTOUT_WIDTH_PCT`
+value is expected to be an float between 0 and 100, and determines what percent of the box width is removed for finger cutouts.  The default is 50. 
+e.g. `[ CMP_CUTOUT_WIDTH_PCT, 25 ]`
 
 #### `CMP_CUTOUT_TYPE`
 value is expected to be one of the following keywords: BOTH, INTERIOR, or EXTERIOR, and determines whether where on the component the cutouts are applied.
