@@ -398,14 +398,17 @@ data =
             ],
             [ BOX_COMPONENT,
                 [
-                    [CMP_NUM_COMPARTMENTS_XY,   [2,4]],
-                    [CMP_COMPARTMENT_SIZE_XYZ,  [  66, 10, 44] ],
-                    [CMP_SHEAR, [0,40]],
+                    [CMP_NUM_COMPARTMENTS_XY,       [2,4]],
+                    [CMP_COMPARTMENT_SIZE_XYZ,      [  66, 10, 44] ],
+                    [CMP_SHEAR,                     [0,40]],
                     [CMP_PADDING_XY,                [ 1, 6]],
                     [CMP_PADDING_HEIGHT_ADJUST_XY,  [ -20,-20]],
-                    [CMP_MARGIN_FBLR, [40,0,0,0]],
-                    [POSITION_XY,                           [CENTER,-25]],
-                    [ CMP_CUTOUT_SIDES_4B,                  [t,t,f,f]]                    
+                    [CMP_MARGIN_FBLR,               [40,0,0,0]],
+                    [POSITION_XY,                   [CENTER,-25]],
+                    [CMP_CUTOUT_SIDES_4B,           [t,t,f,f]],
+                    [CMP_CUTOUT_DEPTH_PCT,          30],
+                    [CMP_CUTOUT_WIDTH_PCT,          50],
+                    [CMP_CUTOUT_HEIGHT_PCT,         100],                    
                 ]
             ],                  
         ]
