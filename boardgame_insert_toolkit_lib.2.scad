@@ -475,13 +475,13 @@ module MakeDividers( div )
 
         difference()
         {
-            MakeRoundedCubeZ( [ width, height, depth ], 4);
+            MakeRoundedCubeAxis( [ width, height, depth ], 4, k_z);
 
             if ( num_columns != -1 )
             for (c = [ 0 : num_columns ] ) 
             {
                 translate( [ divider_column + (divider_column + gap_size) * c, divider_bottom, 0])
-                    MakeRoundedCubeZ( [ gap_size, height - divider_bottom - divider_top, depth ], 4);
+                    MakeRoundedCubeAxis( [ gap_size, height - divider_bottom - divider_top, depth ], 4, k_z);
             }
 
         }
@@ -495,7 +495,7 @@ module MakeDividers( div )
             // tab shape
             translate( title_pos )
             {
-                MakeRoundedCubeZ( [ tab_width, tab_height + height_overlap, depth], 4 ); 
+                MakeRoundedCubeAxis( [ tab_width, tab_height + height_overlap, depth], 4, k_z ); 
             }
 
             // words
@@ -2088,12 +2088,12 @@ module MakeBox( box )
             translate( pos[ side ] )
                 if ( __round_bottom() ) {
                     if ( side == k_back || side == k_front )
-                        MakeRoundedCubeX( size[ side ], radius, shape);
+                        MakeRoundedCubeAxis( size[ side ], radius, shape, k_x);
                     else
-                        MakeRoundedCubeY( size[ side ], radius, shape);
+                        MakeRoundedCubeAxis( size[ side ], radius, shape, k_y);
                 }
                 else
-                    MakeRoundedCubeZ( size[ side ], radius, shape);
+                    MakeRoundedCubeAxis( size[ side ], radius, shape, k_z);
         }
 
         module MakeCornerCutouts( corner )
@@ -2182,7 +2182,7 @@ module MakeBox( box )
                     __cutout_z() ];
 
             translate( pos[ corner ] )
-                MakeRoundedCubeZ( size, 3, shape[ corner]);
+                MakeRoundedCubeAxis( size, 3, shape[ corner], k_z);
 
 
         }
@@ -2586,7 +2586,7 @@ module MakeBox( box )
 
 }
 
-module MakeRoundedCubeX( vec3, radius, vecRounded = [ t, t, t, t ] ){
+module MakeRoundedCubeAxis( vec3, radius, cevRounded = [ t, t, t, t ], axis = k_z ) {
     radii = 
     [
         vecRounded[ 0 ] ? radius : .001,
@@ -2594,99 +2594,54 @@ module MakeRoundedCubeX( vec3, radius, vecRounded = [ t, t, t, t ] ){
         vecRounded[ 2 ] ? radius : .001,
         vecRounded[ 3 ] ? radius : .001,
     ];
-
-    pos = 
+    
+    pos =
     [
-        [ radii[0], 0,  radii[0] ],
-        [ vec3[k_x] - radii[1], 0, radii[1] ],
-        [ radii[0], 0, vec3[k_z] - radii[0] ],
-        [ vec3[k_x] - radii[1], 0, vec3[k_z] - radii[1] ],
+        [
+            [ radii[0], 0,  radii[0] ],
+            [ vec3[k_x] - radii[1], 0, radii[1] ],
+            [ radii[0], 0, vec3[k_z] - radii[0] ],
+            [ vec3[k_x] - radii[1], 0, vec3[k_z] - radii[1] ],
+        ],
+        [
+            [ 0, radii[0], radii[0] ],
+            [ 0, vec3[k_y] - radii[1], radii[1] ],
+            [ 0, radii[0], vec3[k_z] - radii[0] ],
+            [ 0, vec3[k_y] - radii[1], vec3[k_z] - radii[1] ],
+        ], 
+        [
+            [ radii[0], radii[0], 0 ],
+            [ vec3[k_x] - radii[1], radii[1], 0 ],
+            [ radii[2], vec3[k_y] - radii[2], 0 ],
+            [ vec3[k_x] - radii[3], vec3[k_y] - radii[3], 0 ]
+        ]
     ] ;
- 
+    
+    rot =
+    [
+        [270,0,0],
+        [0,90,0],
+        [0,0,0]
+    ] ;
+    
     hull()
     {
-        h = vec3[k_y];
-
-        for ( idx = [ 0 : 3] ) 
+        h = vec3[axis];
+        
+        for ( idx = [ 0 : 3] )
         {
             // collapse the cylinder if we're approximating a point
             fn = radii[ idx ] >= 1 ? $fn: 4;
-
-            translate( pos[ idx ])
-                rotate([270,0,0])
-                    cylinder(r=radii[ idx ], h=h, $fn = fn); 
+            
+            translate( pos[ axis ][ idx ])
+                rotate(rot[ axis ])
+                    cylinder(r=radii[ idx ], h=h, $fn = fn);
         }
     }
-} 
-
-module MakeRoundedCubeY( vec3, radius, vecRounded = [ t, t, t, t ] ){
-    radii = 
-    [
-        vecRounded[ 0 ] ? radius : .001,
-        vecRounded[ 1 ] ? radius : .001,
-        vecRounded[ 2 ] ? radius : .001,
-        vecRounded[ 3 ] ? radius : .001,
-    ];
-
-    pos = 
-    [
-        [ 0, radii[0], radii[0] ],
-        [ 0, vec3[k_y] - radii[1], radii[1] ],
-        [ 0, radii[0], vec3[k_z] - radii[0] ],
-        [ 0, vec3[k_y] - radii[1], vec3[k_z] - radii[1] ],
-    ] ;
- 
-    hull()
-    {
-        h = vec3[k_y];
-
-        for ( idx = [ 0 : 3] ) 
-        {
-            // collapse the cylinder if we're approximating a point
-            fn = radii[ idx ] >= 1 ? $fn: 4;
-
-            translate( pos[ idx ])
-                rotate([0,90,0])
-                    cylinder(r=radii[ idx ], h=h, $fn = fn); 
-        }
-    }
-} 
-
-module MakeRoundedCubeZ( vec3, radius, vecRounded = [ t, t, t, t ] ){
- 
-    radii = 
-    [
-        vecRounded[ 0 ] ? radius : .001,
-        vecRounded[ 1 ] ? radius : .001,
-        vecRounded[ 2 ] ? radius : .001,
-        vecRounded[ 3 ] ? radius : .001,
-    ];
-
-    pos = 
-    [
-        [ radii[0], radii[0], 0 ],
-        [ vec3[k_x] - radii[1], radii[1], 0 ],
-        [ radii[2], vec3[k_y] - radii[2], 0 ],
-        [ vec3[k_x] - radii[3], vec3[k_y] - radii[3], 0 ]
-    ] ;
- 
-    hull()
-    {
-        h = vec3[k_z];
-
-        for ( idx = [ 0 : 3] ) 
-        {
-            // collapse the cylinder if we're approximating a point
-            fn = radii[ idx ] >= 1 ? $fn: 4;
-
-            translate( pos[ idx ])
-                cylinder(r=radii[ idx ], h=h, $fn = fn); 
-        }
-    }
-} 
+}
 
 
-module MakeRoundedCubeall( vecCube, radius, axis = k_z, vecRounded = [ t, t, t, t ] ){
+module MakeRoundedCubeAll( vecCube, radius, axis = k_z, vecRounded = [ t, t, t, t ] ){
  
     radii = 
     [
