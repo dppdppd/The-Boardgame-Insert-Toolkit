@@ -15,6 +15,8 @@ $fn = fn;
 k_key = 0;
 k_value = 1;
 
+epsilon = $preview ? 0.02 : 0; // extend cuts by a bit to fight z-fighting during preview
+
 k_x = 0;
 k_y = 1;
 k_z = 2;
@@ -2257,7 +2259,7 @@ module MakeBox( box )
                 r = __compartment_largest_dimension()/2;
                 x = __component_is_hex()  ? r * sin( 360/ $fn ) : r;
 
-                MakeVerticalShape(h = __compartment_size( k_z ) + m_component_base_height, x = x, r = r);
+                MakeVerticalShape(h = __compartment_size( k_z ) + m_component_base_height + epsilon, x = x, r = r);
             }
             else
             {
@@ -2267,7 +2269,7 @@ module MakeBox( box )
 
                 r = __compartment_size( dim1 ) / 2 / cos( 30 / $fn );
 
-                translate( [0, 0, m_component_base_height])
+                translate( [0, 0, m_component_base_height + epsilon])
                 union()
                 {
                     cylinder_translation = __component_shape_rotated_90() ?
