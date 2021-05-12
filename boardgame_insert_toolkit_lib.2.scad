@@ -1985,7 +1985,7 @@ module MakeBox( box )
                         __padding( main_d )/2  + __size( main_d ) * m_cutout_size_frac_aligned;
 
             //  perp dimension is a half of the width and no more than 3cm
-            perp_size = min( 30, __size( perp_d ) * m_cutout_size_frac_perpindicular );
+            perp_size = __size( perp_d ) * m_cutout_size_frac_perpindicular ;
 
             pos_standard = [
                 // front
@@ -2588,7 +2588,7 @@ module MakeBox( box )
 
 }
 
-module MakeRoundedCubeAxis( vec3, radius, cevRounded = [ t, t, t, t ], axis = k_z ) {
+module MakeRoundedCubeAxis( vec3, radius, vecRounded = [ t, t, t, t ], axis = k_z ) {
     radii = 
     [
         vecRounded[ 0 ] ? radius : .001,
