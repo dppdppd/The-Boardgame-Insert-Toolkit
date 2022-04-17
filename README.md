@@ -20,9 +20,9 @@ This OpenSCAD library was designed to for quick design and iteration on board ga
 - Open your new scad file in your favorite text editor and also in Openscad.
 - In Openscad, set "Automatic Reload and Preview" _on_ in the Design menu. Now openscad will update the display whenever you save the scad file in the text editor.
 - Measure, build, measure again.
-- When you're done, in Openscad, _Render_ final geometry, then _Export_ and STL file for your slicer. 
+- When you're done, in Openscad, _Render_ final geometry, then _Export_ and STL file for your slicer.
 - I also recommend making a little script that will split your STL into separate STLs (one per object) using [Slic3r](https://slic3r.org)'s command line '--split' feature.
-- If you post it on Thingiverse, make it a _remix_ of [BIT](https://www.thingiverse.com/thing:3405465) and I'll get notified and eventually add it to the list of game inserts. 
+- If you post it on Thingiverse, make it a _remix_ of [BIT](https://www.thingiverse.com/thing:3405465) and I'll get notified and eventually add it to the list of game inserts.
 
 ### Pay attention to your dimensions.
 - Note that the box dimensions (BOX_SIZE_XYZ) are _exterior_ dimensions and are as such to guarantee that the box you're defining fits inside the game's cardboard box.
@@ -284,19 +284,19 @@ e.g. `[ LID_PATTERN_RADIUS, 5 ]`
 value is expected to be a number, and determines the number of sides that the pattern outer shape has.  
 
 #### `LID_PATTERN_N2`
-value is expected to be a number, and determines the number of sides that the pattern inner shape has. 
+value is expected to be a number, and determines the number of sides that the pattern inner shape has.
 
 #### `LID_PATTERN_ANGLE`
-value is expected to be a number, and determines the angle of the pattern shape. 
+value is expected to be a number, and determines the angle of the pattern shape.
 
 #### `LID_PATTERN_ROW_OFFSET`
-value is expected to be a number, and determines the percent of height that each row will offset from each other. 
+value is expected to be a number, and determines the percent of height that each row will offset from each other.
 
 #### `LID_PATTERN_COL_OFFSET`
-value is expected to be a number, and determines the percent of width that each column will offset from each other. 
+value is expected to be a number, and determines the percent of width that each column will offset from each other.
 
 #### `LID_PATTERN_THICKNESS`
-value is expected to be a number, and determines the thickness of the shape, i.e. the difference between the inner and outer shapes` radius. 
+value is expected to be a number, and determines the thickness of the shape, i.e. the difference between the inner and outer shapes` radius.
 
 #### `LID_FIT_UNDER_B`
 value is expected to be a bool, and determines whether the box bottom is formed to allow the box to sit in the lid when open. Note that this requires a printer that can print a 45 degree overhang without supports.
@@ -379,6 +379,12 @@ value is expected to be a number, and determines the letter spacing of the tab t
 #### `DIV_TAB_TEXT_CHAR_THRESHOLD`
 value is expected to be a number, and determines the number of characters above which the size of the font should be determined automatically.
 
+#### `DIV_TAB_TEXT_EMBOSSED`
+value is expected to be a bool, and determines whether the text is embossed or engraved. If ommitted, the text will be engraved.
+
+#### `DIV_TAB_TEXT_EMBOSSED_HEIGHT`
+value is expected to be a number, and determines the thickness of the text embossed. If ommitted, the text will be e,bossed by 0.5.
+
 ### Compartment keys
 #### `CMP_NUM_COMPARTMENTS_XY`
 value is expected to be an array of 2 numbers, and determines how many compartments this component will have in the width and depth direction.  
@@ -417,7 +423,7 @@ value is expected to be a bool, and determines whether the shape is rotated for 
 value is expected to be a number, and determines the radius of the fillet, if shape is fillet.
 
 #### `CMP_PEDESTAL_BASE_B`
-value is expected to be a bool, and determines whether the base of the compartment is a pedestal. This allows for cards or tiles to be extracted by pushing down on one of the sides. Ideal for short stacks and for compartments that are interior and where finger cutouts aren't possible or ideal. 
+value is expected to be a bool, and determines whether the base of the compartment is a pedestal. This allows for cards or tiles to be extracted by pushing down on one of the sides. Ideal for short stacks and for compartments that are interior and where finger cutouts aren't possible or ideal.
 
 #### `CMP_PADDING_XY`
 value is expected to be an array of 3 numbers, and determines how far apart the compartments in a component are, in the width and depth direction.  
@@ -436,15 +442,15 @@ value is expected to be an array of 4 bools, and determines whether finger cutou
 e.g. `[ CMP_CUTOUT_SIDES_4B, [ t, t, f, f ] ]`
 
 #### `CMP_CUTOUT_HEIGHT_PCT`
-value is expected to be an float between 0 and 100, and determines what percent of the box height is removed for finger cutouts, starting from the top.  The default is 100. 
+value is expected to be an float between 0 and 100, and determines what percent of the box height is removed for finger cutouts, starting from the top.  The default is 100.
 e.g. `[ CMP_CUTOUT_HEIGHT_PCT, 100 ]`
 
 #### `CMP_CUTOUT_DEPTH_PCT`
-value is expected to be an float between 0 and 100, and determines what percent of the box depth is removed for finger cutouts, when the cutout goes into the base of the box.  The default is 25. 
+value is expected to be an float between 0 and 100, and determines what percent of the box depth is removed for finger cutouts, when the cutout goes into the base of the box.  The default is 25.
 e.g. `[ CMP_CUTOUT_DEPTH_PCT, 25 ]`
 
 #### `CMP_CUTOUT_WIDTH_PCT`
-value is expected to be an float between 0 and 100, and determines what percent of the box width is removed for finger cutouts.  The default is 50. 
+value is expected to be an float between 0 and 100, and determines what percent of the box width is removed for finger cutouts.  The default is 50.
 e.g. `[ CMP_CUTOUT_WIDTH_PCT, 25 ]`
 
 #### `CMP_CUTOUT_TYPE`
@@ -460,7 +466,7 @@ value is expected to be an array of 4 bools, and determines whether finger cutou
 e.g. `[ CMP_CUTOUT_CORNERS_4B, [ t, t, f, f ] ]`
 
 #### `CMP_SHEAR`
-value is expected to be an array of 2 numbers, and determines the degrees to which the component should be sheared in the direction of width and depth. The shearing pivots around the center of the component. 
+value is expected to be an array of 2 numbers, and determines the degrees to which the component should be sheared in the direction of width and depth. The shearing pivots around the center of the component.
 e.g. `[ CMP_SHEAR, [ 45, 0 ] ]`
 
 #### `LABEL`
@@ -490,7 +496,7 @@ value is expected to either be `AUTO` or a number. `AUTO` will attempt to scale 
 e.g. `[ LBL_SIZE, 12 ]`
 
 #### `LBL_SPACING`
-value is expected to be a number, and determines the letter spacing. 
+value is expected to be a number, and determines the letter spacing.
 e.g. `[ LBL_SPACING, 1.1 ]`
 
 
@@ -522,7 +528,7 @@ value is expected to be a number, and determines the degree to which the compone
 e.g. `[ ROTATION, 45 ]`
 
 #### `POSITION_XY`
-value is expected to be an array of 2 numbers, although `MAX` is also valid, and determines the position of the label or component. 
+value is expected to be an array of 2 numbers, although `MAX` is also valid, and determines the position of the label or component.
 - When used on a label, the values are relative to reasonable centers and can be used to adjust the positioning of the text.
 - When used on a component, it is always relative to the origin of the box, and almost always needs to be present.
 - When used on a component, the value `MAX` essentially aligns that value to opposite end, so 'right' when placed in the x position, and 'back' when placed in the y position.  
