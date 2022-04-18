@@ -509,13 +509,12 @@ module MakeDividers( div )
 
             // words engraved
             if (embossed == f) {
-              text_pos_z = 0;
-              text_pos = title_pos + [ tab_width/2, font_size * 2, text_pos_z ];
+              text_pos = title_pos + [ tab_width/2, font_size * 2, 0 ];
 
               text_width = len(title) > number_of_letters_before_scale_to_fit ? tab_width * 0.8 : 0;
 
               translate( text_pos )
-                resize([ text_width, 10, 0 ], auto=[ true, true, false])
+                resize([ text_width, 0, 0 ], auto=[ true, true, false])
                   linear_extrude( depth )
                       text(text = title,
                           font = font,
@@ -529,13 +528,12 @@ module MakeDividers( div )
         }
         // words embossed
         if (embossed == t) {
-          text_pos_z = 0;
-          text_pos = title_pos + [ tab_width/2, font_size * 2, text_pos_z ];
+          text_pos = title_pos + [ tab_width/2, font_size * 2, 0];
 
           text_width = len(title) > number_of_letters_before_scale_to_fit ? tab_width * 0.8 : 0;
 
           translate( text_pos )
-            resize([ text_width, 10, 0 ], auto=[ true, true, false])
+            resize([ text_width, 0, 0 ], auto=[ true, true, false])
               linear_extrude( depth + embossed_height)
                   text(text = title,
                       font = font,
