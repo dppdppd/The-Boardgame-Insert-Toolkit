@@ -455,6 +455,10 @@ e.g. `[ CMP_CUTOUT_TYPE, INTERIOR ]`
 value is expected to be a bool and determines whether the bottom of the compartment is cut out. Note that this is ignored if CMP_PEDESTAL_BASE_B is true or if CMP_SHAPE is set to FILLET.
 e.g. `[ CMP_CUTOUT_BOTTOM, true ]`
 
+#### `CMP_CUTOUT_BOTTOM_PCT` 
+value is expected to be an float between 0 and 100, and determines what percent of the box bottom is removed for bottom cutouts.  The default is 80. 
+e.g. `[ CMP_CUTOUT_BOTTOM_PCT, 90 ]`
+
 #### `CMP_CUTOUT_CORNERS_4B`
 value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the compartments on the corners. The values represent [front-left, back-right, back-left, front-right ].  
 e.g. `[ CMP_CUTOUT_CORNERS_4B, [ t, t, f, f ] ]`
