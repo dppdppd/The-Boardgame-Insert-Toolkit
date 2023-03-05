@@ -82,6 +82,8 @@ LID_LABELS_INVERT_B = "lid_label_inverted";
 LID_SOLID_LABELS_DEPTH = "lid_label_depth";
 LID_LABELS_BG_THICKNESS = "lid_label_bg_thickness";
 LID_LABELS_BORDER_THICKNESS = "lid_label_border_thickness";
+LID_STRIPE_WIDTH = "lid_stripe_width";
+LID_STRIPE_SPACE = "lid_stripe_space";
 LID_INSET_B = "lid_inset";
 LID_TABS_4B = "lid_tabs";
 
@@ -577,6 +579,8 @@ module MakeBox( box )
 
     m_lid_label_bg_thickness = __value( m_lid, LID_LABELS_BG_THICKNESS, default = 2.0 );
     m_lid_label_border_thickness = __value( m_lid, LID_LABELS_BORDER_THICKNESS, default = 0.3 );
+    m_lid_stripe_width = __value( m_lid, LID_STRIPE_WIDTH, default = 0.5 );
+    m_lid_stripe_space = __value( m_lid, LID_STRIPE_SPACE, default = 1 );
 
     m_lid_pattern_n1 = __value( m_lid, LID_PATTERN_N1, default = 6 );
     m_lid_pattern_n2 = __value( m_lid, LID_PATTERN_N2, default = 6 );
@@ -1765,7 +1769,7 @@ module MakeBox( box )
 
                                         translate( [x/2-x2/2, y/2-y2/2, 0])
                                             RotateAboutPoint( theta, [0,0,1], [x2/2,y2/2,0] )
-                                                MakeStripedGrid( x = x2, y = y2, w = 0.5, dx = 1, dy = 0, depth_ratio = 0.5, thickness = thickness );
+                                                MakeStripedGrid( x = x2, y = y2, w = m_lid_stripe_width, dx = m_lid_stripe_space, dy = 0, depth_ratio = 0.5, thickness = thickness );
 
                                         MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness, thickness = thickness );
                                     }

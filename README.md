@@ -319,6 +319,12 @@ value is expected to be a number, and determines the thickness of the lid label 
 #### `LID_LABELS_BORDER_THICKNESS`
 value is expected to be a number, and determines the thickness of the lid label border.  Default is 0.3 mm
 
+#### `LID_STRIPE_WIDTH`
+value is expected to be a number, and determines the thickness of the lines in the striped grid behind the label.  Default is 0.5 mm
+
+#### `LID_STRIPE_SPACE`
+value is expected to be a number, and determines the spacing of the lines in the striped grid behind the label.  Default is 1.0 mm
+
 #### `LID_HEIGHT`
 value is expected to be a number, and determines whether how deep the lid is. Default is 1mm for inset lids, and 2mm for cap lids.
 
