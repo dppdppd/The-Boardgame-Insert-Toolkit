@@ -1151,11 +1151,15 @@ module MakeBox( box )
                 if ( m_component_has_side_cutouts )
                 {
                     // finger cutouts
-                    insetx = m_cutout_size_frac_aligned * __compartment_size( k_x ) + m_component_margin_side[ k_left];
-                    insety = m_cutout_size_frac_aligned * __compartment_size( k_y ) + m_component_margin_side[ k_front];
+                    insetx = m_component_cutout_side[ k_left ]  ? m_cutout_size_frac_aligned * __compartment_size( k_x ) + m_component_margin_side[ k_left]  : 0;
+                    insety = m_component_cutout_side[ k_front ] ? m_cutout_size_frac_aligned * __compartment_size( k_y ) + m_component_margin_side[ k_front] : 0;
 
-                    sizex = __component_size( k_x) - 2 * m_cutout_size_frac_aligned * __compartment_size( k_x ) - __component_margins_sum( k_x );
-                    sizey = __component_size( k_y) - 2 * m_cutout_size_frac_aligned * __compartment_size( k_y ) - __component_margins_sum( k_y );
+                    // Count how many cutouts are made in each direction to substract it from the size of the inner stencil box
+                    x_cutouts = (m_component_cutout_side[ k_left ]?1:0) + (m_component_cutout_side[ k_right ]?1:0);
+                    y_cutouts = (m_component_cutout_side[ k_front ]?1:0) + (m_component_cutout_side[ k_back ]?1:0);
+
+                    sizex = __component_size( k_x) - x_cutouts * m_cutout_size_frac_aligned * __compartment_size( k_x ) - __component_margins_sum( k_x );
+                    sizey = __component_size( k_y) - y_cutouts * m_cutout_size_frac_aligned * __compartment_size( k_y ) - __component_margins_sum( k_y );
                 
                     if ( m_component_cutout_type == BOTH )
                     {
@@ -1176,17 +1180,20 @@ module MakeBox( box )
                     {
                         intersection()
                         {
+                            // Create a stencil for the cutout
                             difference()
                             {
+                                // From the whole box ..
                                 translate( [ -__component_position(k_x),-__component_position(k_y), -m_wall_thickness ] )
                                     cube( [ m_box_size[ k_x], m_box_size[ k_y], m_box_size[ k_z] + __lid_external_size(k_z)]);
 
+                                // .. remove the inner area of the whole compartment
                                 translate( [ insetx, insety, -m_wall_thickness ] )
                                     cube ( [ sizex, sizey, m_box_size[ k_z] + __lid_external_size(k_z)]);
                             }
 
                             MakeAllBoxSideCutouts();
-                        }                       
+                        }
                     }
                 }
 
