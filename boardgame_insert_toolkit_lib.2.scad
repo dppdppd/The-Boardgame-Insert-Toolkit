@@ -2643,6 +2643,20 @@ module MakeHexBox( box )
         ] :
         __element_dimensions( box );
 
+    // Hex boxes are specified differently
+    // Since calculating box size isn't simply adding 2 * g_wall_thickness, the box is specified
+    // by the internal diameter (measuring a hexagonal component you wish to store) and then the 
+    // walls are added around it
+    m_inner_diameter = m_box_size[ k_hex_d ];
+    m_inner_inradius = (m_inner_diameter / 2.0) * sin(60);
+    m_outer_inradius = m_inner_inradius + m_wall_thickness;
+    m_outer_diameter = (2 * m_outer_inradius) / sin(60);
+
+    // This offset shifts everything to the right to center it in the box. That is, specifying a
+    // hex2 compartment of size [ m_inner_diameter, m_inner_diameter * sin(60) ] at [ 0, 0]
+    // will be perfectly centered
+    m_x_offset = ((m_outer_diameter - m_inner_diameter) / 2.0) - m_wall_thickness;
+
     function __notch_length( D ) = m_box_size[ D ] / 5.0;
 
     function __lid_notch_depth() = m_wall_thickness / 2;
@@ -2893,11 +2907,13 @@ module MakeHexBox( box )
 
         module PositionInnerLayer()
         {
-            ContainWithinBox()
-                RotateAboutPoint( __component_rotation(), [0,0,1], [__component_position( k_x ) + __component_size( k_x )/2, __component_position( k_y )+ __component_size( k_y )/2, 0] ) 
-                translate( [ __component_position( k_x ), __component_position( k_y ), m_wall_thickness ] )
-                Shear( __component_shear( k_x ), __component_shear( k_y ), __component_size( k_z ) )
-                children();
+            translate( [ m_x_offset, 0, 0 ]) {
+                ContainWithinBox()
+                    RotateAboutPoint( __component_rotation(), [0,0,1], [__component_position( k_x ) + __component_size( k_x )/2, __component_position( k_y )+ __component_size( k_y )/2, 0] ) 
+                    translate( [ __component_position( k_x ), __component_position( k_y ), m_wall_thickness ] )
+                    Shear( __component_shear( k_x ), __component_shear( k_y ), __component_size( k_z ) )
+                    children();
+            }
         }
 
         if ( __is_component_enabled() )
@@ -3111,17 +3127,8 @@ module MakeHexBox( box )
         module MakeHexBoxShell()
         {
 
-            // Calculate diameter of specified hex plus wall thickness
-            inner_diameter = m_box_size[ k_hex_d ];
-            inner_inradius = (inner_diameter / 2.0) * sin(60);
-            outer_inradius = inner_inradius + g_wall_thickness;
-            outer_diameter = (2 * outer_inradius) / sin(60);
-
-            translate([outer_diameter / 2.0, (outer_diameter / 2.0) * sin(60), 0]) {
-                //difference () {
-                cylinder($fn = 6, d = outer_diameter, m_box_size[ k_hex_z ]);
-                //cylinder($fn = 6, d = inner_diameter, m_box_size[ k_hex_z ]);
-                //}
+            translate([m_outer_diameter / 2.0, (m_outer_diameter / 2.0) * sin(60), 0]) {
+                cylinder($fn = 6, d = m_outer_diameter, m_box_size[ k_hex_z ]);
             }
 
         }
