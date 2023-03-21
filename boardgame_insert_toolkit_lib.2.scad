@@ -2657,20 +2657,26 @@ module MakeHexBox( box )
     // will be perfectly centered
     m_x_offset = ((m_outer_diameter - m_inner_diameter) / 2.0) - m_wall_thickness;
 
-    function __notch_length( D ) = m_box_size[ D ] / 5.0;
+    function __notch_length( D ) = (m_inner_diameter / 2.0) / 5.0;
 
     function __lid_notch_depth() = m_wall_thickness / 2;
 
 
-    function __lid_external_size( D )= D == k_z ? m_lid_thickness + m_lid_wall_height : 
-        m_box_size[ D ];
+    function __lid_external_size( D )= D == k_z 
+        ? m_lid_thickness + m_lid_wall_height
+        : D == k_x
+            ? m_outer_diameter
+            : m_outer_inradius * 2;
 
     m_has_solid_lid = m_lid_solid || g_b_vis_actual;
     m_lid_has_labels = !!__value( m_lid, LABEL, default = false );
 
 
-    function __lid_internal_size( D )= D == k_z ? m_lid_wall_height : 
-        __lid_external_size( D ) - 2*m_lid_wall_thickness;
+    function __lid_internal_size( D )= D == k_z
+        ? m_lid_wall_height
+        : D == k_x
+            ? m_inner_diameter
+            : m_inner_inradius * 2;
 
     m_lid_cutout_sides = __value( m_lid, LID_CUTOUT_SIDES_4B, default = [f,f,f,f]);
     m_lid_is_inverted = __value( m_lid, LID_LABELS_INVERT_B, default = false );
@@ -2959,7 +2965,7 @@ module MakeHexBox( box )
                         MakeHexBoxShell();
                     }
                     else
-                        MakeBoxShellWithNewLidBits();
+                        MakeHexBoxShellWithNewLidBits();
 
                     color([0,0,1])
                         MakeAllBoxLabels();
@@ -2972,13 +2978,13 @@ module MakeHexBox( box )
                 {
                     translate( [ 0,0, m_box_size[k_hex_z ] - __lid_internal_size( k_z ) ] )
                         MirrorAboutPoint( v=[0,0,1], pt=[0,0,__lid_external_size(k_z)/2])
-                        MakeLidBase_Cap();
+                        MakeHexLidBase_Cap();
 
                     notch_pos_z =  m_box_size[k_hex_z ] - m_lid_wall_height + __lid_notch_depth();                    
 
                     if ( m_lid_notches )
                         translate([ 0, 0, notch_pos_z]) 
-                            MakeLidCornerNotches();                              
+                            MakeHexLidCornerNotches();                              
                 }
 
                 // bottom of the box
@@ -3002,7 +3008,7 @@ module MakeHexBox( box )
                     else
                     {
                         translate( [ 0, 0, - m_lid_thickness ] )
-                            MakeLidBase_Cap( omit_detents = false );
+                            MakeHexLidBase_Cap( omit_detents = false );
                     }
 
                 }     
@@ -3064,27 +3070,29 @@ module MakeHexBox( box )
 
         }
 
-        module MakeLidBase_Cap( tolerance = 0, tolerance_detent_pos = 0, omit_detents = false )
+        module MakeHexLidBase_Cap( tolerance = 0, tolerance_detent_pos = 0, omit_detents = false )
         {
             difference()
             {
                 // main __element
-                cube([__lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z )]);
+                translate([m_outer_diameter / 2.0, (m_outer_diameter / 2.0) * sin(60), 0]) {
+                    cylinder($fn = 6, d = m_outer_diameter, __lid_external_size( k_z ));
+                }
 
                 // #TODO: modulize this!
                 translate( [ 0, 0, __lid_external_size( k_z ) - __lid_notch_depth() ] )
                     hull()
                     {
-                        translate( [ __lid_notch_depth() , __lid_notch_depth(), 0 ] )
-                            cube([__lid_internal_size( k_x ), __lid_internal_size( k_y ), 1]);
+                        translate([m_outer_diameter / 2.0, (m_outer_diameter / 2.0) * sin(60), 0])
+                            cylinder($fn = 6, d = m_inner_diameter, 1);
 
-                        translate( [ 0, 0, __lid_notch_depth() ] )
-                            cube([__lid_external_size( k_x ), __lid_external_size( k_y ), 0.01]);
+                        translate([m_outer_diameter / 2.0, (m_outer_diameter / 2.0) * sin(60), __lid_notch_depth()])
+                            cylinder($fn = 6, d = m_outer_diameter, 0.01);
                     }
 
                 // big hollow
-                translate( [ __lid_notch_depth() - tolerance, __lid_notch_depth() - tolerance, 0 ])
-                    cube([  __lid_internal_size( k_x ) + 2*tolerance, __lid_internal_size( k_y ) + 2*tolerance,  __lid_external_size( k_z)]);
+                translate([m_outer_diameter / 2.0, (m_outer_diameter / 2.0) * sin(60), 0])
+                    cylinder($fn = 6, d = (m_outer_diameter + m_inner_diameter) / 2.0 + (tolerance / sin(60)), __lid_external_size( k_z ));
             }
 
             //detents
@@ -3133,13 +3141,13 @@ module MakeHexBox( box )
 
         }
 
-        module MakeBoxShellWithNewLidBits()
+        module MakeHexBoxShellWithNewLidBits()
         {
             difference()
             {
                 union()
                 {
-                    MakeBoxShell();
+                    MakeHexBoxShell();
 
                     if ( m_box_has_lid || m_box_is_stackable )
                     {
@@ -3902,7 +3910,7 @@ module MakeHexBox( box )
 
                 if ( !m_lid_inset )
                 {
-                    MakeLidBase_Cap( tolerance = g_tolerance, tolerance_detent_pos = g_tolerance_detent_pos );
+                    MakeHexLidBase_Cap( tolerance = g_tolerance, tolerance_detent_pos = g_tolerance_detent_pos );
                 }
                 else // new lid
                 {             
@@ -3931,14 +3939,16 @@ module MakeHexBox( box )
                         MoveToLidInterior( tolerance = -tolerance )
                             cube([  __lid_internal_size( k_x ) + 2*tolerance, __lid_internal_size( k_y ) + 2*tolerance,  __lid_external_size( k_z)]);
                     else
-                        cube([  __lid_external_size( k_x ), __lid_external_size( k_y ),  __lid_external_size( k_z)]);
+                        translate([m_outer_diameter / 2.0, (m_outer_diameter / 2.0) * sin(60), 0]) {
+                            cylinder($fn = 6, d = m_outer_diameter, __lid_external_size( k_z ));
+                        }
 
                     MakeLidSurface();
                 }
             }
 
 
-            lid_print_position = [0, m_box_size[ k_y ] + DISTANCE_BETWEEN_PARTS, 0 ];
+            lid_print_position = [0, m_outer_inradius * 2 + DISTANCE_BETWEEN_PARTS, 0 ];
             lid_vis_position = [ 0, 0, m_box_size[k_hex_z ] + m_lid_thickness ];
 
             translate( g_b_vis_actual ? lid_vis_position : lid_print_position ) 
@@ -4525,38 +4535,25 @@ module MakeHexBox( box )
             }
         }
 
-        module MakeLidCornerNotches()
+        module MakeHexLidCornerNotches()
         {
             module MakeLidCornerNotch()
             {
+                m_epsilon = 0.02;
+                translate( [ m_outer_diameter / 4.0, 0, -m_lid_notch_height ])
                 {
-                    translate( [ 0, 0, -m_lid_notch_height ])
-                    {
-                        cube([ __notch_length( k_x ), __lid_notch_depth(), m_lid_notch_height ]);
-                        cube([__lid_notch_depth(), __notch_length( k_y ), m_lid_notch_height]);
-                    }
+                    translate([0, -m_epsilon, 0])
+                    cube([ __notch_length( k_x ), __lid_notch_depth() + m_epsilon, m_lid_notch_height ]);
+                    RotateAboutPoint( 30, [0,0,1], [0,0,0] )
+                    translate([-m_epsilon, 0, 0])
+                        cube([__lid_notch_depth() + m_epsilon, __notch_length( k_y ), m_lid_notch_height]);
                 }
             }
 
-            MakeLidCornerNotch();
+            for ( i = [ 0 : 5 ] )
+                RotateAboutPoint( 60 * i, [0,0,1], [m_outer_diameter / 2.0, (m_outer_diameter / 2.0) * sin(60), 0] )
+                    MakeLidCornerNotch();
 
-            MirrorAboutPoint( [1,0,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
-            {
-                MakeLidCornerNotch();
-            }
-
-            MirrorAboutPoint( [0,1,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
-            {
-                MakeLidCornerNotch();
-            }
-
-            MirrorAboutPoint( [1,0,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
-            {
-                MirrorAboutPoint( [0,1,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
-                {
-                    MakeLidCornerNotch();    
-                }
-            }
         }
 
         module MakeLidTabs( mod = 0.0, square = false )
@@ -4620,13 +4617,13 @@ module MakeHexBox( box )
 
         module MakeDetents( mod = 0, offset = 0 )
         {
-            module MakeDetent( mod )
+            module MakeDetentBase( mod )
             {
                 resize( [g_detent_thickness*2 + mod, 1, 1.0])
                     sphere( r = 1, $fn = 12 ); 
             }
 
-            module MakeOneSet( mod )
+            module MakeDetent( mod )
             {
                 num_detents = 2;
 
@@ -4635,34 +4632,24 @@ module MakeHexBox( box )
                     for ( i = [ 0 : num_detents - 1 ] )
                         translate( [ m_wall_thickness/2 + g_detent_spacing * i + g_detent_dist_from_corner, m_wall_thickness/2, 0] )
                             rotate( 90 )
-                            MakeDetent( mod );
-
-                translate( [offset, 0 ,0 ])
-                    hull()
-                    for ( i = [ 0 : num_detents - 1 ] )
-                        translate( [m_wall_thickness/2, m_wall_thickness/2 + g_detent_spacing * i + g_detent_dist_from_corner, 0] )
-                            MakeDetent( mod );                                    
+                            MakeDetentBase( mod );
             }
 
-            MakeOneSet( mod );
-
-            MirrorAboutPoint( [1,0,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
+            module MakeOneSet( mod )
             {
-                MakeOneSet( mod );
-            }
-
-            MirrorAboutPoint( [0,1,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
-            {
-                MakeOneSet( mod );
-            }
-
-            MirrorAboutPoint( [1,0,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
-            {
-                MirrorAboutPoint( [0,1,0], [ m_box_size[ k_x ] / 2, m_box_size[ k_y ] / 2, 0] )
-                {
-                    MakeOneSet( mod );    
+                translate([m_outer_diameter / 4.0, 0, 0]) {
+                    MakeDetent( mod );
+                    RotateAboutPoint( 120, [0,0,1], [0,0,0] )
+                        MirrorAboutPoint( [0,1,0], [0,0,0] )
+                        MakeDetent( mod );
                 }
+
             }
+
+            for ( i = [ 0 : 5 ] )
+                RotateAboutPoint( 60 * i, [0,0,1], [m_outer_diameter / 2.0, (m_outer_diameter / 2.0) * sin(60), 0] )
+                    MakeOneSet( mod );
+
         }
     }
 
