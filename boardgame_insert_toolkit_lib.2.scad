@@ -131,6 +131,7 @@ LBL_PLACEMENT = "placement";
 LBL_FONT = "font";
 LBL_DEPTH = "depth";
 LBL_SPACING = "spacing";
+LBL_AUTO_SCALE_FACTOR = "label_scale_factor";
 //LBL_AUTO_CHAR_COUNT = "char_auto";
 
 LABEL = "label";
@@ -360,7 +361,8 @@ function __label_placement_is_wall( label ) =
 function __label_offset( label ) = __value( label, POSITION_XY, default = [0,0] );
 function __label_font( label ) = __value( label, LBL_FONT, default = "Stencil Std:style=Bold" );
 function __label_spacing( label ) = __value( label, LBL_SPACING, default = 1 );
-function __label_scale_magic_factor( label ) = 1.2 + (1 * abs(tan( __label_rotation( label ) % 90 )) );
+function __label_scale_factor( label ) = __value( label, LBL_AUTO_SCALE_FACTOR, default = 1.2 );
+function __label_scale_magic_factor( label ) = __label_scale_factor( label ) + (1 * abs(tan( __label_rotation( label ) % 90 )) );
 function __label_auto_width( label, x, y) = __label_size_is_auto( label ) ? 
             (  cos( __label_rotation( label ) ) * ( x/__label_scale_magic_factor( label ) )) + 
             ( abs( sin( __label_rotation( label ) ) ) * ( y/__label_scale_magic_factor( label ) )) :
