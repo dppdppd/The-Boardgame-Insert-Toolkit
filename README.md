@@ -582,6 +582,7 @@ e.g. `[ ENABLED_B, f ]`
 - [Sword & Sorcery plus Expansions](https://www.thingiverse.com/thing:3699454)
 - [Sword & Sorcery]( https://www.thingiverse.com/thing:3515523)
 - [Sword & Sorcey Cards box and Chit box](https://www.thingiverse.com/thing:3637030)
+- [Tainted Grail: Fall of Avalon](https://www.thingiverse.com/thing:4812198) & [Tainted Grail Expansions](https://www.thingiverse.com/thing:4812222)
 - [Tapestry](https://www.thingiverse.com/thing:4579132)
 - [Tyrants of the Underdark]( https://www.thingiverse.com/thing:4570276 )
 - [V Commandos]( https://www.thingiverse.com/thing:4319308 )
