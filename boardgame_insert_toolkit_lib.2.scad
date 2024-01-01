@@ -1483,8 +1483,15 @@ module MakeBox( box )
             x_count = x / dx;
             y_count = y / dy;
 
+            x_total = (floor(x_count) + 2) * dx;
+            x_offset = (x - x_total) / 2.0;
+
+            y_total = (floor(y_count) + 2) * dy;
+            y_offset = (y - y_total) / 2.0;
+
+            translate( [x_offset, y_offset, 0 ] )
             for( j = [ -1: y_count + 1 ] )
-                translate( [ ( j % 2 ) * dx/2 + t, 0, 0 ] )
+                translate( [ ( j % 2 ) * dx/2, 0, 0 ] )
                     for( i = [ -1: x_count + 1 ] )
                         translate( [ i * dx, j * dy, 0 ] )
                             rotate( a = m_lid_pattern_angle, v=[ 0, 0, 1 ] )
@@ -1732,7 +1739,7 @@ module MakeBox( box )
                     t = m_lid_pattern_thickness;
 
                     if ( !m_has_solid_lid )
-                        Make2DPattern( x = __lid_internal_size( k_x ), y = __lid_internal_size( k_y ), R = R, t = t );
+                        Make2DPattern( x = __lid_external_size( k_x ), y = __lid_external_size( k_y ), R = R, t = t );
                     else
                         square( [ __lid_external_size( k_x ), __lid_external_size( k_y ) ] );
                 }
