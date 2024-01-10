@@ -3533,8 +3533,24 @@ module MakeHexBox( box )
             x_count = x / dx;
             y_count = y / dy;
 
+            // Calculate offset to center pattern in the x direction
+            x_count_i = floor(x_count);
+            x_count_odd = x_count_i + 1*((x_count_i + 1) % 2);
+            x_total = (x_count_odd + 2) * dx;
+            x_offset = (x - x_total) / 2.0;
+
+            // Calculate offset to center pattern in the y direction
+            y_count_i = floor(y_count);
+            y_count_even = y_count_i + 1*((y_count_i + 0) % 2);
+            y_total = (y_count_even + 2) * dy;
+            y_offset = (y - y_total) / 2.0;
+
+            echo( str(x, " ", dx, " ", x_count_i, " ", x_count_odd, "\n") );
+            echo( str(y, " ", dy, " ", y_count_i, " ", y_count_even, "\n") );
+
+            translate( [x_offset, y_offset, 0 ] )
             for( j = [ -1: y_count + 1 ] )
-                translate( [ ( j % 2 ) * dx/2 + t, 0, 0 ] )
+                translate( [ ( j % 2 ) * dx/2, 0, 0 ] )
                     for( i = [ -1: x_count + 1 ] )
                         translate( [ i * dx, j * dy, 0 ] )
                             rotate( a = m_lid_pattern_angle, v=[ 0, 0, 1 ] )
@@ -3730,6 +3746,8 @@ module MakeHexBox( box )
             xpos = __lid_external_size( k_x )/2 + __label_offset( label )[k_x];
             ypos = __lid_external_size( k_y )/2 + __label_offset( label )[k_y];
 
+            echo(str("MakeLidLabelFrame: label_offset(x, y): ", __label_offset( label )[k_x], ", ", __label_offset( label )[k_y]));
+
             auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
             width = auto_width != 0 ? min( 100, auto_width ) + offset : 0;
 
@@ -3782,7 +3800,7 @@ module MakeHexBox( box )
                     t = m_lid_pattern_thickness;
 
                     if ( !m_has_solid_lid )
-                        Make2DPattern( x = __lid_internal_size( k_x ), y = __lid_internal_size( k_y ), R = R, t = t );
+                        Make2DPattern( x = __lid_external_size( k_x ), y = __lid_external_size( k_y ), R = R, t = t );
                     else
                         square( [ __lid_external_size( k_x ), __lid_external_size( k_y ) ] );
                 }
