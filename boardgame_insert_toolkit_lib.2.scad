@@ -480,7 +480,7 @@ module MakeDividers( div )
 
         difference()
         {
-            MakeRoundedCubeAxis( [ width, height, depth ], 4, k_z);
+            MakeRoundedCubeAxis( [ width, height, depth ], 4, [t, t, t, t], k_z);
 
             if ( num_columns != -1 )
             for (c = [ 0 : num_columns ] ) 
