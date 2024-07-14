@@ -80,6 +80,8 @@ data =
             [ BOX_COMPONENT,
                 [
                     [CMP_COMPARTMENT_SIZE_XYZ,  [ 42, 42, 8.0] ],
+                    [CMP_CUTOUT_CORNER_RADIUS_PCT_B,  true ],
+                    [CMP_CUTOUT_CORNER_RADIUS_PCT,  100 ],
                     [CMP_CUTOUT_SIDES_4B,                   [t,t,f,f]], // all sides
                 ]
             ],                            
