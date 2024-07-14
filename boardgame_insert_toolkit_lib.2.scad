@@ -111,6 +111,9 @@ CMP_CUTOUT_DEPTH_PCT = "cutout_depth_percent";
 CMP_CUTOUT_WIDTH_PCT = "cutout_width_percent";
 CMP_CUTOUT_BOTTOM_B = "cutout_bottom";
 CMP_CUTOUT_BOTTOM_PCT = "cutout_bottom_percent";
+CMP_CUTOUT_CORNER_RADIUS_SIZE = "cutout_corner_radius_size";
+CMP_CUTOUT_CORNER_RADIUS_PCT_B = "cutout_corner_radius_percent_bool";
+CMP_CUTOUT_CORNER_RADIUS_PCT = "cutout_corner_radius_percent";
 CMP_CUTOUT_TYPE = "cutout_type";
 CMP_SHEAR = "shear";
 CMP_FILLET_RADIUS = "fillet_radius";
@@ -717,6 +720,10 @@ module MakeBox( box )
         m_component_cutout_bottom = __value( component, CMP_CUTOUT_BOTTOM_B, default = false );
         m_component_cutout_bottom_percent = __value( component, CMP_CUTOUT_BOTTOM_PCT, default = 80) / 100;
         m_actually_cutout_the_bottom = !__component_is_fillet() && m_component_cutout_bottom && !m_push_base;
+
+        m_component_cutout_radius_size = __value( component, CMP_CUTOUT_CORNER_RADIUS_SIZE, default = 3);
+        m_component_cutout_radius_use_percent = __value( component, CMP_CUTOUT_CORNER_RADIUS_PCT_B, default = false );
+        m_component_cutout_radius_percent = __value( component, CMP_CUTOUT_CORNER_RADIUS_PCT, default = 10) / 100;
 
         m_component_has_exactly_one_cutout = 
             (m_component_cutout_side[ k_front ]?1:0) +
@@ -1988,16 +1995,16 @@ module MakeBox( box )
             main_d = ( side == k_back || side == k_front ) ? k_y : k_x; 
             perp_d = ( side == k_back || side == k_front ) ? k_x : k_y;
 
-            max_radius = 3;
-            radius = max_radius;
+            //  perp dimension is a half of the width and no more than 3cm
+            perp_size = __size( perp_d ) * m_cutout_size_frac_perpindicular ;
+
+            radius_as_percent = m_component_cutout_radius_percent * perp_size / 2;
+            radius = m_component_cutout_radius_use_percent ? radius_as_percent : m_component_cutout_radius_size;
 
             // main and perpendicular size of hole
             //  main dimension intrudes into the compartment by some fraction ( e.g. 1/5 )
             main_size = margin ? m_component_margin_side[ side ] + g_wall_thickness + radius : 
                         __padding( main_d )/2  + __size( main_d ) * m_cutout_size_frac_aligned;
-
-            //  perp dimension is a half of the width and no more than 3cm
-            perp_size = __size( perp_d ) * m_cutout_size_frac_perpindicular ;
 
             pos_standard = [
                 // front

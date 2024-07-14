@@ -465,6 +465,18 @@ e.g. `[ CMP_CUTOUT_BOTTOM, true ]`
 value is expected to be an float between 0 and 100, and determines what percent of the box bottom is removed for bottom cutouts.  The default is 80. 
 e.g. `[ CMP_CUTOUT_BOTTOM_PCT, 90 ]`
 
+#### `CMP_CUTOUT_CORNER_RADIUS_SIZE`
+value is expected to be a float that determines the size of the cutout corner radius. The default is 3.
+e.g. `[ CMP_CUTOUT_CORNER_RADIUS_SIZE, 3 ]`
+
+#### `CMP_CUTOUT_CORNER_RADIUS_PCT_B`
+value is expected to be a bool and determines whether the corners of the compartment cutout should use a custom radius based on `CMP_CUTOUT_CORNER_RADIUS_PCT` instead of `CMP_CUTOUT_CORNER_RADIUS_SIZE`. The default is false.
+e.g. `[ CMP_CUTOUT_CORNER_RADIUS_PCT_B, true ]`
+
+#### `CMP_CUTOUT_CORNER_RADIUS_PCT` 
+value is expected to be an float between 0 and 100, and determines the size of the cutout corner radius as a percent with respect to the cutout width, as defined by `CMP_CUTOUT_WIDTH_PCT`. When 100 is specified, the cutout shape becomes a complete semicircle. The default is 10.
+e.g. `[ CMP_CUTOUT_CORNER_RADIUS_PCT, 10 ]`
+
 #### `CMP_CUTOUT_CORNERS_4B`
 value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the compartments on the corners. The values represent [front-left, back-right, back-left, front-right ].  
 e.g. `[ CMP_CUTOUT_CORNERS_4B, [ t, t, f, f ] ]`
