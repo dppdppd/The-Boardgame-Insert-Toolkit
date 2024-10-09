@@ -156,6 +156,7 @@ OCT = "oct";
 OCT2 = "oct2";
 ROUND = "round";
 FILLET = "fillet";
+ANTISLIP = "antislip";
 
 INTERIOR = "interior";
 EXTERIOR = "exterior";
@@ -740,6 +741,7 @@ module MakeBox( box )
         function __component_is_round() = __component_shape() == ROUND;
         function __component_is_square() = __component_shape() == SQUARE;
         function __component_is_fillet() = __component_shape() == FILLET;
+        function __component_is_antislip() = __component_shape() == ANTISLIP;
         function __component_fillet_radius() = __value( component, CMP_FILLET_RADIUS, default = min( __compartment_size( k_z ), 10) );
 
         function __component_shear( D ) = __value( component, CMP_SHEAR, default = [0.0, 0.0] )[ D ];
@@ -1108,7 +1110,7 @@ module MakeBox( box )
 
                 InEachCompartment()
                 {
-                    if ( !__component_is_square() && !__component_is_fillet() )
+                    if ( !__component_is_square() && !__component_is_antislip() && !__component_is_fillet() )
                     {
                         difference()
                         {
@@ -1121,6 +1123,11 @@ module MakeBox( box )
                     {
                         translate( [0, 0, m_component_base_height])
                             AddFillets();
+                    }
+                    
+                    if ( __component_is_antislip())
+                    {
+                        AddAntislip();
                     }
                 }
 
@@ -2241,6 +2248,24 @@ module MakeBox( box )
             }        
         }
 
+        // this adds an antislip texture to the bottom of a square compartment, regardless of the size of the compartment.
+        module AddAntislip()
+        {
+            texture_height = 0.4;
+            cube_side_length = sqrt(2 * pow(texture_height, 2));
+            module _MakeAntislip()
+            {
+                cube_rotated = __component_shape_rotated_90() ? [ cube_side_length, __compartment_size( k_y ), cube_side_length ] : [ __compartment_size( k_x ), cube_side_length, cube_side_length ];
+                translate([0, 0, -texture_height]) rotate(__component_shape_rotated_90() ? [0, -45, 0] : [45, 0, 0]) cube ( cube_rotated );
+            }
+
+            for( i = [0 : (__component_shape_rotated_90() ? __compartment_size( k_x ) : __compartment_size( k_y )) / (10*texture_height)])
+            {
+                texture_translated = __component_shape_rotated_90() ? [i*10*texture_height, 0, 0] : [0, i*10*texture_height, 0];
+                translate(texture_translated) _MakeAntislip();
+            }
+        }
+
         module MakeVerticalShape( h, x, r )
         {
             compartment_z_min = m_wall_thickness;
@@ -2260,9 +2285,9 @@ module MakeBox( box )
 
         module MakeCompartmentShape()
         {
-            $fn = __component_is_hex() || __component_is_hex2() ? 6 : __component_is_oct() || __component_is_oct2() ? 8 : __component_is_square() ? 4 : 100;
+            $fn = __component_is_hex() || __component_is_hex2() ? 6 : __component_is_oct() || __component_is_oct2() ? 8 : __component_is_square() || __component_is_antislip() ? 4 : 100;
 
-            if ( __component_is_square() )
+            if ( __component_is_square() || __component_is_antislip() )
             {
                 cube( [ __compartment_size( k_x ), __compartment_size( k_y ), __compartment_size( k_z ) + m_component_base_height]);
             }
