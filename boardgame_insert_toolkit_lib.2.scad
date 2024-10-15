@@ -115,6 +115,7 @@ CMP_CUTOUT_TYPE = "cutout_type";
 CMP_SHEAR = "shear";
 CMP_FILLET_RADIUS = "fillet_radius";
 CMP_PEDESTAL_BASE_B = "push_base";
+CMP_ANTISLIP_HEIGHT = "antislip_height";
 
 // LABEL PARAMETERS
 LBL_TEXT = "text";
@@ -743,6 +744,7 @@ module MakeBox( box )
         function __component_is_fillet() = __component_shape() == FILLET;
         function __component_is_antislip() = __component_shape() == ANTISLIP;
         function __component_fillet_radius() = __value( component, CMP_FILLET_RADIUS, default = min( __compartment_size( k_z ), 10) );
+        function __component_antislip_height() = __value( component, CMP_ANTISLIP_HEIGHT, default = 0.4 );
 
         function __component_shear( D ) = __value( component, CMP_SHEAR, default = [0.0, 0.0] )[ D ];
         ///////////
@@ -2251,7 +2253,7 @@ module MakeBox( box )
         // this adds an antislip texture to the bottom of a square compartment, regardless of the size of the compartment.
         module AddAntislip()
         {
-            texture_height = 0.4;
+            texture_height = __component_antislip_height();
             cube_side_length = sqrt(2 * pow(texture_height, 2));
             module _MakeAntislip()
             {
