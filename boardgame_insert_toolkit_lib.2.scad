@@ -2258,7 +2258,7 @@ module MakeBox( box )
             module _MakeAntislip()
             {
                 cube_rotated = __component_shape_rotated_90() ? [ cube_side_length, __compartment_size( k_y ), cube_side_length ] : [ __compartment_size( k_x ), cube_side_length, cube_side_length ];
-                translate([0, 0, -texture_height]) rotate(__component_shape_rotated_90() ? [0, -45, 0] : [45, 0, 0]) cube ( cube_rotated );
+                translate([0, 0, m_component_base_height-texture_height]) rotate(__component_shape_rotated_90() ? [0, -45, 0] : [45, 0, 0]) cube ( cube_rotated );
             }
 
             for( i = [0 : (__component_shape_rotated_90() ? __compartment_size( k_x ) : __compartment_size( k_y )) / (10*texture_height)])
