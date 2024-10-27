@@ -156,6 +156,7 @@ OCT = "oct";
 OCT2 = "oct2";
 ROUND = "round";
 FILLET = "fillet";
+FILLET2 = "fillet2";
 
 INTERIOR = "interior";
 EXTERIOR = "exterior";
@@ -716,7 +717,7 @@ module MakeBox( box )
         m_component_cutout_type = __value( component, CMP_CUTOUT_TYPE, default = BOTH );
         m_component_cutout_bottom = __value( component, CMP_CUTOUT_BOTTOM_B, default = false );
         m_component_cutout_bottom_percent = __value( component, CMP_CUTOUT_BOTTOM_PCT, default = 80) / 100;
-        m_actually_cutout_the_bottom = !__component_is_fillet() && m_component_cutout_bottom && !m_push_base;
+        m_actually_cutout_the_bottom = !__component_is_fillet() && !__component_is_fillet2() && m_component_cutout_bottom && !m_push_base;
 
         m_component_has_exactly_one_cutout = 
             (m_component_cutout_side[ k_front ]?1:0) +
@@ -740,6 +741,7 @@ module MakeBox( box )
         function __component_is_round() = __component_shape() == ROUND;
         function __component_is_square() = __component_shape() == SQUARE;
         function __component_is_fillet() = __component_shape() == FILLET;
+        function __component_is_fillet2() = __component_shape() == FILLET2;
         function __component_fillet_radius() = __value( component, CMP_FILLET_RADIUS, default = min( __compartment_size( k_z ), 10) );
 
         function __component_shear( D ) = __value( component, CMP_SHEAR, default = [0.0, 0.0] )[ D ];
@@ -1108,7 +1110,7 @@ module MakeBox( box )
 
                 InEachCompartment()
                 {
-                    if ( !__component_is_square() && !__component_is_fillet() )
+                    if ( !__component_is_square() && !__component_is_fillet() && !__component_is_fillet2())
                     {
                         difference()
                         {
@@ -1120,7 +1122,13 @@ module MakeBox( box )
                     if ( __component_is_fillet())
                     {
                         translate( [0, 0, m_component_base_height])
+                            AddFillets();                            
+                    }
+                    if ( __component_is_fillet2())
+                    {
+                        translate( [0, 0, m_component_base_height])
                             AddFillets();
+                            AddFillets(rotated = !__component_shape_rotated_90());
                     }
                 }
 
@@ -2203,7 +2211,7 @@ module MakeBox( box )
 
         // this rounds out the bottoms regardless of the size of the compartment
         // and doesn't attempt to fit a specific shape.
-       module AddFillets()
+       module AddFillets(rotated = __component_shape_rotated_90())
         {
             r = __component_fillet_radius();
 
@@ -2211,18 +2219,18 @@ module MakeBox( box )
             {
                 difference()
                 {
-                    cube_rotated = __component_shape_rotated_90() ? [ __compartment_size( k_x ), r, r ] : [ r, __compartment_size( k_y ), r ];                   
+                    cube_rotated = rotated ? [ __compartment_size( k_x ), r, r ] : [ r, __compartment_size( k_y ), r ];                   
                     cube ( cube_rotated );
 
  
-                    cylinder_translated = __component_shape_rotated_90() ? [ 0, r, r ] : [ r, __compartment_size( k_y ), r ];                    
+                    cylinder_translated = rotated ? [ 0, r, r ] : [ r, __compartment_size( k_y ), r ];                    
                     translate( cylinder_translated )
                     {
-                        cylinder_rotation = __component_shape_rotated_90() ? [ 0, 1, 0, ] : [ 1, 0, 0 ];
+                        cylinder_rotation = rotated ? [ 0, 1, 0, ] : [ 1, 0, 0 ];
 
                         rotate( v=cylinder_rotation, a=90 )
                         {
-                            h = __component_shape_rotated_90() ? __compartment_size( k_x ) : __compartment_size( k_y );
+                            h = rotated ? __compartment_size( k_x ) : __compartment_size( k_y );
                             cylinder(h = h, r1 = r, r2 = r);  
                         } 
                     }
@@ -2232,8 +2240,8 @@ module MakeBox( box )
 
              _MakeFillet();
 
-             mirrorv = __component_shape_rotated_90() ? [ 0,1,0] : [1,0,0];
-             mirrorpt = __component_shape_rotated_90() ? [ 0, __compartment_size( k_y ) / 2, 0 ] : [ __compartment_size( k_x ) / 2, 0, 0 ];
+             mirrorv = rotated ? [ 0,1,0] : [1,0,0];
+             mirrorpt = rotated ? [ 0, __compartment_size( k_y ) / 2, 0 ] : [ __compartment_size( k_x ) / 2, 0, 0 ];
             
             MirrorAboutPoint(mirrorv, mirrorpt)
             {
@@ -2697,16 +2705,3 @@ module MakeRoundedCubeAll( vecCube, radius, axis = k_z, vecRounded = [ t, t, t, 
         }
     }
 } 
-
-
-
-
-
-
-
-
-
-
-
-
-

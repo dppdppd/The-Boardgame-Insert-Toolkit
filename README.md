@@ -409,7 +409,9 @@ an 8-sided compartment that is rotated 22.5 degrees
 - `ROUND`    
 a round compartment
 - `FILLET`   
-a square compartment with rounded bottoms
+a square compartment with two rounded bottoms
+- `FILLET`   
+a square compartment with four rounded bottoms
 
 e.g. `[ CMP_SHAPE, HEX2 ]`
 
@@ -420,7 +422,7 @@ value is expected to be a bool, and determines whether the shape is rotated alon
 value is expected to be a bool, and determines whether the shape is rotated for vertical stacks of pieces.
 
 #### `CMP_FILLET_RADIUS`
-value is expected to be a number, and determines the radius of the fillet, if shape is fillet.
+value is expected to be a number, and determines the radius of the fillet, if shape is fillet or fillet2.
 
 #### `CMP_PEDESTAL_BASE_B`
 value is expected to be a bool, and determines whether the base of the compartment is a pedestal. This allows for cards or tiles to be extracted by pushing down on one of the sides. Ideal for short stacks and for compartments that are interior and where finger cutouts aren't possible or ideal. 
@@ -458,7 +460,7 @@ value is expected to be one of the following keywords: BOTH, INTERIOR, or EXTERI
 e.g. `[ CMP_CUTOUT_TYPE, INTERIOR ]`
 
 #### `CMP_CUTOUT_BOTTOM_B`
-value is expected to be a bool and determines whether the bottom of the compartment is cut out. Note that this is ignored if CMP_PEDESTAL_BASE_B is true or if CMP_SHAPE is set to FILLET.
+value is expected to be a bool and determines whether the bottom of the compartment is cut out. Note that this is ignored if CMP_PEDESTAL_BASE_B is true or if CMP_SHAPE is set to FILLET or FILLET2.
 e.g. `[ CMP_CUTOUT_BOTTOM, true ]`
 
 #### `CMP_CUTOUT_BOTTOM_PCT` 
