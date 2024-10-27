@@ -24,7 +24,7 @@
     - The global "g_finger_partition_thickness" has been deprecated.
     - New field "margin" (default "[false,false,false,false]") specifies which sides of the component will have a partition. The sides are [FRONT,BACK,LEFT,RIGHT].
     - New field "cutout_sides" (default "[false,false,false,false]") specifies sides of the compartment to place finger cutouts. Sides are [FRONT,BACK,LEFT,RIGHT]. 
-    - New field "shape" (default "square") specifies a geometric shape for the compartments. Supported shapes are "hex", "hex2", "oct", "oct2", "round", "square", "fillet".
+    - New field "shape" (default "square") specifies a geometric shape for the compartments. Supported shapes are "hex", "hex2", "oct", "oct2", "round", "square", "fillet", "fillet2".
     - New field "shape_rotated_90" (default "false") specifies whether the shape should be rotated 90 degrees.
     - New field "shape_vertical" (default "false") specifies whether the shape should be rotated vertically.
     - New field "shear" (default "[0,0]) specifies angles by which to shear the component in the x and y directions.
