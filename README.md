@@ -426,7 +426,7 @@ value is expected to be a number, and determines the radius of the fillet, if sh
 value is expected to be a bool, and determines whether the base of the compartment is a pedestal. This allows for cards or tiles to be extracted by pushing down on one of the sides. Ideal for short stacks and for compartments that are interior and where finger cutouts aren't possible or ideal. 
 
 #### `CMP_PADDING_XY`
-value is expected to be an array of 3 numbers, and determines how far apart the compartments in a component are, in the width and depth direction.  
+value is expected to be an array of 2 numbers, and determines how far apart the compartments in a component are, in the width and depth direction.  
 e.g. `[ CMP_PADDING_XY, [ 2.5, 1.3 ] ]`
 
 #### `CMP_PADDING_HEIGHT_ADJUST_XY`
