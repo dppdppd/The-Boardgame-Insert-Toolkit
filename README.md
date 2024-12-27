@@ -406,6 +406,14 @@ a 6-sided compartment that is rotated 30 degrees
 an 8-sided compartment
 - `OCT2`     
 an 8-sided compartment that is rotated 22.5 degrees
+- `TRI`      
+a 3-sided compartment
+- `TRI2`     
+a 3-sided compartment that is rotated 60 degrees
+- `PENT`      
+a 5-sided compartment
+- `PENT2`     
+a 5-sided compartment that is rotated 36 degrees
 - `ROUND`    
 a round compartment
 - `FILLET`   
