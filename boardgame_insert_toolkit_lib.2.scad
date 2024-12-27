@@ -154,6 +154,10 @@ HEX = "hex";
 HEX2 = "hex2";
 OCT = "oct";
 OCT2 = "oct2";
+TRI = "tri";
+TRI2 = "tri2";
+PENT = "pent";
+PENT2 = "pent2";
 ROUND = "round";
 FILLET = "fillet";
 
@@ -736,7 +740,11 @@ module MakeBox( box )
         function __component_is_hex() = __component_shape() == HEX;
         function __component_is_hex2() = __component_shape() == HEX2;
         function __component_is_oct() = __component_shape() == OCT;
-        function __component_is_oct2() = __component_shape() == OCT2;        
+        function __component_is_oct2() = __component_shape() == OCT2;  
+        function __component_is_tri() = __component_shape() == TRI;
+        function __component_is_tri2() = __component_shape() == TRI2; 
+        function __component_is_pent() = __component_shape() == PENT;
+        function __component_is_pent2() = __component_shape() == PENT2;     
         function __component_is_round() = __component_shape() == ROUND;
         function __component_is_square() = __component_shape() == SQUARE;
         function __component_is_fillet() = __component_shape() == FILLET;
@@ -2250,7 +2258,7 @@ module MakeBox( box )
 
             translate( cylinder_translation )
             {
-                angle = __component_is_hex() ? 30 : __component_is_oct() ? 22.5 : 0;
+                angle = __component_is_hex() ? 30 : __component_is_oct() ? 22.5 : __component_is_tri() ? 60 : __component_is_pent() ? 36 : 0;
 
                 rotate( a=angle, v=[0, 0, 1] )
                     cylinder(h, r, r, center = false );                      
@@ -2260,7 +2268,7 @@ module MakeBox( box )
 
         module MakeCompartmentShape()
         {
-            $fn = __component_is_hex() || __component_is_hex2() ? 6 : __component_is_oct() || __component_is_oct2() ? 8 : __component_is_square() ? 4 : 100;
+            $fn = __component_is_hex() || __component_is_hex2() ? 6 : __component_is_oct() || __component_is_oct2() ? 8 : __component_is_tri() || __component_is_tri2() ? 3 : __component_is_pent() || __component_is_pent2() ? 5 : __component_is_square() ? 4 : 100;
 
             if ( __component_is_square() )
             {
@@ -2269,7 +2277,7 @@ module MakeBox( box )
             else if ( __component_shape_vertical() )
             {
                 r = __compartment_largest_dimension()/2;
-                x = __component_is_hex()  ? r * sin( 360/ $fn ) : r;
+                x = __component_is_hex() || __component_is_pent() ? r * sin( 360/ $fn ) : r;
 
                 MakeVerticalShape(h = __compartment_size( k_z ) + m_component_base_height + epsilon, x = x, r = r);
             }
@@ -2302,7 +2310,9 @@ module MakeBox( box )
                                     // do we want hex point down?
                                     rotate( a=__component_is_hex2() ? 
                                             30 : __component_is_oct() ? 
-                                                22.5 : 0, 
+                                            22.5 : __component_is_tri() ? 
+                                            60 : __component_is_pent() ? 
+                                            36 : 0, 
                                             v=[ 0, 0, 1])
                                     {
                                         cylinder(h = __compartment_size( dim2 ), r1 = r, r2 = r );  
