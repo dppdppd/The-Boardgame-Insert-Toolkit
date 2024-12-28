@@ -5,8 +5,8 @@
 
 This:
 
-![Dune 1](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/IMG_3294.jpeg)
-![Mice n Mystics 2](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/IMG_1453.jpeg)
+![Dune 1](images/IMG_3294.jpeg)
+![Mice n Mystics 2](images/IMG_1453.jpeg)
 
 # Why
 This OpenSCAD library was designed to for quick design and iteration on board game inserts--specifically ones with lids. There are lots of great printable inserts out there, but very few for us vertical storers.
@@ -48,7 +48,7 @@ Everything in BIT is defined using key-value pairs, i.e. [ _key_ , _value_ ]. So
 
 That made this:
 
-![example1](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/example1.png)
+![example1](images/example1.png)
 
 ### Some Explanation
 The first key-value pair is [ "example 0: minimal", _one_big_array_of_keyvalues_ ], and its value is an array of all of the details of the box. One of those key-pairs is `BOX_COMPONENT` which defines the one type of compartment we want. It's key-values all the way down. See https://www.thingiverse.com/thing:3435429 for an example of lots of compartments of lots of components in lots of boxes.
@@ -132,7 +132,8 @@ Here is an example of some compartments designed to hold cards, with holes to ge
     ]
 
 And this is the result:
-![example2](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/example2.png)
+
+![example2](images/example2.png)
 
 
 ### Dividers
@@ -147,7 +148,8 @@ As of v2.04, there is also the ability to create card dividers in addition to bo
     ]
 
 And produces something like this:
-![dividers](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/dividers1.png)
+
+![dividers](images/dividers1.png)
 
 ### Customizable Lid Patterns
 As of v2.10, one can now tweak the lid pattern parameters. The default is still a honeycomb, but here are some alternatives:
@@ -177,7 +179,7 @@ As of v2.10, one can now tweak the lid pattern parameters. The default is still 
         ]
     ],   
 
-![lid pattern 1](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/pattern1.png)
+![lid pattern 1](images/pattern1.png)
 
     [   "lid pattern 2",
         [
@@ -202,7 +204,7 @@ As of v2.10, one can now tweak the lid pattern parameters. The default is still 
         ]
     ],
 
-![lid pattern 2](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/pattern2.png)
+![lid pattern 2](images/pattern2.png)
 
     [   "lid pattern 3",
         [
@@ -228,7 +230,7 @@ As of v2.10, one can now tweak the lid pattern parameters. The default is still 
         ]
     ],    
 
-![lid pattern 3](https://github.com/IdoMagal/The-Boardgame-Insert-Toolkit/blob/master/images/pattern3.png)
+![lid pattern 3](images/pattern3.png)
 
 
 # Keys
@@ -426,7 +428,7 @@ value is expected to be a number, and determines the radius of the fillet, if sh
 value is expected to be a bool, and determines whether the base of the compartment is a pedestal. This allows for cards or tiles to be extracted by pushing down on one of the sides. Ideal for short stacks and for compartments that are interior and where finger cutouts aren't possible or ideal. 
 
 #### `CMP_PADDING_XY`
-value is expected to be an array of 3 numbers, and determines how far apart the compartments in a component are, in the width and depth direction.  
+value is expected to be an array of 2 numbers, and determines how far apart the compartments in a component are, in the width and depth direction.  
 e.g. `[ CMP_PADDING_XY, [ 2.5, 1.3 ] ]`
 
 #### `CMP_PADDING_HEIGHT_ADJUST_XY`
