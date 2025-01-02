@@ -15,7 +15,7 @@ This OpenSCAD library was designed to for quick design and iteration on board ga
 # How
 - Download [Openscad](https://www.openscad.org).
 - Create a new directory for the board game you're working on. It's best to keep the BIT file with the board game file because future BIT versions may not be backwards compatible and this way you will always be able to recreate the STLs.
-- Put _boardgame_insert_toolkit_library.2.scad_ and a copy of _example.2.scad_ in the directory.
+- Put _boardgame_insert_toolkit_library.2.scad_, _bit_functions_lib.scad_, and a copy of _starter.scad_ in the directory. Feel free to rename _starter.scad_ to something more descriptive.
 - You'll be working entirely in your copy of the example.
 - The first line should be __include <boardgame_insert_toolkit_lib.2.scad>;__ and the last should be __MakeAll();__ All of your 'code' goes in-between.
 - Open your new scad file in your favorite text editor and also in Openscad.
@@ -35,7 +35,7 @@ This OpenSCAD library was designed to for quick design and iteration on board ga
 ## Key Values
 Everything in BIT is defined using key-value pairs, i.e. [ _key_ , _value_ ]. Sometimes the _value_ is an array of other key-value pairs, so it's important to use indentation to keep track of the pairing. That's where a good text editor comes in handy. See the following example.
 
-    [   "example 0: minimal",                            // our box. name is just for code organization.
+    [   "example 1: minimal",                            // our box. name is just for code organization.
         [
             [ BOX_SIZE_XYZ, [46.5, 46.5, 15.0] ],        // one kv pair specifying the x, y, and z of our box exterior.
             [ BOX_COMPONENT,                             // our first component.
@@ -57,7 +57,7 @@ The first key-value pair is [ "example 0: minimal", _one_big_array_of_keyvalues_
 
 Here is an example of some compartments designed to hold cards, with holes to get our fingers in on the side. Many of these parameters are just the default values and are not necessary, but are included for easy modification:
 
-    [   "example 1",
+    [   "example 2",
         [
             [ BOX_SIZE_XYZ,             [110.0, 180.0, 22.0] ],
             [ ENABLED_B,                t],
@@ -140,18 +140,51 @@ And this is the result:
 ### Hexagonal Boxes
 As of v3.0, there is now the ability to create hexagonal boxes as an efficient way to store hexagonal tiles (like those in Catan). Here is the code to produce a box to hold hexagonal tiles:
 
-    include <Lib.scad>;
+    include <bit_functions_lib.scad>;
     
     [   "hexbox example 1",
-    [
+    [    
         [ TYPE, HEXBOX ],
-        [ HEXBOX_SIZE_DZ,    [ hexbox_d, catan_land_hexbox_z ] ],
+        [ HEXBOX_SIZE_DZ,    [ 100, 40 ] ], 
         [ BOX_STACKABLE_B, t],
-        [ BOX_COMPONENT, cmp_parms_hex( 0, 0, hexbox_d, catan_land_z, "CATAN LAND" ) ],
-
-        [ BOX_LID, lid_parms( "CATAN" ) ],
-    ]
+        [ BOX_COMPONENT, cmp_parms_hex_tile( dx=100, dz=38, lbl="CATAN LAND", font="Venturis ADF Cd:style=Bold" ) ], 
+ 
+        [ BOX_LID, lid_parms( radius=12, lbl="CATAN", font="Venturis ADF Cd:style=Bold", size=22 ) ], 
+    ]    
     ],
+
+And the result:
+
+![example2](images/hexbox_example1.png)
+
+This also introduces __bit_functions_lib.scad__, which is intended to simplify the creation of components. By including it, you are able to create many parts with a single line. Here is the definition of _cmp_parms_hex_tile_:
+
+```
+// This function simplifies creating a hexagonal component
+// Inputs:
+// (dx, dz):     Size of the component - dx is the "diameter" of the tile, and dz is the depth of the stack
+// (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
+// lbl:          Optional parameter - Text to include on the bottom - defaults to blank
+// font:         Optional parameter - OpensSCAD font specifier - defaults to g_default_font
+// size:         Optional parameter - Size of label - defaults to AuTO
+function cmp_parms_hex_tile( llx=0, lly=0, dx, dz, lbl="", font=g_default_font, size="AUTO" ) = 
+[
+    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dx * sin(60), dz ] ],
+    [POSITION_XY,  [ llx, lly ] ],
+    [CMP_SHAPE, HEX2],
+    [CMP_SHAPE_VERTICAL_B, t],
+    [LABEL, 
+    [ 
+        [LBL_TEXT, lbl],
+        [LBL_FONT, font ],
+        [LBL_SIZE, size],
+        [LBL_PLACEMENT, CENTER],
+        [LBL_DEPTH, 1],
+    ],
+    ],
+];
+```
+You can see that the optional parameters llx, lly, and size, are not specified in the creation of the box above. Each function provided in __bit_functions_lib.scad__ is similarly documented.
 
 ### Dividers
 As of v2.04, there is also the ability to create card dividers in addition to boxes. A dividers definition looks like this:
@@ -253,29 +286,33 @@ As of v2.10, one can now tweak the lid pattern parameters. The default is still 
 # Keys
 
 #### `TYPE`
-value is expected to be one of the following:
-- `BOX` (default)
-a box.
-- `DIVIDERS`
-a set of dividers.
+Value is expected to be one of the following:
+- `BOX` (default) a box.
+- `HEXBOX` a hexagonal box.
+- `DIVIDERS` a set of dividers.
 
-### Box keys
+## Box keys
 
 #### `BOX_SIZE_XYZ`
-value is expected to be an array of 3 numbers, and determines the exterior dimensions
+Value is expected to be an array of 3 numbers, and determines the exterior dimensions
 of the box as width, depth, height.  
 e.g. `[ BOX_SIZE_XYZ, [ 140, 250, 80 ] ]`
 
+#### `HEXBOX_SIZE_DZ`
+Value is expected to be an array of 2 numbers, and determines the __interior__ dimension
+of the box as diameter, and the __exterior__ dimension as height.  
+e.g., `[ HEXBOX_SIZE_DZ,    [ 100, 40 ] ],`
+
 #### `BOX_COMPONENT`
-value is expected to be an array of components key-value pairs. Box can have as many of these as desired.
+Value is expected to be an array of components key-value pairs. Box can have as many of these as desired.
 
 #### `BOX_VISUALIZATION`
-describe me
+To be documented later
 
 #### `BOX_STACKABLE_B`
-value is expected to be a bool and determines whether the base of the box is cut to fit on top of an identically sized box. Note that this requires a printer that can print a 45 degree overhang without supports.
+Value is expected to be a bool and determines whether the base of the box is cut to fit on top of an identically sized box. Note that this requires a printer that can print a 45 degree overhang without supports.
 
-### Lid keys
+## Lid keys
 as of v2.09, all lid parameters are specified in a BOX_LID container. This makes it easy to reuse box lid parameters across multiple boxes.
 
 #### `BOX_LID`
