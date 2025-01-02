@@ -11,8 +11,8 @@ g_b_print_lid = true;
 // Determines whether boxes are output.
 g_b_print_box = true; 
 
-// Only render specified b0x
-g_isolated_print_box = "example 1"; 
+// Only render specified box
+g_isolated_print_box = "hexbox example 1"; 
 
 // Used to visualize how all of the boxes fit together. 
 g_b_visualization = false;          
@@ -40,6 +40,8 @@ g_tolerance = 0.15;
 // This adjusts the position of the lid detents downward. 
 // The larger the value, the bigger the gap between the lid and the box.
 g_tolerance_detents_pos = 0.1;
+
+g_default_font = "Arial:style=Bold";
 
 data =
 [
@@ -135,9 +137,9 @@ data =
             [ TYPE, HEXBOX ],
             [ HEXBOX_SIZE_DZ,    [ 100, 40 ] ],
             [ BOX_STACKABLE_B, t],
-            //[ BOX_COMPONENT, cmp_parms_hex( 0, 0, hexbox_d, catan_land_z, "CATAN LAND" ) ],
+            [ BOX_COMPONENT, cmp_parms_hex_tile( dx=100, dz=38, lbl="CATAN LAND", font="Venturis ADF Cd:style=Bold" ) ],
 
-            //[ BOX_LID, lid_parms( "CATAN" ) ],
+            [ BOX_LID, lid_parms( radius=12, lbl="CATAN", font="Venturis ADF Cd:style=Bold", size=22 ) ],
         ]
     ],
 

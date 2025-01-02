@@ -14,14 +14,14 @@ function cmp_parms( dx, dy, dz, llx=0, lly=0, lbl="", font=g_default_font, size=
     [
         [LBL_TEXT, lbl],
         [LBL_FONT, font ],
-        [LBL_PLACEMENT, CENTER],
         [LBL_SIZE, size],
+        [LBL_PLACEMENT, CENTER],
         [LBL_DEPTH, 1],
     ],
     ],
 ];
 
-// This function simplifies creating a square component
+// This function simplifies creating a round component
 // Inputs:
 // (dx, dy, dz): Size of the component
 // (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
@@ -38,6 +38,10 @@ function cmp_parms_round( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
 ];
 
 
+// This function simplifies creating a vertical round component
+// Inputs:
+// (dx, dy, dz): Size of the component
+// (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
 function cmp_parms_disc( llx=0, lly=0, dx, dy, dz ) =
 [
     [CMP_SHAPE_VERTICAL_B, t],
@@ -47,7 +51,14 @@ function cmp_parms_disc( llx=0, lly=0, dx, dy, dz ) =
     [POSITION_XY,  [ llx, lly] ],
 ];
 
-function cmp_parms_hex( llx, lly, dx, dz, lbl ) =
+// This function simplifies creating a hexagonal component
+// Inputs:
+// (dx, dz):     Size of the component - dx is the "diameter" of the tile, and dz is the depth of the stack
+// (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
+// lbl:          Optional parameter - Text to include on the bottom - defaults to blank
+// font:         Optional parameter - OpensSCAD font specifier - defaults to g_default_font
+// size:         Optional parameter - Size of label - defaults to AuTO
+function cmp_parms_hex_tile( llx=0, lly=0, dx, dz, lbl="", font=g_default_font, size="AUTO" ) =
 [
     [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dx * sin(60), dz ] ],
     [POSITION_XY,  [ llx, lly ] ],
@@ -57,6 +68,7 @@ function cmp_parms_hex( llx, lly, dx, dz, lbl ) =
     [
         [LBL_TEXT, lbl],
         [LBL_FONT, font ],
+        [LBL_SIZE, size],
         [LBL_PLACEMENT, CENTER],
         [LBL_DEPTH, 1],
     ],
@@ -79,7 +91,7 @@ function cmp_parms_hex2( llx, lly, dy, dz, lbl ) =
     ],
 ];
 
-function lid_parms(radius=10, thickness=1, label="", font="Arial:style=Bold", size="AUTO") =
+function lid_parms(radius=10, thickness=1, lbl="", font=g_default_font, size="AUTO") =
 [
     [ LID_SOLID_B, f],
     [ LID_INSET_B, t],
@@ -93,7 +105,7 @@ function lid_parms(radius=10, thickness=1, label="", font="Arial:style=Bold", si
     [ LID_LABELS_BORDER_THICKNESS, 0.5 ],
     [ LABEL,
     [   
-        [ LBL_TEXT,     label ],
+        [ LBL_TEXT,     lbl ],
         [ LBL_FONT,     font ],
         [ LBL_SIZE,     size ],
         [ ROTATION,     0 ],
