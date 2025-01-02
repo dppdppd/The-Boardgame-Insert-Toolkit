@@ -1,0 +1,121 @@
+// This function simplifies creating a square component
+// Inputs:
+// (dx, dy, dz): Size of the component
+// (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
+// lbl:          Optional parameter - Text to include on the bottom - defaults to blank
+// font:         Optional parameter - OpensSCAD font specifier - defaults to g_default_font
+// size:         Optional parameter - Size of label - defaults to AuTO
+function cmp_parms( dx, dy, dz, llx=0, lly=0, lbl="", font=g_default_font, size="AUTO" ) =
+[
+    [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
+    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
+    [POSITION_XY,  [ llx, lly ] ],
+    [LABEL, 
+    [
+        [LBL_TEXT, lbl],
+        [LBL_FONT, font ],
+        [LBL_PLACEMENT, CENTER],
+        [LBL_SIZE, size],
+        [LBL_DEPTH, 1],
+    ],
+    ],
+];
+
+// This function simplifies creating a square component
+// Inputs:
+// (dx, dy, dz): Size of the component
+// (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
+// rot:          Optional parameter - Is component rotated around Z axis - defaults to t. Valid values: t, f
+// vert:         Optional parameter - Is component for vertical stack of pieces - defaults to f. Valid values: t, f
+function cmp_parms_round( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
+[
+    [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
+    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
+    [POSITION_XY,  [ llx, lly ] ],
+    [CMP_SHAPE, ROUND],
+    [CMP_SHAPE_ROTATED_B, rot],
+    [CMP_SHAPE_ROTATED_B, rot],
+];
+
+
+function cmp_parms_disc( llx=0, lly=0, dx, dy, dz ) =
+[
+    [CMP_SHAPE_VERTICAL_B, t],
+    [CMP_SHAPE, ROUND],
+    [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
+    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
+    [POSITION_XY,  [ llx, lly] ],
+];
+
+function cmp_parms_hex( llx, lly, dx, dz, lbl ) =
+[
+    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dx * sin(60), dz ] ],
+    [POSITION_XY,  [ llx, lly ] ],
+    [CMP_SHAPE, HEX2],
+    [CMP_SHAPE_VERTICAL_B, t],
+    [LABEL, 
+    [
+        [LBL_TEXT, lbl],
+        [LBL_FONT, font ],
+        [LBL_PLACEMENT, CENTER],
+        [LBL_DEPTH, 1],
+    ],
+    ],
+];
+
+function cmp_parms_hex2( llx, lly, dy, dz, lbl ) =
+[
+    [CMP_COMPARTMENT_SIZE_XYZ,  [ dy * sin(60), dy, dz ] ],
+    [POSITION_XY,  [ llx, lly ] ],
+    [CMP_SHAPE, HEX],
+    [CMP_SHAPE_VERTICAL_B, t],
+    [LABEL, 
+    [
+        [LBL_TEXT, lbl],
+        [LBL_FONT, font ],
+        [LBL_PLACEMENT, CENTER],
+        [LBL_DEPTH, 1],
+    ],
+    ],
+];
+
+function lid_parms(radius=10, thickness=1, label="", font="Arial:style=Bold", size="AUTO") =
+[
+    [ LID_SOLID_B, f],
+    [ LID_INSET_B, t],
+    [ LID_HEIGHT,  1.5 ],
+    [ LID_LABELS_INVERT_B, f],
+
+    [ LID_PATTERN_RADIUS, radius],
+    [ LID_PATTERN_THICKNESS, thickness],
+
+    [ LID_LABELS_BORDER_THICKNESS, 0.5 ],
+    [ LID_LABELS_BORDER_THICKNESS, 0.5 ],
+    [ LABEL,
+    [   
+        [ LBL_TEXT,     label ],
+        [ LBL_FONT,     font ],
+        [ LBL_SIZE,     size ],
+        [ ROTATION,     0 ],
+        [ POSITION_XY, [ 0, 0 ]],
+    ]
+    ],
+
+];
+
+function lid_parms_solid() =
+[
+    [ LID_SOLID_B, t],
+    [ LID_INSET_B, t],
+    [ LID_HEIGHT,  1.5 ],
+
+];
+
+function box_label( label ) =
+[
+    [ LBL_TEXT,     label ],
+    [ LBL_FONT, font ],
+    [ LBL_SIZE,     AUTO ],
+    [ ROTATION,     0 ],
+    [ POSITION_XY, [ 0, 0 ]],
+];
