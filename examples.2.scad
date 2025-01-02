@@ -45,7 +45,7 @@ g_default_font = "Arial:style=Bold";
 
 data =
 [
-    [   "example 0: minimal",                            // Box name, used for g_isolated_print_box
+    [   "example 1: minimal",                            // Box name, used for g_isolated_print_box
         [
             [ BOX_SIZE_XYZ, [46.5, 46.5, 15.0] ],        // one kv pair specifying the x, y, and z of our box exterior.
             [ BOX_COMPONENT,                             // our first component.
@@ -57,7 +57,7 @@ data =
         ]
     ],
 
-    [   "example 1",
+    [   "example 2",
         [
             [ BOX_SIZE_XYZ,             [110.0, 180.0, 22.0] ],
             [ ENABLED_B,                t],
@@ -240,6 +240,7 @@ data =
             ]
         ]
     ],    
+    
     [   "simple box",
         [
             [ BOX_SIZE_XYZ,                                     [45, 45, 15.0] ],
@@ -456,6 +457,7 @@ data =
             ],                  
         ]
     ],    
+
     [   "hex tiles 2",
         [
             [ BOX_SIZE_XYZ,                                     [55, 55, 10.0] ],
@@ -477,73 +479,7 @@ data =
             ],                  
         ]
     ],        
-    [   "example 1",
-        [
-            [ ENABLED_B,                t],
-            [ BOX_SIZE_XYZ,             [140.0, 180.0, 22.0] ],
 
-            [ BOX_LID,
-                [
-                    [ LID_FIT_UNDER_B,      f],
-                    [ LID_CUTOUT_SIDES_4B, [f,f,t,t]],
-                    [ LID_SOLID_B, t],
-                    [ LID_HEIGHT, 15 ],
-                    [ LID_INSET_B, f],
-                ]
-            ],
-
-            [ LABEL,
-                [
-                    [ LBL_TEXT,     "Skull     and"],
-                    [ LBL_SIZE,     AUTO ],
-                    [ ROTATION,     45 ],
-                    [ POSITION_XY, [ 2,-2]],
-                ]
-            ],
-
-            [ LABEL,
-                [
-                    [ LBL_TEXT,     "Crossbones"],
-                    [ LBL_SIZE,     AUTO ],
-                    [ ROTATION,     315 ],
-                    [ POSITION_XY, [ -4,-0]],
-                ]
-            ],        
-
-
-            [   BOX_COMPONENT,
-                [
-                    [CMP_COMPARTMENT_SIZE_XYZ,              [ 22, 60.0, 20.0] ],
-                    [CMP_NUM_COMPARTMENTS_XY,               [2,2] ],
-                    [CMP_SHAPE,                             SQUARE],
-                    [CMP_SHAPE_ROTATED_B,                   f],
-                    [CMP_SHAPE_VERTICAL_B,                  f],
-                    [CMP_PADDING_XY,                        [15,12]],
-                    [CMP_PADDING_HEIGHT_ADJUST_XY,          [-5, 0] ],
-                    [CMP_MARGIN_FBLR,                       [0,0,15,15]],
-                    [CMP_CUTOUT_SIDES_4B,                   [f,f,t,t]],
-                    [CMP_CUTOUT_TYPE,                       EXTERIOR],
-                    [ROTATION,                              5 ],
-                    [LABEL,               
-                        [
-                            [LBL_TEXT,        [   
-                                                ["backleft", "backright"],
-                                                ["frontleft", "frontright"],
-                                            ]
-                            ],
-                            [LBL_PLACEMENT,     FRONT],
-                            [ ROTATION,         10],
-                            [ LBL_SIZE,         AUTO],
-                            [ POSITION_XY,      [ -4,-2]],
-                            [ LBL_FONT,         "Times New Roman:style=bold italic"],
-
-                        ]
-                    ],  
-                ]
-            ],
-                            
-        ]
-    ],
     [   "shear",
         [
             [ BOX_SIZE_XYZ,                             [50.0, 50.0, 20.0] ],
@@ -619,6 +555,7 @@ data =
             ],                  
         ]
     ],          
+
     [   "lid label stencil",
         [
             [ BOX_SIZE_XYZ,             [50.0, 50.0, 20.0] ],
