@@ -58,9 +58,9 @@ function cmp_parms_disc( llx=0, lly=0, dx, dy, dz ) =
 // lbl:          Optional parameter - Text to include on the bottom - defaults to blank
 // font:         Optional parameter - OpensSCAD font specifier - defaults to g_default_font
 // size:         Optional parameter - Size of label - defaults to AuTO
-function cmp_parms_hex_tile( llx=0, lly=0, dx, dz, lbl="", font=g_default_font, size="AUTO" ) =
+function cmp_parms_hex_tile( llx=0, lly=0, d, dz, lbl="", font=g_default_font, size="AUTO" ) =
 [
-    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dx * sin(60), dz ] ],
+    [CMP_COMPARTMENT_SIZE_XYZ,  [ d, d * sin(60), dz ] ],
     [POSITION_XY,  [ llx, lly ] ],
     [CMP_SHAPE, HEX2],
     [CMP_SHAPE_VERTICAL_B, t],

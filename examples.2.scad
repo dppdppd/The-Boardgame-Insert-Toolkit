@@ -137,7 +137,7 @@ data =
             [ TYPE, HEXBOX ],
             [ HEXBOX_SIZE_DZ,    [ 100, 40 ] ],
             [ BOX_STACKABLE_B, t],
-            [ BOX_COMPONENT, cmp_parms_hex_tile( dx=100, dz=38, lbl="CATAN LAND", font="Venturis ADF Cd:style=Bold" ) ],
+            [ BOX_COMPONENT, cmp_parms_hex_tile( d=100, dz=38, lbl="CATAN LAND", font="Venturis ADF Cd:style=Bold" ) ],
 
             [ BOX_LID, lid_parms( radius=12, lbl="CATAN", font="Venturis ADF Cd:style=Bold", size=22 ) ],
         ]
