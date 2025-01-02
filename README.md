@@ -7,6 +7,7 @@ This:
 
 ![Dune 1](images/IMG_3294.jpeg)
 ![Mice n Mystics 2](images/IMG_1453.jpeg)
+![Catan + Expansions](images/Catan.jpeg)
 
 # Why
 This OpenSCAD library was designed to for quick design and iteration on board game inserts--specifically ones with lids. There are lots of great printable inserts out there, but very few for us vertical storers.
@@ -24,8 +25,8 @@ This OpenSCAD library was designed to for quick design and iteration on board ga
 - I also recommend making a little script that will split your STL into separate STLs (one per object) using [Slic3r](https://slic3r.org)'s command line '--split' feature.
 - If you post it on Thingiverse, make it a _remix_ of [BIT](https://www.thingiverse.com/thing:3405465) and I'll get notified and eventually add it to the list of game inserts. 
 
-### Pay attention to your dimensions.
-- Note that the box dimensions (BOX_SIZE_XYZ) are _exterior_ dimensions and are as such to guarantee that the box you're defining fits inside the game's cardboard box.
+## Pay attention to your dimensions.
+- Note that the box dimensions (BOX_SIZE_XYZ) are _exterior_ dimensions and are as such to guarantee that the box you're defining fits inside the game's cardboard box. __IMPORTANT:__ boxes with inset lids are taller by 2 * g_wall_thickness than defined.
 - Also note that the compartment dimensions are _interior_ dimensions and are as such to guarantee that the game pieces will fit inside them.
 - This means that you'll want to make sure that those exterior and interior values don't get too close to each other or your box walls will be thin and/or nonexistant.
 - By default you'll want to leave 3mm in depth and length, and 2mm in height, when designing your inserts.
@@ -56,7 +57,6 @@ The first key-value pair is [ "example 0: minimal", _one_big_array_of_keyvalues_
 
 Here is an example of some compartments designed to hold cards, with holes to get our fingers in on the side. Many of these parameters are just the default values and are not necessary, but are included for easy modification:
 
-
     [   "example 1",
         [
             [ BOX_SIZE_XYZ,             [110.0, 180.0, 22.0] ],
@@ -64,31 +64,31 @@ Here is an example of some compartments designed to hold cards, with holes to ge
 
              [ BOX_LID,
                 [
-                    [ LID_FIT_UNDER_B,      f],
-                    [ LID_CUTOUT_SIDES_4B, [f,f,t,t]],
-                    [ LID_SOLID_B, f],
-                    [ LID_HEIGHT, 15 ],
-                ]
-             ]
+                    [ LID_SOLID_B,         f],
+                    [ LID_FIT_UNDER_B,     f],
+                    [ LID_PATTERN_RADIUS,  8],
+                    [ LID_HEIGHT,          10 ],
 
-            [ LABEL,
-                [
-                    [ LBL_TEXT,     "Skull     and"],
-                    [ LBL_SIZE,     AUTO ],
-                    [ ROTATION,     45 ],
-                    [ POSITION_XY, [ 2,-2]],
-                ]
+                    [ LABEL,
+                        [
+                            [ LBL_TEXT,     "Skull     and"],
+                            [ LBL_SIZE,     AUTO ],
+                            [ ROTATION,     45 ],
+                            [ POSITION_XY, [ 2,-2]],
+                        ]
+                    ],
+
+                    [ LABEL,
+                        [
+                            [ LBL_TEXT,     "Crossbones"],
+                            [ LBL_SIZE,     AUTO ],
+                            [ ROTATION,     315 ],
+                            [ POSITION_XY, [ -4,-0]],
+                        ]
+                    ],
+
+                ],        
             ],
-
-            [ LABEL,
-                [
-                    [ LBL_TEXT,     "Crossbones"],
-                    [ LBL_SIZE,     AUTO ],
-                    [ ROTATION,     315 ],
-                    [ POSITION_XY, [ -4,-0]],
-                ]
-            ],        
-
 
             [   BOX_COMPONENT,
                 [
@@ -97,9 +97,9 @@ Here is an example of some compartments designed to hold cards, with holes to ge
                     [CMP_SHAPE,                             SQUARE],
                     [CMP_SHAPE_ROTATED_B,                   f],
                     [CMP_SHAPE_VERTICAL_B,                  f],
-                    [CMP_PADDING_XY,                        [15,12]],
+                    [CMP_PADDING_XY,                        [10,12]],
                     [CMP_PADDING_HEIGHT_ADJUST_XY,          [-5, 0] ],
-                    [CMP_MARGIN_4B,                         [t,f,f,f]],
+                    [CMP_MARGIN_FBLR,                       [0,0,0,0]],
                     [CMP_CUTOUT_SIDES_4B,                   [f,f,f,t]],
                     [ROTATION,                              5 ],
                     [POSITION_XY,                           [CENTER,CENTER]],
@@ -111,7 +111,7 @@ Here is an example of some compartments designed to hold cards, with holes to ge
                                             ]
                             ],
                             [LBL_PLACEMENT,     FRONT],
-                            [ ROTATION,         10],
+                            [ ROTATION,         5],
                             [ LBL_SIZE,         AUTO],
                             [ POSITION_XY,      [ -4,-2]],
                             [ LBL_FONT,         "Times New Roman:style=bold italic"],
@@ -120,21 +120,38 @@ Here is an example of some compartments designed to hold cards, with holes to ge
                     ],  
                 ]
             ],
+
            [ BOX_COMPONENT,
                 [
                     [CMP_NUM_COMPARTMENTS_XY,       [1,1]],
                     [CMP_COMPARTMENT_SIZE_XYZ,      [ 60.0, 10.0, 5.0] ],
-                    [POSITION_XY,                   [CENTER,2]],
+                    [POSITION_XY,                   [CENTER,165]],
                 ]
             ],                              
 
         ]
-    ]
+    ],
+
 
 And this is the result:
 
 ![example2](images/example2.png)
 
+### Hexagonal Boxes
+As of v3.0, there is now the ability to create hexagonal boxes as an efficient way to store hexagonal tiles (like those in Catan). Here is the code to produce a box to hold hexagonal tiles:
+
+    include <Lib.scad>;
+    
+    [   "hexbox example 1",
+    [
+        [ TYPE, HEXBOX ],
+        [ HEXBOX_SIZE_DZ,    [ hexbox_d, catan_land_hexbox_z ] ],
+        [ BOX_STACKABLE_B, t],
+        [ BOX_COMPONENT, cmp_parms_hex( 0, 0, hexbox_d, catan_land_z, "CATAN LAND" ) ],
+
+        [ BOX_LID, lid_parms( "CATAN" ) ],
+    ]
+    ],
 
 ### Dividers
 As of v2.04, there is also the ability to create card dividers in addition to boxes. A dividers definition looks like this:
@@ -400,6 +417,8 @@ e.g. `[ CMP_COMPARTMENT_SIZE_XYZ, [ 10, 20, 5 ] ]`
 value is expected to be one of the following:
 - `SQUARE`    
 default right angled compartment
+- `FILLET`   
+a square compartment with rounded bottom corners on opposite edges
 - `HEX`      
 a 6-sided compartment
 - `HEX2`     
@@ -410,8 +429,6 @@ an 8-sided compartment
 an 8-sided compartment that is rotated 22.5 degrees
 - `ROUND`    
 a round compartment
-- `FILLET`   
-a square compartment with rounded bottoms
 
 e.g. `[ CMP_SHAPE, HEX2 ]`
 
