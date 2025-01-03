@@ -12,7 +12,7 @@ g_b_print_lid = true;
 g_b_print_box = true; 
 
 // Only render specified box
-g_isolated_print_box = "hexbox example 1"; 
+g_isolated_print_box = "components"; 
 
 // Used to visualize how all of the boxes fit together. 
 g_b_visualization = false;          
@@ -42,6 +42,10 @@ g_tolerance = 0.15;
 g_tolerance_detents_pos = 0.1;
 
 g_default_font = "Arial:style=Bold";
+
+// Variables for components box
+cmp_size = 20;
+cmp_pitch = cmp_size + wall;
 
 data =
 [
@@ -140,6 +144,39 @@ data =
             [ BOX_COMPONENT, cmp_parms_hex_tile( d=100, dz=38, lbl="CATAN LAND", font="Venturis ADF Cd:style=Bold" ) ],
 
             [ BOX_LID, lid_parms( radius=12, lbl="CATAN", font="Venturis ADF Cd:style=Bold", size=22 ) ],
+        ]
+    ],
+
+    [   "components",
+        [
+            [ BOX_SIZE_XYZ,    [7*20 + 8*wall, 3*20 + 4*wall, cmp_size+3*wall] ],
+            [ BOX_STACKABLE_B, f],
+            [ BOX_COMPONENT, cmp_parms(llx=0*cmp_pitch, lly=0*cmp_pitch, dx=cmp_size, dy=cmp_size,  dz=cmp_size ) ],
+
+            [ BOX_COMPONENT, cmp_parms_fillet(llx=1*cmp_pitch, lly=0*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size ) ],
+            [ BOX_COMPONENT, cmp_parms_fillet(llx=1*cmp_pitch, lly=1*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, rot=f ) ],
+
+            [ BOX_COMPONENT, cmp_parms_round(llx=2*cmp_pitch, lly=0*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size ) ],
+            [ BOX_COMPONENT, cmp_parms_round(llx=2*cmp_pitch, lly=1*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, rot=f ) ],
+            [ BOX_COMPONENT, cmp_parms_round(llx=2*cmp_pitch, lly=2*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, vert=t ) ],
+
+            [ BOX_COMPONENT, cmp_parms_hex(llx=3*cmp_pitch, lly=0*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size ) ],
+            [ BOX_COMPONENT, cmp_parms_hex(llx=3*cmp_pitch, lly=1*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, rot=f ) ],
+            [ BOX_COMPONENT, cmp_parms_hex(llx=3*cmp_pitch, lly=2*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, vert=t ) ],
+
+            [ BOX_COMPONENT, cmp_parms_hex2(llx=4*cmp_pitch, lly=0*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size ) ],
+            [ BOX_COMPONENT, cmp_parms_hex2(llx=4*cmp_pitch, lly=1*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, rot=f ) ],
+            [ BOX_COMPONENT, cmp_parms_hex2(llx=4*cmp_pitch, lly=2*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, vert=t ) ],
+
+            [ BOX_COMPONENT, cmp_parms_oct(llx=5*cmp_pitch, lly=0*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size ) ],
+            [ BOX_COMPONENT, cmp_parms_oct(llx=5*cmp_pitch, lly=1*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, rot=f ) ],
+            [ BOX_COMPONENT, cmp_parms_oct(llx=5*cmp_pitch, lly=2*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, vert=t ) ],
+
+            [ BOX_COMPONENT, cmp_parms_oct2(llx=6*cmp_pitch, lly=0*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size ) ],
+            [ BOX_COMPONENT, cmp_parms_oct2(llx=6*cmp_pitch, lly=1*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, rot=f ) ],
+            [ BOX_COMPONENT, cmp_parms_oct2(llx=6*cmp_pitch, lly=2*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, vert=t ) ],
+
+            [ BOX_LID, lid_parms( radius=12 ) ],
         ]
     ],
 
