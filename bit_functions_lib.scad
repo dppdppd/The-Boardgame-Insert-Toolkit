@@ -146,8 +146,10 @@ function cmp_parms_disc( llx=0, lly=0, dx, dy, dz ) =
 ];
 
 // This function simplifies creating a vertical hexagonal component with a label at the bottom
+// Instead of specifying x and y dimensions, the diameter of the hex is used. This is the
+// easiest way to make a box for hexagonal tiles.
 // Inputs:
-// (dx, dz):     Size of the component - dx is the "diameter" of the tile, and dz is the depth of the stack
+// (d, dz):      Size of the component - d is the "diameter" of the tile, and dz is the depth of the stack
 // (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
 // lbl:          Optional parameter - Text to include on the bottom - defaults to blank
 // font:         Optional parameter - OpensSCAD font specifier - defaults to g_default_font
@@ -169,7 +171,14 @@ function cmp_parms_hex_tile( llx=0, lly=0, d, dz, lbl="", font=g_default_font, s
     ],
 ];
 
-function lid_parms(radius=10, thickness=1, lbl="", font=g_default_font, size="AUTO") =
+// This function simplifies creating an inset lid with a hexagonal pattern
+// Inputs:
+// radius:       Optional parameter - Radius of the hexagons - defaults to 5mm
+// thickness:    Optional parameter - Thickness of the hexagonal borders - defaults to 1mm 
+// lbl:          Optional parameter - Text to include on the bottom - defaults to blank
+// font:         Optional parameter - OpensSCAD font specifier - defaults to g_default_font
+// size:         Optional parameter - Size of label - defaults to AuTO
+function lid_parms(radius=5, thickness=1, lbl="", font=g_default_font, size="AUTO") =
 [
     [ LID_SOLID_B, f],
     [ LID_INSET_B, t],
@@ -193,19 +202,11 @@ function lid_parms(radius=10, thickness=1, lbl="", font=g_default_font, size="AU
 
 ];
 
+// This function simplifies creating a solid inset lid
 function lid_parms_solid() =
 [
     [ LID_SOLID_B, t],
     [ LID_INSET_B, t],
     [ LID_HEIGHT,  1.5 ],
 
-];
-
-function box_label( label ) =
-[
-    [ LBL_TEXT,     label ],
-    [ LBL_FONT, font ],
-    [ LBL_SIZE,     AUTO ],
-    [ ROTATION,     0 ],
-    [ POSITION_XY, [ 0, 0 ]],
 ];
