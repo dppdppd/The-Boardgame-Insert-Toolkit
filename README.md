@@ -138,7 +138,7 @@ And this is the result:
 ![example2](images/example2.png)
 
 ### Hexagonal Boxes
-As of v3.0, there is now the ability to create hexagonal boxes as an efficient way to store hexagonal tiles (like those in Catan). Here is the code to produce a box to hold hexagonal tiles:
+As of v3.00, there is now the ability to create hexagonal boxes as an efficient way to store hexagonal tiles (like those in Catan). Here is the code to produce a box to hold hexagonal tiles:
 
     include <bit_functions_lib.scad>;
     
