@@ -1,5 +1,5 @@
 // Toolkit that performs all the model generation operations
-include <boardgame_insert_toolkit_lib.2.scad>;
+include <boardgame_insert_toolkit_lib.3.scad>;
 
 // Helper library to simplify creation of single components
 // Also includes some basic lid helpers
