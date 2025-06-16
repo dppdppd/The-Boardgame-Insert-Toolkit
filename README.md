@@ -637,5 +637,6 @@ Value is expected to be a number, and determines the number of characters above 
 - [Sword & Sorcey Cards box and Chit box](https://www.thingiverse.com/thing:3637030)
 - [Tainted Grail: Fall of Avalon](https://www.thingiverse.com/thing:4812198) & [Tainted Grail Expansions](https://www.thingiverse.com/thing:4812222)
 - [Tapestry](https://www.thingiverse.com/thing:4579132)
+- [Twilight Imperium wormhole token box](https://www.thingiverse.com/thing:7067400)
 - [Tyrants of the Underdark]( https://www.thingiverse.com/thing:4570276 )
 - [V Commandos]( https://www.thingiverse.com/thing:4319308 )
