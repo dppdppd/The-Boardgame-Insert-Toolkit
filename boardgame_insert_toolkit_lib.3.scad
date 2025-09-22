@@ -2298,7 +2298,13 @@ module MakeBox( box )
 
             translate( cylinder_translation )
             {
-                angle = __component_is_hex() ? 30 : __component_is_oct() ? 22.5 : __component_is_tri() ? 60 : __component_is_pent() ? 36 : 0;
+                angle = __component_is_hex() ? 30 : 
+                        __component_is_oct() ? 22.5 :
+                        __component_is_tri() ? 90 :
+                        __component_is_tri2() ? 30 : // Rotate to put vertex down
+                        __component_is_pent() ? 18 :
+                        __component_is_pent2() ? 18+36 : // Rotate to put vertex down
+                        0;
 
                 rotate( a=angle, v=[0, 0, 1] )
                     cylinder(h, r, r, center = false );                      
@@ -2308,7 +2314,11 @@ module MakeBox( box )
 
         module MakeCompartmentShape()
         {
-            $fn = __component_is_hex() || __component_is_hex2() ? 6 : __component_is_oct() || __component_is_oct2() ? 8 : __component_is_tri() || __component_is_tri2() ? 3 : __component_is_pent() || __component_is_pent2() ? 5 : __component_is_square() ? 4 : 100;
+            $fn = __component_is_hex() || __component_is_hex2() ? 6 :
+                    __component_is_oct() || __component_is_oct2() ? 8 :
+                    __component_is_tri() || __component_is_tri2() ? 3 :
+                    __component_is_pent() || __component_is_pent2() ? 5 :
+                    __component_is_square() ? 4 : 100;
 
             if ( __component_is_square() )
             {
@@ -2347,12 +2357,13 @@ module MakeBox( box )
                                 // lay the hex down
                                 rotate( a= 90, v=[ 1,0,0])
                                 {
-                                    // do we want hex point down?
-                                    rotate( a=__component_is_hex2() ? 
-                                            30 : __component_is_oct() ?
-                                            22.5 : __component_is_tri() ?
-                                            60 : __component_is_pent() ?
-                                            36 : 0,
+                                    
+                                    rotate( a=__component_is_hex2() ? 30 : // do we want hex point down?
+                                            __component_is_oct() ? 22.5 :  // octo-corner down
+                                            __component_is_tri() || __component_is_tri2() ? 30 :    // triangle vertex down, any other rotation doesn't make sense
+                                            __component_is_pent() ? 18 : // flat side down
+                                            __component_is_pent2() ? 36+18 : // pent-corner down
+                                            0,
                                             v=[ 0, 0, 1])
                                     {
                                         cylinder(h = __compartment_size( dim2 ), r1 = r, r2 = r );  

@@ -131,6 +131,69 @@ function cmp_parms_oct2( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
     [CMP_SHAPE_VERTICAL_B, vert],
 ];
 
+// This function simplifies creating a triangular component (lying flat)
+// Inputs:
+// (dx, dy, dz): Size of the component
+// (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
+// rot:          Optional parameter - Is component rotated around Z axis - defaults to t. Valid values: t, f
+// vert:         Optional parameter - Is component for vertical stack of pieces - defaults to f. Valid values: t, f
+function cmp_parms_tri( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
+[
+    [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
+    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
+    [POSITION_XY,  [ llx, lly ] ],
+    [CMP_SHAPE, TRI],
+    [CMP_SHAPE_ROTATED_B, rot],
+    [CMP_SHAPE_VERTICAL_B, vert],
+];
+
+// This function simplifies creating a triangular component (vertex down)
+// Inputs:
+// (dx, dy, dz): Size of the component
+// (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
+// rot:          Optional parameter - Is component rotated around Z axis - defaults to t. Valid values: t, f
+// vert:         Optional parameter - Is component for vertical stack of pieces - defaults to f. Valid values: t, f
+function cmp_parms_tri2( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
+[
+    [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
+    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
+    [POSITION_XY,  [ llx, lly ] ],
+    [CMP_SHAPE, TRI2],
+    [CMP_SHAPE_ROTATED_B, rot],
+    [CMP_SHAPE_VERTICAL_B, vert],
+];
+
+// This function simplifies creating a pentagonal component (lying flat)
+// Inputs:
+// (dx, dy, dz): Size of the component
+// (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
+// rot:          Optional parameter - Is component rotated around Z axis - defaults to t. Valid values: t, f
+// vert:         Optional parameter - Is component for vertical stack of pieces - defaults to f. Valid values: t, f
+function cmp_parms_pent( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
+[
+    [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
+    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
+    [POSITION_XY,  [ llx, lly ] ],
+    [CMP_SHAPE, PENT],
+    [CMP_SHAPE_ROTATED_B, rot],
+    [CMP_SHAPE_VERTICAL_B, vert],
+];
+
+// This function simplifies creating a pentagonal component (vertex down)
+// Inputs:
+// (dx, dy, dz): Size of the component
+// (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
+// rot:          Optional parameter - Is component rotated around Z axis - defaults to t. Valid values: t, f
+// vert:         Optional parameter - Is component for vertical stack of pieces - defaults to f. Valid values: t, f
+function cmp_parms_pent2( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
+[
+    [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
+    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
+    [POSITION_XY,  [ llx, lly ] ],
+    [CMP_SHAPE, PENT2],
+    [CMP_SHAPE_ROTATED_B, rot],
+    [CMP_SHAPE_VERTICAL_B, vert],
+];
 
 // This function simplifies creating a vertical round component
 // Inputs:
