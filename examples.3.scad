@@ -149,7 +149,7 @@ data =
 
     [   "components",
         [
-            [ BOX_SIZE_XYZ,    [7*20 + 8*wall, 3*20 + 4*wall, cmp_size+3*wall] ],
+            [ BOX_SIZE_XYZ,    [11*20 + 12*wall, 3*20 + 4*wall, cmp_size+3*wall] ],
             [ BOX_STACKABLE_B, f],
             [ BOX_COMPONENT, cmp_parms(llx=0*cmp_pitch, lly=0*cmp_pitch, dx=cmp_size, dy=cmp_size,  dz=cmp_size ) ],
 
@@ -175,6 +175,22 @@ data =
             [ BOX_COMPONENT, cmp_parms_oct2(llx=6*cmp_pitch, lly=0*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size ) ],
             [ BOX_COMPONENT, cmp_parms_oct2(llx=6*cmp_pitch, lly=1*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, rot=f ) ],
             [ BOX_COMPONENT, cmp_parms_oct2(llx=6*cmp_pitch, lly=2*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, vert=t ) ],
+
+            [ BOX_COMPONENT, cmp_parms_tri(llx=7*cmp_pitch, lly=0*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size ) ],
+            [ BOX_COMPONENT, cmp_parms_tri(llx=7*cmp_pitch, lly=1*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, rot=f ) ],
+            [ BOX_COMPONENT, cmp_parms_tri(llx=7*cmp_pitch, lly=2*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, vert=t ) ],
+
+            [ BOX_COMPONENT, cmp_parms_tri2(llx=8*cmp_pitch, lly=0*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size ) ],
+            [ BOX_COMPONENT, cmp_parms_tri2(llx=8*cmp_pitch, lly=1*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, rot=f ) ],
+            [ BOX_COMPONENT, cmp_parms_tri2(llx=8*cmp_pitch, lly=2*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, vert=t ) ],
+
+            [ BOX_COMPONENT, cmp_parms_pent(llx=9*cmp_pitch, lly=0*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size ) ],
+            [ BOX_COMPONENT, cmp_parms_pent(llx=9*cmp_pitch, lly=1*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, rot=f ) ],
+            [ BOX_COMPONENT, cmp_parms_pent(llx=9*cmp_pitch, lly=2*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, vert=t ) ],
+
+            [ BOX_COMPONENT, cmp_parms_pent2(llx=10*cmp_pitch, lly=0*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size ) ],
+            [ BOX_COMPONENT, cmp_parms_pent2(llx=10*cmp_pitch, lly=1*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, rot=f ) ],
+            [ BOX_COMPONENT, cmp_parms_pent2(llx=10*cmp_pitch, lly=2*cmp_pitch, dx=cmp_size, dy=cmp_size, dz=cmp_size, vert=t ) ],
 
             [ BOX_LID, lid_parms( radius=12 ) ],
         ]

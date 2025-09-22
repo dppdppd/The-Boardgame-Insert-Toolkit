@@ -405,6 +405,10 @@ Value is expected to be one of the following:
 - `HEX2`     a 6-sided compartment that is rotated 30 degrees (corner down)
 - `OCT`      an 8-sided compartment (flat side down)
 - `OCT2`     an 8-sided compartment that is rotated 22.5 degrees (corner down)
+- `TRI`      a 3-sided compartment (flat side of triangle down)
+- `TRI2`     a 3-sided compartment that is rotated (corner down)
+- `PENT`     a 5-sided compartment (flat side of pentagon down)
+- `PENT2`    a 5-sided compartment that is rotated (corner down)
 
 e.g. `[ CMP_SHAPE, HEX2 ]`. The following box shows all the different components. The front row has the components in the order listed above. The second row shows the same, but rotated (`[CMP_SHAPE_ROTATED_B]` below). The third row has the same order for vertical stacks of pieces (`[CMP_SHAPE_VERTICAL_B]` below).
 
