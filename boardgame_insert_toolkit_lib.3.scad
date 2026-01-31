@@ -1506,9 +1506,9 @@ module MakeBox( box )
             //echo( str(y, " ", dy, " ", y_count_i, " ", y_count_even, "\n") );
 
             translate( [x_offset, y_offset, 0 ] )
-            for( j = [ -1: y_count + 1 ] )
+            for( j = [ -1: y_count + 2 ] )
                 translate( [ ( j % 2 ) * dx/2, 0, 0 ] )
-                    for( i = [ -1: x_count + 1 ] )
+                    for( i = [ -1: x_count + 2 ] )
                         translate( [ i * dx, j * dy, 0 ] )
                             rotate( a = m_lid_pattern_angle, v=[ 0, 0, 1 ] )
                             {
