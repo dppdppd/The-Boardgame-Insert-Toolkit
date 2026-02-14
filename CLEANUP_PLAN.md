@@ -232,32 +232,22 @@ Larger, more complex modules. Higher risk.
 
 ## Phase 4: Reduce MakeBox/MakeHexBox Duplication (Structural)
 
-After extracting shared code, MakeBox and MakeHexBox should be much smaller. This phase tackles the remaining structural differences.
+### 4.0 Unify accessor functions — DONE
+Introduced `m_box_height_index`, `m_lid_size_ext`, `m_lid_size_int`, `m_notch_length_base` precomputed arrays. All 35 MakeLayer functions and all 4 top-level accessors are now identical between MakeBox and MakeHexBox.
 
-### 4.1 Extract MakeLid
-**Significant differences**: Hex uses cylinder clipping, hex lid bases
-**Approach**: Create a shared `MakeLid` that takes a `shape_type` parameter and dispatches to cube vs cylinder geometry
-- [ ] Design the interface
-- [ ] Implement
-- [ ] Verify: render all lid tests for both box types
+### 4.1 MakeLayer dedup assessment — DONE (deferred)
+After accessor unification, diffed MakeLayer copies:
+- **1,690 lines** (MakeBox) vs **1,585 lines** (MakeHexBox)
+- **319 lines** differ (whitespace-insensitive)
+- **73 diff hunks** concentrated in two areas:
+  1. **Shell/lid structure** (~lines 1-500): `cube()` vs `cylinder($fn=6)`, lid base/cap/edge/notch modules are geometrically different, hex has `m_x_offset` translate and `m_is_lid_holder` layer
+  2. **Outer assembly** (~lines 1500-1690): stackable features, final geometry wrapping differ
+- **Middle section** (~lines 500-1500): labels, cutouts, iteration, fillets, partitions, compartments — largely identical but cannot be extracted to file scope due to OpenSCAD scoping (closures over ~40 parent-scope variables)
 
-### 4.2 Simplify MakeLayer dispatch
-After extracting accessors, iteration, and inner layers, MakeLayer should be much simpler.
-- [ ] Review remaining MakeLayer code
-- [ ] Identify further extraction opportunities
-- [ ] Implement
-- [ ] Verify
+**Conclusion**: Remaining MakeLayer differences are genuine geometric divergence between rectangular and hexagonal box types. Further dedup requires architectural changes (shape abstraction layer) beyond safe mechanical refactoring. This is the natural stopping point for Phases 2-4.
 
-### 4.3 Assess MakeBox/MakeHexBox merge feasibility
-At this point, evaluate whether MakeBox and MakeHexBox can share a common base.
-**Genuinely hex-specific code** (~220 lines):
-- Shell shape (cube vs cylinder)
-- Lid bases (cube vs cylinder)
-- Lid holder (hex-specific)
-- Corner notches (4 mirrors vs 6 rotations)
-- Lid tabs (4 sides vs 6 rotations)
-- Detents (4 corners vs 6 sides)
-- Size/dimension functions
+### Future: shape abstraction (out of scope)
+Would require a `MakeShell(type)`, `MakeLidBase(type)` abstraction that dispatches cube vs cylinder geometry. High risk, significant redesign, deferred indefinitely.
 
 **Decision point**: Is a shared `MakeBoxBase(shape_type)` worth the complexity?
 - [ ] Evaluate after Phase 3 extraction results
