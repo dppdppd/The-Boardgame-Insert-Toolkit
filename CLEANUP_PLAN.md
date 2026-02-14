@@ -130,6 +130,10 @@ Move code that is **100% identical** between MakeBox and MakeHexBox to file-scop
 
 ## Phase 2: Extract Shared Label & Iteration Code
 
+**STATUS: BLOCKED** — All target modules depend on `__` accessor functions scoped inside MakeBox/MakeHexBox. 6 of 39 accessors differ between box types (mostly `k_z` vs `k_hex_z`). Cannot extract to file scope without first unifying the accessor layer (Phase 4). Phases 2 and 3 as written are deferred.
+
+**2.0 (DONE)**: Introduced `m_box_height_index` variable (`k_z` in MakeBox, `k_hex_z` in MakeHexBox) to eliminate the most common diff category. Replaced 19 `m_box_size[k_z]` refs in MakeBox and 20 `m_box_size[k_hex_z]` refs in MakeHexBox. This makes 35 of 35 MakeLayer accessor functions use the same variable name, prep for Phase 4 unification.
+
 These are **100% identical** between MakeBox and MakeHexBox but may reference parent-scope variables.
 
 ### 2.1 Extract label helpers
@@ -359,9 +363,11 @@ Key reference points for navigation. **Must be updated after any change that shi
 | Make2dShape (file scope) | 481-489 | Phase 1.3 |
 | Make2DPattern (file scope) | 491-525 | Phase 1.3 |
 | MakeStripedGrid (file scope) | 527-553 | Phase 1.3 |
-| MakeAll | 556-611 | Phase 1.3 |
-| MakeDividers | 613-721 | Phase 1.3 |
-| MakeBox start | 723 | Phase 1.3 |
-| MakeHexBox start | 2543 | Phase 1.3 |
-| MakeRoundedCubeAxis | 4280-4332 | Phase 1.3 |
-| **Total lines** | **4335** | Phase 1.3 |
+| MakeAll | 556-611 | Phase 2.0 |
+| MakeDividers | 613-721 | Phase 2.0 |
+| MakeBox start | 723 | Phase 2.0 |
+| m_box_height_index = k_z | 756 | Phase 2.0 |
+| MakeHexBox start | 2545 | Phase 2.0 |
+| m_box_height_index = k_hex_z | 2577 | Phase 2.0 |
+| MakeRoundedCubeAxis | 4284-4336 | Phase 2.0 |
+| **Total lines** | **4339** | Phase 2.0 |

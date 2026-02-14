@@ -753,6 +753,8 @@ module MakeBox( box )
             ] :
             __element_dimensions( box );
 
+    m_box_height_index = k_z;
+
     function __notch_length( D ) = m_box_size[ D ] / 5.0;
 
     function __lid_notch_depth() = m_wall_thickness / 2;
@@ -918,7 +920,7 @@ module MakeBox( box )
     
 
 
-        m_component_base_height = m_box_size[ k_z ] - __component_size( k_z ) - m_wall_thickness;
+        m_component_base_height = m_box_size[ m_box_height_index ] - __component_size( k_z ) - m_wall_thickness;
 
         // DERIVED VARIABLES
 
@@ -1041,11 +1043,11 @@ module MakeBox( box )
                // box top lid accommodation
                 if ( !m_lid_inset && m_box_has_lid )
                 {
-                    translate( [ 0,0, m_box_size[ k_z ] - __lid_internal_size( k_z ) ] )
+                    translate( [ 0,0, m_box_size[ m_box_height_index ] - __lid_internal_size( k_z ) ] )
                         MirrorAboutPoint( v=[0,0,1], pt=[0,0,__lid_external_size(k_z)/2])
                             MakeLidBase_Cap();
 
-                    notch_pos_z =  m_box_size[ k_z ] - m_lid_wall_height + __lid_notch_depth();                    
+                    notch_pos_z =  m_box_size[ m_box_height_index ] - m_lid_wall_height + __lid_notch_depth();                    
 
                     if ( m_lid_notches )
                      translate([ 0, 0, notch_pos_z]) 
@@ -1199,7 +1201,7 @@ module MakeBox( box )
         {
             cube([  m_box_size[ k_x ], 
                     m_box_size[ k_y ], 
-                    m_box_size[ k_z ]]);
+                    m_box_size[ m_box_height_index ]]);
                     
         }
 
@@ -1214,7 +1216,7 @@ module MakeBox( box )
                     if ( m_box_has_lid || m_box_is_stackable )
                     {
                         // create the structure above the box that holds the lid
-                        translate([ 0, 0, m_box_size[ k_z ] ])
+                        translate([ 0, 0, m_box_size[ m_box_height_index ] ])
                             difference()
                             {
                                 cube( [ m_box_size[ k_x ], m_box_size[ k_y ], __lid_external_size( k_z )]);
@@ -1227,7 +1229,7 @@ module MakeBox( box )
                     
                 // subtract tabs
 
-                    translate( [ 0, 0, m_box_size[ k_z ] - m_lid_tab[ k_z ] + 1 ])
+                    translate( [ 0, 0, m_box_size[ m_box_height_index ] - m_lid_tab[ k_z ] + 1 ])
                         MakeLidTabs( mod = 0, square = true ); // this needs to be wide 
             }  
         }
@@ -1237,10 +1239,10 @@ module MakeBox( box )
             {
                 difference()
                 {
-                    cube( [ m_box_size[ k_x ], m_box_size[ k_y ], m_box_size[ k_z ] ] );
+                    cube( [ m_box_size[ k_x ], m_box_size[ k_y ], m_box_size[ m_box_height_index ] ] );
 
                     translate( [ m_wall_thickness, m_wall_thickness, 0 ])
-                        cube( [ m_box_size[ k_x ] - ( 2 * m_wall_thickness ), m_box_size[ k_y ] - ( 2 * m_wall_thickness ), m_box_size[ k_z ] ] );
+                        cube( [ m_box_size[ k_x ] - ( 2 * m_wall_thickness ), m_box_size[ k_y ] - ( 2 * m_wall_thickness ), m_box_size[ m_box_height_index ] ] );
                 }
             }
         }
@@ -1256,7 +1258,7 @@ module MakeBox( box )
                 // we carve all the way to the bottom and then fill it back up
                 cube([  __component_size( k_x ), 
                     __component_size( k_y ), 
-                    m_box_size[ k_z] + __lid_external_size(k_z)]);
+                    m_box_size[ m_box_height_index ] + __lid_external_size(k_z)]);
             }
             else if ( m_is_component_additions )
             {
@@ -1327,7 +1329,7 @@ module MakeBox( box )
                         {
 
                             translate( [ insetx, insety, -m_wall_thickness ] )
-                                cube ( [ sizex, sizey, m_box_size[ k_z]]);
+                                cube ( [ sizex, sizey, m_box_size[ m_box_height_index ]]);
 
                             MakeAllBoxSideCutouts();
                         }                    
@@ -1341,11 +1343,11 @@ module MakeBox( box )
                             {
                                 // From the whole box ..
                                 translate( [ -__component_position(k_x),-__component_position(k_y), -m_wall_thickness ] )
-                                    cube( [ m_box_size[ k_x], m_box_size[ k_y], m_box_size[ k_z] + __lid_external_size(k_z)]);
+                                    cube( [ m_box_size[ k_x], m_box_size[ k_y], m_box_size[ m_box_height_index ] + __lid_external_size(k_z)]);
 
                                 // .. remove the inner area of the whole compartment
                                 translate( [ insetx, insety, -m_wall_thickness ] )
-                                    cube ( [ sizex, sizey, m_box_size[ k_z] + __lid_external_size(k_z)]);
+                                    cube ( [ sizex, sizey, m_box_size[ m_box_height_index ] + __lid_external_size(k_z)]);
                             }
 
                             MakeAllBoxSideCutouts();
@@ -1518,7 +1520,7 @@ module MakeBox( box )
         module MakeBoxLabel( label, x = 0, y = 0 )
         {
             z_pos = 0;
-            z_pos_vertical = (m_box_size[ k_z ] - m_lid_notch_height) / 2;
+            z_pos_vertical = (m_box_size[ m_box_height_index ] - m_lid_notch_height) / 2;
 
             if ( __label_placement_is_front( label) )
             {
@@ -1779,7 +1781,7 @@ module MakeBox( box )
 
 
             lid_print_position = [0, m_box_size[ k_y ] + DISTANCE_BETWEEN_PARTS, 0 ];
-            lid_vis_position = [ 0, 0, m_box_size[ k_z ] + m_lid_thickness ];
+            lid_vis_position = [ 0, 0, m_box_size[ m_box_height_index ] + m_lid_thickness ];
           
             translate( g_b_vis_actual ? lid_vis_position : lid_print_position ) 
                 RotateAboutPoint( g_b_vis_actual ? 180 : 0, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )
@@ -1886,12 +1888,12 @@ module MakeBox( box )
         {
 
             function __cutout_z() = m_is_lid ? m_lid_wall_height + m_lid_thickness : 
-                                    m_box_size[ k_z ] + __lid_external_size( k_z ) * 2 * m_cutout_height_pct; 
+                                    m_box_size[ m_box_height_index ] + __lid_external_size( k_z ) * 2 * m_cutout_height_pct; 
             function __padding( D ) = m_is_lid ? 0 : __component_padding( D );
             function __size( D ) = m_is_lid ? __lid_external_size( D ) : __compartment_size( D );
             function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : 
-                                                - __lid_external_size( k_z ) + (m_box_size[ k_z ] * (1-m_cutout_height_pct));
-            function __round_bottom() = __finger_cutouts_bottom() > m_box_size[ k_z ] - __size( k_z );
+                                                - __lid_external_size( k_z ) + (m_box_size[ m_box_height_index ] * (1-m_cutout_height_pct));
+            function __round_bottom() = __finger_cutouts_bottom() > m_box_size[ m_box_height_index ] - __size( k_z );
             // main and perpendicular dimensions
             main_d = ( side == k_back || side == k_front ) ? k_y : k_x; 
             perp_d = ( side == k_back || side == k_front ) ? k_x : k_y;
@@ -2020,7 +2022,7 @@ module MakeBox( box )
 
         module MakeCornerCutouts( corner )
         {
-            function __cutout_z() = ( m_is_lid ? m_lid_wall_height + m_lid_thickness : m_box_size[ k_z ] + __lid_external_size( k_z ) * 2 );
+            function __cutout_z() = ( m_is_lid ? m_lid_wall_height + m_lid_thickness : m_box_size[ m_box_height_index ] + __lid_external_size( k_z ) * 2 );
             function __padding( D ) = m_is_lid ? 0 : __component_padding( D );
             function __size( D ) = m_is_lid ? __lid_internal_size( D ) : __compartment_size( D );
             function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : 
@@ -2222,7 +2224,7 @@ module MakeBox( box )
 
                     // from midpoint--up. clear the rest of the compartment
                     translate( [ 0,0, r ])
-                        cube ( [ __compartment_size( k_x ), __compartment_size( k_y ), m_box_size[ k_z ]] );
+                        cube ( [ __compartment_size( k_x ), __compartment_size( k_y ), m_box_size[ m_box_height_index ]] );
                 } 
             }
         }
@@ -2572,6 +2574,8 @@ module MakeHexBox( box )
         ] :
         __element_dimensions( box );
 
+    m_box_height_index = k_hex_z;
+
     // Hex boxes are specified differently
     // Since calculating box size isn't simply adding 2 * g_wall_thickness, the box is specified
     // by the internal diameter (measuring a hexagonal component you wish to store) and then the 
@@ -2762,7 +2766,7 @@ module MakeHexBox( box )
 
 
 
-        m_component_base_height = m_box_size[ k_hex_z ] - __component_size( k_z ) - m_wall_thickness;
+        m_component_base_height = m_box_size[ m_box_height_index ] - __component_size( k_z ) - m_wall_thickness;
 
         // DERIVED VARIABLES
 
@@ -2887,10 +2891,10 @@ module MakeHexBox( box )
                 // box top lid accommodation
                 if ( !m_lid_inset && m_box_has_lid )
                 {
-                    translate( [ 0,0, m_box_size[k_hex_z ] - __lid_internal_size( k_z ) ] )
+                    translate( [ 0,0, m_box_size[ m_box_height_index ] - __lid_internal_size( k_z ) ] )
                         MakeHexLidBase_Cap();
 
-                    notch_pos_z =  m_box_size[k_hex_z ] - m_lid_wall_height + __lid_notch_depth();                    
+                    notch_pos_z =  m_box_size[ m_box_height_index ] - m_lid_wall_height + __lid_notch_depth();                    
 
                     if ( m_lid_notches )
                         translate([ 0, 0, notch_pos_z]) 
@@ -3014,7 +3018,7 @@ module MakeHexBox( box )
         {
 
             translate([m_outer_diameter / 2.0, (m_outer_diameter / 2.0) * sin(60), 0]) {
-                cylinder($fn = 6, d = m_outer_diameter, m_box_size[ k_hex_z ]);
+                cylinder($fn = 6, d = m_outer_diameter, m_box_size[ m_box_height_index ]);
             }
 
         }
@@ -3025,7 +3029,7 @@ module MakeHexBox( box )
             {
                 difference() {
                     // create the structure above the box that holds the lid
-                    translate([ 0, 0, m_box_size[k_hex_z ] ])
+                    translate([ 0, 0, m_box_size[ m_box_height_index ] ])
                         difference()
                         {
                             translate([m_outer_diameter / 2.0, (m_outer_diameter / 2.0) * sin(60), 0])
@@ -3036,7 +3040,7 @@ module MakeHexBox( box )
                         }
 
                     // subtract tabs
-                    translate( [ 0, 0, m_box_size[k_hex_z ] - m_lid_tab[ k_z ] + 1 ])
+                    translate( [ 0, 0, m_box_size[ m_box_height_index ] - m_lid_tab[ k_z ] + 1 ])
                         MakeLidTabs( mod = 0, square = true ); // this needs to be wide 
                 }
             }
@@ -3050,7 +3054,7 @@ module MakeHexBox( box )
 
 
                 // subtract tabs
-                translate( [ 0, 0, m_box_size[k_hex_z ] - m_lid_tab[ k_z ] + 1 ])
+                translate( [ 0, 0, m_box_size[ m_box_height_index ] - m_lid_tab[ k_z ] + 1 ])
                     MakeLidTabs( mod = 0, square = true ); // this needs to be wide 
             }  
         }
@@ -3060,10 +3064,10 @@ module MakeHexBox( box )
             {
                 difference()
                 {
-                    cube( [ m_box_size[ k_x ], m_box_size[ k_y ], m_box_size[k_hex_z ] ] );
+                    cube( [ m_box_size[ k_x ], m_box_size[ k_y ], m_box_size[ m_box_height_index ] ] );
 
                     translate( [ m_wall_thickness, m_wall_thickness, 0 ])
-                        cube( [ m_box_size[ k_x ] - ( 2 * m_wall_thickness ), m_box_size[ k_y ] - ( 2 * m_wall_thickness ), m_box_size[k_hex_z ] ] );
+                        cube( [ m_box_size[ k_x ] - ( 2 * m_wall_thickness ), m_box_size[ k_y ] - ( 2 * m_wall_thickness ), m_box_size[ m_box_height_index ] ] );
                 }
             }
         }
@@ -3079,7 +3083,7 @@ module MakeHexBox( box )
                 // we carve all the way to the bottom and then fill it back up
                 cube([  __component_size( k_x ), 
                         __component_size( k_y ), 
-                        m_box_size[ k_hex_z] + __lid_external_size(k_z)]);
+                        m_box_size[ m_box_height_index ] + __lid_external_size(k_z)]);
             }
             else if ( m_is_component_additions )
             {
@@ -3146,7 +3150,7 @@ module MakeHexBox( box )
                         {
 
                             translate( [ insetx, insety, -m_wall_thickness ] )
-                                cube ( [ sizex, sizey, m_box_size[k_hex_z]]);
+                                cube ( [ sizex, sizey, m_box_size[ m_box_height_index ]]);
 
                             MakeAllBoxSideCutouts();
                         }                    
@@ -3158,10 +3162,10 @@ module MakeHexBox( box )
                             difference()
                             {
                                 translate( [ -__component_position(k_x),-__component_position(k_y), -m_wall_thickness ] )
-                                    cube( [ m_box_size[ k_x], m_box_size[ k_y], m_box_size[k_hex_z] + __lid_external_size(k_z)]);
+                                    cube( [ m_box_size[ k_x], m_box_size[ k_y], m_box_size[ m_box_height_index ] + __lid_external_size(k_z)]);
 
                                 translate( [ insetx, insety, -m_wall_thickness ] )
-                                    cube ( [ sizex, sizey, m_box_size[k_hex_z] + __lid_external_size(k_z)]);
+                                    cube ( [ sizex, sizey, m_box_size[ m_box_height_index ] + __lid_external_size(k_z)]);
                             }
 
                             MakeAllBoxSideCutouts();
@@ -3334,7 +3338,7 @@ module MakeHexBox( box )
         module MakeBoxLabel( label, x = 0, y = 0 )
         {
             z_pos = 0;
-            z_pos_vertical = (m_box_size[k_hex_z ] - m_lid_notch_height) / 2;
+            z_pos_vertical = (m_box_size[ m_box_height_index ] - m_lid_notch_height) / 2;
 
             if ( __label_placement_is_front( label) )
             {
@@ -3588,7 +3592,7 @@ module MakeHexBox( box )
 
 
             lid_print_position = [0, m_outer_inradius * 2 + DISTANCE_BETWEEN_PARTS, 0 ];
-            lid_vis_position = [ 0, 0, m_box_size[k_hex_z ] + m_lid_thickness ];
+            lid_vis_position = [ 0, 0, m_box_size[ m_box_height_index ] + m_lid_thickness ];
 
             translate( g_b_vis_actual ? lid_vis_position : lid_print_position ) 
                 RotateAboutPoint( g_b_vis_actual ? 180 : 0, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )
@@ -3695,12 +3699,12 @@ module MakeHexBox( box )
         {
 
             function __cutout_z() = m_is_lid ? m_lid_wall_height + m_lid_thickness : 
-                m_box_size[k_hex_z ] + __lid_external_size( k_z ) * 2 * m_cutout_height_pct; 
+                m_box_size[ m_box_height_index ] + __lid_external_size( k_z ) * 2 * m_cutout_height_pct; 
             function __padding( D ) = m_is_lid ? 0 : __component_padding( D );
             function __size( D ) = m_is_lid ? __lid_external_size( D ) : __compartment_size( D );
             function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : 
-                - __lid_external_size( k_z ) + (m_box_size[k_hex_z ] * (1-m_cutout_height_pct));
-            function __round_bottom() = __finger_cutouts_bottom() > m_box_size[k_hex_z ] - __size( k_z );
+                - __lid_external_size( k_z ) + (m_box_size[ m_box_height_index ] * (1-m_cutout_height_pct));
+            function __round_bottom() = __finger_cutouts_bottom() > m_box_size[ m_box_height_index ] - __size( k_z );
             // main and perpendicular dimensions
             main_d = ( side == k_back || side == k_front ) ? k_y : k_x; 
             perp_d = ( side == k_back || side == k_front ) ? k_x : k_y;
@@ -3829,7 +3833,7 @@ module MakeHexBox( box )
 
         module MakeCornerCutouts( corner )
         {
-            function __cutout_z() = ( m_is_lid ? m_lid_wall_height + m_lid_thickness : m_box_size[k_hex_z ] + __lid_external_size( k_z ) * 2 );
+            function __cutout_z() = ( m_is_lid ? m_lid_wall_height + m_lid_thickness : m_box_size[ m_box_height_index ] + __lid_external_size( k_z ) * 2 );
             function __padding( D ) = m_is_lid ? 0 : __component_padding( D );
             function __size( D ) = m_is_lid ? __lid_internal_size( D ) : __compartment_size( D );
             function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : 
@@ -4031,7 +4035,7 @@ module MakeHexBox( box )
 
                         // from midpoint--up. clear the rest of the compartment
                         translate( [ 0,0, r ])
-                            cube ( [ __compartment_size( k_x ), __compartment_size( k_y ), m_box_size[k_hex_z ]] );
+                            cube ( [ __compartment_size( k_x ), __compartment_size( k_y ), m_box_size[ m_box_height_index ]] );
                     } 
             }
         }
