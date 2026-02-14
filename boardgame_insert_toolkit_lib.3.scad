@@ -755,20 +755,22 @@ module MakeBox( box )
 
     m_box_height_index = k_z;
 
-    function __notch_length( D ) = m_box_size[ D ] / 5.0;
+    // Precomputed dimension arrays for lid sizing (box type specific)
+    m_lid_size_ext = [ m_box_size[ k_x ], m_box_size[ k_y ], m_lid_thickness + m_lid_wall_height ];
+    m_lid_size_int = [ m_box_size[ k_x ] - 2*m_lid_wall_thickness, m_box_size[ k_y ] - 2*m_lid_wall_thickness, m_lid_wall_height ];
+    m_notch_length_base = [ m_box_size[ k_x ] / 5.0, m_box_size[ k_y ] / 5.0 ];
+
+    function __notch_length( D ) = m_notch_length_base[ D ];
 
     function __lid_notch_depth() = m_wall_thickness / 2;
 
-
-    function __lid_external_size( D )= D == k_z ? m_lid_thickness + m_lid_wall_height : 
-                                                m_box_size[ D ];
+    function __lid_external_size( D ) = m_lid_size_ext[ D ];
 
     m_has_solid_lid = m_lid_solid || g_b_vis_actual;
     m_lid_has_labels = !!__value( m_lid, LABEL, default = false );
 
 
-    function __lid_internal_size( D )= D == k_z ? m_lid_wall_height : 
-                                                __lid_external_size( D ) - 2*m_lid_wall_thickness;
+    function __lid_internal_size( D ) = m_lid_size_int[ D ];
 
     m_lid_cutout_sides = __value( m_lid, LID_CUTOUT_SIDES_4B, default = [f,f,f,f]);
     m_lid_is_inverted = __value( m_lid, LID_LABELS_INVERT_B, default = false );
@@ -2590,26 +2592,22 @@ module MakeHexBox( box )
     // will be perfectly centered
     m_x_offset = ((m_outer_diameter - m_inner_diameter) / 2.0) - m_wall_thickness;
 
-    function __notch_length( D ) = (m_inner_diameter / 2.0) / 5.0;
+    // Precomputed dimension arrays for lid sizing (box type specific)
+    m_lid_size_ext = [ m_outer_diameter, m_outer_inradius * 2, m_lid_thickness + m_lid_wall_height ];
+    m_lid_size_int = [ m_inner_diameter, m_inner_inradius * 2, m_lid_wall_height ];
+    m_notch_length_base = [ (m_inner_diameter / 2.0) / 5.0, (m_inner_diameter / 2.0) / 5.0 ];
+
+    function __notch_length( D ) = m_notch_length_base[ D ];
 
     function __lid_notch_depth() = m_wall_thickness / 2;
 
-
-    function __lid_external_size( D )= D == k_z 
-        ? m_lid_thickness + m_lid_wall_height
-        : D == k_x
-            ? m_outer_diameter
-            : m_outer_inradius * 2;
+    function __lid_external_size( D ) = m_lid_size_ext[ D ];
 
     m_has_solid_lid = m_lid_solid || g_b_vis_actual;
     m_lid_has_labels = !!__value( m_lid, LABEL, default = false );
 
 
-    function __lid_internal_size( D )= D == k_z
-        ? m_lid_wall_height
-        : D == k_x
-            ? m_inner_diameter
-            : m_inner_inradius * 2;
+    function __lid_internal_size( D ) = m_lid_size_int[ D ];
 
     m_lid_cutout_sides = __value( m_lid, LID_CUTOUT_SIDES_4B, default = [f,f,f,f]);
     m_lid_is_inverted = __value( m_lid, LID_LABELS_INVERT_B, default = false );
