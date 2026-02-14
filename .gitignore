@@ -8,3 +8,5 @@ BIT_*.scad
 *.code-workspace
 launch.json
 gh-md-toc
+*_Conflict*
+tests/renders/
