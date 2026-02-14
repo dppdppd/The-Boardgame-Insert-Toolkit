@@ -100,14 +100,12 @@ Move code that is **100% identical** between MakeBox and MakeHexBox to file-scop
 
 ### 1.1 Extract polygon helpers to file scope
 **What**: `Tri`, `Quad`, `Pent`, `Hex`, `Sept`, `Oct`, `AddPoint`, `AddOrderIndex`, `Make2dShape`
-**Current**: Duplicated identically inside MakeBox (1375-1569) and MakeHexBox (3475-3669)
-**Target**: One copy at file scope (after utility modules, before MakeAll)
-**Risk**: Low — these are pure geometry, no closures over parent scope
-**Verify**: CSG regression on all 53 tests + render `test_lid_pattern_basic`
-- [ ] Extract polygon modules (Tri through Oct)
-- [ ] Extract `AddPoint`, `AddOrderIndex`, `Make2dShape`
-- [ ] Remove duplicates from MakeBox and MakeHexBox
-- [ ] Verify
+**Done**: Extracted to file scope (after Shear, before MakeAll). Removed both MakeBox and MakeHexBox copies.
+**Result**: -191 lines net. 53/53 CSG pass. 0% pixel diff on lid pattern + n1n2 pattern tests.
+- [x] Extract polygon modules (Tri through Oct)
+- [x] Extract `AddPoint`, `AddOrderIndex`, `Make2dShape`
+- [x] Remove duplicates from MakeBox and MakeHexBox
+- [x] Verify — 0% pixel diff, identical STL sizes
 
 ### 1.2 Extract pattern generation to file scope
 **What**: `Make2DPattern`, `MakeStripedGrid`
@@ -342,7 +340,7 @@ Record anything learned during the work that affects the plan. **Update after ev
 | Phase | Description | Tasks | Done | Status |
 |-------|-------------|-------|------|--------|
 | 0 | Bugs & Dead Code | 6 groups | 6 | Done |
-| 1 | Extract Shared Geometry | 3 groups | 0 | Not started |
+| 1 | Extract Shared Geometry | 3 groups | 1 | In progress |
 | 2 | Extract Labels & Iteration | 3 groups | 0 | Not started |
 | 3 | Extract Cutouts & Structure | 3 groups | 0 | Not started |
 | 4 | Reduce Box/HexBox Duplication | 3 groups | 0 | Not started |

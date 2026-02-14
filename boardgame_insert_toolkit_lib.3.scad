@@ -465,6 +465,207 @@ module Shear( x, y, height )
                 children();
 }
 
+// ======================================================================
+// Polygon Helpers - shared by MakeBox and MakeHexBox lid patterns
+// ======================================================================
+
+module Tri( R = 1, t = 0.2 )
+{
+    n = 3;
+    a = 2 * ( PI / n) * 180 / PI;
+ 
+    polygon([
+                [ R * cos(0 * a), R * sin(0 * a) ],
+                [ R * cos(1 * a), R * sin(1 * a) ],
+                [ R * cos(2 * a), R * sin(2 * a) ],
+
+                [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
+                [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
+                [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
+            ],
+        
+            [
+                [0,1,2],[3,4,5]
+            ]
+        );     
+};   
+
+module Quad( R = 1, t = 0.2 )
+{
+    n = 4;
+    a = 2 * ( PI / n) * 180 / PI;
+ 
+    polygon([
+                [ R * cos(0 * a), R * sin(0 * a) ],
+                [ R * cos(1 * a), R * sin(1 * a) ],
+                [ R * cos(2 * a), R * sin(2 * a) ],
+                [ R * cos(3 * a), R * sin(3 * a) ],
+
+                [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
+                [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
+                [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
+                [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
+            ],
+        
+            [
+                [0,1,2,3],[4,5,6,7]
+            ]
+        );     
+};   
+
+module Pent( R = 1, t = 0.2 )
+{
+    n = 5;
+    a = 2 * ( PI / n) * 180 / PI;
+ 
+    polygon([
+                [ R * cos(0 * a), R * sin(0 * a) ],
+                [ R * cos(1 * a), R * sin(1 * a) ],
+                [ R * cos(2 * a), R * sin(2 * a) ],
+                [ R * cos(3 * a), R * sin(3 * a) ],
+                [ R * cos(4 * a), R * sin(4 * a) ],
+
+                [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
+                [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
+                [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
+                [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
+                [ ( R - t ) * cos(4 * a), ( R - t ) * sin(4 * a) ],
+            ],
+        
+            [
+                [0,1,2,3,4],[5,6,7,8,9]
+            ]
+        );     
+};   
+
+module Hex( R = 1, t = 0.2 )
+{
+    n = 6;
+    a = 2 * ( PI / n) * 180 / PI;
+
+    polygon([
+                [ R * cos(0 * a), R * sin(0 * a) ],
+                [ R * cos(1 * a), R * sin(1 * a) ],
+                [ R * cos(2 * a), R * sin(2 * a) ],
+                [ R * cos(3 * a), R * sin(3 * a) ],
+                [ R * cos(4 * a), R * sin(4 * a) ],
+                [ R * cos(5 * a), R * sin(5 * a) ],
+
+                [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
+                [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
+                [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
+                [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
+                [ ( R - t ) * cos(4 * a), ( R - t ) * sin(4 * a) ],
+                [ ( R - t ) * cos(5 * a), ( R - t ) * sin(5 * a) ]
+            ],
+        
+            [
+                [0,1,2,3,4,5],[6,7,8,9,10,11]
+            ]
+        );
+    
+            
+};     
+
+module Sept( R = 1, t = 0.2 )
+{
+    n = 7;
+    a = 2 * ( PI / n) * 180 / PI;
+ 
+    polygon([
+                [ R * cos(0 * a), R * sin(0 * a) ],
+                [ R * cos(1 * a), R * sin(1 * a) ],
+                [ R * cos(2 * a), R * sin(2 * a) ],
+                [ R * cos(3 * a), R * sin(3 * a) ],
+                [ R * cos(4 * a), R * sin(4 * a) ],
+                [ R * cos(5 * a), R * sin(5 * a) ],
+                [ R * cos(6 * a), R * sin(6 * a) ],  
+
+                [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
+                [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
+                [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
+                [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
+                [ ( R - t ) * cos(4 * a), ( R - t ) * sin(4 * a) ],
+                [ ( R - t ) * cos(5 * a), ( R - t ) * sin(5 * a) ],
+                [ ( R - t ) * cos(6 * a), ( R - t ) * sin(6 * a) ],
+            ],
+        
+            [
+                [0,1,2,3,4,5,6],[7,8,9,10,11,12,13]
+            ]
+        );   
+};    
+
+module Oct( R = 1, t = 0.2 )
+{
+    n = 8;
+    a = 2 * ( PI / n) * 180 / PI;
+ 
+    polygon([
+                [ R * cos(0 * a), R * sin(0 * a) ],
+                [ R * cos(1 * a), R * sin(1 * a) ],
+                [ R * cos(2 * a), R * sin(2 * a) ],
+                [ R * cos(3 * a), R * sin(3 * a) ],
+                [ R * cos(4 * a), R * sin(4 * a) ],
+                [ R * cos(5 * a), R * sin(5 * a) ],
+                [ R * cos(6 * a), R * sin(6 * a) ],  
+                [ R * cos(7 * a), R * sin(7 * a) ],                                                
+
+                [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
+                [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
+                [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
+                [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
+                [ ( R - t ) * cos(4 * a), ( R - t ) * sin(4 * a) ],
+                [ ( R - t ) * cos(5 * a), ( R - t ) * sin(5 * a) ],
+                [ ( R - t ) * cos(6 * a), ( R - t ) * sin(6 * a) ],
+                [ ( R - t ) * cos(7 * a), ( R - t ) * sin(7 * a) ],                                                                        
+            ],
+        
+            [
+                [0,1,2,3,4,5,6,7],[8,9,10,11,12,13,14,15]
+            ]
+        );   
+};    
+
+
+function AddPoint( R, t, n, i = 0 ) = i == n ? [] : 
+    concat( [[ ( R - t ) * cos( i * 2 * ( PI / n) * 180 / PI ), ( R - t ) * sin( i * 2 * ( PI / n) * 180 / PI ) ]],
+        AddPoint( R, t, n, i + 1 ) );
+
+function AddOrderIndex( b, e, i = 0 ) = i == e ? [] :
+    concat ( i, AddOrderIndex( b, e, i + 1) );
+
+
+module Make2dShape( R, t, n1, n2 )
+{
+ 
+    if ( n1 == 3 && n2 == 3 )
+        Tri( R, t );
+    else if ( n1 == 4 && n2 == 4 )
+        Quad( R, t );                
+    else if ( n1 == 5 && n2 == 5 )
+        Pent( R, t );
+    else if ( n1 == 6 && n2 == 6 )
+        Hex( R, t );
+    else if ( n1 == 7 && n2 == 7 )
+        Sept( R, t );                
+    else if ( n1 == 8 && n2 == 8 )
+        Oct( R, t );
+    else
+    {
+        base = AddPoint( R, 0, n1 );
+        inset = AddPoint( R, t, n2 );
+
+        combined = concat( base, inset );
+
+        order = concat( [ AddOrderIndex( 0, n1)], [AddOrderIndex( n1, n1 + n2, n1 )] );
+
+        polygon( combined, order );     
+    }
+
+};        
+
+
 module MakeAll()
 {
     echo( str( "\n\n\n", COPYRIGHT_INFO, "\n\n\tVersion ", VERSION, "\n\n" ));
@@ -1328,201 +1529,6 @@ module MakeBox( box )
 
 ////////PATTERNS
 
-        module Tri( R = 1, t = 0.2 )
-        {
-            n = 3;
-            a = 2 * ( PI / n) * 180 / PI;
- 
-            polygon([
-                        [ R * cos(0 * a), R * sin(0 * a) ],
-                        [ R * cos(1 * a), R * sin(1 * a) ],
-                        [ R * cos(2 * a), R * sin(2 * a) ],
-
-                        [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
-                        [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
-                        [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
-                    ],
-                
-                    [
-                        [0,1,2],[3,4,5]
-                    ]
-                );     
-        };   
-
-        module Quad( R = 1, t = 0.2 )
-        {
-            n = 4;
-            a = 2 * ( PI / n) * 180 / PI;
- 
-            polygon([
-                        [ R * cos(0 * a), R * sin(0 * a) ],
-                        [ R * cos(1 * a), R * sin(1 * a) ],
-                        [ R * cos(2 * a), R * sin(2 * a) ],
-                        [ R * cos(3 * a), R * sin(3 * a) ],
-
-                        [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
-                        [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
-                        [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
-                        [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
-                    ],
-                
-                    [
-                        [0,1,2,3],[4,5,6,7]
-                    ]
-                );     
-        };   
-
-        module Pent( R = 1, t = 0.2 )
-        {
-            n = 5;
-            a = 2 * ( PI / n) * 180 / PI;
- 
-            polygon([
-                        [ R * cos(0 * a), R * sin(0 * a) ],
-                        [ R * cos(1 * a), R * sin(1 * a) ],
-                        [ R * cos(2 * a), R * sin(2 * a) ],
-                        [ R * cos(3 * a), R * sin(3 * a) ],
-                        [ R * cos(4 * a), R * sin(4 * a) ],
-
-                        [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
-                        [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
-                        [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
-                        [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
-                        [ ( R - t ) * cos(4 * a), ( R - t ) * sin(4 * a) ],
-                    ],
-                
-                    [
-                        [0,1,2,3,4],[5,6,7,8,9]
-                    ]
-                );     
-        };   
-
-        module Hex( R = 1, t = 0.2 )
-        {
-            n = 6;
-            a = 2 * ( PI / n) * 180 / PI;
-
-            polygon([
-                        [ R * cos(0 * a), R * sin(0 * a) ],
-                        [ R * cos(1 * a), R * sin(1 * a) ],
-                        [ R * cos(2 * a), R * sin(2 * a) ],
-                        [ R * cos(3 * a), R * sin(3 * a) ],
-                        [ R * cos(4 * a), R * sin(4 * a) ],
-                        [ R * cos(5 * a), R * sin(5 * a) ],
-
-                        [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
-                        [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
-                        [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
-                        [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
-                        [ ( R - t ) * cos(4 * a), ( R - t ) * sin(4 * a) ],
-                        [ ( R - t ) * cos(5 * a), ( R - t ) * sin(5 * a) ]
-                    ],
-                
-                    [
-                        [0,1,2,3,4,5],[6,7,8,9,10,11]
-                    ]
-                );
-            
-                    
-        };     
-
-        module Sept( R = 1, t = 0.2 )
-        {
-            n = 7;
-            a = 2 * ( PI / n) * 180 / PI;
- 
-            polygon([
-                        [ R * cos(0 * a), R * sin(0 * a) ],
-                        [ R * cos(1 * a), R * sin(1 * a) ],
-                        [ R * cos(2 * a), R * sin(2 * a) ],
-                        [ R * cos(3 * a), R * sin(3 * a) ],
-                        [ R * cos(4 * a), R * sin(4 * a) ],
-                        [ R * cos(5 * a), R * sin(5 * a) ],
-                        [ R * cos(6 * a), R * sin(6 * a) ],  
-
-                        [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
-                        [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
-                        [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
-                        [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
-                        [ ( R - t ) * cos(4 * a), ( R - t ) * sin(4 * a) ],
-                        [ ( R - t ) * cos(5 * a), ( R - t ) * sin(5 * a) ],
-                        [ ( R - t ) * cos(6 * a), ( R - t ) * sin(6 * a) ],
-                    ],
-                
-                    [
-                        [0,1,2,3,4,5,6],[7,8,9,10,11,12,13]
-                    ]
-                );   
-        };    
-
-        module Oct( R = 1, t = 0.2 )
-        {
-            n = 8;
-            a = 2 * ( PI / n) * 180 / PI;
- 
-            polygon([
-                        [ R * cos(0 * a), R * sin(0 * a) ],
-                        [ R * cos(1 * a), R * sin(1 * a) ],
-                        [ R * cos(2 * a), R * sin(2 * a) ],
-                        [ R * cos(3 * a), R * sin(3 * a) ],
-                        [ R * cos(4 * a), R * sin(4 * a) ],
-                        [ R * cos(5 * a), R * sin(5 * a) ],
-                        [ R * cos(6 * a), R * sin(6 * a) ],  
-                        [ R * cos(7 * a), R * sin(7 * a) ],                                                
-
-                        [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
-                        [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
-                        [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
-                        [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
-                        [ ( R - t ) * cos(4 * a), ( R - t ) * sin(4 * a) ],
-                        [ ( R - t ) * cos(5 * a), ( R - t ) * sin(5 * a) ],
-                        [ ( R - t ) * cos(6 * a), ( R - t ) * sin(6 * a) ],
-                        [ ( R - t ) * cos(7 * a), ( R - t ) * sin(7 * a) ],                                                                        
-                    ],
-                
-                    [
-                        [0,1,2,3,4,5,6,7],[8,9,10,11,12,13,14,15]
-                    ]
-                );   
-        };    
-
-
-        function AddPoint( R, t, n, i = 0 ) = i == n ? [] : 
-            concat( [[ ( R - t ) * cos( i * 2 * ( PI / n) * 180 / PI ), ( R - t ) * sin( i * 2 * ( PI / n) * 180 / PI ) ]],
-                AddPoint( R, t, n, i + 1 ) );
-
-        function AddOrderIndex( b, e, i = 0 ) = i == e ? [] :
-            concat ( i, AddOrderIndex( b, e, i + 1) );
-
-
-        module Make2dShape( R, t, n1, n2 )
-        {
- 
-            if ( n1 == 3 && n2 == 3 )
-                Tri( R, t );
-            else if ( n1 == 4 && n2 == 4 )
-                Quad( R, t );                
-            else if ( n1 == 5 && n2 == 5 )
-                Pent( R, t );
-            else if ( n1 == 6 && n2 == 6 )
-                Hex( R, t );
-            else if ( n1 == 7 && n2 == 7 )
-                Sept( R, t );                
-            else if ( n1 == 8 && n2 == 8 )
-                Oct( R, t );
-            else
-            {
-                base = AddPoint( R, 0, n1 );
-                inset = AddPoint( R, t, n2 );
-
-                combined = concat( base, inset );
-
-                order = concat( [ AddOrderIndex( 0, n1)], [AddOrderIndex( n1, n1 + n2, n1 )] );
-
-                polygon( combined, order );     
-            }
-
-        };        
 
         module Make2DPattern( x = 200, y = 200, R = 1, t = 0.5 )
         {
@@ -3406,201 +3412,6 @@ module MakeHexBox( box )
 
         ////////PATTERNS
 
-        module Tri( R = 1, t = 0.2 )
-        {
-            n = 3;
-            a = 2 * ( PI / n) * 180 / PI;
-
-            polygon([
-                    [ R * cos(0 * a), R * sin(0 * a) ],
-                    [ R * cos(1 * a), R * sin(1 * a) ],
-                    [ R * cos(2 * a), R * sin(2 * a) ],
-
-                    [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
-                    [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
-                    [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
-            ],
-
-            [
-            [0,1,2],[3,4,5]
-            ]
-            );     
-        };   
-
-        module Quad( R = 1, t = 0.2 )
-        {
-            n = 4;
-            a = 2 * ( PI / n) * 180 / PI;
-
-            polygon([
-                    [ R * cos(0 * a), R * sin(0 * a) ],
-                    [ R * cos(1 * a), R * sin(1 * a) ],
-                    [ R * cos(2 * a), R * sin(2 * a) ],
-                    [ R * cos(3 * a), R * sin(3 * a) ],
-
-                    [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
-                    [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
-                    [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
-                    [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
-            ],
-
-            [
-            [0,1,2,3],[4,5,6,7]
-            ]
-            );     
-        };   
-
-        module Pent( R = 1, t = 0.2 )
-        {
-            n = 5;
-            a = 2 * ( PI / n) * 180 / PI;
-
-            polygon([
-                    [ R * cos(0 * a), R * sin(0 * a) ],
-                    [ R * cos(1 * a), R * sin(1 * a) ],
-                    [ R * cos(2 * a), R * sin(2 * a) ],
-                    [ R * cos(3 * a), R * sin(3 * a) ],
-                    [ R * cos(4 * a), R * sin(4 * a) ],
-
-                    [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
-                    [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
-                    [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
-                    [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
-                    [ ( R - t ) * cos(4 * a), ( R - t ) * sin(4 * a) ],
-            ],
-
-            [
-            [0,1,2,3,4],[5,6,7,8,9]
-            ]
-            );     
-        };   
-
-        module Hex( R = 1, t = 0.2 )
-        {
-            n = 6;
-            a = 2 * ( PI / n) * 180 / PI;
-
-            polygon([
-                    [ R * cos(0 * a), R * sin(0 * a) ],
-                    [ R * cos(1 * a), R * sin(1 * a) ],
-                    [ R * cos(2 * a), R * sin(2 * a) ],
-                    [ R * cos(3 * a), R * sin(3 * a) ],
-                    [ R * cos(4 * a), R * sin(4 * a) ],
-                    [ R * cos(5 * a), R * sin(5 * a) ],
-
-                    [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
-                    [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
-                    [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
-                    [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
-                    [ ( R - t ) * cos(4 * a), ( R - t ) * sin(4 * a) ],
-                    [ ( R - t ) * cos(5 * a), ( R - t ) * sin(5 * a) ]
-            ],
-
-            [
-            [0,1,2,3,4,5],[6,7,8,9,10,11]
-            ]
-            );
-
-
-        };     
-
-        module Sept( R = 1, t = 0.2 )
-        {
-            n = 7;
-            a = 2 * ( PI / n) * 180 / PI;
-
-            polygon([
-                    [ R * cos(0 * a), R * sin(0 * a) ],
-                    [ R * cos(1 * a), R * sin(1 * a) ],
-                    [ R * cos(2 * a), R * sin(2 * a) ],
-                    [ R * cos(3 * a), R * sin(3 * a) ],
-                    [ R * cos(4 * a), R * sin(4 * a) ],
-                    [ R * cos(5 * a), R * sin(5 * a) ],
-                    [ R * cos(6 * a), R * sin(6 * a) ],  
-
-                    [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
-                    [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
-                    [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
-                    [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
-                    [ ( R - t ) * cos(4 * a), ( R - t ) * sin(4 * a) ],
-                    [ ( R - t ) * cos(5 * a), ( R - t ) * sin(5 * a) ],
-                    [ ( R - t ) * cos(6 * a), ( R - t ) * sin(6 * a) ],
-            ],
-
-            [
-            [0,1,2,3,4,5,6],[7,8,9,10,11,12,13]
-            ]
-                );   
-        };    
-
-        module Oct( R = 1, t = 0.2 )
-        {
-            n = 8;
-            a = 2 * ( PI / n) * 180 / PI;
-
-            polygon([
-                    [ R * cos(0 * a), R * sin(0 * a) ],
-                    [ R * cos(1 * a), R * sin(1 * a) ],
-                    [ R * cos(2 * a), R * sin(2 * a) ],
-                    [ R * cos(3 * a), R * sin(3 * a) ],
-                    [ R * cos(4 * a), R * sin(4 * a) ],
-                    [ R * cos(5 * a), R * sin(5 * a) ],
-                    [ R * cos(6 * a), R * sin(6 * a) ],  
-                    [ R * cos(7 * a), R * sin(7 * a) ],                                                
-
-                    [ ( R - t ) * cos(0 * a), ( R - t ) * sin(0 * a) ],
-                    [ ( R - t ) * cos(1 * a), ( R - t ) * sin(1 * a) ],
-                    [ ( R - t ) * cos(2 * a), ( R - t ) * sin(2 * a) ],
-                    [ ( R - t ) * cos(3 * a), ( R - t ) * sin(3 * a) ],
-                    [ ( R - t ) * cos(4 * a), ( R - t ) * sin(4 * a) ],
-                    [ ( R - t ) * cos(5 * a), ( R - t ) * sin(5 * a) ],
-                    [ ( R - t ) * cos(6 * a), ( R - t ) * sin(6 * a) ],
-                    [ ( R - t ) * cos(7 * a), ( R - t ) * sin(7 * a) ],                                                                        
-            ],
-
-            [
-                [0,1,2,3,4,5,6,7],[8,9,10,11,12,13,14,15]
-            ]
-                );   
-        };    
-
-
-        function AddPoint( R, t, n, i = 0 ) = i == n ? [] : 
-            concat( [[ ( R - t ) * cos( i * 2 * ( PI / n) * 180 / PI ), ( R - t ) * sin( i * 2 * ( PI / n) * 180 / PI ) ]],
-                    AddPoint( R, t, n, i + 1 ) );
-
-        function AddOrderIndex( b, e, i = 0 ) = i == e ? [] :
-            concat ( i, AddOrderIndex( b, e, i + 1) );
-
-
-        module Make2dShape( R, t, n1, n2 )
-        {
-
-            if ( n1 == 3 && n2 == 3 )
-                Tri( R, t );
-            else if ( n1 == 4 && n2 == 4 )
-                Quad( R, t );                
-            else if ( n1 == 5 && n2 == 5 )
-                Pent( R, t );
-            else if ( n1 == 6 && n2 == 6 )
-                Hex( R, t );
-            else if ( n1 == 7 && n2 == 7 )
-                Sept( R, t );                
-            else if ( n1 == 8 && n2 == 8 )
-                Oct( R, t );
-            else
-            {
-                base = AddPoint( R, 0, n1 );
-                inset = AddPoint( R, t, n2 );
-
-                combined = concat( base, inset );
-
-                order = concat( [ AddOrderIndex( 0, n1)], [AddOrderIndex( n1, n1 + n2, n1 )] );
-
-                polygon( combined, order );     
-            }
-
-        };        
 
         module Make2DPattern( x = 200, y = 200, R = 1, t = 0.5 )
         {
