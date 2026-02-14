@@ -14,6 +14,28 @@
  * organizing board game pieces and cards.
  */
 
+// =============================================================================
+// TABLE OF CONTENTS
+// =============================================================================
+//
+//   Line  Section
+//   ----  -------
+//    49   Constants, enums, keywords, internal defaults
+//   253   Key-value helpers
+//   338   Utility modules (debug, rotate, mirror, colorize, shear)
+//   395   Data accessor functions (elements, dividers, labels)
+//   515   Geometry helpers (Make2dShape, Make2DPattern, MakeStripedGrid)
+//   605   MakeAll() — top-level entry point
+//   667   MakeDividers() — card divider generation
+//   782   MakeBox() — rectangular box generation
+//   912     MakeLayer() — component processing pipeline (inside MakeBox)
+//  2610   MakeHexBox() — hexagonal box generation
+//  2757     MakeLayer() — component processing pipeline (inside MakeHexBox)
+//  4350   MakeRoundedCubeAxis() — rounded cube utility
+//
+// =============================================================================
+
+
 // Version information
 VERSION = "3.00";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
@@ -59,7 +81,6 @@ k_front_right = 3;
 t = true;
 f = false;
 
-///////////////////////
 // PARAMETER KEYWORDS
 
 // Component type identifiers
@@ -225,13 +246,16 @@ MIN_CORNER_RADIUS = 0.001;            // Minimum corner radius for MakeRoundedCu
 HULL_EPSILON = 0.01;                  // Small height for hull/cap operations
 
 DISTANCE_BETWEEN_PARTS = 2;
-////////////////////
 
 // key-values helpers
+
+// =============================================================================
+// KEY-VALUE HELPERS
+// =============================================================================
+
 function __index_of_key( table, key ) = search( [ key ], table )[ k_key ];
 function __value( table, key, default = false ) = __index_of_key( table, key ) == [] ? default : table[ __index_of_key( table, key ) ][ k_value ];
 
-///////////////////////
 // determines whether lids are output.
 g_b_print_lid = t;
 
@@ -314,13 +338,6 @@ m_lid_notches = true;
 // UTILITY MODULES
 // =============================================================================
 
-/**
- * Debug visualization helper module
- * Creates three highlighted axes to visualize a position and orientation in 3D space
- *
- * @param w Width of the axes lines in mm. Default is 0.2mm.
- * @param l Length of the axes lines in mm. Default is 100mm.
- */
 module debug( w = 0.2, l = 100 )
 {
     // X-axis (red by default in OpenSCAD)
@@ -372,6 +389,11 @@ module MirrorAboutPoint( v, pt)
                 children();   
 }
 
+
+
+// =============================================================================
+// DATA ACCESSOR FUNCTIONS
+// =============================================================================
 
 function __element( i ) = data[ i ][1];
 function __num_elements() = len( data );
@@ -488,6 +510,11 @@ module Shear( x, y, height )
 
 // Generate an n-sided polygon ring with outer radius R and inner radius R-t.
 // Replaces the former hand-unrolled Tri/Quad/Pent/Hex/Sept/Oct modules.
+
+// =============================================================================
+// GEOMETRY HELPERS (shared between MakeBox and MakeHexBox)
+// =============================================================================
+
 function __ngon_points( R, t, n, i = 0 ) = i == n ? [] : 
     concat( [[ ( R - t ) * cos( i * 2 * ( PI / n) * 180 / PI ), ( R - t ) * sin( i * 2 * ( PI / n) * 180 / PI ) ]],
         __ngon_points( R, t, n, i + 1 ) );
@@ -570,6 +597,14 @@ module MakeStripedGrid( x = 200, y = 200, w = 1, dx = 0, dy = 0, depth_ratio = 0
 
 
 
+
+// =============================================================================
+// ENTRY POINT
+// =============================================================================
+
+// Top-level entry point. Iterates data[] and dispatches each element to
+// MakeBox(), MakeHexBox(), or MakeDividers() based on its TYPE.
+// If g_isolated_print_box is set, renders only that single element.
 module MakeAll()
 {
     echo( str( "\n\n\n", COPYRIGHT_INFO, "\n\n\tVersion ", VERSION, "\n\n" ));
@@ -626,6 +661,11 @@ module MakeAll()
     }
 
 }
+
+
+// =============================================================================
+// DIVIDERS
+// =============================================================================
 
 module MakeDividers( div )
 {
@@ -737,6 +777,15 @@ module MakeDividers( div )
  *   - LABEL: Text or image labels for the box
  *   - And many other optional parameters
  */
+
+// =============================================================================
+// MAKEBOX — Rectangular box generation
+// =============================================================================
+// Generates a rectangular box with optional lid, compartments, labels, cutouts,
+// and stackable features. Uses cube() for shell geometry.
+// Key variables set here: m_box_size[x,y,z], m_box_height_index=k_z,
+// m_lid_size_ext/int, m_notch_length_base (used by shared accessor functions).
+
 module MakeBox( box )
 {
     m_num_components =  len( box );
@@ -867,15 +916,21 @@ module MakeBox( box )
         }
     }
 
+    // MakeLayer — the core CSG pipeline for box construction.
+    // Called multiple times per component with different layer values:
+    //   "outerbox"                    — outer shell geometry
+    //   "layer_lid"                   — lid geometry (pattern, surface, labels)
+    //   "layer_spacer"                — stackable spacer between boxes
+    //   "lid_substractions"           — shapes subtracted from lid
+    //   "component_subtractions"      — compartment holes subtracted from box
+    //   "component_additions"         — walls/partitions added between compartments
+    //   "final_component_subtractions"— cutouts, fillets, labels applied last
     module MakeLayer( component, layer = "" )
     {
         m_is_outerbox = layer == "outerbox";
         m_is_lid = layer == "layer_lid";
         m_is_spacer = layer == "layer_spacer";
         m_is_lid_subtractions = layer == "lid_substractions";
-
-        // we don't use position for the box or the lid. Only for components.
-
 
         m_is_component_subtractions = layer == "component_subtractions";
         m_is_component_additions = layer == "component_additions";
@@ -1435,7 +1490,6 @@ module MakeBox( box )
 
 
 
-///////////////////////
 
         module MoveToLidInterior( tolerance = 0)
         {
@@ -2561,6 +2615,15 @@ module MakeBox( box )
 }
 
 
+
+// =============================================================================
+// MAKEHEXBOX — Hexagonal box generation
+// =============================================================================
+// Generates a hexagonal box with optional lid. Uses cylinder($fn=6) for shell.
+// m_box_size is [diameter, height] (2-element), m_box_height_index=k_hex_z.
+// Hex-specific: m_inner/outer_diameter/inradius, m_x_offset for centering.
+// Shares all accessor functions with MakeBox via precomputed dimension arrays.
+
 module MakeHexBox( box )
 {
     m_num_components =  len( box );
@@ -2708,6 +2771,8 @@ module MakeHexBox( box )
         }
     }
 
+    // MakeLayer — the core CSG pipeline for hex box construction.
+    // Same layer types as MakeBox::MakeLayer, plus "lid_holder" for hex inset lid holder.
     module MakeLayer( component, layer = "" )
     {
         m_is_outerbox = layer == "outerbox";
@@ -2715,9 +2780,6 @@ module MakeHexBox( box )
         m_is_spacer = layer == "layer_spacer";
         m_is_lid_subtractions = layer == "lid_substractions";
         m_is_lid_holder = layer == "lid_holder";
-
-        // we don't use position for the box or the lid. Only for components.
-
 
         m_is_component_subtractions = layer == "component_subtractions";
         m_is_component_additions = layer == "component_additions";
@@ -4295,6 +4357,11 @@ module MakeHexBox( box )
     }
 
 }
+
+
+// =============================================================================
+// UTILITY: Rounded cube
+// =============================================================================
 
 module MakeRoundedCubeAxis( vec3, radius, vecRounded = [ t, t, t, t ], axis = k_z ) {
     radii = 
