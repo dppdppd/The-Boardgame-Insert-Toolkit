@@ -118,15 +118,13 @@ Move code that is **100% identical** between MakeBox and MakeHexBox to file-scop
 - [x] Verify — 0% pixel diff across 6 comparisons
 
 ### 1.3 Consolidate polygon helpers into single parameterized module
-**What**: Replace 6 hardcoded polygon modules (Tri-Oct) with one `NGon(n, R, t)` module
-**Current**: Each is a hand-unrolled version of the same formula
-**Already exists**: `AddPoint`/`AddOrderIndex` do this generically but are only used as fallback
-**Risk**: Medium — must verify all polygon outputs match exactly
-**Verify**: Render every lid pattern test, compare iso+top views
-- [ ] Write `NGon(n, R, t)` using the existing `AddPoint`/`AddOrderIndex` pattern
-- [ ] Update `Make2dShape` to use `NGon` instead of dispatching to Tri/Quad/etc
-- [ ] Remove individual Tri/Quad/Pent/Hex/Sept/Oct modules
-- [ ] Verify all pattern tests
+**What**: Replace 6 hardcoded polygon modules (Tri-Oct) with one generic approach
+**Done**: Removed Tri/Quad/Pent/Hex/Sept/Oct and the if/else dispatch in Make2dShape. Renamed AddPoint→__ngon_points, AddOrderIndex→__ngon_indices. Make2dShape now always uses the generic path (outer + inner point rings). Verified via symmetric-difference STL test that hand-unrolled and generic produce identical geometry (empty difference).
+**Result**: -178 lines net (4513→4335). 53/53 CSG pass. 0% pixel diff on pattern and n1n2 tests.
+- [x] Verify hand-unrolled and generic approaches produce identical geometry
+- [x] Simplify Make2dShape to always use generic __ngon_points/__ngon_indices
+- [x] Remove Tri/Quad/Pent/Hex/Sept/Oct modules
+- [x] Verify — 0% pixel diff across 4 comparisons
 
 ---
 
@@ -356,14 +354,14 @@ Key reference points for navigation. **Must be updated after any change that shi
 | Constants/Keywords | 1-210 | pre-plan |
 | Key-value helpers | 213-215 | pre-plan |
 | Globals | 219-295 | pre-plan |
-| Utility modules (debug..Shear) | 307-470 | Phase 1.2 |
-| Polygon helpers (Tri..Oct) | 472-637 | Phase 1.2 |
-| Make2dShape (file scope) | 639-666 | Phase 1.1 |
-| Make2DPattern (file scope) | 669-703 | Phase 1.2 |
-| MakeStripedGrid (file scope) | 705-731 | Phase 1.2 |
-| MakeAll | 734-789 | Phase 1.2 |
-| MakeDividers | 791-899 | Phase 1.2 |
-| MakeBox start | 901 | Phase 1.2 |
-| MakeHexBox start | 2721 | Phase 1.2 |
-| MakeRoundedCubeAxis | 4458-4510 | Phase 1.2 |
-| **Total lines** | **4513** | Phase 1.2 |
+| Utility modules (debug..Shear) | 307-470 | Phase 1.3 |
+| __ngon_points, __ngon_indices | 474-479 | Phase 1.3 |
+| Make2dShape (file scope) | 481-489 | Phase 1.3 |
+| Make2DPattern (file scope) | 491-525 | Phase 1.3 |
+| MakeStripedGrid (file scope) | 527-553 | Phase 1.3 |
+| MakeAll | 556-611 | Phase 1.3 |
+| MakeDividers | 613-721 | Phase 1.3 |
+| MakeBox start | 723 | Phase 1.3 |
+| MakeHexBox start | 2543 | Phase 1.3 |
+| MakeRoundedCubeAxis | 4280-4332 | Phase 1.3 |
+| **Total lines** | **4335** | Phase 1.3 |
