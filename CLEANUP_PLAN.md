@@ -257,30 +257,31 @@ Would require a `MakeShell(type)`, `MakeLidBase(type)` abstraction that dispatch
 
 ## Phase 5: Magic Numbers → Named Constants
 
-### 5.1 Extract magic numbers to named constants
-Add to the constants section (lines 1-210):
+### 5.1 Extract magic numbers to named constants — DONE
+Added 14 named constants to the constants section and replaced 39 occurrences across the file.
 
-| Value | Context | Proposed Name |
-|-------|---------|---------------|
-| `4` | Divider corner radius (578, 584, 598) | `k_divider_corner_radius` |
-| `0.8` | Tab text width fraction (604) | `k_tab_text_width_fraction` |
-| `2.0` / `4.0` | Default lid heights (658, 2780) | `k_default_inset_lid_height` / `k_default_cap_lid_height` |
-| `0.01` | Hull epsilon (1109, 3235) | `k_hull_epsilon` |
-| `0.4` | Pedestal base fraction (1241, 3348) | `k_pedestal_base_fraction` |
-| `100` | Max label auto-width (1700, 3800) | `k_max_label_auto_width` |
-| `200` | Label frame hull offset (1806-1818) | `k_label_frame_hull_offset` |
-| `45` | Stripe grid angle (1898, 4000) | `k_stripe_angle` |
-| `3` | Cutout corner radius (2117) | `k_cutout_corner_radius` |
-| `1/4` | Corner cutout inset fraction (2247, 4340) | `k_corner_cutout_inset_fraction` |
-| `1.0` | Detent sphere radius (2684-2685) | `k_detent_sphere_radius` |
-| `2` | Detents per set (2690) | `k_num_detents` |
-| `10` | Lid tab modifier multiplier (2625, 4706) | `k_lid_tab_mod_multiplier` |
-| `.001` | Min corner radius (4785-4788) | `k_min_corner_radius` |
+| Constant | Value | Replacements |
+|----------|-------|-------------|
+| `DEFAULT_INSET_LID_HEIGHT` | 2.0 | 2 |
+| `DEFAULT_CAP_LID_HEIGHT` | 4.0 | 2 |
+| `DEFAULT_PEDESTAL_BASE_FRACTION` | 0.4 | 2 |
+| `DEFAULT_MAX_LABEL_WIDTH` | 100 | 4 |
+| `DEFAULT_STRIPE_ANGLE` | 45 | 2 |
+| `DEFAULT_MAX_CUTOUT_CORNER_RADIUS` | 3 | 2 |
+| `DEFAULT_CORNER_CUTOUT_INSET_FRACTION` | 1/4 | 2 |
+| `DEFAULT_DETENT_SPHERE_RADIUS` | 1 | 2 |
+| `LID_TAB_MODIFIER_SCALE` | 10 | 2 |
+| `LABEL_FRAME_HULL_EXTENT` | 200 | 8 |
+| `DEFAULT_DIV_TAB_RADIUS` | 4 | 1 |
+| `DEFAULT_TAB_TEXT_WIDTH_FRACTION` | 0.8 | 1 |
+| `MIN_CORNER_RADIUS` | 0.001 | 4 |
+| `HULL_EPSILON` | 0.01 | 7 |
 
-- [ ] Add constants to constants section
-- [ ] Replace all occurrences
-- [ ] CSG regression
-- **Note**: Line numbers will shift after earlier phases. Update before starting.
+**Not replaced**: `m_epsilon = 0.001` (different semantics — tolerance epsilon, not hull).
+**Result**: +17 lines (constants block). 53/53 CSG pass. 0% pixel diff on 5 comparisons.
+- [x] Add constants to constants section
+- [x] Replace all occurrences
+- [x] CSG regression
 
 ---
 
@@ -350,7 +351,7 @@ Key reference points for navigation. **Must be updated after any change that shi
 
 | Item | Line(s) | Last verified |
 |------|---------|---------------|
-| Constants/Keywords | 1-210 | pre-plan |
+| Constants/Keywords + defaults | 1-227 | Phase 5.1 |
 | Key-value helpers | 213-215 | pre-plan |
 | Globals | 219-295 | pre-plan |
 | Utility modules (debug..Shear) | 307-470 | Phase 1.3 |
@@ -365,4 +366,4 @@ Key reference points for navigation. **Must be updated after any change that shi
 | MakeHexBox start | 2545 | Phase 2.0 |
 | m_box_height_index = k_hex_z | 2577 | Phase 2.0 |
 | MakeRoundedCubeAxis | 4284-4336 | Phase 2.0 |
-| **Total lines** | **4337** | Phase 4.0 |
+| **Total lines** | **4354** | Phase 5.1 |

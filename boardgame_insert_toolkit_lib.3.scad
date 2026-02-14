@@ -207,6 +207,23 @@ INTERIOR = "interior";
 EXTERIOR = "exterior";
 BOTH = "both";
 
+
+// INTERNAL DEFAULTS (magic numbers extracted for clarity)
+DEFAULT_INSET_LID_HEIGHT = 2.0;       // Default lid wall height for inset lids
+DEFAULT_CAP_LID_HEIGHT = 4.0;         // Default lid wall height for cap lids
+DEFAULT_PEDESTAL_BASE_FRACTION = 0.4;  // Fraction of compartment height for pedestal base
+DEFAULT_MAX_LABEL_WIDTH = 100;         // Maximum auto-width for labels
+DEFAULT_STRIPE_ANGLE = 45;            // Rotation angle for lid stripe grid
+DEFAULT_MAX_CUTOUT_CORNER_RADIUS = 3;  // Maximum radius for cutout corners
+DEFAULT_CORNER_CUTOUT_INSET_FRACTION = 1/4; // Fraction of compartment inset for corner cutouts
+DEFAULT_DETENT_SPHERE_RADIUS = 1;      // Radius of detent bump spheres
+LID_TAB_MODIFIER_SCALE = 10;          // Scale factor for lid tab size modifier
+LABEL_FRAME_HULL_EXTENT = 200;        // Hull extent for label frame generation
+DEFAULT_DIV_TAB_RADIUS = 4;           // Default divider tab corner radius
+DEFAULT_TAB_TEXT_WIDTH_FRACTION = 0.8; // Fraction of tab width used for text scaling
+MIN_CORNER_RADIUS = 0.001;            // Minimum corner radius for MakeRoundedCubeAxis
+HULL_EPSILON = 0.01;                  // Small height for hull/cap operations
+
 DISTANCE_BETWEEN_PARTS = 2;
 ////////////////////
 
@@ -380,7 +397,7 @@ function __box_vis_rotation( box ) = __value( __box_vis_data( box ), ROTATION );
 
 function __div_thickness( div ) = __value( div, DIV_THICKNESS, default = 0.5 );
 function __div_tab_size( div ) = __value( div, DIV_TAB_SIZE_XY, default = [32, 14] );
-function __div_tab_radius( div ) = __value( div, DIV_TAB_RADIUS, default = 4 );
+function __div_tab_radius( div ) = __value( div, DIV_TAB_RADIUS, default = DEFAULT_DIV_TAB_RADIUS );
 function __div_tab_cycle( div ) = __value( div, DIV_TAB_CYCLE, default = 3 );
 function __div_tab_cycle_start( div ) = __value( div, DIV_TAB_CYCLE_START, default = 1 );
 
@@ -685,7 +702,7 @@ module MakeDividers( div )
             // words
             text_pos = title_pos + [ tab_width/2, font_size * 2, 0 ];
 
-            text_width = len(title) > number_of_letters_before_scale_to_fit ? tab_width * 0.8 : 0;
+            text_width = len(title) > number_of_letters_before_scale_to_fit ? tab_width * DEFAULT_TAB_TEXT_WIDTH_FRACTION : 0;
 
             translate( text_pos)
                 resize([ text_width,0, 0 ], auto=[ true, true, false])
@@ -739,7 +756,7 @@ module MakeBox( box )
     m_lid_inset = m_box_is_stackable || __value( m_lid, LID_INSET_B, default = false ); 
 
     // the part of the lid that overlaps the box
-    m_lid_wall_height = __value( m_lid, LID_HEIGHT, default = m_lid_inset ? 2.0 : 4.0 );
+    m_lid_wall_height = __value( m_lid, LID_HEIGHT, default = m_lid_inset ? DEFAULT_INSET_LID_HEIGHT : DEFAULT_CAP_LID_HEIGHT );
     m_lid_wall_thickness = m_lid_inset ? 2*m_wall_thickness : m_wall_thickness/2;    
 
     m_lid_thickness = m_wall_thickness;
@@ -1154,7 +1171,7 @@ module MakeBox( box )
                             cube([__lid_internal_size( k_x ), __lid_internal_size( k_y ), 1]);
 
                         translate( [ 0, 0, __lid_notch_depth() ] )
-                            cube([__lid_external_size( k_x ), __lid_external_size( k_y ), 0.01]);
+                            cube([__lid_external_size( k_x ), __lid_external_size( k_y ), HULL_EPSILON]);
                     }
 
                 // big hollow
@@ -1286,7 +1303,7 @@ module MakeBox( box )
 
                 if ( m_push_base && m_component_base_height > 0 )
                 {
-                    frac = 0.4;
+                    frac = DEFAULT_PEDESTAL_BASE_FRACTION;
 
                     InEachCompartment()
                         translate( [ (__compartment_size( k_x) * (1-frac))/2, (__compartment_size( k_y) * (1-frac))/2, 0 ])
@@ -1483,7 +1500,7 @@ module MakeBox( box )
             ypos = __lid_external_size( k_y )/2 + __label_offset( label )[k_y];
 
             auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
-            width = auto_width != 0 ? min( 100, auto_width ) + offset : 0;
+            width = auto_width != 0 ? min( DEFAULT_MAX_LABEL_WIDTH, auto_width ) + offset : 0;
 
             linear_extrude( thickness )
                 translate( [ xpos, ypos, 0 ] )
@@ -1578,7 +1595,7 @@ module MakeBox( box )
             ypos = __lid_external_size( k_y )/2 + __label_offset( label )[k_y];
 
             auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
-            width = auto_width != 0 ? min( 100, auto_width ) + offset : 0;
+            width = auto_width != 0 ? min( DEFAULT_MAX_LABEL_WIDTH, auto_width ) + offset : 0;
 
             linear_extrude( thickness )
                 translate( [ xpos, ypos, 0 ] )
@@ -1589,18 +1606,18 @@ module MakeBox( box )
                                 {
                                     hull()
                                     {
-                                        translate( [ -200,0,0])
+                                        translate( [ -LABEL_FRAME_HULL_EXTENT,0,0])
                                             Make2dLidLabel( label, width, offset );
 
-                                        translate( [ 200,0,0])
+                                        translate( [ LABEL_FRAME_HULL_EXTENT,0,0])
                                             Make2dLidLabel( label, width, offset );
                                     }
                                     hull()
                                     {
-                                        translate( [ -0,-200,0])
+                                        translate( [ -0,-LABEL_FRAME_HULL_EXTENT,0])
                                             Make2dLidLabel( label, width, offset );
 
-                                        translate( [ 0,200,0])
+                                        translate( [ 0,LABEL_FRAME_HULL_EXTENT,0])
                                             Make2dLidLabel( label, width, offset );
                                     }         
                                 }    
@@ -1681,7 +1698,7 @@ module MakeBox( box )
                                 {
                                     intersection()
                                     {
-                                        theta = 45;
+                                        theta = DEFAULT_STRIPE_ANGLE;
 
                                         x = __lid_external_size( k_x );
                                         y = __lid_external_size( k_y );
@@ -1900,7 +1917,7 @@ module MakeBox( box )
             main_d = ( side == k_back || side == k_front ) ? k_y : k_x; 
             perp_d = ( side == k_back || side == k_front ) ? k_x : k_y;
 
-            max_radius = 3;
+            max_radius = DEFAULT_MAX_CUTOUT_CORNER_RADIUS;
             radius = max_radius;
 
             // main and perpendicular size of hole
@@ -2030,7 +2047,7 @@ module MakeBox( box )
             function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : 
                                                 - __lid_external_size( k_z );
 
-            inset_into_compartment_fraction = 1/4;
+            inset_into_compartment_fraction = DEFAULT_CORNER_CUTOUT_INSET_FRACTION;
             inverse_inset = 1 - inset_into_compartment_fraction;
 
             // k_front_left = 0;
@@ -2408,7 +2425,7 @@ module MakeBox( box )
             module MakeLidTab( mod )
             {
 
-                x = m_lid_tab[ k_x ] + 10 * mod;
+                x = m_lid_tab[ k_x ] + LID_TAB_MODIFIER_SCALE * mod;
                 y = m_lid_tab[ k_y ] + mod;
                 z = m_lid_tab[ k_z ] + mod;
 
@@ -2427,11 +2444,11 @@ module MakeBox( box )
                     {
                         hull()
                         {
-                         cube( [ x, y, 0.01 ], center = false );
+                         cube( [ x, y, HULL_EPSILON ], center = false );
 
                             translate( [0, 0, y  ])
                                 rotate( v=[ 0,1,0], a=90)
-                                    cylinder( h= x, r=0.01);
+                                    cylinder( h= x, r=HULL_EPSILON);
 
                         }
                     }       
@@ -2468,7 +2485,7 @@ module MakeBox( box )
             {
                 // Create one squished sphere
                 resize( [g_detent_thickness*2 + mod, 1, 1.0])
-                    sphere( r = 1, $fn = 12 ); 
+                    sphere( r = DEFAULT_DETENT_SPHERE_RADIUS, $fn = 12 ); 
             }
 
             module MakeOneSet( mod )
@@ -2563,7 +2580,7 @@ module MakeHexBox( box )
     m_lid_inset = m_box_is_stackable || __value( m_lid, LID_INSET_B, default = false ); 
 
     // the part of the lid that overlaps the box
-    m_lid_wall_height = __value( m_lid, LID_HEIGHT, default = m_lid_inset ? 2.0 : 4.0 );
+    m_lid_wall_height = __value( m_lid, LID_HEIGHT, default = m_lid_inset ? DEFAULT_INSET_LID_HEIGHT : DEFAULT_CAP_LID_HEIGHT );
     m_lid_wall_thickness = m_lid_inset ? 2*m_wall_thickness : m_wall_thickness/2;    
 
     m_lid_thickness = m_wall_thickness;
@@ -2994,7 +3011,7 @@ module MakeHexBox( box )
                             cylinder($fn = 6, d = m_inner_diameter, 1);
 
                         translate([m_outer_diameter / 2.0, (m_outer_diameter / 2.0) * sin(60), __lid_notch_depth()])
-                            cylinder($fn = 6, d = m_outer_diameter, 0.01);
+                            cylinder($fn = 6, d = m_outer_diameter, HULL_EPSILON);
                     }
 
                 // big hollow
@@ -3107,7 +3124,7 @@ module MakeHexBox( box )
 
                 if ( m_push_base && m_component_base_height > 0 )
                 {
-                    frac = 0.4;
+                    frac = DEFAULT_PEDESTAL_BASE_FRACTION;
 
                     InEachCompartment()
                         translate( [ (__compartment_size( k_x) * (1-frac))/2, (__compartment_size( k_y) * (1-frac))/2, 0 ])
@@ -3297,7 +3314,7 @@ module MakeHexBox( box )
             ypos = __lid_external_size( k_y )/2 + __label_offset( label )[k_y];
 
             auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
-            width = auto_width != 0 ? min( 100, auto_width ) + offset : 0;
+            width = auto_width != 0 ? min( DEFAULT_MAX_LABEL_WIDTH, auto_width ) + offset : 0;
 
             linear_extrude( thickness )
                 translate( [ xpos, ypos, 0 ] )
@@ -3394,7 +3411,7 @@ module MakeHexBox( box )
             //echo(str("MakeLidLabelFrame: label_offset(x, y): ", __label_offset( label )[k_x], ", ", __label_offset( label )[k_y]));
 
             auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
-            width = auto_width != 0 ? min( 100, auto_width ) + offset : 0;
+            width = auto_width != 0 ? min( DEFAULT_MAX_LABEL_WIDTH, auto_width ) + offset : 0;
 
             linear_extrude( thickness )
                 translate( [ xpos, ypos, 0 ] )
@@ -3405,18 +3422,18 @@ module MakeHexBox( box )
                 {
                     hull()
                     {
-                        translate( [ -200,0,0])
+                        translate( [ -LABEL_FRAME_HULL_EXTENT,0,0])
                             Make2dLidLabel( label, width, offset );
 
-                        translate( [ 200,0,0])
+                        translate( [ LABEL_FRAME_HULL_EXTENT,0,0])
                             Make2dLidLabel( label, width, offset );
                     }
                     hull()
                     {
-                        translate( [ -0,-200,0])
+                        translate( [ -0,-LABEL_FRAME_HULL_EXTENT,0])
                             Make2dLidLabel( label, width, offset );
 
-                        translate( [ 0,200,0])
+                        translate( [ 0,LABEL_FRAME_HULL_EXTENT,0])
                             Make2dLidLabel( label, width, offset );
                     }         
                 }    
@@ -3497,7 +3514,7 @@ module MakeHexBox( box )
                                 {
                                     intersection()
                                     {
-                                        theta = 45;
+                                        theta = DEFAULT_STRIPE_ANGLE;
 
                                         x = __lid_external_size( k_x );
                                         y = __lid_external_size( k_y );
@@ -3707,7 +3724,7 @@ module MakeHexBox( box )
             main_d = ( side == k_back || side == k_front ) ? k_y : k_x; 
             perp_d = ( side == k_back || side == k_front ) ? k_x : k_y;
 
-            max_radius = 3;
+            max_radius = DEFAULT_MAX_CUTOUT_CORNER_RADIUS;
             radius = max_radius;
 
             // main and perpendicular size of hole
@@ -3837,7 +3854,7 @@ module MakeHexBox( box )
             function __finger_cutouts_bottom() = m_is_lid ?__lid_external_size( k_z ) - __cutout_z() : 
                 - __lid_external_size( k_z );
 
-            inset_into_compartment_fraction = 1/4;
+            inset_into_compartment_fraction = DEFAULT_CORNER_CUTOUT_INSET_FRACTION;
             inverse_inset = 1 - inset_into_compartment_fraction;
 
             // k_front_left = 0;
@@ -4201,9 +4218,9 @@ module MakeHexBox( box )
         {
             module MakeLidTab( mod )
             {
-                m_epsilon = 0.01;
+                m_epsilon = HULL_EPSILON;
 
-                x = m_lid_tab[ k_x ] + 10 * mod;
+                x = m_lid_tab[ k_x ] + LID_TAB_MODIFIER_SCALE * mod;
                 y = m_lid_tab[ k_y ] + 2*m_epsilon + mod;
                 z = m_lid_tab[ k_z ] + mod;
 
@@ -4222,11 +4239,11 @@ module MakeHexBox( box )
                     {
                         hull()
                         {
-                            cube( [ x, y, 0.01 ], center = false );
+                            cube( [ x, y, HULL_EPSILON ], center = false );
 
                             translate( [0, 0, y  ])
                                 rotate( v=[ 0,1,0], a=90)
-                                cylinder( h= x, r=0.01);
+                                cylinder( h= x, r=HULL_EPSILON);
 
                         }
                     }       
@@ -4244,7 +4261,7 @@ module MakeHexBox( box )
             module MakeDetentBase( mod )
             {
                 resize( [g_detent_thickness*2 + mod, 1, 1.0])
-                    sphere( r = 1, $fn = 12 ); 
+                    sphere( r = DEFAULT_DETENT_SPHERE_RADIUS, $fn = 12 ); 
             }
 
             module MakeDetent( mod )
@@ -4282,10 +4299,10 @@ module MakeHexBox( box )
 module MakeRoundedCubeAxis( vec3, radius, vecRounded = [ t, t, t, t ], axis = k_z ) {
     radii = 
     [
-        vecRounded[ 0 ] ? radius : .001,
-        vecRounded[ 1 ] ? radius : .001,
-        vecRounded[ 2 ] ? radius : .001,
-        vecRounded[ 3 ] ? radius : .001,
+        vecRounded[ 0 ] ? radius : MIN_CORNER_RADIUS,
+        vecRounded[ 1 ] ? radius : MIN_CORNER_RADIUS,
+        vecRounded[ 2 ] ? radius : MIN_CORNER_RADIUS,
+        vecRounded[ 3 ] ? radius : MIN_CORNER_RADIUS,
     ];
     
     pos =
