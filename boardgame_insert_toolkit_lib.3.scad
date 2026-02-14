@@ -287,8 +287,6 @@ g_print_mmu_layer = "default";
 
 
 
-m_tab_corner_gap = 4;
-m_wall_underside_lid_storage_depth = 7;
 m_corner_width = 6;
 
 m_lid_notch_height = 2.0;
@@ -638,7 +636,7 @@ module MakeBox( box )
 {
     m_num_components =  len( box );
 
-    m_box_label = __value( box, LABEL, default = "");
+
 
     m_box_is_spacer = ( __type( box )  == SPACER ) || g_b_fit_test;
 
@@ -684,7 +682,7 @@ module MakeBox( box )
 
     m_lid_cutout_sides = __value( m_lid, LID_CUTOUT_SIDES_4B, default = [f,f,f,f]);
     m_lid_is_inverted = __value( m_lid, LID_LABELS_INVERT_B, default = false );
-    m_lid_label_depth = __value( m_lid, LID_SOLID_LABELS_DEPTH, default = m_lid_thickness / 2 );
+
 
     m_lid_tab_sides = __value( m_lid, LID_TABS_4B, default = [t,t,t,t]);
 
@@ -702,31 +700,12 @@ module MakeBox( box )
 
     m_lid_pattern_radius = __value( m_lid, LID_PATTERN_RADIUS, default = 4.0 );
 
-    m_tab_width_x = max( m_box_size[ k_x ]/4, g_detent_spacing * 2 );
-    m_tab_width_y = max( m_box_size[ k_y ]/4, g_detent_spacing * 2 );
+
 
     m_lid_tab = [ max( m_box_size[ k_x ]/4, g_detent_spacing * 2 ), m_wall_thickness,  __lid_external_size( k_z ) + 1];    
 
     m_box_inner_position_min = [ m_wall_thickness, m_wall_thickness, m_wall_thickness ];
     m_box_inner_position_max = m_box_size - m_box_inner_position_min;
-
-        module MakeCorners( mod = 0 )
-        {
-            difference()
-            {
-                cube([  m_box_size[ k_x ], m_box_size[ k_y ],  m_box_size[ k_z ] + __lid_external_size( k_z ) ]); // outer box
-
-                translate( [ 0, m_corner_width + mod , 0])
-                    cube([ m_box_size[ k_x ], m_box_size[ k_y ] - 2*( m_corner_width + mod ), m_box_size[ k_z ] + __lid_external_size( k_z ) ]); // middle y
-
-                translate( [ m_corner_width  + mod, 0, 0])
-                    cube([ m_box_size[ k_x ] - 2*( m_corner_width + mod ), m_box_size[ k_y ], m_box_size[ k_z ] + __lid_external_size( k_z ) ]);// middle x
-
-                translate( [ m_wall_thickness, m_wall_thickness, 0]) // innerbox
-                    cube([  m_box_size[ k_x ] - 2*m_wall_thickness, m_box_size[ k_y ] - 2*m_wall_thickness,  m_box_size[ k_z ] + __lid_external_size( k_z ) ]);      
-
-            }
-        }
 
     if ( m_box_is_spacer )
     {
@@ -787,7 +766,7 @@ module MakeBox( box )
         m_is_lid_subtractions = layer == "lid_substractions";
 
         // we don't use position for the box or the lid. Only for components.
-        m_ignore_position = m_is_outerbox || m_is_lid || m_is_spacer || m_is_lid_subtractions;
+
 
         m_is_component_subtractions = layer == "component_subtractions";
         m_is_component_additions = layer == "component_additions";
@@ -828,12 +807,6 @@ module MakeBox( box )
         m_component_cutout_bottom_percent = __value( component, CMP_CUTOUT_BOTTOM_PCT, default = 80) / 100;
         m_actually_cutout_the_bottom = !__component_is_fillet() && m_component_cutout_bottom && !m_push_base;
 
-        m_component_has_exactly_one_cutout = 
-            (m_component_cutout_side[ k_front ]?1:0) +
-            (m_component_cutout_side[ k_back ]?1:0) +
-            (m_component_cutout_side[ k_left ]?1:0) +
-            (m_component_cutout_side[ k_right ]?1:0) == 1;
-        
         m_cutout_height_pct = __value( component, CMP_CUTOUT_HEIGHT_PCT, default = 100 ) / 100;
         m_cutout_size_frac_aligned = __value( component, CMP_CUTOUT_DEPTH_PCT, default = 25 ) / 100;
         m_cutout_size_frac_perpindicular = __value( component, CMP_CUTOUT_WIDTH_PCT, default = 50 ) / 100;
@@ -847,7 +820,7 @@ module MakeBox( box )
         function __component_is_hex2() = __component_shape() == HEX2;
         function __component_is_oct() = __component_shape() == OCT;
         function __component_is_oct2() = __component_shape() == OCT2;        
-        function __component_is_round() = __component_shape() == ROUND;
+
         function __component_is_square() = __component_shape() == SQUARE;
         function __component_is_fillet() = __component_shape() == FILLET;
         function __component_fillet_radius() = __value( component, CMP_FILLET_RADIUS, default = min( __compartment_size( k_z ), 10) );
@@ -855,7 +828,7 @@ module MakeBox( box )
         function __component_shear( D ) = __value( component, CMP_SHEAR, default = [0.0, 0.0] )[ D ];
         ///////////
     
-        function __partition_height_scale( D ) = D == __Y2() ? __req_lower_partitions() ? 0.5 : 1.00 : 1.00;
+
 
         m_component_base_height = m_box_size[ k_z ] - __component_size( k_z ) - m_wall_thickness;
 
@@ -875,9 +848,9 @@ module MakeBox( box )
                                                 __p_i_m( D ) ? __c_p_max( D ): 
                                                     __c_p_raw()[ D ] + m_wall_thickness;
 
-        function __component_position_max( D ) = __component_position( D ) + __component_size( D );
 
-        function __compartment_smallest_dimension() = ( __compartment_size( k_x ) < __compartment_size( k_y ) ) ? __compartment_size( k_x ) : __compartment_size( k_y );
+
+
         function __compartment_largest_dimension() = ( __compartment_size( k_x ) > __compartment_size( k_y ) ) ? __compartment_size( k_x ) : __compartment_size( k_y );
 
         function __partitions_num( D )= __compartments_num( D ) - 1;
@@ -915,22 +888,7 @@ module MakeBox( box )
             }
         }
 
-/////////////////////////////////////////
-/////////////////////////////////////////
-
-
-        module __ColorComponent()
-        {
-            r = !g_b_colorize ? 0.7 : pow( sin( pow( __component_position(k_x),5) ), 0.5);
-            g = !g_b_colorize ? 0.8 :pow( sin( pow( __component_position(k_y), 5) ), 0.3);
-            b = !g_b_colorize ? 0.5 :pow( cos( pow( __component_size(k_z), 5) ), 0.5);
-
-
-            color( [r, g, b] )
-                children();
-        }
-
-/////////////////////////////////////////
+        /////////////////////////////////////////
 
         module PositionInnerLayer()
         {
@@ -2760,7 +2718,7 @@ module MakeHexBox( box )
 {
     m_num_components =  len( box );
 
-    m_box_label = __value( box, LABEL, default = "");
+
 
     m_box_is_spacer = ( __type( box )  == SPACER ) || g_b_fit_test;
 
@@ -2825,7 +2783,7 @@ module MakeHexBox( box )
 
     m_lid_cutout_sides = __value( m_lid, LID_CUTOUT_SIDES_4B, default = [f,f,f,f]);
     m_lid_is_inverted = __value( m_lid, LID_LABELS_INVERT_B, default = false );
-    m_lid_label_depth = __value( m_lid, LID_SOLID_LABELS_DEPTH, default = m_lid_thickness / 2 );
+
 
     m_lid_tab_sides = __value( m_lid, LID_TABS_4B, default = [t,t,t,t]);
 
@@ -2843,8 +2801,7 @@ module MakeHexBox( box )
 
     m_lid_pattern_radius = __value( m_lid, LID_PATTERN_RADIUS, default = 4.0 );
 
-    m_tab_width_x = max( m_box_size[ k_x ]/4, g_detent_spacing * 2 );
-    m_tab_width_y = max( m_box_size[ k_y ]/4, g_detent_spacing * 2 );
+
 
     m_lid_tab = [ max( m_box_size[ k_x ]/4, g_detent_spacing * 2 ), m_wall_thickness,  __lid_external_size( k_z ) + 1];    
 
@@ -2915,7 +2872,7 @@ module MakeHexBox( box )
         m_is_lid_holder = layer == "lid_holder";
 
         // we don't use position for the box or the lid. Only for components.
-        m_ignore_position = m_is_outerbox || m_is_lid || m_is_spacer || m_is_lid_subtractions;
+
 
         m_is_component_subtractions = layer == "component_subtractions";
         m_is_component_additions = layer == "component_additions";
@@ -2956,12 +2913,6 @@ module MakeHexBox( box )
         m_component_cutout_bottom_percent = __value( component, CMP_CUTOUT_BOTTOM_PCT, default = 80) / 100;
         m_actually_cutout_the_bottom = !__component_is_fillet() && m_component_cutout_bottom && !m_push_base;
 
-        m_component_has_exactly_one_cutout = 
-            (m_component_cutout_side[ k_front ]?1:0) +
-            (m_component_cutout_side[ k_back ]?1:0) +
-            (m_component_cutout_side[ k_left ]?1:0) +
-            (m_component_cutout_side[ k_right ]?1:0) == 1;
-
         m_cutout_height_pct = __value( component, CMP_CUTOUT_HEIGHT_PCT, default = 100 ) / 100;
         m_cutout_size_frac_aligned = __value( component, CMP_CUTOUT_DEPTH_PCT, default = 25 ) / 100;
         m_cutout_size_frac_perpindicular = __value( component, CMP_CUTOUT_WIDTH_PCT, default = 50 ) / 100;
@@ -2975,7 +2926,7 @@ module MakeHexBox( box )
         function __component_is_hex2() = __component_shape() == HEX2;
         function __component_is_oct() = __component_shape() == OCT;
         function __component_is_oct2() = __component_shape() == OCT2;        
-        function __component_is_round() = __component_shape() == ROUND;
+
         function __component_is_square() = __component_shape() == SQUARE;
         function __component_is_fillet() = __component_shape() == FILLET;
         function __component_fillet_radius() = __value( component, CMP_FILLET_RADIUS, default = min( __compartment_size( k_z ), 10) );
@@ -2983,7 +2934,7 @@ module MakeHexBox( box )
         function __component_shear( D ) = __value( component, CMP_SHEAR, default = [0.0, 0.0] )[ D ];
         ///////////
 
-        function __partition_height_scale( D ) = D == __Y2() ? __req_lower_partitions() ? 0.5 : 1.00 : 1.00;
+
 
         m_component_base_height = m_box_size[ k_hex_z ] - __component_size( k_z ) - m_wall_thickness;
 
@@ -3003,9 +2954,9 @@ module MakeHexBox( box )
             __p_i_m( D ) ? __c_p_max( D ): 
             __c_p_raw()[ D ] + m_wall_thickness;
 
-        function __component_position_max( D ) = __component_position( D ) + __component_size( D );
 
-        function __compartment_smallest_dimension() = ( __compartment_size( k_x ) < __compartment_size( k_y ) ) ? __compartment_size( k_x ) : __compartment_size( k_y );
+
+
         function __compartment_largest_dimension() = ( __compartment_size( k_x ) > __compartment_size( k_y ) ) ? __compartment_size( k_x ) : __compartment_size( k_y );
 
         function __partitions_num( D )= __compartments_num( D ) - 1;
@@ -3041,21 +2992,6 @@ module MakeHexBox( box )
             {
                 children();  
             }
-        }
-
-        /////////////////////////////////////////
-        /////////////////////////////////////////
-
-
-        module __ColorComponent()
-        {
-            r = !g_b_colorize ? 0.7 : pow( sin( pow( __component_position(k_x),5) ), 0.5);
-            g = !g_b_colorize ? 0.8 :pow( sin( pow( __component_position(k_y), 5) ), 0.3);
-            b = !g_b_colorize ? 0.5 :pow( cos( pow( __component_size(k_z), 5) ), 0.5);
-
-
-            color( [r, g, b] )
-                children();
         }
 
         /////////////////////////////////////////
@@ -3688,8 +3624,8 @@ module MakeHexBox( box )
             y_total = (y_count_even + 2) * dy;
             y_offset = (y - y_total) / 2.0;
 
-            echo( str(x, " ", dx, " ", x_count_i, " ", x_count_odd, "\n") );
-            echo( str(y, " ", dy, " ", y_count_i, " ", y_count_even, "\n") );
+            //echo( str(x, " ", dx, " ", x_count_i, " ", x_count_odd, "\n") );
+            //echo( str(y, " ", dy, " ", y_count_i, " ", y_count_even, "\n") );
 
             translate( [x_offset, y_offset, 0 ] )
             for( j = [ -1: y_count + 1 ] )
@@ -3889,7 +3825,7 @@ module MakeHexBox( box )
             xpos = __lid_external_size( k_x )/2 + __label_offset( label )[k_x];
             ypos = __lid_external_size( k_y )/2 + __label_offset( label )[k_y];
 
-            echo(str("MakeLidLabelFrame: label_offset(x, y): ", __label_offset( label )[k_x], ", ", __label_offset( label )[k_y]));
+            //echo(str("MakeLidLabelFrame: label_offset(x, y): ", __label_offset( label )[k_x], ", ", __label_offset( label )[k_y]));
 
             auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
             width = auto_width != 0 ? min( 100, auto_width ) + offset : 0;
@@ -4832,45 +4768,4 @@ module MakeRoundedCubeAxis( vec3, radius, vecRounded = [ t, t, t, t ], axis = k_
 }
 
 
-module MakeRoundedCubeAll( vecCube, radius, axis = k_z, vecRounded = [ t, t, t, t ] ){
- 
-    radii = 
-    [
-        vecRounded[ 0 ] ? radius : .001,
-        vecRounded[ 1 ] ? radius : .001,
-        vecRounded[ 2 ] ? radius : .001,
-        vecRounded[ 3 ] ? radius : .001,
-    ];
 
-    vecCube2 = axis == k_z ? vecCube :
-        axis == k_y ? [ vecCube[2], vecCube[1], vecCube[0] ] :
-        [ vecCube[0], vecCube[2], vecCube[1] ];
-
-    pos = 
-    [
-        [ radii[0], radii[0], 0 ],
-        [ vecCube2[k_x] - radii[1], radii[1], 0 ],
-        [ radii[2], vecCube2[k_y] - radii[2], 0 ],
-        [ vecCube2[k_x] - radii[3], vecCube2[k_y] - radii[3], 0 ]
-    ] ;
- 
-    vecCubeCtr = vecCube/2;
-
- translate( vecCubeCtr )
-    debug();
-
-    RotateAboutPoint( a=90, v=[ axis==k_x?1:0, axis==k_y?1:0, 0 ], pt= vecCubeCtr)
-    hull()
-    {
-        h = vecCube2[ k_z ];
-
-        for ( idx = [ 0 : 3] ) 
-        {
-            // collapse the cylinder if we're approximating a point
-            fn = radii[ idx ] >= 1 ? $fn: 4;
-
-                translate( pos[ idx ])
-                    cylinder(r=radii[ idx ], h=h, $fn = fn); 
-        }
-    }
-} 

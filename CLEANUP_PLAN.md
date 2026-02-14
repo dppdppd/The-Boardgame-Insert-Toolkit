@@ -65,27 +65,27 @@ Minimal-risk changes. Fix known bugs, remove dead code. Each is independent.
 Remove in one commit per category:
 
 **Dead functions/modules (never called):**
-- [ ] `MakeRoundedCubeAll` (lines 4837-4878) — never called, contains debug()
-- [ ] `MakeCorners(mod)` (line 715-731) — only reference is commented-out call at 1977
-- [ ] `__ColorComponent()` in MakeBox (924-933) and MakeHexBox (3052-3061)
-- [ ] `__partition_height_scale(D)` (860, 2988) — references undefined `__Y2()` and `__req_lower_partitions()`
-- [ ] `__component_position_max(D)` (880, 3008)
-- [ ] `__compartment_smallest_dimension()` (882, 3010)
-- [ ] `__component_is_round()` (852, 2980)
+- [x] `MakeRoundedCubeAll` — removed
+- [x] `MakeCorners(mod)` — removed
+- [x] `__ColorComponent()` in MakeBox and MakeHexBox — removed
+- [x] `__partition_height_scale(D)` — removed (referenced undefined symbols)
+- [x] `__component_position_max(D)` — removed
+- [x] `__compartment_smallest_dimension()` — removed
+- [x] `__component_is_round()` — removed
 
 **Dead variables (computed, never read):**
-- [ ] `m_component_has_exactly_one_cutout` (833-837, 2961-2965)
-- [ ] `m_ignore_position` (792, 2920)
-- [ ] `m_box_label` (643, 2765)
-- [ ] `m_tab_width_x` / `m_tab_width_y` (707-708, 2848-2849)
-- [ ] `m_lid_label_depth` (689, 2830)
-- [ ] `m_tab_corner_gap` (global, 290)
-- [ ] `m_wall_underside_lid_storage_depth` (global, 291)
+- [x] `m_component_has_exactly_one_cutout` — removed
+- [x] `m_ignore_position` — removed
+- [x] `m_box_label` — removed
+- [x] `m_tab_width_x` / `m_tab_width_y` — removed
+- [x] `m_lid_label_depth` — removed
+- [x] `m_tab_corner_gap` (global) — removed
+- [x] `m_wall_underside_lid_storage_depth` (global) — removed
 
 ### 0.5 Remove debug echo lines in MakeHexBox
-- **Lines**: ~3693-3694 (Make2DPattern), ~3876 (MakeAllLidLabelFrames), ~3889 (MakeLidLabelFrame)
+- **Lines**: 3627-3628 (Make2DPattern), 3828 (MakeLidLabelFrame) — commented out to match MakeBox
 - **Impact**: No geometry change, just removes console noise
-- **Status**: [ ] pending
+- **Status**: [x] done
 
 ### 0.6 Fix raw string `"wall_thickness"` → use constant
 - **Lines**: 649, 2771 — `__value(box, "wall_thickness", ...)` uses raw string
@@ -341,7 +341,7 @@ Record anything learned during the work that affects the plan. **Update after ev
 
 | Phase | Description | Tasks | Done | Status |
 |-------|-------------|-------|------|--------|
-| 0 | Bugs & Dead Code | 6 groups | 1 | In progress |
+| 0 | Bugs & Dead Code | 6 groups | 5 | In progress |
 | 1 | Extract Shared Geometry | 3 groups | 0 | Not started |
 | 2 | Extract Labels & Iteration | 3 groups | 0 | Not started |
 | 3 | Extract Cutouts & Structure | 3 groups | 0 | Not started |
