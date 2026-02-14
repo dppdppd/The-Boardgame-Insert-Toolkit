@@ -88,9 +88,9 @@ Remove in one commit per category:
 - **Status**: [x] done
 
 ### 0.6 Fix raw string `"wall_thickness"` → use constant
-- **Lines**: 649, 2771 — `__value(box, "wall_thickness", ...)` uses raw string
-- **Decision**: Either define a `WALL_THICKNESS` constant or confirm this is intentional (user-facing param name)
-- **Status**: [ ] pending — investigate first
+- **Lines**: 645, 2727 — `__value(box, "wall_thickness", ...)` uses raw string
+- **Investigated**: This is an undocumented per-box wall thickness override. The raw string is the user-facing key name. Should define `BOX_WALL_THICKNESS = "wall_thickness"` constant and use it, but this is low priority and can wait for Phase 5 (magic numbers).
+- **Status**: [x] deferred to Phase 5
 
 ---
 
@@ -341,7 +341,7 @@ Record anything learned during the work that affects the plan. **Update after ev
 
 | Phase | Description | Tasks | Done | Status |
 |-------|-------------|-------|------|--------|
-| 0 | Bugs & Dead Code | 6 groups | 5 | In progress |
+| 0 | Bugs & Dead Code | 6 groups | 6 | Done |
 | 1 | Extract Shared Geometry | 3 groups | 0 | Not started |
 | 2 | Extract Labels & Iteration | 3 groups | 0 | Not started |
 | 3 | Extract Cutouts & Structure | 3 groups | 0 | Not started |
