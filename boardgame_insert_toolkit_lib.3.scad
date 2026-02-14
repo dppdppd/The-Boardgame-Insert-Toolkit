@@ -666,6 +666,71 @@ module Make2dShape( R, t, n1, n2 )
 };        
 
 
+module Make2DPattern( x = 200, y = 200, R = 1, t = 0.5, pattern_angle = 0, pattern_col_offset = 0, pattern_row_offset = 0, pattern_n1 = 6, pattern_n2 = 6 )
+{
+    r = cos( pattern_angle ) * R;
+
+    dx = r * ( 1 + pattern_col_offset / 100 ) - t;
+    dy = R * ( 1 + ( pattern_row_offset / 100 ) ) - t;
+
+    x_count = x / dx;
+    y_count = y / dy;
+
+    // Calculate offset to center pattern in the x direction
+    x_count_i = floor(x_count);
+    x_count_odd = x_count_i + 1*((x_count_i + 1) % 2);
+    x_total = (x_count_odd + 2) * dx;
+    x_offset = (x - x_total) / 2.0;
+
+    // Calculate offset to center pattern in the y direction
+    y_count_i = floor(y_count);
+    y_count_even = y_count_i + 1*((y_count_i + 0) % 2);
+    y_total = (y_count_even + 2) * dy;
+    y_offset = (y - y_total) / 2.0;
+
+    //echo( str(x, " ", dx, " ", x_count_i, " ", x_count_odd, "\n") );
+    //echo( str(y, " ", dy, " ", y_count_i, " ", y_count_even, "\n") );
+
+    translate( [x_offset, y_offset, 0 ] )
+    for( j = [ -1: y_count + 1 ] )
+        translate( [ ( j % 2 ) * dx/2, 0, 0 ] )
+            for( i = [ -1: x_count + 1 ] )
+                translate( [ i * dx, j * dy, 0 ] )
+                    rotate( a = pattern_angle, v=[ 0, 0, 1 ] )
+                    {
+                        Make2dShape( R, t, pattern_n1, pattern_n2 );
+                    }
+}
+
+module MakeStripedGrid( x = 200, y = 200, w = 1, dx = 0, dy = 0, depth_ratio = 0.5, thickness = 1 )
+{
+
+    _thickness = thickness * depth_ratio;
+
+    x_count = x / ( w + dx );
+    y_count = y / ( w + dy );
+
+    if ( dx > 0 )
+    {
+        for( j = [ 0: x_count ] )
+        {
+            translate( [ j * ( w + dx ), 0, thickness - _thickness ] )
+                cube( [ w, y, _thickness]);
+        }
+    }
+
+    if ( dy > 0 )
+    {
+        for( j = [ 0: y_count ] )
+        {
+            translate( [ 0, j * ( w + dy ), thickness - _thickness  ] )
+                cube( [ x, w, _thickness ]);
+        }
+    }
+}
+
+
+
 module MakeAll()
 {
     echo( str( "\n\n\n", COPYRIGHT_INFO, "\n\n\tVersion ", VERSION, "\n\n" ));
@@ -1527,73 +1592,6 @@ module MakeBox( box )
 
 
 
-////////PATTERNS
-
-
-        module Make2DPattern( x = 200, y = 200, R = 1, t = 0.5 )
-        {
-            r = cos( m_lid_pattern_angle ) * R;
-
-            dx = r * ( 1 + m_lid_pattern_col_offset / 100 ) - t;
-            dy = R * ( 1 + ( m_lid_pattern_row_offset / 100 ) ) - t;
-
-            x_count = x / dx;
-            y_count = y / dy;
-
-            // Calculate offset to center pattern in the x direction
-            x_count_i = floor(x_count);
-            x_count_odd = x_count_i + 1*((x_count_i + 1) % 2);
-            x_total = (x_count_odd + 2) * dx;
-            x_offset = (x - x_total) / 2.0;
-
-            // Calculate offset to center pattern in the y direction
-            y_count_i = floor(y_count);
-            y_count_even = y_count_i + 1*((y_count_i + 0) % 2);
-            y_total = (y_count_even + 2) * dy;
-            y_offset = (y - y_total) / 2.0;
-
-            //echo( str(x, " ", dx, " ", x_count_i, " ", x_count_odd, "\n") );
-            //echo( str(y, " ", dy, " ", y_count_i, " ", y_count_even, "\n") );
-
-            translate( [x_offset, y_offset, 0 ] )
-            for( j = [ -1: y_count + 1 ] )
-                translate( [ ( j % 2 ) * dx/2, 0, 0 ] )
-                    for( i = [ -1: x_count + 1 ] )
-                        translate( [ i * dx, j * dy, 0 ] )
-                            rotate( a = m_lid_pattern_angle, v=[ 0, 0, 1 ] )
-                            {
-                                Make2dShape( R, t, m_lid_pattern_n1, m_lid_pattern_n2 );
-                            }
-        }
-
-        module MakeStripedGrid( x = 200, y = 200, w = 1, dx = 0, dy = 0, depth_ratio = 0.5, thickness = m_lid_thickness )
-        {
-
-            _thickness = thickness * depth_ratio;
-
-            x_count = x / ( w + dx );
-            y_count = y / ( w + dy );
-
-            if ( dx > 0 )
-            {
-                for( j = [ 0: x_count ] )
-                {
-                    translate( [ j * ( w + dx ), 0, thickness - _thickness ] )
-                        cube( [ w, y, _thickness]);
-                }
-            }
-
-            if ( dy > 0 )
-            {
-                for( j = [ 0: y_count ] )
-                {
-                    translate( [ 0, j * ( w + dy ), thickness - _thickness  ] )
-                        cube( [ x, w, _thickness ]);
-                }
-            }
-        }
-
-
 ///////////////////////
 
         module MoveToLidInterior( tolerance = 0)
@@ -1805,7 +1803,7 @@ module MakeBox( box )
                     t = m_lid_pattern_thickness;
 
                     if ( !m_has_solid_lid )
-                        Make2DPattern( x = __lid_external_size( k_x ), y = __lid_external_size( k_y ), R = R, t = t );
+                        Make2DPattern( x = __lid_external_size( k_x ), y = __lid_external_size( k_y ), R = R, t = t, pattern_angle = m_lid_pattern_angle, pattern_col_offset = m_lid_pattern_col_offset, pattern_row_offset = m_lid_pattern_row_offset, pattern_n1 = m_lid_pattern_n1, pattern_n2 = m_lid_pattern_n2 );
                     else
                         square( [ __lid_external_size( k_x ), __lid_external_size( k_y ) ] );
                 }
@@ -3410,73 +3408,6 @@ module MakeHexBox( box )
 
 
 
-        ////////PATTERNS
-
-
-        module Make2DPattern( x = 200, y = 200, R = 1, t = 0.5 )
-        {
-            r = cos( m_lid_pattern_angle ) * R;
-
-            dx = r * ( 1 + m_lid_pattern_col_offset / 100 ) - t;
-            dy = R * ( 1 + ( m_lid_pattern_row_offset / 100 ) ) - t;
-
-            x_count = x / dx;
-            y_count = y / dy;
-
-            // Calculate offset to center pattern in the x direction
-            x_count_i = floor(x_count);
-            x_count_odd = x_count_i + 1*((x_count_i + 1) % 2);
-            x_total = (x_count_odd + 2) * dx;
-            x_offset = (x - x_total) / 2.0;
-
-            // Calculate offset to center pattern in the y direction
-            y_count_i = floor(y_count);
-            y_count_even = y_count_i + 1*((y_count_i + 0) % 2);
-            y_total = (y_count_even + 2) * dy;
-            y_offset = (y - y_total) / 2.0;
-
-            //echo( str(x, " ", dx, " ", x_count_i, " ", x_count_odd, "\n") );
-            //echo( str(y, " ", dy, " ", y_count_i, " ", y_count_even, "\n") );
-
-            translate( [x_offset, y_offset, 0 ] )
-            for( j = [ -1: y_count + 1 ] )
-                translate( [ ( j % 2 ) * dx/2, 0, 0 ] )
-                    for( i = [ -1: x_count + 1 ] )
-                        translate( [ i * dx, j * dy, 0 ] )
-                            rotate( a = m_lid_pattern_angle, v=[ 0, 0, 1 ] )
-                            {
-                                Make2dShape( R, t, m_lid_pattern_n1, m_lid_pattern_n2 );
-                            }
-        }
-
-        module MakeStripedGrid( x = 200, y = 200, w = 1, dx = 0, dy = 0, depth_ratio = 0.5, thickness = m_lid_thickness )
-        {
-
-            _thickness = thickness * depth_ratio;
-
-            x_count = x / ( w + dx );
-            y_count = y / ( w + dy );
-
-            if ( dx > 0 )
-            {
-                for( j = [ 0: x_count ] )
-                {
-                    translate( [ j * ( w + dx ), 0, thickness - _thickness ] )
-                        cube( [ w, y, _thickness]);
-                }
-            }
-
-            if ( dy > 0 )
-            {
-                for( j = [ 0: y_count ] )
-                {
-                    translate( [ 0, j * ( w + dy ), thickness - _thickness  ] )
-                        cube( [ x, w, _thickness ]);
-                }
-            }
-        }
-
-
         ///////////////////////
 
         module MoveToLidInterior( tolerance = 0)
@@ -3690,7 +3621,7 @@ module MakeHexBox( box )
                     t = m_lid_pattern_thickness;
 
                     if ( !m_has_solid_lid )
-                        Make2DPattern( x = __lid_external_size( k_x ), y = __lid_external_size( k_y ), R = R, t = t );
+                        Make2DPattern( x = __lid_external_size( k_x ), y = __lid_external_size( k_y ), R = R, t = t, pattern_angle = m_lid_pattern_angle, pattern_col_offset = m_lid_pattern_col_offset, pattern_row_offset = m_lid_pattern_row_offset, pattern_n1 = m_lid_pattern_n1, pattern_n2 = m_lid_pattern_n2 );
                     else
                         square( [ __lid_external_size( k_x ), __lid_external_size( k_y ) ] );
                 }

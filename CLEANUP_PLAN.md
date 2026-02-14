@@ -109,15 +109,13 @@ Move code that is **100% identical** between MakeBox and MakeHexBox to file-scop
 
 ### 1.2 Extract pattern generation to file scope
 **What**: `Make2DPattern`, `MakeStripedGrid`
-**Current**: Duplicated inside MakeBox (1571-1632) and MakeHexBox (3671-3732)
-**Problem**: These reference `m_lid_pattern_*` variables from parent scope
-**Solution**: Add parameters for all referenced variables
-**Verify**: Render `test_lid_pattern_basic`, `test_label_lid`
-- [ ] Add parameters to `Make2DPattern` for pattern config
-- [ ] Add parameters to `MakeStripedGrid` for stripe config
-- [ ] Extract to file scope
-- [ ] Remove duplicates
-- [ ] Verify
+**Done**: Extracted to file scope (after Make2dShape, before MakeAll). Added 5 explicit parameters to `Make2DPattern` (pattern_angle, pattern_col_offset, pattern_row_offset, pattern_n1, pattern_n2). Changed `MakeStripedGrid` default thickness from `m_lid_thickness` to `1` (all callsites pass explicitly). Removed both MakeBox and MakeHexBox copies.
+**Result**: -69 lines net (4582→4513). 53/53 CSG pass. 0% pixel diff on lid pattern, stripes, and n1n2 pattern tests.
+- [x] Add parameters to `Make2DPattern` for pattern config
+- [x] Add parameters to `MakeStripedGrid` for stripe config
+- [x] Extract to file scope
+- [x] Remove duplicates
+- [x] Verify — 0% pixel diff across 6 comparisons
 
 ### 1.3 Consolidate polygon helpers into single parameterized module
 **What**: Replace 6 hardcoded polygon modules (Tri-Oct) with one `NGon(n, R, t)` module
@@ -358,24 +356,14 @@ Key reference points for navigation. **Must be updated after any change that shi
 | Constants/Keywords | 1-210 | pre-plan |
 | Key-value helpers | 213-215 | pre-plan |
 | Globals | 219-295 | pre-plan |
-| Utility modules | 309-470 | pre-plan |
-| Data accessors | 361-445 | pre-plan |
-| MakeAll | 472-527 | pre-plan |
-| MakeDividers | 529-620 | pre-plan |
-| MakeBox start | 639 | pre-plan |
-| MakeBox::MakeLayer | 784-1044 | pre-plan |
-| MakeBox::polygons | 1375-1569 | pre-plan |
-| MakeBox::patterns | 1571-1632 | pre-plan |
-| MakeBox::labels | 1643-1822 | pre-plan |
-| MakeBox::MakeLid | 1834-2014 | pre-plan |
-| MakeBox::iteration | 2016-2100 | pre-plan |
-| MakeBox::cutouts | 2103-2328 | pre-plan |
-| MakeBox::shapes | 2332-2446 | pre-plan |
-| MakeBox::compartment labels | 2448-2537 | pre-plan |
-| MakeBox::partitions | 2539-2584 | pre-plan |
-| MakeBox::lid structure | 2586-2755 | pre-plan |
-| MakeBox end | 2758 | pre-plan |
-| MakeHexBox start | 2761 | pre-plan |
-| MakeHexBox end | 4780 | pre-plan |
-| MakeRoundedCubeAxis | 4782-4834 | pre-plan |
-| MakeRoundedCubeAll (DEAD) | 4837-4878 | pre-plan |
+| Utility modules (debug..Shear) | 307-470 | Phase 1.2 |
+| Polygon helpers (Tri..Oct) | 472-637 | Phase 1.2 |
+| Make2dShape (file scope) | 639-666 | Phase 1.1 |
+| Make2DPattern (file scope) | 669-703 | Phase 1.2 |
+| MakeStripedGrid (file scope) | 705-731 | Phase 1.2 |
+| MakeAll | 734-789 | Phase 1.2 |
+| MakeDividers | 791-899 | Phase 1.2 |
+| MakeBox start | 901 | Phase 1.2 |
+| MakeHexBox start | 2721 | Phase 1.2 |
+| MakeRoundedCubeAxis | 4458-4510 | Phase 1.2 |
+| **Total lines** | **4513** | Phase 1.2 |
