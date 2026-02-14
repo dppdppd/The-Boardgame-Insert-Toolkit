@@ -1,108 +1,144 @@
+/*
+ * The Boardgame Insert Toolkit - Library File
+ * Version: 3.00
+ * 
+ * A parametric system for creating custom board game inserts and organizers
+ * https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
+ * 
+ * 
+ * Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
+ * https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+ * 
+ * This library provides functions and modules for creating custom board game inserts.
+ * It allows the user to define boxes, dividers, lids, and other components for 
+ * organizing board game pieces and cards.
+ */
 
-// Copyright 2020 MysteryDough https://www.thingiverse.com/MysteryDough/
-//
-// Released under the Creative Commons - Attribution - Non-Commercial - Share Alike License.
-// https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
-
+// Version information
 VERSION = "3.00";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
+// Resolution settings
+// Lower resolution for previews (faster) and higher for final rendering
 fn = $preview ? 10 : 100;
-
 $fn = fn;
 
-// constants
-k_key = 0;
-k_value = 1;
+// =============================================================================
+// COMMON CONSTANTS AND UTILITY VALUES
+// =============================================================================
 
+// Dictionary/associative array indexing constants
+k_key = 0;    // Index for keys in key-value pairs
+k_value = 1;  // Index for values in key-value pairs
+
+// Small value to prevent z-fighting in preview mode
 epsilon = $preview ? 0.02 : 0; // extend cuts by a bit to fight z-fighting during preview
 
-k_x = 0;
-k_y = 1;
-k_z = 2;
+// Coordinate system constants
+k_x = 0;      // X-axis index in coordinate arrays
+k_y = 1;      // Y-axis index in coordinate arrays
+k_z = 2;      // Z-axis index in coordinate arrays
 
-k_hex_d = 0;
-k_hex_z = 1;
+// Hexagon parameter indices
+k_hex_d = 0;  // Hex diameter index
+k_hex_z = 1;  // Hex height index
 
+// Direction/orientation constants
 k_front = 0;
 k_back = 1;
 k_left = 2;
 k_right = 3;
 
+// Corner position constants
 k_front_left = 0;
 k_back_right = 1;
 k_back_left = 2;
 k_front_right = 3;
 
+// Boolean aliases for readability
 t = true;
 f = false;
 
 ///////////////////////
 // PARAMETER KEYWORDS
 
+// Component type identifiers
 TYPE = "type";
 BOX = "box";
 HEXBOX = "hexbox";
 DIVIDERS = "dividers";
 SPACER = "spacer";
-
 BOX_LID = "box_lid";
 
-DIV_THICKNESS = "div_thickness";
+// =============================================================================
+// DIVIDER PARAMETERS
+// =============================================================================
+DIV_THICKNESS = "div_thickness";        // Thickness of divider walls
 
-DIV_TAB_SIZE_XY = "div_tab_size";
+// Tab parameters
+DIV_TAB_SIZE_XY = "div_tab_size";       // Size of tabs on dividers [x,y]
+DIV_TAB_RADIUS = "div_tab_radius";      // Radius of tab corners
+DIV_TAB_CYCLE = "div_tab_cycle";        // Pattern of tab placement
+DIV_TAB_CYCLE_START = "div_tab_cycle_start"; // Starting position in pattern
 
-DIV_TAB_RADIUS = "div_tab_radius";
-DIV_TAB_CYCLE = "div_tab_cycle";
-DIV_TAB_CYCLE_START = "div_tab_cycle_start";
+// Tab text parameters
+DIV_TAB_TEXT = "div_tab_text";          // Text to display on tabs
+DIV_TAB_TEXT_SIZE = "DIV_TAB_TEXT_size"; // Text size
+DIV_TAB_TEXT_FONT = "DIV_TAB_TEXT_font"; // Text font
+DIV_TAB_TEXT_SPACING = "DIV_TAB_TEXT_spacing"; // Spacing between characters
+DIV_TAB_TEXT_CHAR_THRESHOLD = "DIV_TAB_TEXT_char_threshold"; // Min chars for text display
 
-DIV_TAB_TEXT = "div_tab_text";
-DIV_TAB_TEXT_SIZE = "DIV_TAB_TEXT_size";
-DIV_TAB_TEXT_FONT = "DIV_TAB_TEXT_font";
-DIV_TAB_TEXT_SPACING = "DIV_TAB_TEXT_spacing";
-DIV_TAB_TEXT_CHAR_THRESHOLD = "DIV_TAB_TEXT_char_threshold";
+// Frame parameters
+DIV_FRAME_SIZE_XY = "div_frame_size";   // Size of divider frame [x,y]
+DIV_FRAME_TOP = "div_frame_top";        // Frame top edge settings
+DIV_FRAME_BOTTOM = "div_frame_bottom";  // Frame bottom edge settings
+DIV_FRAME_COLUMN = "div_frame_column";  // Frame column settings
+DIV_FRAME_RADIUS = "div_frame_radius";  // Corner radius of frame
+DIV_FRAME_NUM_COLUMNS = "div_frame_num_columns"; // Number of columns in frame
 
-DIV_FRAME_SIZE_XY = "div_frame_size";
-
-DIV_FRAME_TOP = "div_frame_top";
-DIV_FRAME_BOTTOM = "div_frame_bottom";
-DIV_FRAME_COLUMN = "div_frame_column";
-DIV_FRAME_RADIUS = "div_frame_radius";
-DIV_FRAME_NUM_COLUMNS = "div_frame_num_columns";
-
+// =============================================================================
 // HEXBOX PARAMETERS
-HEXBOX_SIZE_DZ = "hexbox_size";
+// =============================================================================
+HEXBOX_SIZE_DZ = "hexbox_size";         // Size parameters for hexagonal boxes [diameter, height]
 
+// =============================================================================
 // BOX PARAMETERS
-BOX_SIZE_XYZ = "box_size";
-BOX_COMPONENT = "component";
-BOX_VISUALIZATION = "visualization";
+// =============================================================================
+BOX_SIZE_XYZ = "box_size";              // Box dimensions [x,y,z]
+BOX_COMPONENT = "component";            // Component to be contained in box
+BOX_VISUALIZATION = "visualization";    // Visualization settings
 
-BOX_NO_LID_B = "no_lid";
-BOX_STACKABLE_B = "stackable";
+BOX_NO_LID_B = "no_lid";                // Boolean: box has no lid
+BOX_STACKABLE_B = "stackable";          // Boolean: box can be stacked
 
-LID_FIT_UNDER_B = "fit_lid_under";
-LID_SOLID_B = "box_lid_solid";
-LID_HEIGHT = "lid_height";
-LID_CUTOUT_SIDES_4B = "lid_cutout_sides";
-LID_LABELS_INVERT_B = "lid_label_inverted";
-LID_SOLID_LABELS_DEPTH = "lid_label_depth";
-LID_LABELS_BG_THICKNESS = "lid_label_bg_thickness";
-LID_LABELS_BORDER_THICKNESS = "lid_label_border_thickness";
-LID_STRIPE_WIDTH = "lid_stripe_width";
-LID_STRIPE_SPACE = "lid_stripe_space";
-LID_INSET_B = "lid_inset";
-LID_TABS_4B = "lid_tabs";
+// =============================================================================
+// LID PARAMETERS
+// =============================================================================
+LID_FIT_UNDER_B = "fit_lid_under";      // Boolean: lid fits under box when not in use
+LID_SOLID_B = "box_lid_solid";          // Boolean: lid is solid (no pattern)
+LID_HEIGHT = "lid_height";              // Height of lid
+LID_CUTOUT_SIDES_4B = "lid_cutout_sides"; // Boolean array: which sides have cutouts [front,back,left,right]
+LID_LABELS_INVERT_B = "lid_label_inverted"; // Boolean: invert label imprint
+LID_SOLID_LABELS_DEPTH = "lid_label_depth"; // Depth of embossed/debossed labels
+LID_LABELS_BG_THICKNESS = "lid_label_bg_thickness"; // Thickness of label background
+LID_LABELS_BORDER_THICKNESS = "lid_label_border_thickness"; // Thickness of label border
+LID_STRIPE_WIDTH = "lid_stripe_width";  // Width of decorative stripes on lid
+LID_STRIPE_SPACE = "lid_stripe_space";  // Space between stripes
+LID_INSET_B = "lid_inset";              // Boolean: lid is inset into box
+LID_TABS_4B = "lid_tabs";               // Boolean array: which sides have tabs [front,back,left,right]
 
-LID_PATTERN_RADIUS = "lid_hex_radius";
-LID_PATTERN_N1 = "lid_pattern_n1";
-LID_PATTERN_N2 = "lid_pattern_n2";
-LID_PATTERN_ANGLE = "lid_pattern_angle";
-LID_PATTERN_ROW_OFFSET = "lid_pattern_row_offset";
-LID_PATTERN_COL_OFFSET = "lid_pattern_col_offset";
-LID_PATTERN_THICKNESS = "lid_pattern_thickness";
+// Lid pattern parameters
+LID_PATTERN_RADIUS = "lid_hex_radius";  // Radius of hex pattern elements
+LID_PATTERN_N1 = "lid_pattern_n1";      // Pattern density parameter 1
+LID_PATTERN_N2 = "lid_pattern_n2";      // Pattern density parameter 2
+LID_PATTERN_ANGLE = "lid_pattern_angle"; // Rotation angle of pattern
+LID_PATTERN_ROW_OFFSET = "lid_pattern_row_offset"; // Offset between pattern rows
+LID_PATTERN_COL_OFFSET = "lid_pattern_col_offset"; // Offset between pattern columns
+LID_PATTERN_THICKNESS = "lid_pattern_thickness";  // Thickness of pattern elements
 
+// =============================================================================
 // COMPARTMENT PARAMETERS
+// =============================================================================
 CMP_NUM_COMPARTMENTS_XY = "num_compartments";
 CMP_COMPARTMENT_SIZE_XYZ = "compartment_size";
 CMP_SHAPE = "shape";
@@ -123,7 +159,9 @@ CMP_SHEAR = "shear";
 CMP_FILLET_RADIUS = "fillet_radius";
 CMP_PEDESTAL_BASE_B = "push_base";
 
+// =============================================================================
 // LABEL PARAMETERS
+// =============================================================================
 LBL_TEXT = "text";
 LBL_IMAGE = "image";
 LBL_SIZE = "size";
@@ -201,40 +239,51 @@ g_b_no_labels_actual = g_b_preview_no_labels && $preview;
 // Might be faster to print. Definitely faster to render.
 g_b_simple_lids = f;            
 
-// default = 1.5
+// Wall thickness in mm. Default = 1.5
+// Increasing this makes stronger but heavier components
 g_wall_thickness = 1.5; 
 
-// thickness of detent. For a looser snap fit, reduce this. For a tighter snap fit, increase it.  ( recommended 0.05 increments )
+// Thickness of lid and box detent mechanism in mm
+// For a looser snap fit, reduce this value
+// For a tighter snap fit, increase this value
+// Recommended 0.05 increments for adjustments
 g_detent_thickness = 0.25;
 
-// Translates to length of detent
+// Translates to length of detent in mm
 g_detent_spacing = 2;
 
+// Distance from corner to start detent placement
 g_detent_dist_from_corner = 1.5;
 
 // If the distance from the corner to the tab is greater than this,
-// add another detent next to the tab;
+// add another detent next to the tab
 g_detent_min_spacing = 40;
 
-// default = g_wall_thickness
+// Thickness of the box lid in mm. Default = same as wall thickness
 g_lid_thickness = g_wall_thickness; 
 
-// give each compartment a different color. Useful for development
+// Colorization for development
+// When true, gives each compartment a different color to help
+// visualize the structure during development
 g_b_colorize = true;
 
-// tolerance for fittings. This is the gap between fitting pieces,
-// such as lids and boxes. Increase to loosen the fit and decrease to
-// tighten it.
+// Tolerance for fittings in mm
+// This is the gap between fitting pieces such as lids and boxes
+// Increase to loosen the fit, decrease to tighten it
 g_tolerance = 0.1;
 
-// this adjusts the position of the lid detents downwards. 
-// The larger the value, the bigger the gap between the lid and the box.
+// Adjusts the position of lid detents downwards
+// The larger the value, the bigger the gap between lid and box
 g_tolerance_detent_pos = 0.1;
 
-// This determines whether the default single material version is output, or, if printing in multiple materials, 
-// which layer to output.
-//
-g_print_mmu_layer = "default"; // [ "default" | "mmu_box_layer" | "mmu_label_layer" ]
+// Multi-material printing configuration
+// This determines whether the default single material version is output, or,
+// when printing in multiple materials, which layer to output.
+// Options:
+//   - "default": standard single material output
+//   - "mmu_box_layer": the box layer for multi-material printing
+//   - "mmu_label_layer": the label layer for multi-material printing
+g_print_mmu_layer = "default"; 
 
 
 
@@ -246,17 +295,39 @@ m_lid_notch_height = 2.0;
 m_lid_notches = true;
 
 
+// =============================================================================
+// UTILITY MODULES
+// =============================================================================
+
+/**
+ * Debug visualization helper module
+ * Creates three highlighted axes to visualize a position and orientation in 3D space
+ *
+ * @param w Width of the axes lines in mm. Default is 0.2mm.
+ * @param l Length of the axes lines in mm. Default is 100mm.
+ */
 module debug( w = 0.2, l = 100 )
 {
+    // X-axis (red by default in OpenSCAD)
     #translate( [ -w/2, -w/2, -l/2])
         cube( [ w , w, l ] );
+    
+    // Y-axis (green by default in OpenSCAD)
     #translate( [ -w/2, -l/2, -w/2])
         cube( [ w , l, w ] );
+    
+    // Z-axis (blue by default in OpenSCAD)
     #translate( [ -l/2, -w/2, -w/2])
         cube( [ l , w, w ] );                
-
 }
 
+/**
+ * Rotates children and moves them back to origin based on bounding box
+ * Useful for orientation changes while maintaining position
+ *
+ * @param a Rotation angle in degrees (supports 90, -90, and -180)
+ * @param extents The dimensions [x,y,z] of the object being rotated
+ */
 module RotateAndMoveBackToOrigin(a, extents ) 
 {
     pos = 
@@ -473,7 +544,7 @@ module MakeDividers( div )
     number_of_letters_before_scale_to_fit = __div_tab_text_char_threshold( div );;
 
     divider_bottom = __div_frame_bottom( div );
-    divider_top = __div_frame_bottom( div );
+    divider_top = __div_frame_top( div );
     divider_column = __div_frame_column( div );
     divider_corner_radius = __div_frame_radius( div );
     num_columns = __div_frame_num_columns( div );
@@ -548,6 +619,23 @@ module MakeDividers( div )
     }
 }
 
+/**
+ * MakeBox - Main module for creating a box component
+ * 
+ * This module is the central function of the Boardgame Insert Toolkit that
+ * creates box components with optional features like compartments, lids,
+ * labels, stackability, and more.
+ *
+ * @param box A data structure containing all the parameters for the box:
+ *   - TYPE: The type of component ("box", "spacer", etc.)
+ *   - BOX_SIZE_XYZ: [x,y,z] dimensions of the box
+ *   - BOX_COMPONENT: Sub-components like compartments
+ *   - BOX_LID: Lid parameters
+ *   - BOX_STACKABLE_B: Whether the box should be stackable
+ *   - BOX_NO_LID_B: Whether the box should have no lid
+ *   - LABEL: Text or image labels for the box
+ *   - And many other optional parameters
+ */
 module MakeBox( box )
 {
     m_num_components =  len( box );
@@ -1859,8 +1947,6 @@ module MakeBox( box )
 
             module Helper__BuildLid()
             {
-                tolerance = g_tolerance;
-
                 if ( !m_lid_inset )
                 {
                     MakeLidBase_Cap( tolerance = g_tolerance, tolerance_detent_pos = g_tolerance_detent_pos );
@@ -1870,7 +1956,7 @@ module MakeBox( box )
                     if ( m_lid_inset )
                     {
                         // main structure of lid minus center
-                        difference( tolerance = g_tolerance )
+                        difference()
                         {
                             MakeLidBase_Inset( tolerance = g_tolerance, tolerance_detent_pos = g_tolerance_detent_pos );
 
@@ -1892,7 +1978,7 @@ module MakeBox( box )
                         // }
 
                         // add tabs
-                        MakeLidTabs( mod = -tolerance );
+                        MakeLidTabs( mod = -g_tolerance );
                     }
                 }
 
@@ -1900,8 +1986,8 @@ module MakeBox( box )
                     intersection() // clip to lid extents
                     {
                         if ( m_lid_inset )
-                            MoveToLidInterior( tolerance = -tolerance )
-                                cube([  __lid_internal_size( k_x ) + 2*tolerance, __lid_internal_size( k_y ) + 2*tolerance,  __lid_external_size( k_z)]);
+                            MoveToLidInterior( tolerance = -g_tolerance )
+                                cube([  __lid_internal_size( k_x ) + 2*g_tolerance, __lid_internal_size( k_y ) + 2*g_tolerance,  __lid_external_size( k_z)]);
                         else
                             cube([  __lid_external_size( k_x ), __lid_external_size( k_y ),  __lid_external_size( k_z)]);
 
@@ -2809,7 +2895,7 @@ module MakeHexBox( box )
 
                                 }
                             }
-                        }
+                        }          
                     }
                 }
                 // lid carve outs

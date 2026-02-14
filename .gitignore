@@ -1,5 +1,6 @@
 .*
 !.github/
+!.opencode/
 *.stl
 *.rsls
 old

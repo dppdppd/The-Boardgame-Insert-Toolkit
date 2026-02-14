@@ -202,6 +202,41 @@ Then render a few key tests covering different feature areas:
 - Full suite: ~60 min for all 53 tests
 - Cross-sections add one extra STL export (~same as main export time)
 
+## Refactor Agents & Skill
+
+The refactor workflow is driven by three specialized subagents and one skill, all project-local in `.opencode/`.
+
+### Skill: `bit-refactor`
+- **Path**: `.opencode/skills/bit-refactor/SKILL.md`
+- **Purpose**: Defines the assess-patch-evaluate work loop methodology
+- **Load when**: Starting or resuming a refactor session
+
+### Agent: `@bit-assessor`
+- **Path**: `.opencode/agents/bit-assessor.md`
+- **Purpose**: Reads CLEANUP_PLAN.md, finds next task, reads source, produces a patch specification
+- **Does NOT** make changes — read-only
+- **Outputs**: Structured patch spec with exact line numbers, verification plan, risk level
+
+### Agent: `@bit-patcher`
+- **Path**: `.opencode/agents/bit-patcher.md`
+- **Purpose**: Applies one code change per the assessor's spec, renders BEFORE baseline, runs CSG regression
+- **Updates**: CLEANUP_PLAN.md (mark done, line numbers) and AGENTS.md (if architecture changed)
+
+### Agent: `@bit-evaluator`
+- **Path**: `.opencode/agents/bit-evaluator.md`
+- **Purpose**: Renders AFTER views, compares with BEFORE, runs broader regression, reports PASS/FAIL/WARN
+- **Updates**: Notes test gaps, evaluation methodology gaps, tool issues for the next cycle
+
+### The Loop
+```
+@bit-assessor  ->  patch spec
+@bit-patcher   ->  code change + BEFORE renders + CSG check + doc updates
+@bit-evaluator ->  AFTER renders + comparison + regression + verdict
+commit (if PASS) -> back to @bit-assessor
+```
+
+Every agent is responsible for flagging documentation updates it discovers. The patcher applies plan/AGENTS.md updates. The evaluator flags test and methodology gaps.
+
 ## File Conventions
 
 ### What lives where
@@ -216,6 +251,11 @@ Then render a few key tests covering different feature areas:
 | `tests/renders/eval/*.png` | Ad-hoc evaluation renders |
 | `tests/render_eval.sh` | Evaluation render tool (cross-sections, custom views) |
 | `tests/run_tests.sh` | Test runner script |
+| `.opencode/skills/bit-refactor/SKILL.md` | Refactor work loop skill |
+| `.opencode/agents/bit-assessor.md` | Assessment agent |
+| `.opencode/agents/bit-patcher.md` | Patching agent |
+| `.opencode/agents/bit-evaluator.md` | Evaluation agent |
+| `CLEANUP_PLAN.md` | Phased refactor plan with task status |
 | `images/` | Documentation images |
 | `old/` | Archived v1.x files (gitignored) |
 
