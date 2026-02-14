@@ -394,8 +394,6 @@ function __div_tab_text_font ( div ) = __value( div, DIV_TAB_TEXT_FONT, default 
 function __div_tab_text_spacing ( div ) = __value( div, DIV_TAB_TEXT_SPACING, default = 1.1 );
 function __div_tab_text_char_threshold ( div ) = __value( div, DIV_TAB_TEXT_CHAR_THRESHOLD, default = 4 );
 
-function __div_tab_size( div ) = __value( div, DIV_TAB_SIZE_XY, default = [32, 14] );
-
 function __div_frame_size( div ) = __value( div, DIV_FRAME_SIZE_XY, default = [80, 80] );
 function __div_frame_top( div ) = __value( div, DIV_FRAME_TOP, default = 10 );
 function __div_frame_bottom( div ) = __value( div, DIV_FRAME_BOTTOM, default = 10 );
@@ -1548,7 +1546,7 @@ module MakeBox( box )
                 Quad( R, t );                
             else if ( n1 == 5 && n2 == 5 )
                 Pent( R, t );
-            else if ( n1 == 6 && n1 == 6 )
+            else if ( n1 == 6 && n2 == 6 )
                 Hex( R, t );
             else if ( n1 == 7 && n2 == 7 )
                 Sept( R, t );                
@@ -3648,7 +3646,7 @@ module MakeHexBox( box )
                 Quad( R, t );                
             else if ( n1 == 5 && n2 == 5 )
                 Pent( R, t );
-            else if ( n1 == 6 && n1 == 6 )
+            else if ( n1 == 6 && n2 == 6 )
                 Hex( R, t );
             else if ( n1 == 7 && n2 == 7 )
                 Sept( R, t );                

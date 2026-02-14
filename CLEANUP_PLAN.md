@@ -51,15 +51,15 @@ Minimal-risk changes. Fix known bugs, remove dead code. Each is independent.
 - **Status**: [x] done
 
 ### 0.2 Fix duplicate `__div_tab_size` definition
-- **Lines**: 384 and 397 — identical definition, remove line 397
+- **Lines**: 384 and 397 — identical definition, removed line 397
 - **Impact**: None (identical)
-- **Status**: [ ] pending
+- **Status**: [x] done
 
 ### 0.3 Fix Make2dShape typo `n1 == 6 && n1 == 6`
-- **Lines**: 1551 (MakeBox), 3651 (MakeHexBox) — should be `n1 == 6 && n2 == 6`
+- **Lines**: 1549 (MakeBox), 3649 (MakeHexBox) — fixed to `n1 == 6 && n2 == 6`
 - **Impact**: Only affects cases where n1=6 but n2!=6 (rare but incorrect dispatch)
-- **Verify**: CSG-only regression
-- **Status**: [ ] pending
+- **Verify**: CSG-only regression — 53/53 pass
+- **Status**: [x] done
 
 ### 0.4 Remove dead code
 Remove in one commit per category:
