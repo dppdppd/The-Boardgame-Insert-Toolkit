@@ -77,10 +77,17 @@ All use `--projection=ortho --view=edges --autocenter --viewall`:
 | iso    | 55,0,25           | Isometric overview (most informative) |
 
 ### Test Infrastructure: `tests/`
-- 53 test files covering all features, combinations, and edge cases
+- 60 test files covering all features, combinations, and edge cases (53 box + 7 hex)
 - `tests/run_tests.sh` — runs all tests, generates 7 PNG views per test
-- Output: `tests/renders/{test_name}_{view}.png` (371 PNGs total)
+- Output: `tests/renders/{test_name}_{view}.png`
 - Each test includes the lib via relative path: `include <../boardgame_insert_toolkit_lib.3.scad>;`
+
+### Regression Baseline: `tests/baseline/`
+- Contains the **pre-refactor** library snapshot (commit `0e2e3bb`) for STL comparison
+- Files: `boardgame_insert_toolkit_lib.3.scad` (4,771 lines), `bit_functions_lib.3.scad`
+- To run a full regression: render each test against baseline lib and current lib, compare STL file sizes
+- Baseline test .scad files are generated on-the-fly by rewriting include paths to point at `tests/baseline/`
+- 1-byte STL diffs (0.00%) are acceptable — CGAL floating-point serialization noise
 
 ### Test Runner Usage
 ```bash
@@ -246,7 +253,8 @@ Every agent is responsible for flagging documentation updates it discovers. The 
 | `starter.scad` | Template for new user projects |
 | `examples.3.scad` | Feature showcase |
 | `BIT_*.scad` | User game-specific designs (gitignored) |
-| `tests/test_*.scad` | Test files |
+| `tests/test_*.scad` | Test files (60 total) |
+| `tests/baseline/` | Pre-refactor lib snapshot for STL regression comparison |
 | `tests/renders/*.png` | Full test suite renders (7 views each) |
 | `tests/renders/eval/*.png` | Ad-hoc evaluation renders |
 | `tests/render_eval.sh` | Evaluation render tool (cross-sections, custom views) |
