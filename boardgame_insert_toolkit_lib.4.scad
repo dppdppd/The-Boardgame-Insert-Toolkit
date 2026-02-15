@@ -712,7 +712,7 @@ __VALID_LID_KEYS = [
 __VALID_LABEL_KEYS = [
     LBL_TEXT, LBL_IMAGE, LBL_SIZE, LBL_PLACEMENT,
     LBL_FONT, LBL_DEPTH, LBL_SPACING, LBL_AUTO_SCALE_FACTOR,
-    ROTATION, POSITION_XY
+    ENABLED_B, ROTATION, POSITION_XY
 ];
 
 // Valid shape enum values
@@ -1407,7 +1407,7 @@ module MakeBox( box )
 
     m_has_solid_lid = m_lid_solid || g_b_vis_actual;
     m_lid_has_labels = !!__value( m_lid, LABEL, default = false );
-
+    m_lid_solid_label_depth = __value( m_lid, LID_SOLID_LABELS_DEPTH, default = 0.5 );
 
     function __lid_internal_size( D ) = m_lid_size_int[ D ];
 
@@ -2096,7 +2096,8 @@ module MakeBox( box )
                 {
                     label = m_lid[ i ][ k_value ];
 
-                    MakeLidLabel( label, offset = offset, thickness = thickness );
+                    if ( __value( label, ENABLED_B, default = true ) )
+                        MakeLidLabel( label, offset = offset, thickness = thickness );
                 }
             }
         }
@@ -2112,8 +2113,9 @@ module MakeBox( box )
                 {
                     label = box[ i ][ k_value ];
 
-                    MakeBoxLabel( label, x, y )
-                        Helper_MakeBoxLabel( label, x, y );
+                    if ( __value( label, ENABLED_B, default = true ) )
+                        MakeBoxLabel( label, x, y )
+                            Helper_MakeBoxLabel( label, x, y );
                 }
             }
         }        
@@ -2147,11 +2149,19 @@ module MakeBox( box )
             auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
             width = auto_width != 0 ? min( DEFAULT_MAX_LABEL_WIDTH, auto_width ) + offset : 0;
 
-            linear_extrude( thickness )
-                translate( [ xpos, ypos, 0 ] )
-                    MirrorAboutPoint( [ 1,0,0],[0,0, thickness / 2])
-                        RotateAboutPoint( __label_rotation( label ), [0,0,1], [0,0,0] )
-                            Make2dLidLabel( label, width, offset );
+            // For solid lids, limit label depth instead of cutting all the way through.
+            // Use per-label LBL_DEPTH if set, otherwise fall back to LID_SOLID_LABELS_DEPTH.
+            _lbl_depth = __value( label, LBL_DEPTH, default = false );
+            _effective_thickness = m_has_solid_lid
+                ? ( _lbl_depth != false ? _lbl_depth : m_lid_solid_label_depth )
+                : thickness;
+
+            translate( [ 0, 0, m_has_solid_lid ? thickness - _effective_thickness : 0 ] )
+                linear_extrude( _effective_thickness )
+                    translate( [ xpos, ypos, 0 ] )
+                        MirrorAboutPoint( [ 1,0,0],[0,0, _effective_thickness / 2])
+                            RotateAboutPoint( __label_rotation( label ), [0,0,1], [0,0,0] )
+                                Make2dLidLabel( label, width, offset );
         }
 
         module Helper_MakeBoxLabel( label, x = 0, y = 0 )
@@ -2229,7 +2239,8 @@ module MakeBox( box )
                 {
                     label = m_lid[ i ][ k_value ];
 
-                    MakeLidLabelFrame( label, offset = offset, thickness = thickness );
+                    if ( __value( label, ENABLED_B, default = true ) )
+                        MakeLidLabelFrame( label, offset = offset, thickness = thickness );
                 }
             }
         }
@@ -2541,8 +2552,9 @@ module MakeBox( box )
                             {
                                 label = component[ i ][ k_value ];
 
-                                MakeLabel( label, x, y )
-                                    Helper_MakeLabel( label, x, y );
+                                if ( __value( label, ENABLED_B, default = true ) )
+                                    MakeLabel( label, x, y )
+                                        Helper_MakeLabel( label, x, y );
                             }
                         }
 
