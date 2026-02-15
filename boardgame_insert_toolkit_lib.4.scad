@@ -182,6 +182,7 @@ CMP_CUTOUT_WIDTH_PCT = "cutout_width_percent";
 CMP_CUTOUT_BOTTOM_B = "cutout_bottom";
 CMP_CUTOUT_BOTTOM_PCT = "cutout_bottom_percent";
 CMP_CUTOUT_TYPE = "cutout_type";
+CMP_CUTOUT_DEPTH_MAX = "cutout_depth_max"; // Maximum absolute cutout depth in mm
 CMP_SHEAR = "shear";
 CMP_FILLET_RADIUS = "fillet_radius";
 CMP_PEDESTAL_BASE_B = "push_base";
@@ -691,6 +692,7 @@ __VALID_COMPONENT_KEYS = [
     CMP_CUTOUT_SIDES_4B, CMP_CUTOUT_CORNERS_4B,
     CMP_CUTOUT_HEIGHT_PCT, CMP_CUTOUT_DEPTH_PCT, CMP_CUTOUT_WIDTH_PCT,
     CMP_CUTOUT_BOTTOM_B, CMP_CUTOUT_BOTTOM_PCT, CMP_CUTOUT_TYPE,
+    CMP_CUTOUT_DEPTH_MAX,
     CMP_SHEAR, CMP_FILLET_RADIUS, CMP_PEDESTAL_BASE_B,
     ENABLED_B, LABEL, ROTATION, POSITION_XY
 ];
@@ -842,6 +844,10 @@ module __ValidateComponentTypes( table, ctx )
     v_ct = __value( table, CMP_CUTOUT_TYPE, default = false );
     if ( v_ct != false && !__is_valid_key( v_ct, __VALID_CUTOUT_TYPES ) )
         __TypeMsg( CMP_CUTOUT_TYPE, ctx, "one of INTERIOR, EXTERIOR, BOTH", v_ct );
+
+    v_cdm = __value( table, CMP_CUTOUT_DEPTH_MAX, default = false );
+    if ( v_cdm != false && !is_num( v_cdm ) )
+        __TypeMsg( CMP_CUTOUT_DEPTH_MAX, ctx, "number (mm)", v_cdm );
 
     v_shear = __value( table, CMP_SHEAR, default = false );
     if ( v_shear != false && !__all_num_list( v_shear, 2 ) )
@@ -1541,6 +1547,7 @@ module MakeBox( box )
         m_component_cutout_corner = __value( component, CMP_CUTOUT_CORNERS_4B, default = [false, false, false, false] );
 
         m_component_cutout_type = __value( component, CMP_CUTOUT_TYPE, default = BOTH );
+        m_cutout_depth_max = __value( component, CMP_CUTOUT_DEPTH_MAX, default = 0 );
         m_component_cutout_bottom = __value( component, CMP_CUTOUT_BOTTOM_B, default = false );
         m_component_cutout_bottom_percent = __value( component, CMP_CUTOUT_BOTTOM_PCT, default = 80) / 100;
         m_actually_cutout_the_bottom = !__component_is_fillet() && m_component_cutout_bottom && !m_push_base;
@@ -2585,8 +2592,9 @@ module MakeBox( box )
 
             // main and perpendicular size of hole
             //  main dimension intrudes into the compartment by some fraction ( e.g. 1/5 )
-            main_size = margin ? m_component_margin_side[ side ] + g_wall_thickness + radius : 
+            main_size_raw = margin ? m_component_margin_side[ side ] + g_wall_thickness + radius : 
                         __padding( main_d )/2  + __size( main_d ) * m_cutout_size_frac_aligned;
+            main_size = ( m_cutout_depth_max > 0 && !margin ) ? min( main_size_raw, m_cutout_depth_max ) : main_size_raw;
 
             //  perp dimension is a half of the width and no more than 3cm
             perp_size = __size( perp_d ) * m_cutout_size_frac_perpindicular ;
