@@ -647,6 +647,316 @@ __VALID_LABEL_KEYS = [
     ROTATION, POSITION_XY
 ];
 
+// Valid shape enum values
+__VALID_SHAPES = [ SQUARE, HEX, HEX2, OCT, OCT2, ROUND, FILLET ];
+
+// Valid cutout type enum values
+__VALID_CUTOUT_TYPES = [ INTERIOR, EXTERIOR, BOTH ];
+
+// Valid label placement enum values
+__VALID_PLACEMENTS = [ FRONT, BACK, LEFT, RIGHT, FRONT_WALL, BACK_WALL, LEFT_WALL, RIGHT_WALL, CENTER, BOTTOM ];
+
+// Valid element type enum values
+__VALID_TYPES = [ BOX, DIVIDERS, SPACER ];
+
+// Type-check helper functions
+function __is_list_of_len( v, n ) = is_list( v ) && len( v ) == n;
+function __is_list_min_len( v, n ) = is_list( v ) && len( v ) >= n;
+function __is_num_or_special( v ) = is_num( v ) || v == CENTER || v == MAX;
+function __all_bool_4( v ) = is_list( v ) && len( v ) == 4 && 
+    is_bool( v[0] ) && is_bool( v[1] ) && is_bool( v[2] ) && is_bool( v[3] );
+function __all_num_list( v, n ) = is_list( v ) && len( v ) == n &&
+    ( n < 1 || is_num( v[0] ) ) && ( n < 2 || is_num( v[1] ) ) && 
+    ( n < 3 || is_num( v[2] ) ) && ( n < 4 || is_num( v[3] ) );
+
+// Emit a BIT type-check message
+module __TypeMsg( key, context, expected, got )
+{
+    echo( str( "BIT: wrong type for \"", key, "\" in ", context,
+               ". Expected ", expected, ", got: ", got ) );
+}
+
+// Validate value types for box-level keys
+module __ValidateBoxTypes( table, ctx )
+{
+    v_size = __value( table, BOX_SIZE_XYZ, default = false );
+    if ( v_size != false && !__all_num_list( v_size, 3 ) )
+        __TypeMsg( BOX_SIZE_XYZ, ctx, "[x, y, z] (3 numbers)", v_size );
+
+    v_type = __value( table, TYPE, default = false );
+    if ( v_type != false && !__is_valid_key( v_type, __VALID_TYPES ) )
+        __TypeMsg( TYPE, ctx, "one of BOX, DIVIDERS, SPACER", v_type );
+
+    v_nolid = __value( table, BOX_NO_LID_B, default = false );
+    if ( __is_valid_key( BOX_NO_LID_B, table ) && !is_bool( v_nolid ) )
+        __TypeMsg( BOX_NO_LID_B, ctx, "boolean (true/false)", v_nolid );
+
+    v_stack = __value( table, BOX_STACKABLE_B, default = false );
+    if ( __is_valid_key( BOX_STACKABLE_B, table ) && !is_bool( v_stack ) )
+        __TypeMsg( BOX_STACKABLE_B, ctx, "boolean (true/false)", v_stack );
+
+    v_wt = __value( table, BOX_WALL_THICKNESS, default = false );
+    if ( v_wt != false && !is_num( v_wt ) )
+        __TypeMsg( BOX_WALL_THICKNESS, ctx, "number", v_wt );
+
+    v_en = __value( table, ENABLED_B, default = false );
+    if ( __is_valid_key( ENABLED_B, table ) && !is_bool( v_en ) )
+        __TypeMsg( ENABLED_B, ctx, "boolean (true/false)", v_en );
+
+    v_rot = __value( table, ROTATION, default = false );
+    if ( v_rot != false && !is_num( v_rot ) )
+        __TypeMsg( ROTATION, ctx, "number (degrees)", v_rot );
+}
+
+// Validate value types for component-level keys
+module __ValidateComponentTypes( table, ctx )
+{
+    v_size = __value( table, CMP_COMPARTMENT_SIZE_XYZ, default = false );
+    if ( v_size != false && !__all_num_list( v_size, 3 ) )
+        __TypeMsg( CMP_COMPARTMENT_SIZE_XYZ, ctx, "[x, y, z] (3 numbers)", v_size );
+
+    v_num = __value( table, CMP_NUM_COMPARTMENTS_XY, default = false );
+    if ( v_num != false && !__all_num_list( v_num, 2 ) )
+        __TypeMsg( CMP_NUM_COMPARTMENTS_XY, ctx, "[nx, ny] (2 numbers)", v_num );
+
+    v_shape = __value( table, CMP_SHAPE, default = false );
+    if ( v_shape != false && !__is_valid_key( v_shape, __VALID_SHAPES ) )
+        __TypeMsg( CMP_SHAPE, ctx, "one of SQUARE, HEX, HEX2, OCT, OCT2, ROUND, FILLET", v_shape );
+
+    v_sr = __value( table, CMP_SHAPE_ROTATED_B, default = false );
+    if ( __is_valid_key( CMP_SHAPE_ROTATED_B, table ) && !is_bool( v_sr ) )
+        __TypeMsg( CMP_SHAPE_ROTATED_B, ctx, "boolean (true/false)", v_sr );
+
+    v_sv = __value( table, CMP_SHAPE_VERTICAL_B, default = false );
+    if ( __is_valid_key( CMP_SHAPE_VERTICAL_B, table ) && !is_bool( v_sv ) )
+        __TypeMsg( CMP_SHAPE_VERTICAL_B, ctx, "boolean (true/false)", v_sv );
+
+    v_pad = __value( table, CMP_PADDING_XY, default = false );
+    if ( v_pad != false && !__all_num_list( v_pad, 2 ) )
+        __TypeMsg( CMP_PADDING_XY, ctx, "[px, py] (2 numbers)", v_pad );
+
+    v_padh = __value( table, CMP_PADDING_HEIGHT_ADJUST_XY, default = false );
+    if ( v_padh != false && !__all_num_list( v_padh, 2 ) )
+        __TypeMsg( CMP_PADDING_HEIGHT_ADJUST_XY, ctx, "[ax, ay] (2 numbers)", v_padh );
+
+    v_margin = __value( table, CMP_MARGIN_FBLR, default = false );
+    if ( v_margin != false && !__all_num_list( v_margin, 4 ) )
+        __TypeMsg( CMP_MARGIN_FBLR, ctx, "[front, back, left, right] (4 numbers)", v_margin );
+
+    v_cs = __value( table, CMP_CUTOUT_SIDES_4B, default = false );
+    if ( v_cs != false && !__all_bool_4( v_cs ) )
+        __TypeMsg( CMP_CUTOUT_SIDES_4B, ctx, "[f,b,l,r] (4 booleans)", v_cs );
+
+    v_cc = __value( table, CMP_CUTOUT_CORNERS_4B, default = false );
+    if ( v_cc != false && !__all_bool_4( v_cc ) )
+        __TypeMsg( CMP_CUTOUT_CORNERS_4B, ctx, "[fl,br,bl,fr] (4 booleans)", v_cc );
+
+    v_chp = __value( table, CMP_CUTOUT_HEIGHT_PCT, default = false );
+    if ( v_chp != false && !is_num( v_chp ) )
+        __TypeMsg( CMP_CUTOUT_HEIGHT_PCT, ctx, "number (0-100)", v_chp );
+
+    v_cdp = __value( table, CMP_CUTOUT_DEPTH_PCT, default = false );
+    if ( v_cdp != false && !is_num( v_cdp ) )
+        __TypeMsg( CMP_CUTOUT_DEPTH_PCT, ctx, "number (0-100)", v_cdp );
+
+    v_cwp = __value( table, CMP_CUTOUT_WIDTH_PCT, default = false );
+    if ( v_cwp != false && !is_num( v_cwp ) )
+        __TypeMsg( CMP_CUTOUT_WIDTH_PCT, ctx, "number (0-100)", v_cwp );
+
+    v_cb = __value( table, CMP_CUTOUT_BOTTOM_B, default = false );
+    if ( __is_valid_key( CMP_CUTOUT_BOTTOM_B, table ) && !is_bool( v_cb ) )
+        __TypeMsg( CMP_CUTOUT_BOTTOM_B, ctx, "boolean (true/false)", v_cb );
+
+    v_cbp = __value( table, CMP_CUTOUT_BOTTOM_PCT, default = false );
+    if ( v_cbp != false && !is_num( v_cbp ) )
+        __TypeMsg( CMP_CUTOUT_BOTTOM_PCT, ctx, "number (0-100)", v_cbp );
+
+    v_ct = __value( table, CMP_CUTOUT_TYPE, default = false );
+    if ( v_ct != false && !__is_valid_key( v_ct, __VALID_CUTOUT_TYPES ) )
+        __TypeMsg( CMP_CUTOUT_TYPE, ctx, "one of INTERIOR, EXTERIOR, BOTH", v_ct );
+
+    v_shear = __value( table, CMP_SHEAR, default = false );
+    if ( v_shear != false && !__all_num_list( v_shear, 2 ) )
+        __TypeMsg( CMP_SHEAR, ctx, "[sx, sy] (2 numbers)", v_shear );
+
+    v_fr = __value( table, CMP_FILLET_RADIUS, default = false );
+    if ( v_fr != false && !is_num( v_fr ) )
+        __TypeMsg( CMP_FILLET_RADIUS, ctx, "number", v_fr );
+
+    v_pb = __value( table, CMP_PEDESTAL_BASE_B, default = false );
+    if ( __is_valid_key( CMP_PEDESTAL_BASE_B, table ) && !is_bool( v_pb ) )
+        __TypeMsg( CMP_PEDESTAL_BASE_B, ctx, "boolean (true/false)", v_pb );
+
+    v_en = __value( table, ENABLED_B, default = false );
+    if ( __is_valid_key( ENABLED_B, table ) && !is_bool( v_en ) )
+        __TypeMsg( ENABLED_B, ctx, "boolean (true/false)", v_en );
+
+    v_rot = __value( table, ROTATION, default = false );
+    if ( v_rot != false && !is_num( v_rot ) )
+        __TypeMsg( ROTATION, ctx, "number (degrees)", v_rot );
+
+    v_pos = __value( table, POSITION_XY, default = false );
+    if ( v_pos != false )
+    {
+        if ( !__is_list_of_len( v_pos, 2 ) )
+            __TypeMsg( POSITION_XY, ctx, "[x, y] (2 values: numbers, CENTER, or MAX)", v_pos );
+        else if ( !__is_num_or_special( v_pos[0] ) || !__is_num_or_special( v_pos[1] ) )
+            __TypeMsg( POSITION_XY, ctx, "[x, y] where each is a number, CENTER, or MAX", v_pos );
+    }
+}
+
+// Validate value types for lid-level keys
+module __ValidateLidTypes( table, ctx )
+{
+    v_fu = __value( table, LID_FIT_UNDER_B, default = false );
+    if ( __is_valid_key( LID_FIT_UNDER_B, table ) && !is_bool( v_fu ) )
+        __TypeMsg( LID_FIT_UNDER_B, ctx, "boolean (true/false)", v_fu );
+
+    v_sol = __value( table, LID_SOLID_B, default = false );
+    if ( __is_valid_key( LID_SOLID_B, table ) && !is_bool( v_sol ) )
+        __TypeMsg( LID_SOLID_B, ctx, "boolean (true/false)", v_sol );
+
+    v_h = __value( table, LID_HEIGHT, default = false );
+    if ( v_h != false && !is_num( v_h ) )
+        __TypeMsg( LID_HEIGHT, ctx, "number", v_h );
+
+    v_in = __value( table, LID_INSET_B, default = false );
+    if ( __is_valid_key( LID_INSET_B, table ) && !is_bool( v_in ) )
+        __TypeMsg( LID_INSET_B, ctx, "boolean (true/false)", v_in );
+
+    v_lcs = __value( table, LID_CUTOUT_SIDES_4B, default = false );
+    if ( v_lcs != false && !__all_bool_4( v_lcs ) )
+        __TypeMsg( LID_CUTOUT_SIDES_4B, ctx, "[f,b,l,r] (4 booleans)", v_lcs );
+
+    v_tabs = __value( table, LID_TABS_4B, default = false );
+    if ( v_tabs != false && !__all_bool_4( v_tabs ) )
+        __TypeMsg( LID_TABS_4B, ctx, "[f,b,l,r] (4 booleans)", v_tabs );
+
+    v_inv = __value( table, LID_LABELS_INVERT_B, default = false );
+    if ( __is_valid_key( LID_LABELS_INVERT_B, table ) && !is_bool( v_inv ) )
+        __TypeMsg( LID_LABELS_INVERT_B, ctx, "boolean (true/false)", v_inv );
+
+    // All numeric lid keys
+    _num_keys = [ LID_SOLID_LABELS_DEPTH, LID_LABELS_BG_THICKNESS, LID_LABELS_BORDER_THICKNESS,
+                  LID_STRIPE_WIDTH, LID_STRIPE_SPACE,
+                  LID_PATTERN_RADIUS, LID_PATTERN_N1, LID_PATTERN_N2,
+                  LID_PATTERN_ANGLE, LID_PATTERN_ROW_OFFSET, LID_PATTERN_COL_OFFSET,
+                  LID_PATTERN_THICKNESS ];
+    for ( ki = [ 0 : len( _num_keys ) - 1 ] )
+    {
+        _k = _num_keys[ ki ];
+        _v = __value( table, _k, default = false );
+        if ( _v != false && !is_num( _v ) )
+            __TypeMsg( _k, ctx, "number", _v );
+    }
+}
+
+// Validate value types for label-level keys
+module __ValidateLabelTypes( table, ctx )
+{
+    v_text = __value( table, LBL_TEXT, default = false );
+    if ( v_text != false && !is_string( v_text ) && !is_list( v_text ) )
+        __TypeMsg( LBL_TEXT, ctx, "string or list of strings", v_text );
+
+    v_img = __value( table, LBL_IMAGE, default = false );
+    if ( v_img != false && !is_string( v_img ) && !is_list( v_img ) )
+        __TypeMsg( LBL_IMAGE, ctx, "string (file path) or list", v_img );
+
+    v_size = __value( table, LBL_SIZE, default = false );
+    if ( v_size != false && !is_num( v_size ) && v_size != AUTO )
+        __TypeMsg( LBL_SIZE, ctx, "number or AUTO", v_size );
+
+    v_pl = __value( table, LBL_PLACEMENT, default = false );
+    if ( v_pl != false && !__is_valid_key( v_pl, __VALID_PLACEMENTS ) )
+        __TypeMsg( LBL_PLACEMENT, ctx,
+            "one of FRONT, BACK, LEFT, RIGHT, FRONT_WALL, BACK_WALL, LEFT_WALL, RIGHT_WALL, CENTER, BOTTOM", v_pl );
+
+    v_font = __value( table, LBL_FONT, default = false );
+    if ( v_font != false && !is_string( v_font ) )
+        __TypeMsg( LBL_FONT, ctx, "string (font name)", v_font );
+
+    v_depth = __value( table, LBL_DEPTH, default = false );
+    if ( v_depth != false && !is_num( v_depth ) )
+        __TypeMsg( LBL_DEPTH, ctx, "number", v_depth );
+
+    v_sp = __value( table, LBL_SPACING, default = false );
+    if ( v_sp != false && !is_num( v_sp ) )
+        __TypeMsg( LBL_SPACING, ctx, "number", v_sp );
+
+    v_sf = __value( table, LBL_AUTO_SCALE_FACTOR, default = false );
+    if ( v_sf != false && !is_num( v_sf ) )
+        __TypeMsg( LBL_AUTO_SCALE_FACTOR, ctx, "number", v_sf );
+
+    v_rot = __value( table, ROTATION, default = false );
+    if ( v_rot != false && !is_num( v_rot ) )
+        __TypeMsg( ROTATION, ctx, "number (degrees)", v_rot );
+
+    v_pos = __value( table, POSITION_XY, default = false );
+    if ( v_pos != false && !__all_num_list( v_pos, 2 ) )
+        __TypeMsg( POSITION_XY, ctx, "[x, y] (2 numbers)", v_pos );
+}
+
+// Validate value types for divider-level keys
+module __ValidateDividerTypes( table, ctx )
+{
+    v_thick = __value( table, DIV_THICKNESS, default = false );
+    if ( v_thick != false && !is_num( v_thick ) )
+        __TypeMsg( DIV_THICKNESS, ctx, "number", v_thick );
+
+    v_ts = __value( table, DIV_TAB_SIZE_XY, default = false );
+    if ( v_ts != false && !__all_num_list( v_ts, 2 ) )
+        __TypeMsg( DIV_TAB_SIZE_XY, ctx, "[x, y] (2 numbers)", v_ts );
+
+    v_tr = __value( table, DIV_TAB_RADIUS, default = false );
+    if ( v_tr != false && !is_num( v_tr ) )
+        __TypeMsg( DIV_TAB_RADIUS, ctx, "number", v_tr );
+
+    v_tc = __value( table, DIV_TAB_CYCLE, default = false );
+    if ( v_tc != false && !is_num( v_tc ) )
+        __TypeMsg( DIV_TAB_CYCLE, ctx, "number", v_tc );
+
+    v_tcs = __value( table, DIV_TAB_CYCLE_START, default = false );
+    if ( v_tcs != false && !is_num( v_tcs ) )
+        __TypeMsg( DIV_TAB_CYCLE_START, ctx, "number", v_tcs );
+
+    v_tt = __value( table, DIV_TAB_TEXT, default = false );
+    if ( v_tt != false && !is_list( v_tt ) )
+        __TypeMsg( DIV_TAB_TEXT, ctx, "list of strings", v_tt );
+
+    v_tts = __value( table, DIV_TAB_TEXT_SIZE, default = false );
+    if ( v_tts != false && !is_num( v_tts ) )
+        __TypeMsg( DIV_TAB_TEXT_SIZE, ctx, "number", v_tts );
+
+    v_ttf = __value( table, DIV_TAB_TEXT_FONT, default = false );
+    if ( v_ttf != false && !is_string( v_ttf ) )
+        __TypeMsg( DIV_TAB_TEXT_FONT, ctx, "string (font name)", v_ttf );
+
+    v_ttsp = __value( table, DIV_TAB_TEXT_SPACING, default = false );
+    if ( v_ttsp != false && !is_num( v_ttsp ) )
+        __TypeMsg( DIV_TAB_TEXT_SPACING, ctx, "number", v_ttsp );
+
+    v_ttct = __value( table, DIV_TAB_TEXT_CHAR_THRESHOLD, default = false );
+    if ( v_ttct != false && !is_num( v_ttct ) )
+        __TypeMsg( DIV_TAB_TEXT_CHAR_THRESHOLD, ctx, "number", v_ttct );
+
+    v_fs = __value( table, DIV_FRAME_SIZE_XY, default = false );
+    if ( v_fs != false && !__all_num_list( v_fs, 2 ) )
+        __TypeMsg( DIV_FRAME_SIZE_XY, ctx, "[x, y] (2 numbers)", v_fs );
+
+    _frame_nums = [ DIV_FRAME_TOP, DIV_FRAME_BOTTOM, DIV_FRAME_COLUMN, DIV_FRAME_RADIUS, DIV_FRAME_NUM_COLUMNS ];
+    for ( ki = [ 0 : len( _frame_nums ) - 1 ] )
+    {
+        _k = _frame_nums[ ki ];
+        _v = __value( table, _k, default = false );
+        if ( _v != false && !is_num( _v ) )
+            __TypeMsg( _k, ctx, "number", _v );
+    }
+
+    v_en = __value( table, ENABLED_B, default = false );
+    if ( __is_valid_key( ENABLED_B, table ) && !is_bool( v_en ) )
+        __TypeMsg( ENABLED_B, ctx, "boolean (true/false)", v_en );
+}
+
 // Validate a key-value table against a set of valid keys.
 // Echoes a message for each unrecognized key.
 module __ValidateTable( table, valid_keys, context_name )
@@ -680,7 +990,7 @@ module __ValidateTable( table, valid_keys, context_name )
     }
 }
 
-// Validate all labels found in a key-value table.
+// Validate all labels found in a key-value table (keys + types).
 module __ValidateLabels( table, context_name )
 {
     if ( is_list( table ) )
@@ -691,8 +1001,9 @@ module __ValidateLabels( table, context_name )
             {
                 if ( table[i][ k_key ] == LABEL )
                 {
-                    __ValidateTable( table[i][ k_value ], __VALID_LABEL_KEYS,
-                        str( context_name, " > label" ) );
+                    _lbl_ctx = str( context_name, " > label" );
+                    __ValidateTable( table[i][ k_value ], __VALID_LABEL_KEYS, _lbl_ctx );
+                    __ValidateLabelTypes( table[i][ k_value ], _lbl_ctx );
                 }
             }
         }
@@ -700,32 +1011,35 @@ module __ValidateLabels( table, context_name )
 }
 
 // Validate a complete element (box or divider) and its sub-structures.
+// Checks both key names and value types at every level.
 module __ValidateElement( element, element_name )
 {
     element_type = __type( element );
 
     if ( element_type == DIVIDERS )
     {
-        __ValidateTable( element, __VALID_DIVIDER_KEYS,
-            str( "dividers \"", element_name, "\"" ) );
+        _ctx = str( "dividers \"", element_name, "\"" );
+        __ValidateTable( element, __VALID_DIVIDER_KEYS, _ctx );
+        __ValidateDividerTypes( element, _ctx );
     }
     else
     {
         // Box or Spacer
-        __ValidateTable( element, __VALID_BOX_KEYS,
-            str( "box \"", element_name, "\"" ) );
+        _ctx = str( "box \"", element_name, "\"" );
+        __ValidateTable( element, __VALID_BOX_KEYS, _ctx );
+        __ValidateBoxTypes( element, _ctx );
 
-        // Validate lid sub-table
+        // Validate lid sub-table (keys + types)
         lid = __value( element, BOX_LID, default = false );
         if ( is_list( lid ) && len( lid ) > 0 )
         {
-            __ValidateTable( lid, __VALID_LID_KEYS,
-                str( "box \"", element_name, "\" > lid" ) );
-            __ValidateLabels( lid,
-                str( "box \"", element_name, "\" > lid" ) );
+            _lid_ctx = str( _ctx, " > lid" );
+            __ValidateTable( lid, __VALID_LID_KEYS, _lid_ctx );
+            __ValidateLidTypes( lid, _lid_ctx );
+            __ValidateLabels( lid, _lid_ctx );
         }
 
-        // Validate each component sub-table
+        // Validate each component sub-table (keys + types)
         for ( i = [ 0 : max( len( element ) - 1, 0 ) ] )
         {
             if ( is_list( element[i] ) && len( element[i] ) >= 2 )
@@ -733,17 +1047,16 @@ module __ValidateElement( element, element_name )
                 if ( element[i][ k_key ] == BOX_COMPONENT )
                 {
                     comp = element[i][ k_value ];
-                    __ValidateTable( comp, __VALID_COMPONENT_KEYS,
-                        str( "box \"", element_name, "\" > component[", i, "]" ) );
-                    __ValidateLabels( comp,
-                        str( "box \"", element_name, "\" > component[", i, "]" ) );
+                    _comp_ctx = str( _ctx, " > component[", i, "]" );
+                    __ValidateTable( comp, __VALID_COMPONENT_KEYS, _comp_ctx );
+                    __ValidateComponentTypes( comp, _comp_ctx );
+                    __ValidateLabels( comp, _comp_ctx );
                 }
             }
         }
 
         // Validate box-level labels
-        __ValidateLabels( element,
-            str( "box \"", element_name, "\"" ) );
+        __ValidateLabels( element, _ctx );
     }
 }
 

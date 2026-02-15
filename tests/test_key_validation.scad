@@ -1,5 +1,7 @@
-// Test: Key validation catches typos and malformed entries
-// Expected: renders successfully with BIT: messages in console for bad keys
+// Test: Key validation catches typos, malformed entries, and wrong value types
+// Expected: renders successfully with BIT: messages in console
+// NOTE: type errors here use values that still render (no OpenSCAD WARNINGs)
+//       but are caught by our validation as semantically wrong.
 include <../boardgame_insert_toolkit_lib.4.scad>;
 include <../bit_functions_lib.4.scad>;
 g_default_font = "Liberation Sans:style=Regular";
@@ -9,11 +11,11 @@ g_b_print_box = true;
 g_isolated_print_box = "";
 
 data = [
-    [ "validation_box",
+    [ "key_typos_box",
         [
             [ BOX_SIZE_XYZ, [ 60, 40, 20 ] ],
 
-            // Intentional typos to trigger validation messages
+            // --- Key name typos (5 total) ---
             [ "boz_size",   [ 60, 40, 20 ] ],    // typo: boz_size
             [ "compnent",   [] ],                 // typo: compnent (should be component)
 
@@ -45,6 +47,27 @@ data = [
                     ],
                 ]
             ],
+        ]
+    ],
+
+    // --- Type validation box: wrong types that still render cleanly ---
+    // These use valid box structure but with type errors caught by validation
+    [ "type_check_box",
+        [
+            [ BOX_SIZE_XYZ, [ 60, 40, 20 ] ],
+
+            [ BOX_COMPONENT,
+                [
+                    [ CMP_COMPARTMENT_SIZE_XYZ, [ 56, 36, 18 ] ],
+                    // Wrong type: string where enum expected (caught as invalid shape)
+                    [ CMP_SHAPE, "triangle" ],       // not a valid shape enum
+                    // Wrong type: string where bool expected
+                    [ CMP_PEDESTAL_BASE_B, "yes" ],  // should be bool
+                ]
+            ],
+
+            // Wrong type: string where bool expected
+            [ BOX_NO_LID_B, "false" ],               // should be bool, not string
         ]
     ],
 ];
