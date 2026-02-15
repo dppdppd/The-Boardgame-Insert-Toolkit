@@ -555,8 +555,8 @@ module Shear( x, y, height )
 {
      translate( [0,0,height/2])
         multmatrix(m =  [
-            [ 1, 0, sin(x), 0],
-            [ 0, 1, sin(y), 0],
+            [ 1, 0, tan(x), 0],
+            [ 0, 1, tan(y), 0],
             [ 0, 0, 1, 0]
                     ])
             translate( [0,0,-height/2])
@@ -1290,13 +1290,13 @@ module MakeDividers( div )
 
         difference()
         {
-            MakeRoundedCubeAxis( [ width, height, depth ], 4, [t, t, t, t], k_z);
+            MakeRoundedCubeAxis( [ width, height, depth ], divider_corner_radius, [t, t, t, t], k_z);
 
             if ( num_columns != -1 )
             for (c = [ 0 : num_columns ] ) 
             {
                 translate( [ divider_column + (divider_column + gap_size) * c, divider_bottom, 0])
-                    MakeRoundedCubeAxis( [ gap_size, height - divider_bottom - divider_top, depth ], 4, k_z);
+                    MakeRoundedCubeAxis( [ gap_size, height - divider_bottom - divider_top, depth ], divider_corner_radius, k_z);
             }
 
         }
@@ -1310,7 +1310,7 @@ module MakeDividers( div )
             // tab shape
             translate( title_pos )
             {
-                MakeRoundedCubeAxis( [ tab_width, tab_height + height_overlap, depth], 4, [f, f, t, t], k_z);
+                MakeRoundedCubeAxis( [ tab_width, tab_height + height_overlap, depth], tab_radius, [f, f, t, t], k_z);
             }
 
             // words
