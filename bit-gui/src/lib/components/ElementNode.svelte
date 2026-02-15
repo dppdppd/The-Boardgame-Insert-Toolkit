@@ -1,12 +1,11 @@
-<script lang="ts">
+<script>
   import { createEventDispatcher } from "svelte";
   import KVRow from "./KVRow.svelte";
   import { mergeWithDefaults, getAddableNodes } from "../schema";
-  import { updateParam, addComponent, addSubNode } from "../stores/project";
-  import type { Element } from "../stores/project";
+  import { updateParam, addComponent, addSubNode, moveElement, duplicateElement } from "../stores/project";
 
-  export let element: Element;
-  export let index: number;
+  export let element;
+  export let index;
 
   const dispatch = createEventDispatcher();
 
@@ -18,7 +17,7 @@
   $: fullParams = mergeWithDefaults(element.params, context, element.type);
   $: addable = getAddableNodes(element.params, context, element.type);
 
-  function handleParamChange(e: CustomEvent, paramKey: string) {
+  function handleParamChange(e, paramKey) {
     updateParam(index, [paramKey], e.detail.value);
   }
 
@@ -70,11 +69,12 @@
     {/if}
 
     <span class="element-type">({element.type})</span>
-    <button
-      class="delete-btn"
-      data-testid="element-{index}-delete"
-      on:click={() => dispatch("delete")}
-    >✕</button>
+    <span class="element-actions">
+      <button class="action-btn" title="Move up" on:click={() => moveElement(index, -1)}>▲</button>
+      <button class="action-btn" title="Move down" on:click={() => moveElement(index, 1)}>▼</button>
+      <button class="action-btn" title="Duplicate" on:click={() => duplicateElement(index)}>⧉</button>
+      <button class="delete-btn" data-testid="element-{index}-delete" on:click={() => dispatch("delete")}>✕</button>
+    </span>
   </div>
 
   {#if expanded}
@@ -85,7 +85,6 @@
           {context}
           depth={1}
           elementIndex={index}
-          paramPath={[]}
           on:change={(e) => handleParamChange(e, param.key)}
         />
       {/each}
@@ -112,8 +111,8 @@
   .element-node {
     background: white;
     border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-bottom: 8px;
+    border-radius: 3px;
+    margin-bottom: 4px;
   }
   .expr-node {
     background: #fef9e7;
@@ -128,11 +127,11 @@
   .element-header {
     display: flex;
     align-items: center;
-    padding: 6px 8px;
-    gap: 6px;
+    padding: 3px 6px;
+    gap: 4px;
     background: #f8f9fa;
     border-bottom: 1px solid #eee;
-    border-radius: 4px 4px 0 0;
+    border-radius: 3px 3px 0 0;
   }
   .toggle {
     background: none;
@@ -145,47 +144,62 @@
   .element-name {
     font-weight: 600;
     color: #2c3e50;
-    font-size: 14px;
+    font-size: 12px;
     cursor: pointer;
   }
   .element-name:hover { text-decoration: underline; }
   .name-input {
     font-weight: 600;
-    font-size: 14px;
+    font-size: 12px;
     border: 1px solid #3498db;
     border-radius: 2px;
-    padding: 1px 4px;
-    width: 140px;
+    padding: 0px 3px;
+    width: 120px;
+    height: 18px;
   }
   .element-type {
     color: #7f8c8d;
-    font-size: 12px;
+    font-size: 10px;
   }
-  .delete-btn {
+  .element-actions {
     margin-left: auto;
+    display: flex;
+    gap: 2px;
+  }
+  .action-btn {
     background: none;
     border: none;
-    color: #e74c3c;
+    color: #999;
+    cursor: pointer;
+    font-size: 11px;
+    padding: 0 3px;
+  }
+  .action-btn:hover { color: #3498db; }
+  .delete-btn {
+    background: none;
+    border: none;
+    color: #ccc;
     cursor: pointer;
     font-size: 14px;
     padding: 0 4px;
   }
+  .delete-btn:hover { color: #e74c3c; }
   .element-body {
-    padding: 4px 0;
+    padding: 2px 0;
   }
   .add-nodes {
     display: flex;
-    gap: 6px;
-    padding: 4px 0 6px;
+    gap: 4px;
+    padding: 2px 0 4px;
   }
   .add-node-btn {
     background: none;
-    border: 1px dashed #bbb;
-    color: #7f8c8d;
-    padding: 3px 10px;
-    border-radius: 3px;
+    border: 1px dashed #ccc;
+    color: #999;
+    padding: 1px 8px;
+    border-radius: 2px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 10px;
   }
   .add-node-btn:hover {
     border-color: #3498db;

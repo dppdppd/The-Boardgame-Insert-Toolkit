@@ -169,8 +169,8 @@ const DEFAULT_POSTAMBLE = `MakeAll();
 
 export function generateScad(project: Project): string {
   const out: string[] = [];
-  const preamble = (project as any).preamble || DEFAULT_PREAMBLE;
-  const postamble = (project as any).postamble || DEFAULT_POSTAMBLE;
+  const preamble = project.preamble || DEFAULT_PREAMBLE;
+  const postamble = project.postamble || DEFAULT_POSTAMBLE;
 
   out.push("// BITGUI");
   out.push("");

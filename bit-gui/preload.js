@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("bitgui", {
+  getPendingLoad: () => ipcRenderer.invoke("get-pending-load"),
   platform: process.platform,
   harness: !!process.env.BITGUI_HARNESS,
 

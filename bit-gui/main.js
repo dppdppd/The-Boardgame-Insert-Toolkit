@@ -20,6 +20,20 @@ function createWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, "dist", "index.html"));
+
+  // Auto-load file from env or CLI arg
+  const autoLoad = process.env.BITGUI_OPEN || process.argv.find(a => a.endsWith(".scad"));
+  if (autoLoad) {
+    try {
+      console.log("Auto-loading:", autoLoad);
+      const content = fs.readFileSync(autoLoad, "utf-8");
+      const proj = importScad(content);
+      console.log("Parsed", proj.data.length, "elements");
+      pendingLoad = { data: proj, filePath: autoLoad };
+    } catch (err) {
+      console.error("Auto-load failed:", err.message);
+    }
+  }
 }
 
 // --- Helpers ---
@@ -29,6 +43,15 @@ function atomicWrite(filePath, content) {
   fs.writeFileSync(tmp, content, "utf-8");
   fs.renameSync(tmp, filePath);
 }
+
+// --- Auto-load state ---
+let pendingLoad = null;
+
+ipcMain.handle("get-pending-load", () => {
+  const p = pendingLoad;
+  pendingLoad = null;
+  return p;
+});
 
 // --- IPC Handlers ---
 

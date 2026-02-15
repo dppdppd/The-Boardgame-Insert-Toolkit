@@ -469,24 +469,21 @@ Settings stored in Electron app data dir (OS-appropriate).
 - [x] Atomic file writer (Electron main process via IPC)
 - [x] Autosave pipeline (debounced)
 - [x] Open/Save As via Electron dialogs
+- [x] SCAD is sole source of truth (no JSON project file)
+- [x] Preamble/postamble preserved (user code outside data[] survives)
+- [x] BITGUI marker comment; .bak backup on first save of unmarked files
+- [x] Expression support (__expr for function calls, arithmetic)
+- [x] Expression elements in data[] (e.g. makeFaction()) preserved as read-only
+- [x] Open in OpenSCAD button
 - [ ] Reorder list items (components)
 
-### Phase 3: Project Management
-- [ ] New Project wizard (name, folder, copy libs)
-- [x] Open Project (file browser -> select `project.bitgui.json`)
-- [ ] Recent Projects list
-- [ ] Stale-lib detection + update prompt
-
-### Phase 4: Polish
-- [ ] Options menu (settings persistence)
-- [ ] "Open in OpenSCAD" button
-- [ ] Validation warnings inline in tree
-- [ ] Schema generation script (`generate_schema.py`)
-- [ ] Cross-platform release builds
-
-### Phase 5: Optional
-- [ ] Import existing `.scad` design file
-- [ ] Undo/redo
-- [ ] Keyboard shortcuts
-- [ ] Dark/light theme
+### Phase 3: Polish + Release
 - [ ] Duplicate element/component
+- [ ] Cross-platform release builds (electron-builder)
+- [ ] Keyboard shortcuts (Ctrl+O, Ctrl+S, Ctrl+Shift+S)
+
+### Backlog
+- [ ] Undo/redo
+- [ ] Dark/light theme
+- [ ] Recent files list
+- [ ] Schema generation script (`generate_schema.py`)

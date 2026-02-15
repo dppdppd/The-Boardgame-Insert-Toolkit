@@ -1,17 +1,19 @@
-<script lang="ts">
+<script>
   import { createEventDispatcher } from "svelte";
   import { getContextKeys, mergeWithDefaults, isOptionalNode } from "../schema";
+  import { moveComponent, duplicateComponent, deleteComponent } from "../stores/project";
 
-  export let param: { key: string; value: any };
-  export let context: string;
-  export let depth: number = 0;
+  export let param;
+  export let context;
+  export let depth = 0;
+  export let elementIndex = -1;
 
   const dispatch = createEventDispatcher();
 
   let expanded = true;
 
   $: keyDefs = getContextKeys(context);
-  $: keySchema = (keyDefs as any)[param.key] || null;
+  $: keySchema = keyDefs[param.key] || null;
   $: keyType = keySchema?.type || "unknown";
   $: isNested = keyType === "table" || keyType === "table_list";
   $: childContext = keySchema?.child_context || context;
@@ -19,7 +21,7 @@
   $: isExpr = param.value && typeof param.value === "object" && "__expr" in param.value;
   $: isDefault = !isNested && !isExpr && JSON.stringify(param.value) === JSON.stringify(defaultVal);
 
-  function update(newValue: any) {
+  function update(newValue) {
     param.value = newValue;
     dispatch("change", { key: param.key, value: newValue });
   }
@@ -31,13 +33,13 @@
   }
 
   // Helpers for array-based types
-  function updateIndex(arr: any[], i: number, val: any): any[] {
+  function updateIndex(arr, i, val) {
     const copy = [...arr];
     copy[i] = val;
     return copy;
   }
 
-  function parseNum(s: string): number {
+  function parseNum(s) {
     const n = parseFloat(s);
     return isNaN(n) ? 0 : n;
   }
@@ -64,17 +66,22 @@
         <div class="child-group" style="padding-left: {(depth + 1) * 16}px">
           <div class="child-header">
             <span>Component {i + 1}</span>
-            <button class="delete-btn" data-testid="kv-{param.key}-{i}-delete">✕</button>
+            <span class="child-actions">
+              <button class="action-btn" title="Move up" on:click={() => moveComponent(elementIndex, i, -1)}>▲</button>
+              <button class="action-btn" title="Move down" on:click={() => moveComponent(elementIndex, i, 1)}>▼</button>
+              <button class="action-btn" title="Duplicate" on:click={() => duplicateComponent(elementIndex, i)}>⧉</button>
+              <button class="delete-btn" data-testid="kv-{param.key}-{i}-delete" on:click={() => deleteComponent(elementIndex, i)}>✕</button>
+            </span>
           </div>
           {#each merged as childParam (childParam.key)}
-            <svelte:self param={childParam} context={childContext} depth={depth + 2} />
+            <svelte:self param={childParam} context={childContext} depth={depth + 2} {elementIndex} />
           {/each}
         </div>
       {/each}
     {:else}
       {@const merged = mergeWithDefaults(param.value, childContext)}
       {#each merged as childParam (childParam.key)}
-        <svelte:self param={childParam} context={childContext} depth={depth + 1} />
+        <svelte:self param={childParam} context={childContext} depth={depth + 1} {elementIndex} />
       {/each}
     {/if}
   {/if}
@@ -238,11 +245,11 @@
   .kv-row {
     display: flex;
     align-items: center;
-    padding: 2px 8px;
-    gap: 6px;
-    font-size: 13px;
-    border-bottom: 1px solid #f0f0f0;
-    min-height: 26px;
+    padding: 1px 8px;
+    gap: 4px;
+    font-size: 12px;
+    border-bottom: 1px solid #f5f5f5;
+    min-height: 20px;
   }
   .kv-row:hover { background: #f8f9fa; }
   .kv-row.muted { opacity: 0.45; }
@@ -251,9 +258,9 @@
   .key {
     color: #2c3e50;
     font-weight: 500;
-    min-width: 170px;
+    min-width: 150px;
     font-family: "Courier New", monospace;
-    font-size: 11px;
+    font-size: 10px;
     flex-shrink: 0;
   }
   .key.muted { font-weight: 400; }
@@ -270,18 +277,19 @@
   /* Input styles */
   .num-input, .str-input, select {
     font-family: "Courier New", monospace;
-    font-size: 12px;
-    padding: 1px 4px;
-    border: 1px solid #ccc;
+    font-size: 11px;
+    padding: 0px 3px;
+    border: 1px solid #ddd;
     border-radius: 2px;
     background: white;
+    height: 18px;
   }
-  .num-input { width: 64px; }
-  .num-input.sm { width: 52px; }
-  .num-input.xs { width: 40px; }
-  .str-input { width: 120px; }
-  .str-input.sm { width: 64px; }
-  .str-input.wide { width: 200px; }
+  .num-input { width: 56px; }
+  .num-input.sm { width: 44px; }
+  .num-input.xs { width: 36px; }
+  .str-input { width: 110px; }
+  .str-input.sm { width: 56px; }
+  .str-input.wide { width: 180px; }
   .str-input.expr { color: #e67e22; font-style: italic; }
   select { padding: 1px 2px; }
   input[type="checkbox"] { margin: 0; }
@@ -290,14 +298,14 @@
   .side-label {
     display: inline-flex;
     align-items: center;
-    gap: 1px;
-    font-size: 11px;
+    gap: 0px;
+    font-size: 10px;
   }
   .side-tag {
     color: #999;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 600;
-    width: 10px;
+    width: 9px;
     text-align: center;
   }
 
@@ -336,25 +344,39 @@
   .add-btn:hover { border-color: #3498db; color: #3498db; }
   .child-group {
     border-left: 2px solid #e0e0e0;
-    margin: 2px 0;
+    margin: 1px 0;
   }
   .child-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    font-size: 12px;
+    font-size: 11px;
     color: #7f8c8d;
     font-weight: 600;
-    padding: 3px 8px;
+    padding: 1px 8px;
   }
+  .child-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 2px;
+  }
+  .action-btn {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    font-size: 11px;
+    padding: 0 3px;
+  }
+  .action-btn:hover { color: #3498db; }
   .delete-btn {
     background: none;
     border: none;
-    color: #e74c3c;
+    color: #ccc;
     cursor: pointer;
     font-size: 12px;
     padding: 0 4px;
   }
+  .delete-btn:hover { color: #e74c3c; }
   .revert-btn {
     background: none;
     border: none;

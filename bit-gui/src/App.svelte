@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
   import { onMount } from "svelte";
   import ElementNode from "./lib/components/ElementNode.svelte";
   import { project, addElement, deleteElement, renameElement } from "./lib/stores/project";
@@ -14,13 +14,45 @@
 
   onSaveStatus((msg) => { statusMsg = msg; });
 
-  onMount(() => {
-    showIntent = !!(window as any).bitgui?.harness;
+  function handleLoad(payload) {
+    try {
+      const { data, filePath } = payload;
+      document.title = "LOADING " + (data?.data?.length ?? "?") + " elements";
+      project.set(data);
+      setFilePath(filePath);
+      setNeedsBackup(!data.hasMarker);
+      const name = filePath.replace(/.*[/\\]/, "");
+      statusMsg = data.hasMarker ? name : `${name} (will backup)`;
+      document.title = "BIT GUI - " + name;
+    } catch(e) {
+      document.title = "LOAD ERROR: " + (e).message;
+    }
+  }
+
+  onMount(function() {
+    showIntent = !!window.bitgui?.harness;
     startAutosave();
+    pollForPendingLoad();
   });
 
+  function pollForPendingLoad() {
+    var attempts = 0;
+    var timer = setInterval(function() {
+      attempts++;
+      if (attempts > 50) { clearInterval(timer); return; }
+      var api = window.bitgui;
+      if (!api || !api.getPendingLoad) { clearInterval(timer); return; }
+      api.getPendingLoad().then(function(pending) {
+        if (pending) {
+          clearInterval(timer);
+          handleLoad(pending);
+        }
+      });
+    }, 200);
+  }
+
   async function openFile() {
-    const bitgui = (window as any).bitgui;
+    const bitgui = window.bitgui;
     if (!bitgui?.openFile) return;
     const res = await bitgui.openFile();
     if (!res.ok) { if (res.error) statusMsg = `Open failed: ${res.error}`; return; }
@@ -32,7 +64,7 @@
   }
 
   async function saveFileAs() {
-    const bitgui = (window as any).bitgui;
+    const bitgui = window.bitgui;
     if (!bitgui?.saveFileAs) return;
     const res = await bitgui.saveFileAs(scadOutput);
     if (!res.ok) return;
@@ -42,7 +74,7 @@
   }
 
   async function openInOpenScad() {
-    const bitgui = (window as any).bitgui;
+    const bitgui = window.bitgui;
     const fp = getFilePath();
     if (!bitgui?.openInOpenScad || !fp) return;
     // Save first

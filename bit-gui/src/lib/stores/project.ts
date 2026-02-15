@@ -1,6 +1,5 @@
 import { writable, get } from "svelte/store";
 import { createDefaultNode } from "../schema";
-import fixture from "../../../schema/fixture.json";
 
 export interface KVParam {
   key: string;
@@ -23,7 +22,13 @@ export interface Project {
   hasMarker?: boolean;
 }
 
-export const project = writable<Project>(fixture as Project);
+const emptyProject: Project = {
+  version: 1,
+  globals: { g_b_print_lid: true, g_b_print_box: true, g_isolated_print_box: "" },
+  data: [],
+};
+
+export const project = writable<Project>(emptyProject);
 
 /** Update a param value at a path within the project.
  *  path is [elementIndex, ...nested keys/indices] */
@@ -148,6 +153,53 @@ export function deleteComponent(elementIndex: number, componentIndex: number) {
     if (comp) {
       comp.value = comp.value.filter((_: any, i: number) => i !== componentIndex);
     }
+    return { ...p };
+  });
+}
+
+/** Move an element up or down */
+export function moveElement(index: number, direction: -1 | 1) {
+  project.update((p) => {
+    const target = index + direction;
+    if (target < 0 || target >= p.data.length) return p;
+    const tmp = p.data[index];
+    p.data[index] = p.data[target];
+    p.data[target] = tmp;
+    return { ...p };
+  });
+}
+
+/** Move a component up or down within BOX_COMPONENT */
+export function moveComponent(elementIndex: number, componentIndex: number, direction: -1 | 1) {
+  project.update((p) => {
+    const comp = p.data[elementIndex].params.find((p) => p.key === "BOX_COMPONENT");
+    if (!comp) return p;
+    const target = componentIndex + direction;
+    if (target < 0 || target >= comp.value.length) return p;
+    const tmp = comp.value[componentIndex];
+    comp.value[componentIndex] = comp.value[target];
+    comp.value[target] = tmp;
+    return { ...p };
+  });
+}
+
+/** Duplicate an element */
+export function duplicateElement(index: number) {
+  project.update((p) => {
+    const copy = structuredClone(p.data[index]);
+    if (!copy.__expr) copy.name = copy.name + " copy";
+    p.data.splice(index + 1, 0, copy);
+    return { ...p };
+  });
+}
+
+/** Duplicate a component within BOX_COMPONENT */
+export function duplicateComponent(elementIndex: number, componentIndex: number) {
+  project.update((p) => {
+    const comp = p.data[elementIndex].params.find((p) => p.key === "BOX_COMPONENT");
+    if (!comp) return p;
+    const copy = structuredClone(comp.value[componentIndex]);
+    comp.value.splice(componentIndex + 1, 0, copy);
     return { ...p };
   });
 }
