@@ -3,26 +3,61 @@
   import ElementNode from "./lib/components/ElementNode.svelte";
   import { project, addElement, deleteElement, renameElement } from "./lib/stores/project";
   import { generateScad } from "./lib/scad";
+  import { startAutosave, onSaveStatus, setProjectDir, getProjectDir } from "./lib/autosave";
 
   let intentText = "";
   let showIntent = false;
   let showScad = false;
+  let statusMsg = "No project open";
 
   $: scadOutput = generateScad($project);
 
+  onSaveStatus((msg) => { statusMsg = msg; });
+
   onMount(() => {
     showIntent = !!(window as any).bitgui?.harness;
+    startAutosave();
   });
+
+  async function openProject() {
+    const bitgui = (window as any).bitgui;
+    if (!bitgui?.showOpenDialog) return;
+    const res = await bitgui.showOpenDialog();
+    if (!res.ok) return;
+    const loaded = await bitgui.loadProject(res.filePath);
+    if (loaded.ok) {
+      project.set(loaded.data);
+      // Derive project dir from file path
+      const dir = res.filePath.replace(/[/\\][^/\\]+$/, "");
+      setProjectDir(dir);
+      statusMsg = `Opened: ${dir}`;
+    } else {
+      statusMsg = `Open failed: ${loaded.error}`;
+    }
+  }
+
+  async function saveProjectAs() {
+    const bitgui = (window as any).bitgui;
+    if (!bitgui?.showSaveDialog) return;
+    const res = await bitgui.showSaveDialog();
+    if (!res.ok) return;
+    setProjectDir(res.dirPath);
+    statusMsg = `Project dir: ${res.dirPath}`;
+    // Trigger immediate save
+    const { triggerSave } = await import("./lib/autosave");
+    triggerSave();
+  }
 </script>
 
 <main data-testid="app-root">
   <header data-testid="app-header">
     <h1>BIT GUI</h1>
     <div class="header-actions">
+      <button data-testid="open-project" on:click={openProject}>Open</button>
+      <button data-testid="save-as" on:click={saveProjectAs}>Save As</button>
       <button data-testid="show-scad" on:click={() => (showScad = !showScad)}>
         {showScad ? "Tree" : "SCAD"}
       </button>
-      <button data-testid="options-open">Options</button>
     </div>
   </header>
 
@@ -51,7 +86,7 @@
   </section>
 
   <footer class="status-bar" data-testid="status-bar">
-    <span data-testid="save-status">No project open</span>
+    <span data-testid="save-status">{statusMsg}</span>
     <span>Libs: —</span>
   </footer>
 

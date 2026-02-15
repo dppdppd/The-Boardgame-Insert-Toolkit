@@ -18,6 +18,6 @@
     "electron": "^33.4.11",
     "playwright": "^1.49",
     "svelte": "^4",
-    "vite": "^5"
+    "vite": "^6"
   }
 }
