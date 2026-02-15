@@ -1,5 +1,6 @@
 <script lang="ts">
   import KVRow from "./KVRow.svelte";
+  import { mergeWithDefaults, getAddableNodes, createDefaultNode } from "../schema";
   import type { Element } from "../stores/project";
 
   export let element: Element;
@@ -7,8 +8,9 @@
 
   let expanded = true;
 
-  // Determine context based on element type
   $: context = element.type === "DIVIDERS" ? "divider" : "element";
+  $: fullParams = mergeWithDefaults(element.params, context, element.type);
+  $: addable = getAddableNodes(element.params, context, element.type);
 </script>
 
 <div class="element-node" data-testid="element-{index}">
@@ -29,12 +31,19 @@
 
   {#if expanded}
     <div class="element-body">
-      {#each element.params as param}
+      {#each fullParams as param (param.key)}
         <KVRow {param} {context} depth={1} />
       {/each}
-      <div class="add-param" style="padding-left: 16px">
-        <button data-testid="element-{index}-add-param">+ Add Parameter</button>
-      </div>
+
+      {#if addable.length > 0}
+        <div class="add-nodes" style="padding-left: 16px">
+          {#each addable as { key, def }}
+            <button class="add-node-btn" data-testid="element-{index}-add-{key}">
+              + {key.replace("BOX_", "").replace("_", " ")}
+            </button>
+          {/each}
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
@@ -84,17 +93,21 @@
   .element-body {
     padding: 4px 0;
   }
-  .add-param button {
+  .add-nodes {
+    display: flex;
+    gap: 6px;
+    padding: 4px 0 6px;
+  }
+  .add-node-btn {
     background: none;
     border: 1px dashed #bbb;
     color: #7f8c8d;
-    padding: 3px 12px;
+    padding: 3px 10px;
     border-radius: 3px;
     cursor: pointer;
     font-size: 12px;
-    margin: 4px 0;
   }
-  .add-param button:hover {
+  .add-node-btn:hover {
     border-color: #3498db;
     color: #3498db;
   }

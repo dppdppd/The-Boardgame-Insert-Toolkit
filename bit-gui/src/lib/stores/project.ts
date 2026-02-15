@@ -1,5 +1,4 @@
 import { writable } from "svelte/store";
-import schema from "../../../schema/bit.schema.json";
 import fixture from "../../../schema/fixture.json";
 
 export interface KVParam {
@@ -20,4 +19,3 @@ export interface Project {
 }
 
 export const project = writable<Project>(fixture as Project);
-export const schemaData = schema;
