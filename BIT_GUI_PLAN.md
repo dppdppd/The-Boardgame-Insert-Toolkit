@@ -457,22 +457,23 @@ Settings stored in Electron app data dir (OS-appropriate).
 ### Phase 1: Schema + Tree View
 - [x] Create `bit.schema.json` (from v4 valid keys + validation + accessors)
 - [x] Basic tree view (expand/collapse, display key-value pairs from fixture project)
-- [ ] Nodes show all keys with defaults (populated from schema)
-- [ ] Inline editor widgets (bool, number, string, enum, xy, xyz, 4bool, 4num, string_list, position_xy)
+- [x] Nodes show all keys with defaults (populated from schema, muted styling)
+- [x] Inline editor widgets (bool, number, string, enum, xy, xyz, 4bool, 4num, string_list, position_xy)
 
 ### Phase 2: Editing + Autosave
-- [ ] All keys shown with defaults (no "Add Parameter" picker)
-- [ ] Add/remove optional sub-nodes (BOX_COMPONENT items, BOX_LID, LABEL)
-- [ ] Delete element / component / sub-node
+- [x] All keys shown with defaults, revert button on non-defaults
+- [x] Store actions: add/delete elements, rename, update params
+- [x] Add/remove optional sub-nodes (BOX_COMPONENT items, BOX_LID, LABEL)
+- [x] SCAD text generator (omit keys matching defaults)
+- [x] SCAD preview toggle
+- [x] Atomic file writer (Electron main process via IPC)
+- [x] Autosave pipeline (debounced)
+- [x] Open/Save As via Electron dialogs
 - [ ] Reorder list items (components)
-- [ ] SCAD text generator (omit keys matching defaults)
-- [ ] Atomic file writer (Electron main process via IPC)
-- [ ] Autosave pipeline (debounced)
-- [ ] JSON project model (create, load, save)
 
 ### Phase 3: Project Management
 - [ ] New Project wizard (name, folder, copy libs)
-- [ ] Open Project (file browser -> select `project.bitgui.json`)
+- [x] Open Project (file browser -> select `project.bitgui.json`)
 - [ ] Recent Projects list
 - [ ] Stale-lib detection + update prompt
 
