@@ -3,12 +3,12 @@
   import ElementNode from "./lib/components/ElementNode.svelte";
   import { project, addElement, deleteElement, renameElement } from "./lib/stores/project";
   import { generateScad } from "./lib/scad";
-  import { startAutosave, onSaveStatus, setProjectDir, getProjectDir, triggerSave } from "./lib/autosave";
+  import { startAutosave, onSaveStatus, setFilePath, getFilePath, setNeedsBackup, triggerSave } from "./lib/autosave";
 
   let intentText = "";
   let showIntent = false;
   let showScad = false;
-  let statusMsg = "No project open";
+  let statusMsg = "No file open";
 
   $: scadOutput = generateScad($project);
 
@@ -19,76 +19,36 @@
     startAutosave();
   });
 
-  async function newProject() {
+  async function openFile() {
     const bitgui = (window as any).bitgui;
-    if (!bitgui?.showSaveDialog) return;
-    const res = await bitgui.showSaveDialog();
-    if (!res.ok) return;
-    const created = await bitgui.newProject(res.dirPath);
-    if (!created.ok) { statusMsg = `New project failed: ${created.error}`; return; }
-    const emptyProject = {
-      version: 1,
-      lib_checksums: created.checksums,
-      globals: { g_b_print_lid: true, g_b_print_box: true, g_isolated_print_box: "" },
-      data: [],
-    };
-    project.set(emptyProject);
-    setProjectDir(res.dirPath);
-    statusMsg = `New project: ${res.dirPath}`;
-    triggerSave();
+    if (!bitgui?.openFile) return;
+    const res = await bitgui.openFile();
+    if (!res.ok) { if (res.error) statusMsg = `Open failed: ${res.error}`; return; }
+    project.set(res.data);
+    setFilePath(res.filePath);
+    setNeedsBackup(!res.data.hasMarker);
+    const name = res.filePath.replace(/.*[/\\]/, "");
+    statusMsg = res.data.hasMarker ? name : `${name} (will backup on save)`;
   }
 
-  async function openProject() {
+  async function saveFileAs() {
     const bitgui = (window as any).bitgui;
-    if (!bitgui?.showOpenDialog) return;
-    const res = await bitgui.showOpenDialog();
+    if (!bitgui?.saveFileAs) return;
+    const res = await bitgui.saveFileAs(scadOutput);
     if (!res.ok) return;
-    const loaded = await bitgui.loadProject(res.filePath);
-    if (loaded.ok) {
-      project.set(loaded.data);
-      const dir = res.filePath.replace(/[/\\][^/\\]+$/, "");
-      setProjectDir(dir);
-      statusMsg = `Opened: ${dir}`;
-      // Check lib staleness
-      const stale = await bitgui.checkLibStaleness(dir);
-      if (stale.ok && stale.stale.length > 0) {
-        statusMsg += ` (libs outdated: ${stale.stale.join(", ")})`;
-      }
-    } else {
-      statusMsg = `Open failed: ${loaded.error}`;
-    }
-  }
-
-  async function importScadFile() {
-    const bitgui = (window as any).bitgui;
-    if (!bitgui?.showImportDialog) return;
-    const res = await bitgui.showImportDialog();
-    if (!res.ok) return;
-    const imported = await bitgui.importScad(res.filePath);
-    if (imported.ok) {
-      project.set(imported.data);
-      statusMsg = `Imported: ${res.filePath}`;
-    } else {
-      statusMsg = `Import failed: ${imported.error}`;
-    }
+    setFilePath(res.filePath);
+    const name = res.filePath.replace(/.*[/\\]/, "");
+    statusMsg = `Saved ${name}`;
   }
 
   async function openInOpenScad() {
     const bitgui = (window as any).bitgui;
-    const dir = getProjectDir();
-    if (!bitgui?.openInOpenScad || !dir) return;
-    const res = await bitgui.openInOpenScad(dir);
+    const fp = getFilePath();
+    if (!bitgui?.openInOpenScad || !fp) return;
+    // Save first
+    await bitgui.saveFile(fp, scadOutput);
+    const res = await bitgui.openInOpenScad(fp);
     if (!res.ok) statusMsg = `OpenSCAD: ${res.error}`;
-  }
-
-  async function saveProjectAs() {
-    const bitgui = (window as any).bitgui;
-    if (!bitgui?.showSaveDialog) return;
-    const res = await bitgui.showSaveDialog();
-    if (!res.ok) return;
-    setProjectDir(res.dirPath);
-    statusMsg = `Project dir: ${res.dirPath}`;
-    triggerSave();
   }
 </script>
 
@@ -96,16 +56,14 @@
   <header data-testid="app-header">
     <h1>BIT GUI</h1>
     <div class="header-actions">
-      <button data-testid="new-project" on:click={newProject}>New</button>
-      <button data-testid="open-project" on:click={openProject}>Open</button>
-      <button data-testid="import-scad" on:click={importScadFile}>Import</button>
-      <button data-testid="save-as" on:click={saveProjectAs}>Save As</button>
+      <button data-testid="open-file" on:click={openFile}>Open</button>
+      <button data-testid="save-as" on:click={saveFileAs}>Save As</button>
       <button data-testid="show-scad" on:click={() => (showScad = !showScad)}>
         {showScad ? "Tree" : "SCAD"}
       </button>
       <button
         data-testid="open-openscad"
-        disabled={!getProjectDir()}
+        disabled={!getFilePath()}
         on:click={openInOpenScad}
       >OpenSCAD</button>
     </div>
@@ -137,7 +95,6 @@
 
   <footer class="status-bar" data-testid="status-bar">
     <span data-testid="save-status">{statusMsg}</span>
-    <span>Libs: —</span>
   </footer>
 
   {#if showIntent}
@@ -183,14 +140,24 @@
     font-weight: 700;
   }
 
+  .header-actions {
+    display: flex;
+    gap: 4px;
+  }
+
   .header-actions button {
     background: rgba(255, 255, 255, 0.15);
     color: white;
     border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 4px 12px;
+    padding: 4px 10px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 12px;
+  }
+
+  .header-actions button:disabled {
+    opacity: 0.4;
+    cursor: default;
   }
 
   .content {
@@ -217,6 +184,12 @@
     min-height: 100px;
   }
 
+  .empty-state {
+    color: #999;
+    text-align: center;
+    margin-top: 40px;
+  }
+
   .scad-preview {
     background: #1e1e1e;
     color: #d4d4d4;
@@ -228,12 +201,6 @@
     margin: 0;
     white-space: pre;
     line-height: 1.4;
-  }
-
-  .empty-state {
-    color: #999;
-    text-align: center;
-    margin-top: 40px;
   }
 
   .status-bar {

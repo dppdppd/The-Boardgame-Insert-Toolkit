@@ -17,6 +17,9 @@ export interface Project {
   version: number;
   globals: Record<string, any>;
   data: Element[];
+  preamble?: string;
+  postamble?: string;
+  hasMarker?: boolean;
 }
 
 export const project = writable<Project>(fixture as Project);
