@@ -118,6 +118,7 @@ DIV_TAB_TEXT_SIZE = "DIV_TAB_TEXT_size"; // Text size
 DIV_TAB_TEXT_FONT = "DIV_TAB_TEXT_font"; // Text font
 DIV_TAB_TEXT_SPACING = "DIV_TAB_TEXT_spacing"; // Spacing between characters
 DIV_TAB_TEXT_CHAR_THRESHOLD = "DIV_TAB_TEXT_char_threshold"; // Min chars for text display
+DIV_TAB_TEXT_EMBOSSED_B = "div_tab_text_embossed_b"; // true = raised text, false = cut text (default)
 
 // Frame parameters
 DIV_FRAME_SIZE_XY = "div_frame_size";   // Size of divider frame [x,y]
@@ -490,12 +491,13 @@ function __div_tab_text_size ( div ) = __value( div, DIV_TAB_TEXT_SIZE, default 
 function __div_tab_text_font ( div ) = __value( div, DIV_TAB_TEXT_FONT, default = "Stencil Std:style=Bold" );
 function __div_tab_text_spacing ( div ) = __value( div, DIV_TAB_TEXT_SPACING, default = 1.1 );
 function __div_tab_text_char_threshold ( div ) = __value( div, DIV_TAB_TEXT_CHAR_THRESHOLD, default = 4 );
+function __div_tab_text_embossed ( div ) = __value( div, DIV_TAB_TEXT_EMBOSSED_B, default = false );
 
 function __div_frame_size( div ) = __value( div, DIV_FRAME_SIZE_XY, default = [80, 80] );
 function __div_frame_top( div ) = __value( div, DIV_FRAME_TOP, default = 10 );
 function __div_frame_bottom( div ) = __value( div, DIV_FRAME_BOTTOM, default = 10 );
 function __div_frame_column( div ) = __value( div, DIV_FRAME_COLUMN, default = 7 );
-function __div_frame_radius( div ) = __value( div, DIV_FRAME_RADIUS, default = 15 );
+function __div_frame_radius( div ) = __value( div, DIV_FRAME_RADIUS, default = 4 );
 function __div_frame_num_columns( div ) = __value( div, DIV_FRAME_NUM_COLUMNS, default = -1 );
 
 // is the text a string or a list of strings?
@@ -679,6 +681,7 @@ __VALID_DIVIDER_KEYS = [
     DIV_THICKNESS,
     DIV_TAB_SIZE_XY, DIV_TAB_RADIUS, DIV_TAB_CYCLE, DIV_TAB_CYCLE_START,
     DIV_TAB_TEXT, DIV_TAB_TEXT_SIZE, DIV_TAB_TEXT_FONT, DIV_TAB_TEXT_SPACING, DIV_TAB_TEXT_CHAR_THRESHOLD,
+    DIV_TAB_TEXT_EMBOSSED_B,
     DIV_FRAME_SIZE_XY, DIV_FRAME_TOP, DIV_FRAME_BOTTOM, DIV_FRAME_COLUMN,
     DIV_FRAME_RADIUS, DIV_FRAME_NUM_COLUMNS
 ];
@@ -1013,6 +1016,10 @@ module __ValidateDividerTypes( table, ctx )
     if ( v_ttct != false && !is_num( v_ttct ) )
         __TypeMsg( DIV_TAB_TEXT_CHAR_THRESHOLD, ctx, "number", v_ttct );
 
+    v_tte = __value( table, DIV_TAB_TEXT_EMBOSSED_B, default = false );
+    if ( v_tte != false && !is_bool( v_tte ) )
+        __TypeMsg( DIV_TAB_TEXT_EMBOSSED_B, ctx, "boolean (true/false)", v_tte );
+
     v_fs = __value( table, DIV_FRAME_SIZE_XY, default = false );
     if ( v_fs != false && !__all_num_list( v_fs, 2 ) )
         __TypeMsg( DIV_FRAME_SIZE_XY, ctx, "[x, y] (2 numbers)", v_fs );
@@ -1262,7 +1269,8 @@ module MakeDividers( div )
     font_size = __div_tab_text_size( div );
     font = __div_tab_text_font( div );
     font_spacing = __div_tab_text_spacing( div );
-    number_of_letters_before_scale_to_fit = __div_tab_text_char_threshold( div );;
+    number_of_letters_before_scale_to_fit = __div_tab_text_char_threshold( div );
+    text_embossed = __div_tab_text_embossed( div );
 
     divider_bottom = __div_frame_bottom( div );
     divider_top = __div_frame_top( div );
@@ -1308,26 +1316,21 @@ module MakeDividers( div )
         }
 
         // TAB
-        difference()
-        {
-            height_overlap = tab_radius;
-            title_pos = [ tab_offset, height - height_overlap, 0];
+        height_overlap = tab_radius;
+        title_pos = [ tab_offset, height - height_overlap, 0];
+        text_pos = title_pos + [ tab_width/2, font_size * 2, 0 ];
+        text_width = len(title) > number_of_letters_before_scale_to_fit ? tab_width * DEFAULT_TAB_TEXT_WIDTH_FRACTION : 0;
 
+        if ( text_embossed )
+        {
             // tab shape
             translate( title_pos )
-            {
                 MakeRoundedCubeAxis( [ tab_width, tab_height + height_overlap, depth], tab_radius, [f, f, t, t], k_z);
-            }
 
-            // words — cut to half depth so inner letter parts survive removal from bed
-            text_depth = depth / 2;
-            text_pos = title_pos + [ tab_width/2, font_size * 2, 0 ];
-
-            text_width = len(title) > number_of_letters_before_scale_to_fit ? tab_width * DEFAULT_TAB_TEXT_WIDTH_FRACTION : 0;
-
-            translate( text_pos)
-                resize([ text_width,0, 0 ], auto=[ true, true, false])
-                    linear_extrude( text_depth )
+            // raised text on top of tab
+            translate( text_pos + [0, 0, depth] )
+                resize([ text_width, 0, 0 ], auto=[ true, true, false])
+                    linear_extrude( depth )
                         text(text = title, 
                             font = font, 
                             size = font_size, 
@@ -1335,6 +1338,28 @@ module MakeDividers( div )
                             halign = "center", 
                             spacing = font_spacing,
                             $fn = fn);
+        }
+        else
+        {
+            // debossed: cut text through full depth (v3 default behavior)
+            difference()
+            {
+                // tab shape
+                translate( title_pos )
+                    MakeRoundedCubeAxis( [ tab_width, tab_height + height_overlap, depth], tab_radius, [f, f, t, t], k_z);
+
+                // words — cut through full depth
+                translate( text_pos )
+                    resize([ text_width, 0, 0 ], auto=[ true, true, false])
+                        linear_extrude( depth )
+                            text(text = title, 
+                                font = font, 
+                                size = font_size, 
+                                valign = "top",
+                                halign = "center", 
+                                spacing = font_spacing,
+                                $fn = fn);
+            }
         }
 
         
