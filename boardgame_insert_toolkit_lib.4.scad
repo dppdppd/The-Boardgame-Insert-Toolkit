@@ -21,16 +21,29 @@
 //   Line  Section
 //   ----  -------
 //    46   Constants, enums, keywords, internal defaults
-//   246   Key-value helpers
-//   331   Utility modules (debug, rotate, mirror, colorize, shear)
-//   388   Data accessor functions (elements, dividers, labels)
-//   506   Geometry helpers (Make2dShape, Make2DPattern, MakeStripedGrid)
-//   590   Key validation (__ValidateTable, __ValidateElement)
-//   755   MakeAll() — top-level entry point
-//   825   MakeDividers() — card divider generation
-//   944   MakeBox() — box generation
-//  1082     MakeLayer() — component processing pipeline
-//  2801   MakeRoundedCubeAxis() — rounded cube utility
+//   247   Key-value helpers
+//   332   Utility modules (debug, rotate, mirror, colorize, shear)
+//   389   Data accessor functions (elements, auto-size, dividers, labels)
+//   507   Geometry helpers (Make2dShape, Make2DPattern, MakeStripedGrid)
+//   646   Key validation (__ValidateTable, __ValidateElement)
+//  1161   MakeAll() — top-level entry point
+//  1231   MakeDividers() — card divider generation
+//  1350   MakeBox() — box generation
+//  1488     MakeLayer() — component processing pipeline
+//  1591       Layer positioning (ContainWithinBox, PositionInnerLayer)
+//  1727       Lid base geometry (Inset, Cap, Edge)
+//  1837       Box shell & spacer
+//  1889       Inner layer dispatch
+//  2030       Box-level cutout dispatch
+//  2070       Lid & box labels
+//  2269       Lid assembly (MakeLid, mesh, surface)
+//  2453       Iteration helpers (ForEach*, InEach*)
+//  2541       Cutout & fillet geometry
+//  2823       Compartment shapes
+//  2903       Component labels
+//  2996       Partitions & margins
+//  3045       Lid hardware (notches, tabs, detents)
+//  3229   MakeRoundedCubeAxis() — rounded cube utility
 //
 // =============================================================================
 
@@ -1588,6 +1601,7 @@ module MakeBox( box )
         function __partition_height( D ) = __component_size( k_z ) + __component_padding_height_adjust( D );
         function __smallest_partition_height() = min( __partition_height( k_x ), __partition_height( k_y ) );
 
+        // ----- LAYER POSITIONING -----
 
         module ContainWithinBox()
         {
@@ -1720,8 +1734,10 @@ module MakeBox( box )
             { 
                 PositionInnerLayer()
                     InnerLayer();   
-            }
+             }
         }
+
+        // ----- LID BASE GEOMETRY -----
 
         module MakeLidBase_Inset( tolerance = 0, tolerance_detent_pos = 0, omit_detents = false )
         {
@@ -1831,6 +1847,8 @@ module MakeBox( box )
 
         }
 
+        // ----- BOX SHELL & SPACER -----
+
         module MakeBoxShell()
         {
             cube([  m_box_size[ k_x ], 
@@ -1880,6 +1898,10 @@ module MakeBox( box )
                 }
             }
         }
+
+        // ----- INNER LAYER DISPATCH -----
+        // Routes each MakeLayer call to the appropriate geometry stage:
+        // outerbox, lid, spacer, component subtractions/additions, final subtractions.
 
         module InnerLayer()
         {
@@ -2018,6 +2040,8 @@ module MakeBox( box )
             }
         }
 
+        // ----- BOX-LEVEL CUTOUT DISPATCH -----
+
         module MakeAllBoxSideCutouts()
         {
 
@@ -2056,9 +2080,7 @@ module MakeBox( box )
                         MakeCornerCutouts( side );                            
             }        
         }
-
-
-
+        // ----- LID & BOX LABELS -----
 
         module MoveToLidInterior( tolerance = 0)
         {
@@ -2257,6 +2279,8 @@ module MakeBox( box )
                         MakeAllLidLabels();
         }
     
+        // ----- LID ASSEMBLY -----
+
         module MakeLid() 
         {
 
@@ -2437,7 +2461,9 @@ module MakeBox( box )
                                 if ( m_lid_cutout_sides[ side ])
                                     MakeSideCutouts( side );
                     }        
-        }
+         }
+
+        // ----- ITERATION HELPERS -----
 
         module ForEachPartition( D,  )
         {
@@ -2525,6 +2551,7 @@ module MakeBox( box )
             } 
         }
 
+        // ----- CUTOUT & FILLET GEOMETRY -----
 
         module MakeSideCutouts( side, margin = false )
         {
@@ -2804,7 +2831,9 @@ module MakeBox( box )
             {
                 _MakeFillet();   
             }        
-        }
+         }
+
+        // ----- COMPARTMENT SHAPES -----
 
         module MakeVerticalShape( h, x, r )
         {
@@ -2883,6 +2912,8 @@ module MakeBox( box )
                 } 
             }
         }
+
+        // ----- COMPONENT LABELS -----
 
         module Helper_MakeLabel( label, x = 0, y = 0 )
         {
@@ -2975,6 +3006,8 @@ module MakeBox( box )
             }
         }
 
+        // ----- PARTITIONS & MARGINS -----
+
         module MakePartitions()
         {
             MakeMargin( side = k_front );
@@ -3021,6 +3054,8 @@ module MakeBox( box )
                 cube ( [ __component_size( k_x ), __component_padding( k_y ) , __partition_height( k_y ) + m_component_base_height ] );     
             }
         }
+
+        // ----- LID HARDWARE (notches, tabs, detents) -----
 
         module MakeLidCornerNotches()
         {

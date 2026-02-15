@@ -337,15 +337,28 @@ Record anything learned during the work that affects the plan. **Update after ev
 
 | Item | Line(s) |
 |------|---------|
-| Constants/Keywords/Defaults | 1-240 |
-| Key-value helpers | 246-250 |
-| Utility modules | 331-385 |
-| Data accessor functions | 388-500 |
-| Geometry helpers | 506-585 |
-| Key validation | 590-750 |
-| MakeAll | 755-822 |
-| MakeDividers | 825-935 |
-| MakeBox | 944-2795 |
-| MakeLayer (inside MakeBox) | 1082-2793 |
-| MakeRoundedCubeAxis | 2801-2860 |
-| **Total lines** | **2,857** |
+| Constants/Keywords/Defaults | 1-245 |
+| Key-value helpers | 247-330 |
+| Utility modules | 332-387 |
+| Data accessor functions | 389-505 |
+| Geometry helpers | 507-644 |
+| Key validation | 646-1154 |
+| MakeAll | 1161-1228 |
+| MakeDividers | 1231-1348 |
+| MakeBox | 1350-3226 |
+|   MakeLayer (inside MakeBox) | 1488-3222 |
+|     Layer positioning | 1591 |
+|     Lid base geometry | 1727 |
+|     Box shell & spacer | 1837 |
+|     Inner layer dispatch | 1889 |
+|     Box-level cutout dispatch | 2030 |
+|     Lid & box labels | 2070 |
+|     Lid assembly | 2269 |
+|     Iteration helpers | 2453 |
+|     Cutout & fillet geometry | 2541 |
+|     Compartment shapes | 2823 |
+|     Component labels | 2903 |
+|     Partitions & margins | 2996 |
+|     Lid hardware | 3045 |
+| MakeRoundedCubeAxis | 3229-3284 |
+| **Total lines** | **3,284** |

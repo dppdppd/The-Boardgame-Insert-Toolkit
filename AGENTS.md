@@ -24,17 +24,17 @@ Users define boxes via key-value data structures; the library renders them into 
 ### Key Modules (in boardgame_insert_toolkit_lib.4.scad)
 | Module | Lines | Purpose |
 |--------|-------|---------|
-| Constants/Keywords/Defaults | 1-240 | Parameter name constants, shape enums, internal defaults |
-| Key-Value Helpers | 246-250 | `__index_of_key()`, `__value()` — dictionary lookup |
-| Utility Modules | 331-385 | debug, rotate, mirror, colorize, shear |
-| Data Accessors | 388-500 | Extract parameters from data with defaults |
-| Geometry Helpers | 506-585 | `Make2dShape`, `Make2DPattern`, `MakeStripedGrid` |
-| Key Validation | 590-750 | `__ValidateTable`, `__ValidateElement` — typo/key detection |
-| `MakeAll()` | 755-822 | Top-level entry, validates keys, dispatches per element |
-| `MakeDividers()` | 825-935 | Card dividers with tabs and frames |
-| `MakeBox()` | 944-2795 | Box generation (single module, no hex variant) |
-| `MakeLayer()` | 1082-2793 | Component processing pipeline (inside MakeBox) |
-| `MakeRoundedCubeAxis()` | 2801-2860 | Rounded cube utility |
+| Constants/Keywords/Defaults | 1-245 | Parameter name constants, shape enums, internal defaults |
+| Key-Value Helpers | 247-330 | `__index_of_key()`, `__value()` — dictionary lookup |
+| Utility Modules | 332-387 | debug, rotate, mirror, colorize, shear |
+| Data Accessors | 389-505 | Extract parameters, auto-size, data with defaults |
+| Geometry Helpers | 507-644 | `Make2dShape`, `Make2DPattern`, `MakeStripedGrid` |
+| Key Validation | 646-1154 | `__ValidateTable`, `__ValidateElement`, type checks |
+| `MakeAll()` | 1161-1228 | Top-level entry, validates keys, dispatches per element |
+| `MakeDividers()` | 1231-1348 | Card dividers with tabs and frames |
+| `MakeBox()` | 1350-3226 | Box generation with 13 sub-sections |
+| `MakeLayer()` | 1488-3222 | Component processing pipeline (inside MakeBox) |
+| `MakeRoundedCubeAxis()` | 3229-3284 | Rounded cube utility |
 
 ### Version History
 - **v2**: Legacy, `boardgame_insert_toolkit_lib.2.scad` — no longer maintained
@@ -79,7 +79,7 @@ All use `--projection=ortho --view=edges --autocenter --viewall`:
 | iso    | 55,0,25           | Isometric overview (most informative) |
 
 ### Test Infrastructure: `tests/`
-- 51 test files covering all box features, combinations, and edge cases
+- 52 test files covering all box features, combinations, and edge cases
 - `tests/run_tests.sh` — runs all tests, generates 7 PNG views per test
 - Output: `tests/renders/{test_name}_{view}.png`
 - Each test includes the lib via relative path: `include <../boardgame_insert_toolkit_lib.4.scad>;`
@@ -121,7 +121,7 @@ Output goes to `tests/renders/eval/`.
 | `examples.4.scad` | v4 feature showcase |
 | `examples.3.scad` | v3 feature showcase (includes hex box example) |
 | `BIT_*.scad` | User game-specific designs (gitignored) |
-| `tests/test_*.scad` | Test files (51 total, all reference v4) |
+| `tests/test_*.scad` | Test files (52 total, all reference v4) |
 | `tests/baseline/` | Pre-refactor v3 lib snapshot for STL regression |
 | `tests/renders/*.png` | Full test suite renders |
 | `tests/renders/eval/*.png` | Ad-hoc evaluation renders |
