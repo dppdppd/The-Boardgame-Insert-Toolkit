@@ -3,7 +3,7 @@
   import ElementNode from "./lib/components/ElementNode.svelte";
   import { project, addElement, deleteElement, renameElement } from "./lib/stores/project";
   import { generateScad } from "./lib/scad";
-  import { startAutosave, onSaveStatus, setProjectDir, getProjectDir } from "./lib/autosave";
+  import { startAutosave, onSaveStatus, setProjectDir, getProjectDir, triggerSave } from "./lib/autosave";
 
   let intentText = "";
   let showIntent = false;
@@ -19,6 +19,25 @@
     startAutosave();
   });
 
+  async function newProject() {
+    const bitgui = (window as any).bitgui;
+    if (!bitgui?.showSaveDialog) return;
+    const res = await bitgui.showSaveDialog();
+    if (!res.ok) return;
+    const created = await bitgui.newProject(res.dirPath);
+    if (!created.ok) { statusMsg = `New project failed: ${created.error}`; return; }
+    const emptyProject = {
+      version: 1,
+      lib_checksums: created.checksums,
+      globals: { g_b_print_lid: true, g_b_print_box: true, g_isolated_print_box: "" },
+      data: [],
+    };
+    project.set(emptyProject);
+    setProjectDir(res.dirPath);
+    statusMsg = `New project: ${res.dirPath}`;
+    triggerSave();
+  }
+
   async function openProject() {
     const bitgui = (window as any).bitgui;
     if (!bitgui?.showOpenDialog) return;
@@ -27,13 +46,39 @@
     const loaded = await bitgui.loadProject(res.filePath);
     if (loaded.ok) {
       project.set(loaded.data);
-      // Derive project dir from file path
       const dir = res.filePath.replace(/[/\\][^/\\]+$/, "");
       setProjectDir(dir);
       statusMsg = `Opened: ${dir}`;
+      // Check lib staleness
+      const stale = await bitgui.checkLibStaleness(dir);
+      if (stale.ok && stale.stale.length > 0) {
+        statusMsg += ` (libs outdated: ${stale.stale.join(", ")})`;
+      }
     } else {
       statusMsg = `Open failed: ${loaded.error}`;
     }
+  }
+
+  async function importScadFile() {
+    const bitgui = (window as any).bitgui;
+    if (!bitgui?.showImportDialog) return;
+    const res = await bitgui.showImportDialog();
+    if (!res.ok) return;
+    const imported = await bitgui.importScad(res.filePath);
+    if (imported.ok) {
+      project.set(imported.data);
+      statusMsg = `Imported: ${res.filePath}`;
+    } else {
+      statusMsg = `Import failed: ${imported.error}`;
+    }
+  }
+
+  async function openInOpenScad() {
+    const bitgui = (window as any).bitgui;
+    const dir = getProjectDir();
+    if (!bitgui?.openInOpenScad || !dir) return;
+    const res = await bitgui.openInOpenScad(dir);
+    if (!res.ok) statusMsg = `OpenSCAD: ${res.error}`;
   }
 
   async function saveProjectAs() {
@@ -43,8 +88,6 @@
     if (!res.ok) return;
     setProjectDir(res.dirPath);
     statusMsg = `Project dir: ${res.dirPath}`;
-    // Trigger immediate save
-    const { triggerSave } = await import("./lib/autosave");
     triggerSave();
   }
 </script>
@@ -53,11 +96,18 @@
   <header data-testid="app-header">
     <h1>BIT GUI</h1>
     <div class="header-actions">
+      <button data-testid="new-project" on:click={newProject}>New</button>
       <button data-testid="open-project" on:click={openProject}>Open</button>
+      <button data-testid="import-scad" on:click={importScadFile}>Import</button>
       <button data-testid="save-as" on:click={saveProjectAs}>Save As</button>
       <button data-testid="show-scad" on:click={() => (showScad = !showScad)}>
         {showScad ? "Tree" : "SCAD"}
       </button>
+      <button
+        data-testid="open-openscad"
+        disabled={!getProjectDir()}
+        on:click={openInOpenScad}
+      >OpenSCAD</button>
     </div>
   </header>
 

@@ -31,28 +31,42 @@ const ENUM_MAP: Record<string, string> = {
 };
 
 function isDefault(key: string, value: any, context: string): boolean {
+  if (isExpr(value)) return false; // Expressions are never default
   const keys = getContextKeys(context);
   const def = (keys as any)[key] as KeyDef | undefined;
   if (!def || def.default === undefined) return false;
   return JSON.stringify(value) === JSON.stringify(def.default);
 }
 
+function isExpr(value: any): boolean {
+  return value && typeof value === "object" && "__expr" in value;
+}
+
 function formatValue(value: any, keyType?: string): string {
+  // Raw OpenSCAD expression — emit verbatim
+  if (isExpr(value)) return value.__expr;
+
   if (value === true) return "true";
   if (value === false) return "false";
   if (typeof value === "number") return String(value);
   if (typeof value === "string") {
     // Check if it's an enum constant
     if (ENUM_MAP[value]) return ENUM_MAP[value];
+    // Schema type "string" means it's a real string — quote it
+    // Otherwise treat as raw expression
+    if (keyType === "string" || keyType === "string_list") return `"${value}"`;
+    // If it looks like a known constant, don't quote
+    if (ENUM_MAP[value]) return ENUM_MAP[value];
+    // Default: quote it (safe for most values)
     return `"${value}"`;
   }
   if (Array.isArray(value)) {
-    if (value.length > 0 && typeof value[0] === "object") {
+    if (value.length > 0 && typeof value[0] === "object" && !isExpr(value[0])) {
       // Nested table — shouldn't reach here
       return "[]";
     }
-    // Format array elements
     const items = value.map((v) => {
+      if (isExpr(v)) return v.__expr;
       if (typeof v === "string" && ENUM_MAP[v]) return ENUM_MAP[v];
       if (typeof v === "string") return `"${v}"`;
       if (typeof v === "boolean") return v ? "true" : "false";

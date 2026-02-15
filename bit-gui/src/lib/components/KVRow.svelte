@@ -16,7 +16,8 @@
   $: isNested = keyType === "table" || keyType === "table_list";
   $: childContext = keySchema?.child_context || context;
   $: defaultVal = keySchema?.default;
-  $: isDefault = !isNested && JSON.stringify(param.value) === JSON.stringify(defaultVal);
+  $: isExpr = param.value && typeof param.value === "object" && "__expr" in param.value;
+  $: isDefault = !isNested && !isExpr && JSON.stringify(param.value) === JSON.stringify(defaultVal);
 
   function update(newValue: any) {
     param.value = newValue;
@@ -89,7 +90,15 @@
     <span class="key" class:muted={isDefault}>{param.key}</span>
 
     <span class="value" data-testid="kv-{param.key}-editor">
-      {#if keyType === "bool"}
+      {#if isExpr}
+        <input
+          class="str-input wide expr"
+          type="text"
+          value={param.value.__expr}
+          on:change={(e) => update({ __expr: e.currentTarget.value })}
+          data-testid="kv-{param.key}-expr"
+        />
+      {:else if keyType === "bool"}
         <input
           type="checkbox"
           checked={param.value}
@@ -273,6 +282,7 @@
   .str-input { width: 120px; }
   .str-input.sm { width: 64px; }
   .str-input.wide { width: 200px; }
+  .str-input.expr { color: #e67e22; font-style: italic; }
   select { padding: 1px 2px; }
   input[type="checkbox"] { margin: 0; }
 
