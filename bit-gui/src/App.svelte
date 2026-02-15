@@ -2,9 +2,13 @@
   import { onMount } from "svelte";
   import ElementNode from "./lib/components/ElementNode.svelte";
   import { project, addElement, deleteElement, renameElement } from "./lib/stores/project";
+  import { generateScad } from "./lib/scad";
 
   let intentText = "";
   let showIntent = false;
+  let showScad = false;
+
+  $: scadOutput = generateScad($project);
 
   onMount(() => {
     showIntent = !!(window as any).bitgui?.harness;
@@ -15,6 +19,9 @@
   <header data-testid="app-header">
     <h1>BIT GUI</h1>
     <div class="header-actions">
+      <button data-testid="show-scad" on:click={() => (showScad = !showScad)}>
+        {showScad ? "Tree" : "SCAD"}
+      </button>
       <button data-testid="options-open">Options</button>
     </div>
   </header>
@@ -23,20 +30,24 @@
     <div class="toolbar">
       <button data-testid="add-element" on:click={() => addElement()}>+ Add Element</button>
     </div>
-    <div class="tree-view" data-testid="tree-view">
-      {#if $project.data.length === 0}
-        <p class="empty-state">No elements yet. Click "+ Add Element" to start.</p>
-      {:else}
-        {#each $project.data as element, i (i)}
-          <ElementNode
-            {element}
-            index={i}
-            on:delete={() => deleteElement(i)}
-            on:rename={(e) => renameElement(i, e.detail)}
-          />
-        {/each}
-      {/if}
-    </div>
+    {#if showScad}
+      <pre class="scad-preview" data-testid="scad-preview">{scadOutput}</pre>
+    {:else}
+      <div class="tree-view" data-testid="tree-view">
+        {#if $project.data.length === 0}
+          <p class="empty-state">No elements yet. Click "+ Add Element" to start.</p>
+        {:else}
+          {#each $project.data as element, i (i)}
+            <ElementNode
+              {element}
+              index={i}
+              on:delete={() => deleteElement(i)}
+              on:rename={(e) => renameElement(i, e.detail)}
+            />
+          {/each}
+        {/if}
+      </div>
+    {/if}
   </section>
 
   <footer class="status-bar" data-testid="status-bar">
@@ -119,6 +130,19 @@
 
   .tree-view {
     min-height: 100px;
+  }
+
+  .scad-preview {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    padding: 12px;
+    border-radius: 4px;
+    overflow: auto;
+    margin: 0;
+    white-space: pre;
+    line-height: 1.4;
   }
 
   .empty-state {
