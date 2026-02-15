@@ -319,37 +319,31 @@ Record anything learned during the work that affects the plan. **Update after ev
 
 ## Progress Summary
 
-| Phase | Description | Tasks | Done | Status |
-|-------|-------------|-------|------|--------|
-| 0 | Bugs & Dead Code | 6 groups | 6 | Done |
-| 1 | Extract Shared Geometry | 3 groups | 1 | In progress |
-| 2 | Extract Labels & Iteration | 3 groups | 0 | Not started |
-| 3 | Extract Cutouts & Structure | 3 groups | 0 | Not started |
-| 4 | Reduce Box/HexBox Duplication | 3 groups | 0 | Not started |
-| 5 | Magic Numbers → Constants | 1 group | 0 | Not started |
-| 6 | Organization & Documentation | 3 groups | 0 | Not started |
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 0 | Bugs & dead code (v3) | Done — 6 tasks, fixed divider_top, Make2dShape typo, removed dead code |
+| 1 | Extract shared geometry (v3) | Done — polygon helpers, Make2DPattern, MakeStripedGrid to file scope |
+| 2-3 | Extract labels/iteration/cutouts (v3) | Blocked — OpenSCAD lexical scoping prevents extraction |
+| 4 | Accessor unification (v3) | Done — m_box_height_index, precomputed dimension arrays |
+| 5 | Magic numbers → constants (v3) | Done — 14 named constants, 39 replacements |
+| 6 | TOC, section headers, documentation (v3) | Done |
+| Bug fixes | #65 asymmetric cutouts, #69 label clipping, #71 dead var | Done |
+| **v4** | **Remove MakeHexBox, create v4 files** | **Done — 4,456 → 2,675 lines (40% reduction)** |
 
 ---
 
-## Line Number Index (update after each phase)
+## Line Number Index (v4: boardgame_insert_toolkit_lib.4.scad)
 
-Key reference points for navigation. **Must be updated after any change that shifts line numbers.**
-
-| Item | Line(s) | Last verified |
-|------|---------|---------------|
-| Constants/Keywords + defaults | 1-227 | Phase 5.1 |
-| Key-value helpers | 213-215 | pre-plan |
-| Globals | 219-295 | pre-plan |
-| Utility modules (debug..Shear) | 307-470 | Phase 1.3 |
-| __ngon_points, __ngon_indices | 474-479 | Phase 1.3 |
-| Make2dShape (file scope) | 481-489 | Phase 1.3 |
-| Make2DPattern (file scope) | 491-525 | Phase 1.3 |
-| MakeStripedGrid (file scope) | 527-553 | Phase 1.3 |
-| MakeAll | 556-611 | Phase 2.0 |
-| MakeDividers | 613-721 | Phase 2.0 |
-| MakeBox start | 723 | Phase 2.0 |
-| m_box_height_index = k_z | 756 | Phase 2.0 |
-| MakeHexBox start | 2545 | Phase 2.0 |
-| m_box_height_index = k_hex_z | 2577 | Phase 2.0 |
-| MakeRoundedCubeAxis | 4284-4336 | Phase 2.0 |
-| **Total lines** | **4421** | Phase 6.1 |
+| Item | Line(s) |
+|------|---------|
+| Constants/Keywords/Defaults | 1-230 |
+| Key-value helpers | 241-250 |
+| Utility modules | 325-380 |
+| Data accessor functions | 382-500 |
+| Geometry helpers | 501-580 |
+| MakeAll | 585-635 |
+| MakeDividers | 641-750 |
+| MakeBox | 763-2610 |
+| MakeLayer (inside MakeBox) | 901-2608 |
+| MakeRoundedCubeAxis | 2617-2670 |
+| **Total lines** | **2,675** |

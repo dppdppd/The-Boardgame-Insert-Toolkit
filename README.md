@@ -12,12 +12,23 @@ This:
 # Why
 This OpenSCAD library was designed to for quick design and iteration on board game inserts--specifically ones with lids. There are lots of great printable inserts out there, but very few for us vertical storers.
 
+# Version 4.00
+
+**v4** is a streamlined release focused on maintainability:
+- **40% smaller codebase** (2,675 lines, down from 4,456 in v3)
+- Removed hexagonal box type (`HEXBOX`) — hex-shaped *compartments* (`CMP_SHAPE` = `HEX`/`HEX2`) still work in regular boxes
+- Bug fixes: asymmetric cutouts with `CMP_CUTOUT_HEIGHT_PCT` (#65), label clipping with shear (#69)
+- 14 magic numbers replaced with named constants
+- Code documentation: TOC, section headers, module docs
+
+**Migrating from v3**: Change your includes from `boardgame_insert_toolkit_lib.3.scad` to `boardgame_insert_toolkit_lib.4.scad` (and similarly for `bit_functions_lib`). If you use `HEXBOX` type boxes, keep using v3 — the v3 files are preserved in the repo.
+
 # How
 - Download [Openscad](https://www.openscad.org).
 - Create a new directory for the board game you're working on. It's best to keep the BIT file with the board game file because future BIT versions may not be backwards compatible and this way you will always be able to recreate the STLs.
-- Put _boardgame_insert_toolkit_library.3.scad_, _bit_functions_lib.3.scad_, and a copy of _starter.scad_ in the directory. Feel free to rename _starter.scad_ to something more descriptive.
+- Put _boardgame_insert_toolkit_lib.4.scad_, _bit_functions_lib.4.scad_, and a copy of _starter.scad_ in the directory. Feel free to rename _starter.scad_ to something more descriptive.
 - You'll be working entirely in your copy of the example.
-- The first line should be __include <boardgame_insert_toolkit_lib.3.scad>;__ and the last should be __MakeAll();__ All of your 'code' goes in-between.
+- The first line should be __include <boardgame_insert_toolkit_lib.4.scad>;__ and the last should be __MakeAll();__ All of your 'code' goes in-between.
 - Open your new scad file in your favorite text editor and also in Openscad.
 - In Openscad, set "Automatic Reload and Preview" _on_ in the Design menu. Now openscad will update the display whenever you save the scad file in the text editor.
 - Measure, build, measure again.
@@ -137,8 +148,10 @@ And this is the result:
 
 ![example2](images/example2.png)
 
-### Hexagonal Boxes
-As of v3.00, there is now the ability to create hexagonal boxes as an efficient way to store hexagonal tiles (like those in Catan). Here is the code to produce a box to hold hexagonal tiles:
+### Hexagonal Boxes (v3 only)
+> **Note:** Hexagonal *box types* (`TYPE = HEXBOX`) were removed in v4. Use v3 if you need hex boxes. Hex-shaped *compartments* (`CMP_SHAPE = HEX` or `HEX2`) still work in v4 regular boxes.
+
+As of v3.00, there is the ability to create hexagonal boxes as an efficient way to store hexagonal tiles (like those in Catan). Here is the code to produce a box to hold hexagonal tiles:
 
     include <bit_functions_lib.scad>;
     
@@ -288,8 +301,8 @@ As of v2.10, one can now tweak the lid pattern parameters. The default is still 
 #### `TYPE`
 Value is expected to be one of the following:
 - `BOX` (default) a box.
-- `HEXBOX` a hexagonal box.
 - `DIVIDERS` a set of dividers.
+- `HEXBOX` a hexagonal box (v3 only — removed in v4).
 
 ## Box keys
 
@@ -297,8 +310,8 @@ Value is expected to be one of the following:
 Value is expected to be an array of 3 numbers, and determines the exterior dimensions of the box as width, depth, height.  
 e.g. `[ BOX_SIZE_XYZ, [ 140, 250, 80 ] ]`
 
-#### `HEXBOX_SIZE_DZ`
-Value is expected to be an array of 2 numbers, and determines the __interior__ dimension of the box as diameter, and the __exterior__ dimension as height.  
+#### `HEXBOX_SIZE_DZ` (v3 only)
+Value is expected to be an array of 2 numbers, and determines the __interior__ dimension of the box as diameter, and the __exterior__ dimension as height. Removed in v4.  
 e.g., `[ HEXBOX_SIZE_DZ,    [ 100, 40 ] ],`
 
 #### `BOX_COMPONENT`
