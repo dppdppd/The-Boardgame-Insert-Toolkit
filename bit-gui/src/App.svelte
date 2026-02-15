@@ -1,4 +1,7 @@
 <script lang="ts">
+  import ElementNode from "./lib/components/ElementNode.svelte";
+  import { project } from "./lib/stores/project";
+
   let intentText = "";
 </script>
 
@@ -15,7 +18,13 @@
       <button data-testid="add-element">+ Add Element</button>
     </div>
     <div class="tree-view" data-testid="tree-view">
-      <p class="empty-state">No elements yet. Click "+ Add Element" to start.</p>
+      {#if $project.data.length === 0}
+        <p class="empty-state">No elements yet. Click "+ Add Element" to start.</p>
+      {:else}
+        {#each $project.data as element, i}
+          <ElementNode {element} index={i} />
+        {/each}
+      {/if}
     </div>
   </section>
 
@@ -54,15 +63,14 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: 8px 16px;
     background: #2c3e50;
     color: white;
-    min-height: 48px;
   }
 
   header h1 {
     margin: 0;
-    font-size: 24px;
+    font-size: 18px;
     font-weight: 700;
   }
 
@@ -79,50 +87,46 @@
   .content {
     flex: 1;
     overflow-y: auto;
-    padding: 12px 16px;
+    padding: 8px 12px;
   }
 
   .toolbar {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
 
   .toolbar button {
     background: #3498db;
     color: white;
     border: none;
-    padding: 6px 16px;
+    padding: 5px 14px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 13px;
   }
 
   .tree-view {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    min-height: 200px;
-    padding: 16px;
+    min-height: 100px;
   }
 
   .empty-state {
     color: #999;
     text-align: center;
-    margin-top: 60px;
+    margin-top: 40px;
   }
 
   .status-bar {
     display: flex;
     justify-content: space-between;
-    padding: 4px 16px;
+    padding: 3px 12px;
     background: #ecf0f1;
     border-top: 1px solid #ddd;
-    font-size: 12px;
+    font-size: 11px;
     color: #666;
   }
 
   .intent-pane {
     background: #1a1a2e;
-    padding: 6px 16px;
+    padding: 6px 12px;
     border-top: 2px solid #e74c3c;
   }
 
