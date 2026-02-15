@@ -1440,7 +1440,16 @@ module MakeBox( box )
 
                 if ( !g_b_no_labels_actual)
                 {
-                    LabelEachCompartment();
+                    // Clip label subtraction geometry to the component bounds
+                    // to prevent sheared/offset labels from cutting outside the box walls
+                    intersection()
+                    {
+                        translate( [ -__component_padding( k_x ), -__component_padding( k_y ), -m_wall_thickness ] )
+                            cube( [ __component_size( k_x ) + 2 * __component_padding( k_x ),
+                                    __component_size( k_y ) + 2 * __component_padding( k_y ),
+                                    m_box_size[ m_box_height_index ] ] );
+                        LabelEachCompartment();
+                    }
                 }
             }
         }
@@ -3274,7 +3283,16 @@ module MakeHexBox( box )
 
                 if ( !g_b_no_labels_actual)
                 {
-                    LabelEachCompartment();
+                    // Clip label subtraction geometry to the component bounds
+                    // to prevent sheared/offset labels from cutting outside the box walls
+                    intersection()
+                    {
+                        translate( [ -__component_padding( k_x ), -__component_padding( k_y ), -m_wall_thickness ] )
+                            cube( [ __component_size( k_x ) + 2 * __component_padding( k_x ),
+                                    __component_size( k_y ) + 2 * __component_padding( k_y ),
+                                    m_box_size[ m_box_height_index ] ] );
+                        LabelEachCompartment();
+                    }
                 }
             }
         }
