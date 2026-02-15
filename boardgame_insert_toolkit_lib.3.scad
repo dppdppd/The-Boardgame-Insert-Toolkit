@@ -2080,10 +2080,23 @@ module MakeBox( box )
             
             translate( pos[ side ] )
                 if ( __round_bottom() ) {
-                    if ( side == k_back || side == k_front )
+                    // When round_bottom is active, the rounding axis switches from k_z to
+                    // k_x (front/back) or k_y (left/right). The internal cylinder direction
+                    // of MakeRoundedCubeAxis extends toward negative Y (axis=k_x) or
+                    // negative X (axis=k_y). For back/right cutouts the cylinder must face
+                    // outward, so we mirror the shape around its center.
+                    if ( side == k_front )
                         MakeRoundedCubeAxis( size[ side ], radius, shape, k_x);
-                    else
+                    else if ( side == k_back )
+                        translate( [0, size[side][k_y], 0] )
+                            mirror( [0, 1, 0] )
+                                MakeRoundedCubeAxis( size[ side ], radius, shape, k_x);
+                    else if ( side == k_left )
                         MakeRoundedCubeAxis( size[ side ], radius, shape, k_y);
+                    else // k_right
+                        translate( [size[side][k_x], 0, 0] )
+                            mirror( [1, 0, 0] )
+                                MakeRoundedCubeAxis( size[ side ], radius, shape, k_y);
                 }
                 else
                     MakeRoundedCubeAxis( size[ side ], radius, shape, k_z);
@@ -3895,10 +3908,18 @@ module MakeHexBox( box )
 
                                 translate( pos[ side ] )
                                     if ( __round_bottom() ) {
-                                        if ( side == k_back || side == k_front )
+                                        if ( side == k_front )
                                             MakeRoundedCubeAxis( size[ side ], radius, shape, k_x);
-                                        else
+                                        else if ( side == k_back )
+                                            translate( [0, size[side][k_y], 0] )
+                                                mirror( [0, 1, 0] )
+                                                    MakeRoundedCubeAxis( size[ side ], radius, shape, k_x);
+                                        else if ( side == k_left )
                                             MakeRoundedCubeAxis( size[ side ], radius, shape, k_y);
+                                        else // k_right
+                                            translate( [size[side][k_x], 0, 0] )
+                                                mirror( [1, 0, 0] )
+                                                    MakeRoundedCubeAxis( size[ side ], radius, shape, k_y);
                                     }
                                     else
                                         MakeRoundedCubeAxis( size[ side ], radius, shape, k_z);
