@@ -287,6 +287,12 @@ function importScad(scadText) {
   // Convert elements
   const elements = [];
   for (const elem of dataArray) {
+    // Function call or expression entry (e.g. makeFaction("ATREIDES"))
+    if (elem && typeof elem === "object" && elem.__expr) {
+      elements.push({ name: elem.__expr, type: "__EXPR__", params: [], __expr: elem.__expr });
+      continue;
+    }
+
     if (!Array.isArray(elem) || elem.length < 2) continue;
     const name = typeof elem[0] === "string" ? elem[0] : String(elem[0]);
     const kvTable = elem[1];

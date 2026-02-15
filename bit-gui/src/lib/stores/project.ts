@@ -11,6 +11,7 @@ export interface Element {
   name: string;
   type: string;
   params: KVParam[];
+  __expr?: string; // Raw expression element (not editable)
 }
 
 export interface Project {

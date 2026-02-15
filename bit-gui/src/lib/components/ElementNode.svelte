@@ -32,6 +32,14 @@
   }
 </script>
 
+{#if element.__expr}
+<div class="element-node expr-node" data-testid="element-{index}">
+  <div class="element-header" data-testid="element-{index}-header">
+    <span class="expr-text">{element.__expr}</span>
+    <button class="delete-btn" data-testid="element-{index}-delete" on:click={() => dispatch("delete")}>✕</button>
+  </div>
+</div>
+{:else}
 <div class="element-node" data-testid="element-{index}">
   <div class="element-header" data-testid="element-{index}-header">
     <button
@@ -98,6 +106,7 @@
     </div>
   {/if}
 </div>
+{/if}
 
 <style>
   .element-node {
@@ -105,6 +114,16 @@
     border: 1px solid #ddd;
     border-radius: 4px;
     margin-bottom: 8px;
+  }
+  .expr-node {
+    background: #fef9e7;
+    border-color: #f0c040;
+  }
+  .expr-text {
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    color: #e67e22;
+    font-style: italic;
   }
   .element-header {
     display: flex;

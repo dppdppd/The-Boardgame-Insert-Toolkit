@@ -192,7 +192,12 @@ export function generateScad(project: Project): string {
   // Data array
   out.push("data = [");
   for (const element of project.data) {
-    out.push(...emitElement(element, 1));
+    if ((element as any).__expr) {
+      // Expression element — emit verbatim
+      out.push(`${indent(1)}${(element as any).__expr},`);
+    } else {
+      out.push(...emitElement(element, 1));
+    }
   }
   out.push("];");
   out.push("");
