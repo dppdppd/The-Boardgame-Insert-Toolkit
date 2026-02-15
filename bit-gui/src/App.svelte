@@ -1,6 +1,5 @@
 <script lang="ts">
   let intentText = "";
-  let intentStep = 0;
 </script>
 
 <main data-testid="app-root">
@@ -26,19 +25,12 @@
   </footer>
 
   <div class="intent-pane" data-testid="intent-pane">
-    <div class="intent-row">
-      <label for="intent-input">Intent:</label>
-      <input
-        id="intent-input"
-        data-testid="intent-text"
-        type="text"
-        bind:value={intentText}
-        placeholder="Describe what you expect to happen..."
-      />
-    </div>
-    <div class="intent-step" data-testid="intent-step">
-      Step: {String(intentStep).padStart(3, "0")}
-    </div>
+    <input
+      data-testid="intent-text"
+      type="text"
+      bind:value={intentText}
+      placeholder="Describe what you expect to happen..."
+    />
   </div>
 </main>
 
@@ -130,38 +122,19 @@
 
   .intent-pane {
     background: #1a1a2e;
-    color: #e0e0e0;
-    padding: 8px 16px;
+    padding: 6px 16px;
     border-top: 2px solid #e74c3c;
-    font-family: "Courier New", monospace;
   }
 
-  .intent-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .intent-row label {
-    font-weight: bold;
-    color: #e74c3c;
-    white-space: nowrap;
-  }
-
-  .intent-row input {
-    flex: 1;
+  .intent-pane input {
+    width: 100%;
+    box-sizing: border-box;
     background: #16213e;
     border: 1px solid #444;
     color: #e0e0e0;
     padding: 4px 8px;
     font-family: "Courier New", monospace;
-    font-size: 14px;
+    font-size: 13px;
     border-radius: 2px;
-  }
-
-  .intent-step {
-    font-size: 12px;
-    color: #888;
-    margin-top: 4px;
   }
 </style>

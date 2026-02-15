@@ -130,8 +130,8 @@ async function main() {
     args: [path.join(BIT_GUI, "main.js")],
     env: {
       ...process.env,
-      BITGUI_WINDOW_WIDTH: "1200",
-      BITGUI_WINDOW_HEIGHT: "900",
+      BITGUI_WINDOW_WIDTH: "800",
+      BITGUI_WINDOW_HEIGHT: "600",
     },
   });
 

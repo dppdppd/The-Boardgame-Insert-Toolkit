@@ -4,8 +4,8 @@ const path = require("path");
 let mainWindow;
 
 function createWindow() {
-  const width = parseInt(process.env.BITGUI_WINDOW_WIDTH || "1200", 10);
-  const height = parseInt(process.env.BITGUI_WINDOW_HEIGHT || "900", 10);
+  const width = parseInt(process.env.BITGUI_WINDOW_WIDTH || "800", 10);
+  const height = parseInt(process.env.BITGUI_WINDOW_HEIGHT || "600", 10);
 
   mainWindow = new BrowserWindow({
     width,
