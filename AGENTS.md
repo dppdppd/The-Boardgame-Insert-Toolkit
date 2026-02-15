@@ -6,7 +6,7 @@ OpenSCAD parametric library for designing 3D-printable board game box inserts wi
 Users define boxes via key-value data structures; the library renders them into 3D geometry.
 
 - **Language**: OpenSCAD (declarative CSG modeling)
-- **Active version**: v4 — `boardgame_insert_toolkit_lib.4.scad` (~2,675 lines)
+- **Active version**: v4 — `boardgame_insert_toolkit_lib.4.scad`
 - **Legacy version**: v3 — `boardgame_insert_toolkit_lib.3.scad` (~4,456 lines, preserved for hex box users)
 - **Helper functions**: `bit_functions_lib.4.scad` (convenience wrappers)
 - **Entry point**: User `.scad` files call `MakeAll()` which processes a `data[]` array
@@ -22,19 +22,18 @@ Users define boxes via key-value data structures; the library renders them into 
 4. Output is OpenSCAD geometry exportable as STL
 
 ### Key Modules (in boardgame_insert_toolkit_lib.4.scad)
-| Module | Lines | Purpose |
-|--------|-------|---------|
-| Constants/Keywords/Defaults | 1-245 | Parameter name constants, shape enums, internal defaults |
-| Key-Value Helpers | 247-330 | `__index_of_key()`, `__value()` — dictionary lookup |
-| Utility Modules | 332-387 | debug, rotate, mirror, colorize, shear |
-| Data Accessors | 389-505 | Extract parameters, auto-size, data with defaults |
-| Geometry Helpers | 507-644 | `Make2dShape`, `Make2DPattern`, `MakeStripedGrid` |
-| Key Validation | 646-1154 | `__ValidateTable`, `__ValidateElement`, type checks |
-| `MakeAll()` | 1161-1228 | Top-level entry, validates keys, dispatches per element |
-| `MakeDividers()` | 1231-1348 | Card dividers with tabs and frames |
-| `MakeBox()` | 1350-3226 | Box generation with 13 sub-sections |
-| `MakeLayer()` | 1488-3222 | Component processing pipeline (inside MakeBox) |
-| `MakeRoundedCubeAxis()` | 3229-3284 | Rounded cube utility |
+| Module | Purpose |
+|--------|---------|
+| Constants/Keywords/Defaults | Parameter name constants, shape enums, internal defaults |
+| Key-Value Helpers | `__index_of_key()`, `__value()` — dictionary lookup |
+| Utility Modules | debug, rotate, mirror, colorize, shear |
+| Data Accessors | Extract parameters, auto-size, data with defaults |
+| Geometry Helpers | `Make2dShape`, `Make2DPattern`, `MakeStripedGrid` |
+| Key Validation | `__ValidateTable`, `__ValidateElement`, type checks |
+| `MakeAll()` | Top-level entry, validates keys, dispatches per element |
+| `MakeDividers()` | Card dividers with tabs and frames |
+| `MakeBox()` / `MakeLayer()` | Box generation + component processing pipeline |
+| `MakeRoundedCubeAxis()` | Rounded cube utility |
 
 ### Version History
 - **v2**: Legacy, `boardgame_insert_toolkit_lib.2.scad` — no longer maintained
@@ -127,7 +126,7 @@ Output goes to `tests/renders/eval/`.
 | `tests/renders/eval/*.png` | Ad-hoc evaluation renders |
 | `tests/render_eval.sh` | Evaluation render tool |
 | `tests/run_tests.sh` | Test runner script |
-| `CLEANUP_PLAN.md` | Refactor plan with task status |
+| `BIT_GUI_PLAN.md` | GUI app design & implementation plan |
 
 ### Test file template
 ```openscad
@@ -174,7 +173,7 @@ MakeAll();
 `LBL_TEXT`, `LBL_SIZE` (number or AUTO), `LBL_PLACEMENT` (FRONT/BACK/LEFT/RIGHT/FRONT_WALL/BACK_WALL/LEFT_WALL/RIGHT_WALL/CENTER/BOTTOM), `LBL_FONT`, `LBL_DEPTH`, `LBL_SPACING`, `LBL_IMAGE`, `ROTATION`, `POSITION_XY`
 
 ### Divider-level
-`DIV_TAB_TEXT`, `DIV_TAB_SIZE_XY`, `DIV_TAB_RADIUS`, `DIV_TAB_CYCLE`, `DIV_TAB_CYCLE_START`, `DIV_TAB_TEXT_SIZE/FONT/SPACING`, `DIV_FRAME_SIZE_XY`, `DIV_FRAME_NUM_COLUMNS`, `DIV_FRAME_COLUMN`, `DIV_FRAME_TOP/BOTTOM/RADIUS`, `DIV_THICKNESS`
+`DIV_TAB_TEXT`, `DIV_TAB_SIZE_XY`, `DIV_TAB_RADIUS`, `DIV_TAB_CYCLE`, `DIV_TAB_CYCLE_START`, `DIV_TAB_TEXT_SIZE/FONT/SPACING`, `DIV_TAB_TEXT_EMBOSSED_B`, `DIV_FRAME_SIZE_XY`, `DIV_FRAME_NUM_COLUMNS`, `DIV_FRAME_COLUMN`, `DIV_FRAME_TOP/BOTTOM/RADIUS`, `DIV_THICKNESS`
 
 ### Globals (set before data[])
 `g_b_print_lid`, `g_b_print_box`, `g_isolated_print_box`, `g_b_visualization`, `g_b_validate_keys`, `g_wall_thickness`, `g_tolerance`, `g_tolerance_detents_pos`, `g_default_font`, `g_print_mmu_layer`
