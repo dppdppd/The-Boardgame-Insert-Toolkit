@@ -69,7 +69,8 @@ interacts to confirm it, and the screenshots are the evidence.
 | `BITGUI_TEST_PROJECT_DIR=/path` | Auto-open this project on startup |
 | `BITGUI_AUTOSAVE_DEBOUNCE_MS=0` | Instant save (no debounce delay) |
 | `BITGUI_DISABLE_PROMPTS=1` | Suppress modal dialogs |
-| `BITGUI_WINDOW_SIZE=1200x900` | Consistent screenshot dimensions |
+| `BITGUI_WINDOW_WIDTH=1200` | Window width for screenshots |
+| `BITGUI_WINDOW_HEIGHT=900` | Window height for screenshots |
 
 ### data-testid Convention
 
@@ -97,7 +98,7 @@ can target by intent, not by pixel coordinates:
 1. **Visual key-value constructor** — structured editor for BIT `data[]` arrays.
 2. **Autosave on every change** — writes a real `.scad` file so OpenSCAD renders live.
 3. **Schema-driven** — keys, types, defaults derived from v4 library; no custom keys.
-4. **Cross-platform** — Windows, macOS, Linux (Tauri).
+4. **Cross-platform** — Windows, macOS, Linux (Electron).
 5. **Project-centric** — each project is a self-contained folder.
 
 ## Architecture
@@ -377,7 +378,7 @@ No custom keys allowed — if it's not in the schema, you can't add it.
 | Backup on Lib Update | true | Checkbox |
 | OpenSCAD Path | (auto-detect) | For "Open in OpenSCAD" button |
 
-Settings stored in Tauri app data dir (OS-appropriate).
+Settings stored in Electron app data dir (OS-appropriate).
 
 ## Autosave Pipeline
 
@@ -453,7 +454,7 @@ Settings stored in Tauri app data dir (OS-appropriate).
 - [ ] Delete node/row
 - [ ] Reorder list items
 - [ ] SCAD text generator
-- [ ] Atomic file writer (Rust backend)
+- [ ] Atomic file writer (Electron main process via IPC)
 - [ ] Autosave pipeline (debounced)
 - [ ] JSON project model (create, load, save)
 
