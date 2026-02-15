@@ -13,11 +13,11 @@
     "electron-serve": "^2.1.1"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^3",
+    "@sveltejs/vite-plugin-svelte": "^5.1.1",
     "concurrently": "^9",
     "electron": "^33.4.11",
     "playwright": "^1.49",
-    "svelte": "^4",
+    "svelte": "^5.51.2",
     "vite": "^6"
   }
 }

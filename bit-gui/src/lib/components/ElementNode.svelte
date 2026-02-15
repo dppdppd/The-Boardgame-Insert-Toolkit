@@ -1,30 +1,32 @@
-<script>
-  import { createEventDispatcher } from "svelte";
+<script lang="ts">
   import KVRow from "./KVRow.svelte";
   import { mergeWithDefaults, getAddableNodes } from "../schema";
   import { updateParam, addComponent, addSubNode, moveElement, duplicateElement } from "../stores/project";
+  import type { Element } from "../stores/project";
 
-  export let element;
-  export let index;
+  let { element, index, ondelete, onrename }: {
+    element: Element;
+    index: number;
+    ondelete: () => void;
+    onrename: (name: string) => void;
+  } = $props();
 
-  const dispatch = createEventDispatcher();
+  let expanded = $state(true);
+  let editingName = $state(false);
+  let nameInput = $state(element.name);
 
-  let expanded = true;
-  let editingName = false;
-  let nameInput = element.name;
+  let context = $derived(element.type === "DIVIDERS" ? "divider" : "element");
+  let fullParams = $derived(mergeWithDefaults(element.params, context, element.type));
+  let addable = $derived(getAddableNodes(element.params, context, element.type));
 
-  $: context = element.type === "DIVIDERS" ? "divider" : "element";
-  $: fullParams = mergeWithDefaults(element.params, context, element.type);
-  $: addable = getAddableNodes(element.params, context, element.type);
-
-  function handleParamChange(e, paramKey) {
+  function handleParamChange(e: CustomEvent, paramKey: string) {
     updateParam(index, [paramKey], e.detail.value);
   }
 
   function commitName() {
     editingName = false;
     if (nameInput.trim() && nameInput !== element.name) {
-      dispatch("rename", nameInput.trim());
+      onrename(nameInput.trim());
     } else {
       nameInput = element.name;
     }
@@ -35,7 +37,7 @@
 <div class="element-node expr-node" data-testid="element-{index}">
   <div class="element-header" data-testid="element-{index}-header">
     <span class="expr-text">{element.__expr}</span>
-    <button class="delete-btn" data-testid="element-{index}-delete" on:click={() => dispatch("delete")}>✕</button>
+    <button class="delete-btn" data-testid="element-{index}-delete" onclick={ondelete}>✕</button>
   </div>
 </div>
 {:else}
@@ -44,7 +46,7 @@
     <button
       class="toggle"
       data-testid="element-{index}-expand"
-      on:click={() => (expanded = !expanded)}
+      onclick={() => (expanded = !expanded)}
     >
       {expanded ? "▼" : "▶"}
     </button>
@@ -54,15 +56,15 @@
         class="name-input"
         type="text"
         bind:value={nameInput}
-        on:blur={commitName}
-        on:keydown={(e) => { if (e.key === "Enter") commitName(); if (e.key === "Escape") { editingName = false; nameInput = element.name; } }}
+        onblur={commitName}
+        onkeydown={(e) => { if (e.key === "Enter") commitName(); if (e.key === "Escape") { editingName = false; nameInput = element.name; } }}
         data-testid="element-{index}-name-input"
       />
     {:else}
       <span
         class="element-name"
         data-testid="element-{index}-name"
-        on:dblclick={() => { editingName = true; nameInput = element.name; }}
+        ondblclick={() => { editingName = true; nameInput = element.name; }}
       >
         "{element.name}"
       </span>
@@ -70,10 +72,10 @@
 
     <span class="element-type">({element.type})</span>
     <span class="element-actions">
-      <button class="action-btn" title="Move up" on:click={() => moveElement(index, -1)}>▲</button>
-      <button class="action-btn" title="Move down" on:click={() => moveElement(index, 1)}>▼</button>
-      <button class="action-btn" title="Duplicate" on:click={() => duplicateElement(index)}>⧉</button>
-      <button class="delete-btn" data-testid="element-{index}-delete" on:click={() => dispatch("delete")}>✕</button>
+      <button class="action-btn" title="Move up" onclick={() => moveElement(index, -1)}>▲</button>
+      <button class="action-btn" title="Move down" onclick={() => moveElement(index, 1)}>▼</button>
+      <button class="action-btn" title="Duplicate" onclick={() => duplicateElement(index)}>⧉</button>
+      <button class="delete-btn" data-testid="element-{index}-delete" onclick={ondelete}>✕</button>
     </span>
   </div>
 
@@ -85,7 +87,7 @@
           {context}
           depth={1}
           elementIndex={index}
-          on:change={(e) => handleParamChange(e, param.key)}
+          onchange={(e) => handleParamChange(e, param.key)}
         />
       {/each}
 
@@ -95,7 +97,7 @@
             <button
               class="add-node-btn"
               data-testid="element-{index}-add-{key}"
-              on:click={() => addSubNode(index, key, def.child_context || context)}
+              onclick={() => addSubNode(index, key, def.child_context || context)}
             >
               + {key.replace("BOX_", "")}
             </button>

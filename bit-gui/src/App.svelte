@@ -1,55 +1,42 @@
-<script>
+<script lang="ts">
   import { onMount } from "svelte";
   import ElementNode from "./lib/components/ElementNode.svelte";
   import { project, addElement, deleteElement, renameElement } from "./lib/stores/project";
   import { generateScad } from "./lib/scad";
   import { startAutosave, onSaveStatus, setFilePath, getFilePath, setNeedsBackup, triggerSave } from "./lib/autosave";
 
-  let intentText = "";
-  let showIntent = false;
-  let showScad = false;
-  let statusMsg = "No file open";
+  let intentText = $state("");
+  let showIntent = $state(false);
+  let showScad = $state(false);
+  let statusMsg = $state("No file open");
 
-  $: scadOutput = generateScad($project);
+  let scadOutput = $derived(generateScad($project));
 
   onSaveStatus((msg) => { statusMsg = msg; });
 
-  function handleLoad(payload) {
-    try {
-      const { data, filePath } = payload;
-      document.title = "LOADING " + (data?.data?.length ?? "?") + " elements";
-      project.set(data);
-      setFilePath(filePath);
-      setNeedsBackup(!data.hasMarker);
-      const name = filePath.replace(/.*[/\\]/, "");
-      statusMsg = data.hasMarker ? name : `${name} (will backup)`;
-      document.title = "BIT GUI - " + name;
-    } catch(e) {
-      document.title = "LOAD ERROR: " + (e).message;
-    }
+  function handleLoad(payload: any) {
+    const { data, filePath } = payload;
+    project.set(data);
+    setFilePath(filePath);
+    setNeedsBackup(!data.hasMarker);
+    const name = filePath.replace(/.*[/\\]/, "");
+    statusMsg = data.hasMarker ? name : `${name} (will backup)`;
   }
 
-  onMount(function() {
-    showIntent = !!window.bitgui?.harness;
+  onMount(async () => {
+    showIntent = !!(window as any).bitgui?.harness;
     startAutosave();
-    pollForPendingLoad();
-  });
 
-  function pollForPendingLoad() {
-    var attempts = 0;
-    var timer = setInterval(function() {
-      attempts++;
-      if (attempts > 50) { clearInterval(timer); return; }
-      var api = window.bitgui;
-      if (!api || !api.getPendingLoad) { clearInterval(timer); return; }
-      api.getPendingLoad().then(function(pending) {
-        if (pending) {
-          clearInterval(timer);
-          handleLoad(pending);
-        }
-      });
-    }, 200);
-  }
+    // Poll for auto-load from main process
+    for (let i = 0; i < 50; i++) {
+      const pending = await (window as any).bitgui?.getPendingLoad?.();
+      if (pending) {
+        handleLoad(pending);
+        break;
+      }
+      await new Promise(r => setTimeout(r, 200));
+    }
+  });
 
   async function openFile() {
     const bitgui = window.bitgui;
@@ -112,14 +99,14 @@
         {#if $project.data.length === 0}
           <p class="empty-state">No elements yet. Click "+ Add Element" to start.</p>
         {:else}
-          {#each $project.data as element, i (i)}
-            <ElementNode
-              {element}
-              index={i}
-              on:delete={() => deleteElement(i)}
-              on:rename={(e) => renameElement(i, e.detail)}
-            />
-          {/each}
+        {#each $project.data as element, i (i)}
+          <ElementNode
+            {element}
+            index={i}
+            ondelete={() => deleteElement(i)}
+            onrename={(name) => renameElement(i, name)}
+          />
+        {/each}
         {/if}
       </div>
     {/if}

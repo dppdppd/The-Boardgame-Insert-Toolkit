@@ -1,29 +1,24 @@
-<script>
-  import { createEventDispatcher } from "svelte";
+<script lang="ts">
   import { getContextKeys, mergeWithDefaults, isOptionalNode } from "../schema";
   import { moveComponent, duplicateComponent, deleteComponent } from "../stores/project";
 
-  export let param;
-  export let context;
-  export let depth = 0;
-  export let elementIndex = -1;
+  let { param, context, depth = 0, elementIndex = -1, onchange } = $props();
 
-  const dispatch = createEventDispatcher();
 
-  let expanded = true;
+  let expanded = $state(true);
 
-  $: keyDefs = getContextKeys(context);
-  $: keySchema = keyDefs[param.key] || null;
-  $: keyType = keySchema?.type || "unknown";
-  $: isNested = keyType === "table" || keyType === "table_list";
-  $: childContext = keySchema?.child_context || context;
-  $: defaultVal = keySchema?.default;
-  $: isExpr = param.value && typeof param.value === "object" && "__expr" in param.value;
-  $: isDefault = !isNested && !isExpr && JSON.stringify(param.value) === JSON.stringify(defaultVal);
+  let keyDefs = $derived.by(() => getContextKeys(context));
+  let keySchema = $derived(keyDefs[param.key] || null);
+  let keyType = $derived(keySchema?.type || "unknown");
+  let isNested = $derived(keyType === "table" || keyType === "table_list");
+  let childContext = $derived(keySchema?.child_context || context);
+  let defaultVal = $derived(keySchema?.default);
+  let isExpr = $derived(param.value && typeof param.value === "object" && "__expr" in param.value);
+  let isDefault = $derived(!isNested && !isExpr && JSON.stringify(param.value) === JSON.stringify(defaultVal));
 
   function update(newValue) {
     param.value = newValue;
-    dispatch("change", { key: param.key, value: newValue });
+    if (onchange) onchange({ detail: { key: param.key, value: newValue } });
   }
 
   function revert() {
@@ -50,7 +45,7 @@
 {#if isNested}
   <!-- Nested: table or table_list -->
   <div class="kv-row nested" style="padding-left: {depth * 16}px" data-testid="kv-{param.key}">
-    <button class="toggle" data-testid="kv-{param.key}-toggle" on:click={() => (expanded = !expanded)}>
+    <button class="toggle" data-testid="kv-{param.key}-toggle" onclick={() => (expanded = !expanded)}>
       {expanded ? "▼" : "▶"}
     </button>
     <span class="key nested-key">{param.key}</span>
@@ -67,21 +62,21 @@
           <div class="child-header">
             <span>Component {i + 1}</span>
             <span class="child-actions">
-              <button class="action-btn" title="Move up" on:click={() => moveComponent(elementIndex, i, -1)}>▲</button>
-              <button class="action-btn" title="Move down" on:click={() => moveComponent(elementIndex, i, 1)}>▼</button>
-              <button class="action-btn" title="Duplicate" on:click={() => duplicateComponent(elementIndex, i)}>⧉</button>
-              <button class="delete-btn" data-testid="kv-{param.key}-{i}-delete" on:click={() => deleteComponent(elementIndex, i)}>✕</button>
+              <button class="action-btn" title="Move up" onclick={() => moveComponent(elementIndex, i, -1)}>▲</button>
+              <button class="action-btn" title="Move down" onclick={() => moveComponent(elementIndex, i, 1)}>▼</button>
+              <button class="action-btn" title="Duplicate" onclick={() => duplicateComponent(elementIndex, i)}>⧉</button>
+              <button class="delete-btn" data-testid="kv-{param.key}-{i}-delete" onclick={() => deleteComponent(elementIndex, i)}>✕</button>
             </span>
           </div>
           {#each merged as childParam (childParam.key)}
-            <svelte:self param={childParam} context={childContext} depth={depth + 2} {elementIndex} />
+            <svelte:self param={childParam} context={childContext} depth={depth + 2} {elementIndex} {onchange} />
           {/each}
         </div>
       {/each}
     {:else}
       {@const merged = mergeWithDefaults(param.value, childContext)}
       {#each merged as childParam (childParam.key)}
-        <svelte:self param={childParam} context={childContext} depth={depth + 1} {elementIndex} />
+        <svelte:self param={childParam} context={childContext} depth={depth + 1} {elementIndex} {onchange} />
       {/each}
     {/if}
   {/if}
@@ -102,20 +97,20 @@
           class="str-input wide expr"
           type="text"
           value={param.value.__expr}
-          on:change={(e) => update({ __expr: e.currentTarget.value })}
+          onchange={(e) => update({ __expr: e.currentTarget.value })}
           data-testid="kv-{param.key}-expr"
         />
       {:else if keyType === "bool"}
         <input
           type="checkbox"
           checked={param.value}
-          on:change={(e) => update(e.currentTarget.checked)}
+          onchange={(e) => update(e.currentTarget.checked)}
         />
 
       {:else if keyType === "enum"}
         <select
           value={param.value}
-          on:change={(e) => update(e.currentTarget.value)}
+          onchange={(e) => update(e.currentTarget.value)}
         >
           {#each keySchema?.values || [] as v}
             <option value={v}>{v}</option>
@@ -128,7 +123,7 @@
           type="number"
           step="any"
           value={param.value}
-          on:change={(e) => update(parseNum(e.currentTarget.value))}
+          onchange={(e) => update(parseNum(e.currentTarget.value))}
           data-testid="kv-{param.key}-val"
         />
 
@@ -137,7 +132,7 @@
           class="str-input"
           type="text"
           value={param.value ?? ""}
-          on:change={(e) => update(e.currentTarget.value)}
+          onchange={(e) => update(e.currentTarget.value)}
           data-testid="kv-{param.key}-val"
         />
 
@@ -146,14 +141,14 @@
           class="num-input sm"
           type="number" step="any"
           value={param.value?.[0] ?? 0}
-          on:change={(e) => update(updateIndex(param.value, 0, parseNum(e.currentTarget.value)))}
+          onchange={(e) => update(updateIndex(param.value, 0, parseNum(e.currentTarget.value)))}
           data-testid="kv-{param.key}-x"
         />
         <input
           class="num-input sm"
           type="number" step="any"
           value={param.value?.[1] ?? 0}
-          on:change={(e) => update(updateIndex(param.value, 1, parseNum(e.currentTarget.value)))}
+          onchange={(e) => update(updateIndex(param.value, 1, parseNum(e.currentTarget.value)))}
           data-testid="kv-{param.key}-y"
         />
 
@@ -162,21 +157,21 @@
           class="num-input sm"
           type="number" step="any"
           value={param.value?.[0] ?? 0}
-          on:change={(e) => update(updateIndex(param.value, 0, parseNum(e.currentTarget.value)))}
+          onchange={(e) => update(updateIndex(param.value, 0, parseNum(e.currentTarget.value)))}
           data-testid="kv-{param.key}-x"
         />
         <input
           class="num-input sm"
           type="number" step="any"
           value={param.value?.[1] ?? 0}
-          on:change={(e) => update(updateIndex(param.value, 1, parseNum(e.currentTarget.value)))}
+          onchange={(e) => update(updateIndex(param.value, 1, parseNum(e.currentTarget.value)))}
           data-testid="kv-{param.key}-y"
         />
         <input
           class="num-input sm"
           type="number" step="any"
           value={param.value?.[2] ?? 0}
-          on:change={(e) => update(updateIndex(param.value, 2, parseNum(e.currentTarget.value)))}
+          onchange={(e) => update(updateIndex(param.value, 2, parseNum(e.currentTarget.value)))}
           data-testid="kv-{param.key}-z"
         />
 
@@ -187,7 +182,7 @@
             <input
               type="checkbox"
               checked={param.value?.[i] ?? false}
-              on:change={(e) => update(updateIndex(param.value, i, e.currentTarget.checked))}
+              onchange={(e) => update(updateIndex(param.value, i, e.currentTarget.checked))}
             />
           </label>
         {/each}
@@ -200,7 +195,7 @@
               class="num-input xs"
               type="number" step="any"
               value={param.value?.[i] ?? 0}
-              on:change={(e) => update(updateIndex(param.value, i, parseNum(e.currentTarget.value)))}
+              onchange={(e) => update(updateIndex(param.value, i, parseNum(e.currentTarget.value)))}
             />
           </label>
         {/each}
@@ -211,7 +206,7 @@
             class="str-input sm"
             type="text"
             value={param.value?.[i] ?? ""}
-            on:change={(e) => {
+            onchange={(e) => {
               const raw = e.currentTarget.value;
               const parsed = (raw === "CENTER" || raw === "MAX") ? raw : parseNum(raw);
               update(updateIndex(param.value, i, parsed));
@@ -225,7 +220,7 @@
           class="str-input wide"
           type="text"
           value={(param.value || []).join(", ")}
-          on:change={(e) => update(e.currentTarget.value.split(",").map((s) => s.trim()).filter(Boolean))}
+          onchange={(e) => update(e.currentTarget.value.split(",").map((s) => s.trim()).filter(Boolean))}
           data-testid="kv-{param.key}-val"
           placeholder="comma-separated"
         />
@@ -236,7 +231,7 @@
     </span>
 
     {#if !isDefault}
-      <button class="revert-btn" data-testid="kv-{param.key}-delete" title="Revert to default" on:click={revert}>✕</button>
+      <button class="revert-btn" data-testid="kv-{param.key}-delete" title="Revert to default" onclick={revert}>✕</button>
     {/if}
   </div>
 {/if}
