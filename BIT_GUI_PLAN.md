@@ -8,10 +8,10 @@ Eliminates the need to memorize parameter keys/types/defaults.
 This is the most important section. Every code change follows this loop:
 
 ```
-1. Edit code
-2. Build:   cd bit-gui && npm run tauri dev   (or rebuild)
-3. Launch:  ./bit-gui/harness/run.sh
-4. Drive:   type intent + interact via REPL
+1. Edit code (Svelte components in src/)
+2. Build:   cd bit-gui && npm run build
+3. Launch:  xvfb-run -a node bit-gui/harness/run.js
+4. Drive:   type intent + interact via REPL (Playwright controls Electron)
 5. Inspect: view screenshots in bit-gui/harness/out/
 6. Repeat
 ```
@@ -21,9 +21,9 @@ This is the most important section. Every code change follows this loop:
 The harness runs the real app headless inside this container and gives
 the developer (me) hands and eyes on every change.
 
-**Launch**: `./bit-gui/harness/run.sh`
-- Starts the app under `xvfb-run` (virtual display).
-- Connects via `tauri-driver` (WebDriver).
+**Launch**: `xvfb-run -a node bit-gui/harness/run.js`
+- Launches Electron via Playwright (virtual display).
+- Playwright controls the app natively (no WebDriver needed).
 - Opens an interactive REPL on stdin.
 
 **REPL commands** (every command auto-screenshots after execution):
@@ -106,10 +106,15 @@ can target by intent, not by pixel coordinates:
 
 | Layer | Technology | Why |
 |-------|-----------|-----|
-| Desktop shell | **Tauri** (Rust) | Cross-OS, small binaries, native file I/O |
-| Frontend | **Svelte** | Lightweight, reactive, good tree UI ergonomics |
+| Desktop shell | **Electron** | Cross-OS, Chromium-based (reliable rendering), native file I/O |
+| Frontend | **Svelte 4** | Lightweight, reactive, good tree UI ergonomics |
 | Schema | `bit.schema.json` | Machine-readable; derived from v4 source |
-| Build | Vite + Tauri CLI | Standard Tauri dev/build pipeline |
+| Build | Vite + Electron | Vite builds frontend, Electron loads from dist/ |
+| Harness | **Playwright** | Controls Electron natively, screenshots, REPL |
+
+> **Note**: Tauri was attempted first but WebKit2GTK had fundamental JS execution
+> issues in the container (modules not loading, CSP blocking inline scripts).
+> Electron works reliably headless with zero configuration.
 
 ### Repo Layout
 
@@ -123,24 +128,17 @@ The-Boardgame-Insert-Toolkit/
         stores/             # Svelte stores (project state, autosave, settings)
       App.svelte
       main.ts
-    src-tauri/              # Rust backend
-      src/
-        main.rs             # Tauri entry
-        project.rs          # Project I/O (create, open, save, atomic write)
-        checksum.rs         # Lib staleness detection (SHA-256)
-        settings.rs         # App settings persistence
-      tauri.conf.json
-      Cargo.toml
+    main.js                 # Electron main process
+    preload.js              # Electron preload (contextBridge)
     schema/
       bit.schema.json       # Authoritative GUI schema
       generate_schema.py    # Script: parse v4 .scad -> regenerate schema
     harness/
-      run.sh                # Launch app headless + REPL
-      repl.js               # REPL driver (WebDriver commands + screenshots)
+      run.js                # Playwright-driven REPL (launch + screenshot + interact)
       out/                  # Screenshot output (accumulates, never cleared)
+    dist/                   # Vite build output (loaded by Electron)
     package.json
-    vite.config.ts
-    README.md
+    vite.config.mjs
 ```
 
 ## Project Model
@@ -439,12 +437,11 @@ Settings stored in Tauri app data dir (OS-appropriate).
 ## Implementation Phases
 
 ### Phase 0: Harness + Skeleton
-- [ ] Install Rust/Tauri toolchain in container
-- [ ] Scaffold Tauri + Svelte project in `bit-gui/`
-- [ ] Add intent pane (always visible bottom strip with text + step counter)
-- [ ] Add `data-testid` attributes to all elements from day 1
-- [ ] Implement harness: `run.sh` + `repl.js` (xvfb-run + tauri-driver + REPL)
-- [ ] Confirm: app loads headless, intent pane visible, screenshot works
+- [x] Scaffold Electron + Svelte 4 project in `bit-gui/`
+- [x] Add intent pane (always visible bottom strip with text + step counter)
+- [x] Add `data-testid` attributes to all elements from day 1
+- [x] Implement harness: Playwright-driven REPL (`harness/run.js`)
+- [x] Confirm: app loads headless, intent pane visible, screenshot works
 
 ### Phase 1: Schema + Tree View
 - [ ] Create `bit.schema.json` (from v4 valid keys + validation + accessors)
