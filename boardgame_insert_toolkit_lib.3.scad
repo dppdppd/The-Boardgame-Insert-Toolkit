@@ -276,10 +276,6 @@ g_b_vis_actual = g_b_visualization && $preview;
 g_b_preview_no_labels = f;
 g_b_no_labels_actual = g_b_preview_no_labels && $preview;
 
-// Makes solid simple lids instead of the honeycomb ones.
-// Might be faster to print. Definitely faster to render.
-g_b_simple_lids = f;            
-
 // Wall thickness in mm. Default = 1.5
 // Increasing this makes stronger but heavier components
 g_wall_thickness = 1.5; 
