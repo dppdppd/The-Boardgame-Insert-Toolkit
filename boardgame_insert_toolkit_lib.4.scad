@@ -1313,14 +1313,15 @@ module MakeDividers( div )
                 MakeRoundedCubeAxis( [ tab_width, tab_height + height_overlap, depth], tab_radius, [f, f, t, t], k_z);
             }
 
-            // words
+            // words — cut to half depth so inner letter parts survive removal from bed
+            text_depth = depth / 2;
             text_pos = title_pos + [ tab_width/2, font_size * 2, 0 ];
 
             text_width = len(title) > number_of_letters_before_scale_to_fit ? tab_width * DEFAULT_TAB_TEXT_WIDTH_FRACTION : 0;
 
             translate( text_pos)
                 resize([ text_width,0, 0 ], auto=[ true, true, false])
-                    linear_extrude( depth )
+                    linear_extrude( text_depth )
                         text(text = title, 
                             font = font, 
                             size = font_size, 
