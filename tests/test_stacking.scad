@@ -1,5 +1,5 @@
 // Test: Stackable boxes — BOX_STACKABLE_B
-include <../boardgame_insert_toolkit_lib.3.scad>;
+include <../boardgame_insert_toolkit_lib.4.scad>;
 
 g_b_print_lid = true;
 g_b_print_box = true;

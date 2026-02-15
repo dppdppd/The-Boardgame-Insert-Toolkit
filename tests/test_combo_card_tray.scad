@@ -1,8 +1,8 @@
 // Test: Integration — card tray with shear, cutouts, padding, lid with label
 // NOTE: Simplified from original (2x2 instead of 2x4, smaller lid pattern)
 //       to keep render time under 2 minutes.
-include <../boardgame_insert_toolkit_lib.3.scad>;
-include <../bit_functions_lib.3.scad>;
+include <../boardgame_insert_toolkit_lib.4.scad>;
+include <../bit_functions_lib.4.scad>;
 g_default_font = "Liberation Sans:style=Regular";
 
 g_b_print_lid = true;

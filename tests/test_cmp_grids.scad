@@ -1,5 +1,5 @@
 // Test: Compartment grids — various NUM_COMPARTMENTS_XY configurations
-include <../boardgame_insert_toolkit_lib.3.scad>;
+include <../boardgame_insert_toolkit_lib.4.scad>;
 
 g_b_print_lid = false;
 g_b_print_box = true;

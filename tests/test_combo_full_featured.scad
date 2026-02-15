@@ -1,5 +1,5 @@
 // Test: Integration — full-featured box with lid labels, component labels, pattern, cutouts
-include <../boardgame_insert_toolkit_lib.3.scad>;
+include <../boardgame_insert_toolkit_lib.4.scad>;
 
 g_b_print_lid = true;
 g_b_print_box = true;

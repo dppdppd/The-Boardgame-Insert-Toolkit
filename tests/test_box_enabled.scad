@@ -1,5 +1,5 @@
 // Test: ENABLED_B flag — one enabled, one disabled, should only render the enabled one
-include <../boardgame_insert_toolkit_lib.3.scad>;
+include <../boardgame_insert_toolkit_lib.4.scad>;
 
 g_b_print_lid = false;
 g_b_print_box = true;

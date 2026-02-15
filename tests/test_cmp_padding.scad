@@ -1,5 +1,5 @@
 // Test: Compartment padding — CMP_PADDING_XY and CMP_PADDING_HEIGHT_ADJUST_XY
-include <../boardgame_insert_toolkit_lib.3.scad>;
+include <../boardgame_insert_toolkit_lib.4.scad>;
 
 g_b_print_lid = false;
 g_b_print_box = true;
