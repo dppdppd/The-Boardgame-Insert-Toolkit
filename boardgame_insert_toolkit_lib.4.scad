@@ -21,15 +21,16 @@
 //   Line  Section
 //   ----  -------
 //    46   Constants, enums, keywords, internal defaults
-//   244   Key-value helpers
-//   325   Utility modules (debug, rotate, mirror, colorize, shear)
-//   382   Data accessor functions (elements, dividers, labels)
-//   501   Geometry helpers (Make2dShape, Make2DPattern, MakeStripedGrid)
-//   585   MakeAll() — top-level entry point
-//   641   MakeDividers() — card divider generation
-//   756   MakeBox() — box generation
-//   901     MakeLayer() — component processing pipeline
-//  2617   MakeRoundedCubeAxis() — rounded cube utility
+//   246   Key-value helpers
+//   331   Utility modules (debug, rotate, mirror, colorize, shear)
+//   388   Data accessor functions (elements, dividers, labels)
+//   506   Geometry helpers (Make2dShape, Make2DPattern, MakeStripedGrid)
+//   590   Key validation (__ValidateTable, __ValidateElement)
+//   755   MakeAll() — top-level entry point
+//   825   MakeDividers() — card divider generation
+//   944   MakeBox() — box generation
+//  1082     MakeLayer() — component processing pipeline
+//  2801   MakeRoundedCubeAxis() — rounded cube utility
 //
 // =============================================================================
 
@@ -120,6 +121,7 @@ BOX_SIZE_XYZ = "box_size";              // Box dimensions [x,y,z]
 BOX_COMPONENT = "component";            // Component to be contained in box
 BOX_VISUALIZATION = "visualization";    // Visualization settings
 
+BOX_WALL_THICKNESS = "wall_thickness";  // Per-box wall thickness override
 BOX_NO_LID_B = "no_lid";                // Boolean: box has no lid
 BOX_STACKABLE_B = "stackable";          // Boolean: box can be stacked
 
@@ -266,6 +268,10 @@ g_b_vis_actual = g_b_visualization && $preview;
 // Turn off labels during preview. 
 g_b_preview_no_labels = f;
 g_b_no_labels_actual = g_b_preview_no_labels && $preview;
+
+// Validate user-provided keys and echo messages for unrecognized ones.
+// Set to false to suppress validation output.
+g_b_validate_keys = t;
 
 // Wall thickness in mm. Default = 1.5
 // Increasing this makes stronger but heavier components
@@ -582,6 +588,166 @@ module MakeStripedGrid( x = 200, y = 200, w = 1, dx = 0, dy = 0, depth_ratio = 0
 
 
 // =============================================================================
+// KEY VALIDATION
+// =============================================================================
+// Valid keys for each context. Used by __ValidateElement to detect typos
+// and other common mistakes in user data definitions.
+
+// Helper: check if a value exists in a flat list
+function __is_valid_key( key, valid_keys ) = 
+    len( search( [key], valid_keys ) ) > 0 && search( [key], valid_keys )[0] != [];
+
+// Box-level valid keys (TYPE=BOX or TYPE=SPACER)
+__VALID_BOX_KEYS = [
+    TYPE, BOX_SIZE_XYZ, BOX_COMPONENT, BOX_LID, BOX_VISUALIZATION,
+    BOX_NO_LID_B, BOX_STACKABLE_B, BOX_WALL_THICKNESS,
+    ENABLED_B, LABEL, ROTATION, POSITION_XY
+];
+
+// Divider-level valid keys (TYPE=DIVIDERS)
+__VALID_DIVIDER_KEYS = [
+    TYPE, ENABLED_B,
+    DIV_THICKNESS,
+    DIV_TAB_SIZE_XY, DIV_TAB_RADIUS, DIV_TAB_CYCLE, DIV_TAB_CYCLE_START,
+    DIV_TAB_TEXT, DIV_TAB_TEXT_SIZE, DIV_TAB_TEXT_FONT, DIV_TAB_TEXT_SPACING, DIV_TAB_TEXT_CHAR_THRESHOLD,
+    DIV_FRAME_SIZE_XY, DIV_FRAME_TOP, DIV_FRAME_BOTTOM, DIV_FRAME_COLUMN,
+    DIV_FRAME_RADIUS, DIV_FRAME_NUM_COLUMNS
+];
+
+// Component-level valid keys (inside BOX_COMPONENT)
+__VALID_COMPONENT_KEYS = [
+    CMP_COMPARTMENT_SIZE_XYZ, CMP_NUM_COMPARTMENTS_XY,
+    CMP_SHAPE, CMP_SHAPE_ROTATED_B, CMP_SHAPE_VERTICAL_B,
+    CMP_PADDING_XY, CMP_PADDING_HEIGHT_ADJUST_XY,
+    CMP_MARGIN_FBLR,
+    CMP_CUTOUT_SIDES_4B, CMP_CUTOUT_CORNERS_4B,
+    CMP_CUTOUT_HEIGHT_PCT, CMP_CUTOUT_DEPTH_PCT, CMP_CUTOUT_WIDTH_PCT,
+    CMP_CUTOUT_BOTTOM_B, CMP_CUTOUT_BOTTOM_PCT, CMP_CUTOUT_TYPE,
+    CMP_SHEAR, CMP_FILLET_RADIUS, CMP_PEDESTAL_BASE_B,
+    ENABLED_B, LABEL, ROTATION, POSITION_XY
+];
+
+// Lid-level valid keys (inside BOX_LID)
+__VALID_LID_KEYS = [
+    LID_FIT_UNDER_B, LID_SOLID_B, LID_HEIGHT, LID_INSET_B,
+    LID_CUTOUT_SIDES_4B, LID_TABS_4B,
+    LID_LABELS_INVERT_B, LID_SOLID_LABELS_DEPTH,
+    LID_LABELS_BG_THICKNESS, LID_LABELS_BORDER_THICKNESS,
+    LID_STRIPE_WIDTH, LID_STRIPE_SPACE,
+    LID_PATTERN_RADIUS, LID_PATTERN_N1, LID_PATTERN_N2,
+    LID_PATTERN_ANGLE, LID_PATTERN_ROW_OFFSET, LID_PATTERN_COL_OFFSET,
+    LID_PATTERN_THICKNESS,
+    LABEL
+];
+
+// Label-level valid keys (inside LABEL)
+__VALID_LABEL_KEYS = [
+    LBL_TEXT, LBL_IMAGE, LBL_SIZE, LBL_PLACEMENT,
+    LBL_FONT, LBL_DEPTH, LBL_SPACING, LBL_AUTO_SCALE_FACTOR,
+    ROTATION, POSITION_XY
+];
+
+// Validate a key-value table against a set of valid keys.
+// Echoes a message for each unrecognized key.
+module __ValidateTable( table, valid_keys, context_name )
+{
+    if ( is_list( table ) )
+    {
+        for ( i = [ 0 : max( len( table ) - 1, 0 ) ] )
+        {
+            entry = table[i];
+            if ( is_list( entry ) && len( entry ) >= 2 )
+            {
+                key = entry[ k_key ];
+                if ( is_string( key ) )
+                {
+                    if ( !__is_valid_key( key, valid_keys ) )
+                        echo( str( "BIT: unrecognized key \"", key, "\" in ", context_name,
+                                   ". Check spelling. Valid keys: ", valid_keys ) );
+                }
+                else
+                {
+                    echo( str( "BIT: non-string key at index ", i, " in ", context_name,
+                               ". Keys must be strings, got: ", key ) );
+                }
+            }
+            else if ( !is_list( entry ) || len( entry ) < 2 )
+            {
+                echo( str( "BIT: malformed entry at index ", i, " in ", context_name,
+                           ". Expected [key, value] pair, got: ", entry ) );
+            }
+        }
+    }
+}
+
+// Validate all labels found in a key-value table.
+module __ValidateLabels( table, context_name )
+{
+    if ( is_list( table ) )
+    {
+        for ( i = [ 0 : max( len( table ) - 1, 0 ) ] )
+        {
+            if ( is_list( table[i] ) && len( table[i] ) >= 2 )
+            {
+                if ( table[i][ k_key ] == LABEL )
+                {
+                    __ValidateTable( table[i][ k_value ], __VALID_LABEL_KEYS,
+                        str( context_name, " > label" ) );
+                }
+            }
+        }
+    }
+}
+
+// Validate a complete element (box or divider) and its sub-structures.
+module __ValidateElement( element, element_name )
+{
+    element_type = __type( element );
+
+    if ( element_type == DIVIDERS )
+    {
+        __ValidateTable( element, __VALID_DIVIDER_KEYS,
+            str( "dividers \"", element_name, "\"" ) );
+    }
+    else
+    {
+        // Box or Spacer
+        __ValidateTable( element, __VALID_BOX_KEYS,
+            str( "box \"", element_name, "\"" ) );
+
+        // Validate lid sub-table
+        lid = __value( element, BOX_LID, default = false );
+        if ( is_list( lid ) && len( lid ) > 0 )
+        {
+            __ValidateTable( lid, __VALID_LID_KEYS,
+                str( "box \"", element_name, "\" > lid" ) );
+            __ValidateLabels( lid,
+                str( "box \"", element_name, "\" > lid" ) );
+        }
+
+        // Validate each component sub-table
+        for ( i = [ 0 : max( len( element ) - 1, 0 ) ] )
+        {
+            if ( is_list( element[i] ) && len( element[i] ) >= 2 )
+            {
+                if ( element[i][ k_key ] == BOX_COMPONENT )
+                {
+                    comp = element[i][ k_value ];
+                    __ValidateTable( comp, __VALID_COMPONENT_KEYS,
+                        str( "box \"", element_name, "\" > component[", i, "]" ) );
+                    __ValidateLabels( comp,
+                        str( "box \"", element_name, "\" > component[", i, "]" ) );
+                }
+            }
+        }
+
+        // Validate box-level labels
+        __ValidateLabels( element,
+            str( "box \"", element_name, "\"" ) );
+    }
+}
+
+// =============================================================================
 // ENTRY POINT
 // =============================================================================
 
@@ -590,6 +756,22 @@ module MakeStripedGrid( x = 200, y = 200, w = 1, dx = 0, dy = 0, depth_ratio = 0
 module MakeAll()
 {
     echo( str( "\n\n\n", COPYRIGHT_INFO, "\n\n\tVersion ", VERSION, "\n\n" ));
+
+    // Validate all element keys if enabled
+    if ( g_b_validate_keys )
+    {
+        if ( __is_element_isolated_for_print() )
+        {
+            __ValidateElement( __value( data, g_isolated_print_box ), g_isolated_print_box );
+        }
+        else
+        {
+            for ( vi = [ 0 : __num_elements() - 1 ] )
+            {
+                __ValidateElement( __element( vi ), data[ vi ][ k_key ] );
+            }
+        }
+    }
 
     if ( __is_element_isolated_for_print() )
     {
@@ -770,7 +952,7 @@ module MakeBox( box )
 
     m_box_is_stackable = __value( box, BOX_STACKABLE_B, default = false );
 
-    m_wall_thickness = g_b_fit_test ? 0.5 : __value( box, "wall_thickness", default = g_wall_thickness ); // needs work to change if no lid
+    m_wall_thickness = g_b_fit_test ? 0.5 : __value( box, BOX_WALL_THICKNESS, default = g_wall_thickness );
 
     m_lid = __value( box, BOX_LID, default = [] );
 

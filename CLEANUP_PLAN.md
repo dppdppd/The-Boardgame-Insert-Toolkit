@@ -329,6 +329,7 @@ Record anything learned during the work that affects the plan. **Update after ev
 | 6 | TOC, section headers, documentation (v3) | Done |
 | Bug fixes | #65 asymmetric cutouts, #69 label clipping, #71 dead var | Done |
 | **v4** | **Remove MakeHexBox, create v4 files** | **Done — 4,456 → 2,675 lines (40% reduction)** |
+| **Key validation** | **Validate user keys in MakeAll(), echo typos** | **Done — 51/51 tests pass** |
 
 ---
 
@@ -336,14 +337,15 @@ Record anything learned during the work that affects the plan. **Update after ev
 
 | Item | Line(s) |
 |------|---------|
-| Constants/Keywords/Defaults | 1-230 |
-| Key-value helpers | 241-250 |
-| Utility modules | 325-380 |
-| Data accessor functions | 382-500 |
-| Geometry helpers | 501-580 |
-| MakeAll | 585-635 |
-| MakeDividers | 641-750 |
-| MakeBox | 763-2610 |
-| MakeLayer (inside MakeBox) | 901-2608 |
-| MakeRoundedCubeAxis | 2617-2670 |
-| **Total lines** | **2,675** |
+| Constants/Keywords/Defaults | 1-240 |
+| Key-value helpers | 246-250 |
+| Utility modules | 331-385 |
+| Data accessor functions | 388-500 |
+| Geometry helpers | 506-585 |
+| Key validation | 590-750 |
+| MakeAll | 755-822 |
+| MakeDividers | 825-935 |
+| MakeBox | 944-2795 |
+| MakeLayer (inside MakeBox) | 1082-2793 |
+| MakeRoundedCubeAxis | 2801-2860 |
+| **Total lines** | **2,857** |
