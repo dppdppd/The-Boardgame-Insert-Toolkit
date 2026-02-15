@@ -15,7 +15,7 @@
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^3",
     "concurrently": "^9",
-    "electron": "^33",
+    "electron": "^33.4.11",
     "playwright": "^1.49",
     "svelte": "^4",
     "vite": "^5"

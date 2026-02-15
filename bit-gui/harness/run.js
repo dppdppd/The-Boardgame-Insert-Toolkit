@@ -132,10 +132,13 @@ async function main() {
       ...process.env,
       BITGUI_WINDOW_WIDTH: "800",
       BITGUI_WINDOW_HEIGHT: "600",
+      BITGUI_HARNESS: "1",
     },
   });
 
   page = await app.firstWindow();
+  await page.waitForLoadState("domcontentloaded");
+  await page.setViewportSize({ width: 800, height: 600 });
   console.log(`Window title: ${await page.title()}`);
 
   // Initial screenshot

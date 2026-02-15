@@ -1,8 +1,14 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import ElementNode from "./lib/components/ElementNode.svelte";
-  import { project } from "./lib/stores/project";
+  import { project, addElement, deleteElement, renameElement } from "./lib/stores/project";
 
   let intentText = "";
+  let showIntent = false;
+
+  onMount(() => {
+    showIntent = !!(window as any).bitgui?.harness;
+  });
 </script>
 
 <main data-testid="app-root">
@@ -15,14 +21,19 @@
 
   <section class="content" data-testid="content-area">
     <div class="toolbar">
-      <button data-testid="add-element">+ Add Element</button>
+      <button data-testid="add-element" on:click={() => addElement()}>+ Add Element</button>
     </div>
     <div class="tree-view" data-testid="tree-view">
       {#if $project.data.length === 0}
         <p class="empty-state">No elements yet. Click "+ Add Element" to start.</p>
       {:else}
-        {#each $project.data as element, i}
-          <ElementNode {element} index={i} />
+        {#each $project.data as element, i (i)}
+          <ElementNode
+            {element}
+            index={i}
+            on:delete={() => deleteElement(i)}
+            on:rename={(e) => renameElement(i, e.detail)}
+          />
         {/each}
       {/if}
     </div>
@@ -33,14 +44,16 @@
     <span>Libs: —</span>
   </footer>
 
-  <div class="intent-pane" data-testid="intent-pane">
-    <input
-      data-testid="intent-text"
-      type="text"
-      bind:value={intentText}
-      placeholder="Describe what you expect to happen..."
-    />
-  </div>
+  {#if showIntent}
+    <div class="intent-pane" data-testid="intent-pane">
+      <input
+        data-testid="intent-text"
+        type="text"
+        bind:value={intentText}
+        placeholder="Describe what you expect to happen..."
+      />
+    </div>
+  {/if}
 </main>
 
 <style>
