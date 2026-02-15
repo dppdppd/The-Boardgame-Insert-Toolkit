@@ -397,9 +397,64 @@ function __is_element_isolated_for_print() = g_isolated_print_box != "" && ( __i
 
 function __is_element_enabled( lmnt ) = __value( lmnt, ENABLED_B, default = true);
 
-function __element_dimensions( lmnt ) = __type( lmnt ) == DIVIDERS
-                                        ? [ __div_frame_size( lmnt )[k_x],  __div_total_height( lmnt ) ]
-                                        :  __value( lmnt, BOX_SIZE_XYZ, default = [ 100, 100] );
+// --- Auto-size helpers ---
+// Compute a single component's total size from its parameter table.
+// Mirrors the formula in MakeLayer: compartment * num + (num-1) * padding + margins
+function __cmp_auto_compartment_size( comp ) = __value( comp, CMP_COMPARTMENT_SIZE_XYZ, default = [10, 10, 10] );
+function __cmp_auto_num( comp ) = __value( comp, CMP_NUM_COMPARTMENTS_XY, default = [1, 1] );
+function __cmp_auto_padding( comp ) = __value( comp, CMP_PADDING_XY, default = [1, 1] );
+function __cmp_auto_margin( comp ) = __value( comp, CMP_MARGIN_FBLR, default = [0, 0, 0, 0] );
+
+function __cmp_auto_size( comp, D ) = 
+    D == k_z ? __cmp_auto_compartment_size( comp )[ k_z ] :
+    D == k_x ? __cmp_auto_compartment_size( comp )[ k_x ] * __cmp_auto_num( comp )[ k_x ]
+               + max( 0, __cmp_auto_num( comp )[ k_x ] - 1 ) * __cmp_auto_padding( comp )[ k_x ]
+               + __cmp_auto_margin( comp )[ k_left ] + __cmp_auto_margin( comp )[ k_right ] :
+    // k_y
+               __cmp_auto_compartment_size( comp )[ k_y ] * __cmp_auto_num( comp )[ k_y ]
+               + max( 0, __cmp_auto_num( comp )[ k_y ] - 1 ) * __cmp_auto_padding( comp )[ k_y ]
+               + __cmp_auto_margin( comp )[ k_front ] + __cmp_auto_margin( comp )[ k_back ];
+
+// Scan all BOX_COMPONENT entries in box, return the max component size per dimension.
+// For centered components (default), the box needs to fit the largest one.
+// For explicitly positioned components, compute position + size to find the envelope.
+function __box_max_component_extent( box, D, i = 0 ) = 
+    !is_list( box ) || i >= len( box ) ? 0 :
+    ( is_list( box[i] ) && len( box[i] ) >= 2 && box[i][ k_key ] == BOX_COMPONENT ) ?
+        let(
+            comp = box[i][ k_value ],
+            pos_raw = __value( comp, POSITION_XY, default = [ CENTER, CENTER ] ),
+            comp_size = ( D == k_z ) ? __cmp_auto_size( comp, k_z ) :
+                        __cmp_auto_size( comp, D ),
+            // For centered/max positions, extent is just the component size.
+            // For numeric positions, extent is position + component size.
+            di = ( D == k_z ) ? 0 : ( D == k_x ? 0 : 1 ),
+            pos_val = ( D == k_z ) ? 0 :
+                      ( is_list( pos_raw ) && len( pos_raw ) > di ) ? pos_raw[ di ] : CENTER,
+            extent = ( D == k_z ) ? comp_size :
+                     ( is_num( pos_val ) ) ? pos_val + comp_size :
+                     comp_size  // CENTER or MAX — just use component size
+        )
+        max( extent, __box_max_component_extent( box, D, i + 1 ) ) :
+    __box_max_component_extent( box, D, i + 1 );
+
+// Auto-calculate box size from components + wall thickness.
+function __box_auto_size( box ) = 
+    let(
+        wt = __value( box, BOX_WALL_THICKNESS, default = g_wall_thickness ),
+        cx = __box_max_component_extent( box, k_x ),
+        cy = __box_max_component_extent( box, k_y ),
+        cz = __box_max_component_extent( box, k_z )
+    )
+    [ cx + 2 * wt, cy + 2 * wt, cz + wt ];
+
+function __element_dimensions( lmnt ) = !is_list( lmnt )
+                                        ? [ 100, 100, 100 ]  // safety fallback for undef/invalid
+                                        : __type( lmnt ) == DIVIDERS
+                                            ? [ __div_frame_size( lmnt )[k_x],  __div_total_height( lmnt ) ]
+                                            : __value( lmnt, BOX_SIZE_XYZ, default = false ) != false
+                                                ? __value( lmnt, BOX_SIZE_XYZ )
+                                                : __box_auto_size( lmnt );
 
 function __element_position_x( i ) = __element( i - 1 ) == undef ? 0 : __is_element_enabled( __element( i - 1 ) ) ? __element_dimensions( __element( i - 1 ) )[ k_x ] + __element_position_x( i - 1 ) + DISTANCE_BETWEEN_PARTS : __element_position_x( i - 2 );
 
@@ -1028,6 +1083,14 @@ module __ValidateElement( element, element_name )
         _ctx = str( "box \"", element_name, "\"" );
         __ValidateTable( element, __VALID_BOX_KEYS, _ctx );
         __ValidateBoxTypes( element, _ctx );
+
+        // Report auto-sized box dimensions
+        if ( __value( element, BOX_SIZE_XYZ, default = false ) == false )
+        {
+            _auto = __box_auto_size( element );
+            echo( str( "BIT: ", _ctx, " has no BOX_SIZE_XYZ — auto-calculated as ",
+                       _auto, " from components." ) );
+        }
 
         // Validate lid sub-table (keys + types)
         lid = __value( element, BOX_LID, default = false );
