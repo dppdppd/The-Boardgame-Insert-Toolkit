@@ -70,6 +70,37 @@ data = [
             [ BOX_NO_LID_B, "false" ],               // should be bool, not string
         ]
     ],
+
+    // --- #3: Missing CMP_COMPARTMENT_SIZE_XYZ ---
+    [ "missing_cmp_size",
+        [
+            [ BOX_SIZE_XYZ, [ 40, 40, 15 ] ],
+            [ BOX_COMPONENT,
+                [
+                    // no CMP_COMPARTMENT_SIZE_XYZ — should warn about 10x10x10 default
+                    [ CMP_NUM_COMPARTMENTS_XY, [ 2, 2 ] ],
+                ]
+            ],
+        ]
+    ],
+
+    // --- #4: Lid clearance — lid won't fit under box ---
+    [ "lid_too_tall",
+        [
+            [ BOX_SIZE_XYZ, [ 40, 40, 6 ] ],
+            [ BOX_COMPONENT,
+                [
+                    [ CMP_COMPARTMENT_SIZE_XYZ, [ 36, 36, 4 ] ],
+                ]
+            ],
+            [ BOX_LID,
+                [
+                    [ LID_FIT_UNDER_B, true ],
+                    // default cap lid: 4mm wall + 1.5mm thickness = 5.5mm > 4.5mm interior
+                ]
+            ],
+        ]
+    ],
 ];
 
 MakeAll();

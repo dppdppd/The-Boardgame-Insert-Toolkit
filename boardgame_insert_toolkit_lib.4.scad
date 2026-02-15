@@ -1114,7 +1114,36 @@ module __ValidateElement( element, element_name )
                     __ValidateTable( comp, __VALID_COMPONENT_KEYS, _comp_ctx );
                     __ValidateComponentTypes( comp, _comp_ctx );
                     __ValidateLabels( comp, _comp_ctx );
+
+                    // #3: Warn when CMP_COMPARTMENT_SIZE_XYZ is missing
+                    if ( __value( comp, CMP_COMPARTMENT_SIZE_XYZ, default = false ) == false )
+                        echo( str( "BIT: ", _comp_ctx,
+                            " has no CMP_COMPARTMENT_SIZE_XYZ — using default [10, 10, 10].",
+                            " This is probably not what you want." ) );
                 }
+            }
+        }
+
+        // #4: Lid-under clearance check
+        _box_size = __element_dimensions( element );
+        _has_lid = !__value( element, BOX_NO_LID_B, default = false );
+        if ( _has_lid && is_list( lid ) && len( lid ) > 0 )
+        {
+            _wt = __value( element, BOX_WALL_THICKNESS, default = g_wall_thickness );
+            _lid_fit_under = __value( lid, LID_FIT_UNDER_B, default = true );
+            _lid_inset = __value( element, BOX_STACKABLE_B, default = false ) ||
+                         __value( lid, LID_INSET_B, default = false );
+            _lid_height_val = __value( lid, LID_HEIGHT, default =
+                _lid_inset ? DEFAULT_INSET_LID_HEIGHT : DEFAULT_CAP_LID_HEIGHT );
+            _lid_ext_z = _wt + _lid_height_val;
+
+            if ( _lid_fit_under && is_list( _box_size ) && len( _box_size ) >= 3 )
+            {
+                _box_interior_z = _box_size[ k_z ] - _wt;
+                if ( _lid_ext_z > _box_interior_z )
+                    echo( str( "BIT: ", _ctx, " has LID_FIT_UNDER_B enabled but lid height (",
+                        _lid_ext_z, "mm) exceeds box interior height (",
+                        _box_interior_z, "mm). The lid won't fit underneath." ) );
             }
         }
 
