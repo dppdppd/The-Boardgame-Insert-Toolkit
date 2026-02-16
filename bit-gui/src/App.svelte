@@ -17,6 +17,7 @@
   import { generateScad } from "./lib/scad";
   import { startAutosave, onSaveStatus, setFilePath, getFilePath, setNeedsBackup, saveNow, triggerSave } from "./lib/autosave";
   import { schema } from "./lib/schema";
+  import tooltips from "./lib/tooltips/en.json";
 
   let intentText = $state("");
   let showIntent = $state(false);
@@ -32,7 +33,7 @@
     setFilePath(filePath);
     setNeedsBackup(!data.hasMarker);
     const name = filePath.replace(/.*[/\\]/, "");
-    statusMsg = data.hasMarker ? name : `${name} (will write _bg.scad)`;
+    statusMsg = data.hasMarker ? name : `${name} (will backup .bak on first save)`;
   }
 
   onMount(async () => {
@@ -74,7 +75,7 @@
     project.set(res.data);
     setFilePath(res.filePath); setNeedsBackup(!res.data.hasMarker);
     const name = res.filePath.replace(/.*[/\\]/, "");
-    statusMsg = res.data.hasMarker ? name : `${name} (will write _bg.scad on save)`;
+    statusMsg = res.data.hasMarker ? name : `${name} (will backup .bak on first save)`;
   }
 
   async function saveFileAs() {
@@ -88,10 +89,19 @@
 
   async function openInOpenScad() {
     const bitgui = (window as any).bitgui;
-    const fp = getFilePath();
-    if (!bitgui?.openInOpenScad || !fp) return;
+    if (!bitgui?.openInOpenScad) return;
+
+    let fp = getFilePath();
+    if (!fp) {
+      // No file yet — prompt save-as first
+      await saveFileAs();
+      fp = getFilePath();
+      if (!fp) return;
+    }
+
     const savedPath = await saveNow();
-    const res = await bitgui.openInOpenScad(savedPath || fp);
+    const openPath = savedPath || fp;
+    const res = await bitgui.openInOpenScad(openPath);
     if (!res.ok) statusMsg = `OpenSCAD: ${res.error}`;
   }
 
@@ -164,6 +174,7 @@
   function smartParseNum(s: string) { const t = s.trim(); return /^-?\d+(\.\d+)?$/.test(t) ? parseFloat(t) : t; }
   function updateKvIdx(li: number, arr: any[], j: number, val: any) { const c = [...arr]; c[j] = val; updateKv(li, c); }
   function canParse(raw: string) { return classifyLocal(raw).kind !== "raw"; }
+  function tip(key: string): string { return (tooltips as Record<string, string>)[key] || ""; }
   function toRaw(i: number) {
     const l = $project.lines[i];
     if (!l || l.kind === "open" || l.kind === "close") return; // brackets are never raw
@@ -293,53 +304,84 @@
   }
 
   /**
-   * Compute virtual default rows that should appear before a given close bracket.
-   * Returns keys from the schema context that are NOT present as real kv lines
-   * between the matching open and this close.
+   * For a close bracket, compute a unified sorted list of all schema keys:
+   * both real (existing kv lines) and virtual (missing, shown with defaults).
+   * Returns { key, def, lineIndex?, value, isReal, depth }[] sorted alphabetically.
    */
-  function getVirtualDefaults(closeIndex: number): { key: string; def: any; depth: number }[] {
+  function getSortedSchemaRows(closeIndex: number): {
+    key: string; def: any; lineIndex: number | null; value: any; isReal: boolean; depth: number;
+  }[] {
     const closeLine = $project.lines[closeIndex];
     if (!closeLine || closeLine.kind !== "close") return [];
     const role = closeLine.role || "";
     const ctx = ROLE_TO_CONTEXT[role];
     if (!ctx) return [];
 
-    // Find the matching open bracket
-    let depth = 0;
+    // Find matching open bracket
+    let bd = 0;
     let openIdx = -1;
     for (let i = closeIndex; i >= 0; i--) {
-      if ($project.lines[i].kind === "close") depth++;
-      if ($project.lines[i].kind === "open") {
-        depth--;
-        if (depth === 0) { openIdx = i; break; }
-      }
+      if ($project.lines[i].kind === "close") bd++;
+      if ($project.lines[i].kind === "open") { bd--; if (bd === 0) { openIdx = i; break; } }
     }
     if (openIdx < 0) return [];
 
-    // Collect existing kv keys between open and close (only direct children, same depth)
     const childDepth = (closeLine.depth ?? 0) + 1;
-    const existing = new Set<string>();
+
+    // Collect existing kv lines
+    const existingMap = new Map<string, { lineIndex: number; value: any }>();
     for (let i = openIdx + 1; i < closeIndex; i++) {
       const l = $project.lines[i];
       if (l.kind === "kv" && l.kvKey && l.depth === childDepth) {
-        existing.add(l.kvKey);
+        existingMap.set(l.kvKey, { lineIndex: i, value: l.kvValue });
       }
     }
 
     const scalars = getScalarKeysForContext(ctx);
-    return scalars
-      .filter(({ key }) => !existing.has(key))
-      .map(({ key, def }) => ({ key, def, depth: childDepth }));
+    const rows = scalars.map(({ key, def }) => {
+      const existing = existingMap.get(key);
+      if (existing) {
+        return { key, def, lineIndex: existing.lineIndex, value: existing.value, isReal: true, depth: childDepth };
+      }
+      return { key, def, lineIndex: null, value: def.default, isReal: false, depth: childDepth };
+    });
+
+    // Sort alphabetically
+    rows.sort((a, b) => a.key.localeCompare(b.key));
+    return rows;
   }
+
+  /**
+   * Set of line indices that are kv lines rendered inside a sorted schema block.
+   * These should be skipped in the main line loop.
+   */
+  let kvRenderedInBlock = $derived.by(() => {
+    const set = new Set<number>();
+    const lines = $project.lines;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].kind !== "close") continue;
+      const role = lines[i].role || "";
+      if (!ROLE_TO_CONTEXT[role]) continue;
+      const rows = getSortedSchemaRows(i);
+      for (const r of rows) {
+        if (r.lineIndex !== null) set.add(r.lineIndex);
+      }
+    }
+    return set;
+  });
 
   /** When a virtual default is changed from its default value, materialize it. */
   function onVirtualChange(closeIndex: number, key: string, def: any, newValue: any) {
-    if (JSON.stringify(newValue) === JSON.stringify(def.default)) return; // still default, ignore
+    if (JSON.stringify(newValue) === JSON.stringify(def.default)) return;
     const depth = (($project.lines[closeIndex]?.depth ?? 0)) + 1;
     materializeKv(closeIndex, key, newValue, depth);
   }
 
-  /** Check if a kv line's value equals its schema default. */
+  /** Delete a real kv line (dematerialize back to virtual default). */
+  function dematerializeKv(lineIndex: number) {
+    deleteLine(lineIndex);
+  }
+
   function isDefault(key: string, value: any): boolean {
     const def = KEY_SCHEMA_MAP[key];
     if (!def || def.default === undefined) return false;
@@ -478,6 +520,9 @@
       {#if hiddenLines.has(i)}
         <!-- Hidden by collapsed parent -->
 
+      {:else if kvRenderedInBlock.has(i)}
+        <!-- This kv line is rendered in the sorted schema block before its close bracket -->
+
       {:else if line.kind === "open"}
         {@const collapsible = !["params", "label_params", "lid_params", "component"].includes(line.role || "")}
         {@const deletable = !["data", "data_list", "params", "label_params", "lid_params", "component"].includes(line.role || "")}
@@ -496,79 +541,65 @@
         </div>
 
       {:else if line.kind === "close"}
-        <!-- Virtual default rows before close -->
-        {#each getVirtualDefaults(i) as vd (vd.key)}
-          {@const vkt = getKeyType(vd.key)}
-          <div class="line-row kv virtual" style={padDepth(vd.depth)} data-testid="virtual-{vd.key}">
-            <span class="kv-key virtual-key">{vd.key}</span>
+        <!-- Sorted schema rows (real + virtual) before close bracket -->
+        {#each getSortedSchemaRows(i) as row (row.key)}
+          {@const rkt = getKeyType(row.key)}
+          {@const rks = getKeySchema(row.key)}
+          {@const onChange = row.isReal
+            ? (v) => updateKv(row.lineIndex, v, row.def.default)
+            : (v) => onVirtualChange(i, row.key, row.def, v)}
+          {@const val = row.value}
+          <div class="line-row kv" class:virtual={!row.isReal} style={padDepth(row.depth)} data-testid={row.isReal ? `line-${row.lineIndex}` : `virtual-${row.key}`}>
+            <span class="kv-key" class:virtual-key={!row.isReal} title={tip(row.key)}>{row.key}</span>
             <span class="kv-control">
-              {#if vkt === "bool"}
-                <input type="checkbox" checked={vd.def.default === true}
-                  onchange={(e) => onVirtualChange(i, vd.key, vd.def, e.currentTarget.checked)} />
-              {:else if vkt === "enum"}
-                <select value={vd.def.default} onchange={(e) => onVirtualChange(i, vd.key, vd.def, e.currentTarget.value)}>
-                  {#each vd.def.values || [] as v}<option value={v}>{v}</option>{/each}
+              {#if rkt === "bool"}
+                <input type="checkbox" checked={val === true} onchange={(e) => onChange(e.currentTarget.checked)} />
+              {:else if rkt === "enum"}
+                <select value={val} onchange={(e) => onChange(e.currentTarget.value)}>
+                  {#each rks?.values || [] as v}<option value={v}>{v}</option>{/each}
                 </select>
-              {:else if vkt === "number"}
-                <input class="kv-num" type="number" step="any" value={vd.def.default ?? 0}
-                  onchange={(e) => onVirtualChange(i, vd.key, vd.def, parseNum(e.currentTarget.value))} />
-              {:else if vkt === "string"}
-                <input class="kv-str" type="text" value={vd.def.default ?? ""}
-                  onchange={(e) => onVirtualChange(i, vd.key, vd.def, e.currentTarget.value)} />
-              {:else if vkt === "xyz"}
+              {:else if rkt === "number"}
+                <input class="kv-num" type="number" step="any" value={val} onchange={(e) => onChange(parseNum(e.currentTarget.value))} />
+              {:else if rkt === "string"}
+                <input class="kv-str" type="text" value={val ?? ""} onchange={(e) => onChange(e.currentTarget.value)} />
+              {:else if rkt === "xyz" && Array.isArray(val)}
                 {#each [0,1,2] as j}
-                  <input class="kv-str sm" type="text" value={(vd.def.default ?? [0,0,0])[j]}
-                    onchange={(e) => {
-                      const copy = [...(vd.def.default ?? [0,0,0])];
-                      copy[j] = smartParseNum(e.currentTarget.value);
-                      onVirtualChange(i, vd.key, vd.def, copy);
-                    }} />
+                  <input class="kv-str sm" type="text" value={val[j] ?? 0}
+                    onchange={(e) => { const c = [...val]; c[j] = smartParseNum(e.currentTarget.value); onChange(c); }} />
                 {/each}
-              {:else if vkt === "xy"}
+              {:else if rkt === "xy" && Array.isArray(val)}
                 {#each [0,1] as j}
-                  <input class="kv-str sm" type="text" value={(vd.def.default ?? [0,0])[j]}
-                    onchange={(e) => {
-                      const copy = [...(vd.def.default ?? [0,0])];
-                      copy[j] = smartParseNum(e.currentTarget.value);
-                      onVirtualChange(i, vd.key, vd.def, copy);
-                    }} />
+                  <input class="kv-str sm" type="text" value={val[j] ?? 0}
+                    onchange={(e) => { const c = [...val]; c[j] = smartParseNum(e.currentTarget.value); onChange(c); }} />
                 {/each}
-              {:else if vkt === "position_xy"}
+              {:else if rkt === "position_xy" && Array.isArray(val)}
                 {#each [0,1] as j}
-                  <input class="kv-str sm" type="text" value={(vd.def.default ?? [0,0])[j]}
-                    onchange={(e) => {
-                      const copy = [...(vd.def.default ?? [0,0])];
-                      const r = e.currentTarget.value.trim();
-                      copy[j] = (r==="CENTER"||r==="MAX") ? r : smartParseNum(r);
-                      onVirtualChange(i, vd.key, vd.def, copy);
-                    }} />
+                  <input class="kv-str sm" type="text" value={val[j] ?? ""}
+                    onchange={(e) => { const c = [...val]; const r = e.currentTarget.value.trim(); c[j] = (r==="CENTER"||r==="MAX") ? r : smartParseNum(r); onChange(c); }} />
                 {/each}
-              {:else if vkt === "4bool"}
+              {:else if rkt === "4bool" && Array.isArray(val)}
                 {#each ["F","B","L","R"] as lb, j}
                   <label class="side-label"><span class="side-tag">{lb}</span>
-                    <input type="checkbox" checked={(vd.def.default ?? [false,false,false,false])[j]}
-                      onchange={(e) => {
-                        const copy = [...(vd.def.default ?? [false,false,false,false])];
-                        copy[j] = e.currentTarget.checked;
-                        onVirtualChange(i, vd.key, vd.def, copy);
-                      }} />
+                    <input type="checkbox" checked={val[j] ?? false}
+                      onchange={(e) => { const c = [...val]; c[j] = e.currentTarget.checked; onChange(c); }} />
                   </label>
                 {/each}
-              {:else if vkt === "4num"}
+              {:else if rkt === "4num" && Array.isArray(val)}
                 {#each ["F","B","L","R"] as lb, j}
                   <label class="side-label"><span class="side-tag">{lb}</span>
-                    <input class="kv-num xs" type="number" step="any" value={(vd.def.default ?? [0,0,0,0])[j]}
-                      onchange={(e) => {
-                        const copy = [...(vd.def.default ?? [0,0,0,0])];
-                        copy[j] = parseNum(e.currentTarget.value);
-                        onVirtualChange(i, vd.key, vd.def, copy);
-                      }} />
+                    <input class="kv-num xs" type="number" step="any" value={val[j] ?? 0}
+                      onchange={(e) => { const c = [...val]; c[j] = parseNum(e.currentTarget.value); onChange(c); }} />
                   </label>
                 {/each}
               {:else}
-                <span class="kv-fallback">{JSON.stringify(vd.def.default)}</span>
+                <span class="kv-fallback">{JSON.stringify(val)}</span>
               {/if}
             </span>
+            <span class="spacer"></span>
+            {#if row.isReal && row.lineIndex !== null}
+              {@render commentBtn($project.lines[row.lineIndex], row.lineIndex)}
+              <button class="delete-btn" title="Reset to default" onclick={() => dematerializeKv(row.lineIndex)}>✕</button>
+            {/if}
           </div>
         {/each}
         <!-- Close bracket with context-aware add buttons -->
@@ -576,12 +607,12 @@
           <span class="struct-bracket">{line.raw.trim()}</span>
           {#if line.role === "data"}
             <button class="add-btn" title="Add element" onclick={() => addElement(i, line.depth ?? 0)}>+ Element</button>
-          {:else if line.role === "component" || line.role === "component_list"}
-            <button class="add-btn" title="Add component" onclick={() => addComponent(i, line.depth ?? 0)}>+ Component</button>
           {:else if line.role === "params"}
             <button class="add-btn" title="Add line" onclick={() => addRawLine(i - 1, (line.depth ?? 0) + 1)}>+ Line</button>
             <button class="add-btn" title="Add LABEL block" onclick={() => addLabel(i, (line.depth ?? 0) + 1)}>+ Label</button>
             <button class="add-btn" title="Add BOX_COMPONENT block" onclick={() => addComponentList(i, (line.depth ?? 0) + 1)}>+ Component</button>
+          {:else if line.role === "component" || line.role === "component_list" || line.role === "label" || line.role === "lid" || line.role === "label_params" || line.role === "lid_params" || line.role === "list" || line.role === "data_list"}
+            <!-- No add buttons on these structural close brackets -->
           {:else}
             <button class="add-btn" title="Add line" onclick={() => addRawLine(i - 1, (line.depth ?? 0) + 1)}>+</button>
           {/if}
@@ -589,7 +620,7 @@
 
       {:else if line.kind === "global" && (line.globalKey === "g_b_print_lid" || line.globalKey === "g_b_print_box")}
         <div class="line-row control" style={pad(line)} data-testid="line-{i}">
-          <span class="control-label">{line.globalKey}</span>
+          <span class="control-label" title={tip(line.globalKey || "")}>{line.globalKey}</span>
           <input type="checkbox" checked={line.globalValue === true}
             onchange={(e) => updateGlobal(i, e.currentTarget.checked)} />
           <span class="spacer"></span>
@@ -599,7 +630,7 @@
 
       {:else if line.kind === "global"}
         <div class="line-row control" style={pad(line)} data-testid="line-{i}">
-          <span class="control-label">{line.globalKey}</span>
+          <span class="control-label" title={tip(line.globalKey || "")}>{line.globalKey}</span>
           <input class="control-text" type="text" value={line.globalValue ?? ""}
             onchange={(e) => updateGlobal(i, e.currentTarget.value)} />
           <span class="spacer"></span>
@@ -612,7 +643,7 @@
         {@const ks = getKeySchema(line.kvKey)}
         {@const sd = getSchemaDefault(line.kvKey)}
         <div class="line-row kv" class:is-default={isDefault(line.kvKey, line.kvValue)} style={pad(line)} data-testid="line-{i}">
-          <span class="kv-key">{line.kvKey}</span>
+          <span class="kv-key" title={tip(line.kvKey || "")}>{line.kvKey}</span>
           <span class="kv-control">
             {#if kt === "bool"}
               <input type="checkbox" checked={line.kvValue === true}
@@ -726,14 +757,13 @@
     border-bottom: 1px solid #f0f0f0;
   }
   .line-row.muted { opacity: 0.35; font-style: italic; }
-  .line-row.control { background: #f0f7ff; }
+  .line-row.control { background: #e8f4e8; }
   .line-row.raw { background: white; }
-  .line-row.kv { background: #f0faf0; }
-  .line-row.kv.virtual { background: #fafafa; opacity: 0.5; font-style: italic; }
-  .line-row.kv.virtual:hover { opacity: 0.8; }
-  .line-row.kv.virtual .kv-key { font-weight: 500; }
+  .line-row.kv { background: #e8f4e8; }
+  .line-row.kv.virtual { background: #f0ecf5; font-style: italic; }
+  .line-row.kv.virtual:hover { background: #e8e2f0; }
+  .line-row.kv.virtual .kv-key { font-weight: 500; color: #7b6b8a; }
   .virtual-key { font-style: italic; }
-  .line-row.kv.is-default { opacity: 0.5; }
   .line-row.struct { background: #f8f4ff; }
   .line-row.struct.open { border-left: 3px solid #8e44ad; }
   .line-row.struct.close { border-left: 3px solid #cbb4d8; opacity: 0.6; }
@@ -775,19 +805,20 @@
     position: relative;
     width: 100%;
     border-bottom: 1px solid #f0f0f0;
+    background: #fdf8ef;
   }
   .raw-textarea {
     display: block;
     width: 100%; box-sizing: border-box;
     resize: none; overflow: hidden;
     font-family: "Courier New", monospace; font-size: 15px; font-weight: 500;
-    line-height: 28px; /* matches .line-row min-height */
+    line-height: 28px;
     padding: 3px 28px 3px 8px;
     border: none; border-left: 3px solid transparent;
-    background: transparent; color: #1a1a1a;
+    background: transparent; color: #5a4a2a;
     outline: none;
   }
-  .raw-textarea:focus { border-left-color: #ddd; background: #fefefe; }
+  .raw-textarea:focus { border-left-color: #e0c87a; background: #fef6e0; }
   .raw-delete {
     position: absolute; top: 4px; right: 6px;
     background: none; border: none; color: #ccc;

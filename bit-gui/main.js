@@ -103,8 +103,8 @@ function rebuildMenu() {
 }
 
 function createWindow() {
-  const width = parseInt(process.env.BITGUI_WINDOW_WIDTH || "800", 10);
-  const height = parseInt(process.env.BITGUI_WINDOW_HEIGHT || "600", 10);
+  const width = parseInt(process.env.BITGUI_WINDOW_WIDTH || "1000", 10);
+  const height = parseInt(process.env.BITGUI_WINDOW_HEIGHT || "1200", 10);
 
   mainWindow = new BrowserWindow({
     width,
@@ -144,22 +144,6 @@ function atomicWrite(filePath, content) {
   fs.renameSync(tmp, filePath);
 }
 
-function bgPathFor(originalPath) {
-  const ext = path.extname(originalPath);
-  const base = ext ? originalPath.slice(0, -ext.length) : originalPath;
-  const outExt = ext || ".scad";
-  let candidate = `${base}_bg${outExt}`;
-  if (!fs.existsSync(candidate)) return candidate;
-
-  // Avoid overwriting an existing *_bg.scad file.
-  for (let i = 2; i < 1000; i++) {
-    candidate = `${base}_bg${i}${outExt}`;
-    if (!fs.existsSync(candidate)) return candidate;
-  }
-
-  return `${base}_bg_${Date.now()}${outExt}`;
-}
-
 // --- Auto-load state ---
 let pendingLoad = null;
 
@@ -191,12 +175,12 @@ ipcMain.handle("open-file", async () => {
 
 ipcMain.handle("save-file", async (_event, filePath, scadText, needsBackup) => {
   try {
-    if (needsBackup) {
-      const outPath = bgPathFor(filePath);
-      atomicWrite(outPath, scadText);
-      return { ok: true, filePath: outPath };
+    if (needsBackup && fs.existsSync(filePath)) {
+      const bakPath = filePath + ".bak";
+      if (!fs.existsSync(bakPath)) {
+        fs.copyFileSync(filePath, bakPath);
+      }
     }
-
     atomicWrite(filePath, scadText);
     return { ok: true, filePath };
   } catch (err) {
@@ -220,25 +204,43 @@ ipcMain.handle("save-file-as", async (_event, scadText) => {
 });
 
 ipcMain.handle("open-in-openscad", async (_event, filePath) => {
-  const { exec } = require("child_process");
-  if (!fs.existsSync(filePath)) {
-    return { ok: false, error: "File not found" };
+  const { spawn } = require("child_process");
+  if (!filePath || !fs.existsSync(filePath)) {
+    return { ok: false, error: `File not found: ${filePath || "(no path)"}` };
   }
-  const candidates = process.platform === "win32"
-    ? ["C:\\Program Files\\OpenSCAD\\openscad.exe", "openscad"]
-    : ["/usr/bin/openscad", "/usr/local/bin/openscad", "/snap/bin/openscad",
-       "/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD", "openscad"];
+
+  if (process.platform === "win32") {
+    // On Windows, use 'start' to open via file association, or try known paths.
+    const candidates = [
+      "C:\\Program Files\\OpenSCAD\\openscad.exe",
+      "C:\\Program Files (x86)\\OpenSCAD\\openscad.exe",
+      "C:\\Program Files\\OpenSCAD (Nightly)\\openscad.exe",
+    ];
+    let cmd = candidates.find(c => fs.existsSync(c));
+    if (cmd) {
+      spawn(cmd, [filePath], { detached: true, stdio: "ignore" }).unref();
+    } else {
+      // Fallback: use 'start' to open with default .scad handler
+      spawn("cmd", ["/c", "start", "", filePath], { detached: true, stdio: "ignore" }).unref();
+    }
+    return { ok: true };
+  }
+
+  // macOS / Linux
+  const candidates = process.platform === "darwin"
+    ? ["/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD", "openscad"]
+    : ["/usr/bin/openscad", "/usr/local/bin/openscad", "/snap/bin/openscad", "openscad"];
 
   let cmd = null;
   for (const c of candidates) {
-    if (c.includes("/") || c.includes("\\")) {
+    if (c.includes("/")) {
       if (fs.existsSync(c)) { cmd = c; break; }
     } else { cmd = c; break; }
   }
   if (!cmd) return { ok: false, error: "OpenSCAD not found" };
 
   try {
-    exec(`"${cmd}" "${filePath}"`);
+    spawn(cmd, [filePath], { detached: true, stdio: "ignore" }).unref();
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err.message };

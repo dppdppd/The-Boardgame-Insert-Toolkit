@@ -37,7 +37,7 @@ BIT GUI is a desktop application for visually editing BIT `.scad` files. It prov
 - **Raw text passthrough**: any line the parser doesn't recognize stays as editable raw text — nothing is hidden or lost
 - **Comment support**: trailing `//` comments are preserved and editable on every line
 - **File operations**: New, Open, Open Recent, Save As via native Electron menu; opens in OpenSCAD via Tools menu
-- **Safe saves**: legacy files (without `// BITGUI` marker) are saved as `*_bg.scad` alongside the original — the original is never modified
+- **Safe saves**: legacy files (without `// BITGUI` marker) get a `.bak` backup on first save, then the original is overwritten
 - **v4 includes**: the generator always emits v4 library includes regardless of the source file's version
 
 ### Install & Run
