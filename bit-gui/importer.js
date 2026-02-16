@@ -1,7 +1,7 @@
-// SCAD file importer — parses BIT-style data[] arrays into project JSON
+// SCAD file importer — line-based model with structural bracket tracking.
 //
-// Preserves all code outside the data[] block and recognized globals.
-// Unrecognized code is kept verbatim in preamble/postamble fields.
+// Every non-blank line becomes a Line object with { raw, kind, depth, ... }
+// Brackets are matched and labelled with their structural role.
 
 const KNOWN_CONSTANTS = {
   BOX: "BOX", DIVIDERS: "DIVIDERS", SPACER: "SPACER",
@@ -16,304 +16,377 @@ const KNOWN_CONSTANTS = {
   true: true, false: false, t: true, f: false,
 };
 
-const KEY_CONSTANTS = new Set([
-  "TYPE", "BOX_SIZE_XYZ", "BOX_COMPONENT", "BOX_LID", "BOX_VISUALIZATION",
-  "BOX_NO_LID_B", "BOX_STACKABLE_B", "BOX_WALL_THICKNESS",
-  "ENABLED_B", "LABEL", "ROTATION", "POSITION_XY",
-  "CMP_COMPARTMENT_SIZE_XYZ", "CMP_NUM_COMPARTMENTS_XY", "CMP_SHAPE",
-  "CMP_SHAPE_ROTATED_B", "CMP_SHAPE_VERTICAL_B", "CMP_PADDING_XY",
-  "CMP_PADDING_HEIGHT_ADJUST_XY", "CMP_MARGIN_FBLR",
-  "CMP_CUTOUT_SIDES_4B", "CMP_CUTOUT_CORNERS_4B",
-  "CMP_CUTOUT_HEIGHT_PCT", "CMP_CUTOUT_DEPTH_PCT", "CMP_CUTOUT_WIDTH_PCT",
-  "CMP_CUTOUT_BOTTOM_B", "CMP_CUTOUT_BOTTOM_PCT",
-  "CMP_CUTOUT_TYPE", "CMP_CUTOUT_DEPTH_MAX",
-  "CMP_SHEAR", "CMP_FILLET_RADIUS", "CMP_PEDESTAL_BASE_B",
-  "LID_FIT_UNDER_B", "LID_SOLID_B", "LID_HEIGHT", "LID_INSET_B",
-  "LID_CUTOUT_SIDES_4B", "LID_TABS_4B", "LID_LABELS_INVERT_B",
-  "LID_SOLID_LABELS_DEPTH", "LID_LABELS_BG_THICKNESS",
-  "LID_LABELS_BORDER_THICKNESS", "LID_STRIPE_WIDTH", "LID_STRIPE_SPACE",
-  "LID_PATTERN_RADIUS", "LID_PATTERN_N1", "LID_PATTERN_N2",
-  "LID_PATTERN_ANGLE", "LID_PATTERN_ROW_OFFSET", "LID_PATTERN_COL_OFFSET",
-  "LID_PATTERN_THICKNESS",
-  "LBL_TEXT", "LBL_IMAGE", "LBL_SIZE", "LBL_PLACEMENT", "LBL_FONT",
-  "LBL_DEPTH", "LBL_SPACING", "LBL_AUTO_SCALE_FACTOR",
-  "DIV_THICKNESS", "DIV_TAB_SIZE_XY", "DIV_TAB_RADIUS",
-  "DIV_TAB_CYCLE", "DIV_TAB_CYCLE_START", "DIV_TAB_TEXT",
-  "DIV_TAB_TEXT_SIZE", "DIV_TAB_TEXT_FONT", "DIV_TAB_TEXT_SPACING",
-  "DIV_TAB_TEXT_CHAR_THRESHOLD", "DIV_TAB_TEXT_EMBOSSED_B",
-  "DIV_FRAME_SIZE_XY", "DIV_FRAME_TOP", "DIV_FRAME_BOTTOM",
-  "DIV_FRAME_COLUMN", "DIV_FRAME_RADIUS", "DIV_FRAME_NUM_COLUMNS",
-]);
-
-// Globals we extract (everything else stays in preamble/postamble)
-const GLOBAL_PATTERNS = [
-  { re: /^(g_b_print_lid)\s*=\s*(true|false|t|f)\s*;/m, key: "g_b_print_lid", convert: v => v === "true" || v === "t" },
-  { re: /^(g_b_print_box)\s*=\s*(true|false|t|f)\s*;/m, key: "g_b_print_box", convert: v => v === "true" || v === "t" },
-  { re: /^(g_isolated_print_box)\s*=\s*"([^"]*)"\s*;/m, key: "g_isolated_print_box", convert: v => v },
-];
-
-class Parser {
-  constructor(src) {
-    this.src = src;
-    this.pos = 0;
-  }
-
-  skipWS() {
-    while (this.pos < this.src.length) {
-      const ch = this.src[this.pos];
-      if (ch === " " || ch === "\t" || ch === "\n" || ch === "\r") {
-        this.pos++;
-      } else if (this.src.slice(this.pos, this.pos + 2) === "//") {
-        while (this.pos < this.src.length && this.src[this.pos] !== "\n") this.pos++;
-      } else if (this.src.slice(this.pos, this.pos + 2) === "/*") {
-        this.pos += 2;
-        while (this.pos < this.src.length - 1 && this.src.slice(this.pos, this.pos + 2) !== "*/") this.pos++;
-        this.pos += 2;
-      } else {
-        break;
-      }
-    }
-  }
-
-  peek() { this.skipWS(); return this.src[this.pos]; }
-
-  expect(ch) {
-    this.skipWS();
-    if (this.src[this.pos] !== ch) throw new Error(`Expected '${ch}' at pos ${this.pos}, got '${this.src[this.pos]}'`);
-    this.pos++;
-  }
-
-  parseValue() {
-    this.skipWS();
-    const ch = this.src[this.pos];
-    if (ch === "[") return this.parseArray();
-    if (ch === '"') return this.parseString();
-    if (ch === "-" || (ch >= "0" && ch <= "9")) {
-      const num = this.parseNumber();
-      this.skipWS();
-      if (this.pos < this.src.length && /[+\-*/%]/.test(this.src[this.pos])) {
-        return this.skipExpression(num);
-      }
-      return num;
-    }
-    if (/[a-zA-Z_]/.test(ch)) return this.parseIdentifier();
-    return this.skipExpression(null);
-  }
-
-  parseString() {
-    this.expect('"');
-    let s = "";
-    while (this.pos < this.src.length && this.src[this.pos] !== '"') {
-      if (this.src[this.pos] === "\\") { this.pos++; s += this.src[this.pos]; }
-      else s += this.src[this.pos];
-      this.pos++;
-    }
-    this.expect('"');
-    return s;
-  }
-
-  parseNumber() {
-    this.skipWS();
-    let s = "";
-    if (this.src[this.pos] === "-") { s += "-"; this.pos++; }
-    while (this.pos < this.src.length && /[0-9.]/.test(this.src[this.pos])) {
-      s += this.src[this.pos++];
-    }
-    return parseFloat(s);
-  }
-
-  parseIdentifier() {
-    this.skipWS();
-    let s = "";
-    while (this.pos < this.src.length && /[a-zA-Z0-9_]/.test(this.src[this.pos])) {
-      s += this.src[this.pos++];
-    }
-    this.skipWS();
-    if (this.pos < this.src.length && this.src[this.pos] === "(") {
-      return this.skipFunctionCall(s);
-    }
-    if (this.pos < this.src.length && /[+\-*/%]/.test(this.src[this.pos])) {
-      return this.skipExpression(s);
-    }
-    if (s in KNOWN_CONSTANTS) return KNOWN_CONSTANTS[s];
-    if (KEY_CONSTANTS.has(s)) return { __key: s };
-    return s;
-  }
-
-  skipFunctionCall(name) {
-    const start = this.pos;
-    let depth = 0;
-    while (this.pos < this.src.length) {
-      const ch = this.src[this.pos];
-      if (ch === "(") depth++;
-      else if (ch === ")") { depth--; if (depth <= 0) { this.pos++; break; } }
-      this.pos++;
-    }
-    const callText = name + this.src.slice(start, this.pos);
-    this.skipWS();
-    if (this.pos < this.src.length && /[+\-*/%]/.test(this.src[this.pos])) {
-      return this.skipExpression(callText);
-    }
-    return { __expr: callText };
-  }
-
-  skipExpression(partial) {
-    const start = this.pos;
-    let depth = 0;
-    while (this.pos < this.src.length) {
-      const ch = this.src[this.pos];
-      if (ch === "[" || ch === "(") depth++;
-      else if (ch === "]" || ch === ")") { if (depth <= 0) break; depth--; }
-      else if (ch === "," && depth <= 0) break;
-      this.pos++;
-    }
-    const rest = this.src.slice(start, this.pos).trim();
-    const expr = partial != null ? String(partial) + rest : rest;
-    return { __expr: expr };
-  }
-
-  parseArray() {
-    this.expect("[");
-    const items = [];
-    let safety = 0;
-    while (this.peek() !== "]" && this.pos < this.src.length) {
-      if (++safety > 100000) throw new Error(`Array parse safety limit at pos ${this.pos}`);
-      items.push(this.parseValue());
-      this.skipWS();
-      if (this.src[this.pos] === ",") this.pos++;
-    }
-    this.expect("]");
-    return items;
-  }
+// Derive ALL_KEYS from the actual schema — only keys that exist in a schema
+// context get native controls. Everything else stays raw.
+const schemaJson = require("./schema/bit.schema.json");
+const ALL_KEYS = new Set();
+for (const ctx of Object.values(schemaJson.contexts)) {
+  for (const k of Object.keys(ctx.keys)) ALL_KEYS.add(k);
 }
 
-function isKVPair(arr) {
-  return Array.isArray(arr) && arr.length === 2 && arr[0] && typeof arr[0] === "object" && arr[0].__key;
-}
+const GLOBAL_BOOL_RE = /^\s*(g_b_print_lid|g_b_print_box)\s*=\s*(true|false|t|f|0|1)\s*;\s*(?:\/\/.*)?$/i;
+const GLOBAL_STR_RE = /^\s*(g_isolated_print_box)\s*=\s*"([^"]*)"\s*;\s*(?:\/\/.*)?$/i;
+const INCLUDE_RE = /^\s*include\s*<\s*(?:lib\/)?(?:boardgame_insert_toolkit_lib\.|bit_functions_lib\.)\d+\.scad\s*>\s*;?\s*(?:\/\/.*)?$/i;
+const MARKER_RE = /^\s*\/\/\s*BITGUI\b/i;
+const MAKEALL_RE = /^\s*MakeAll\s*\(\s*\)\s*;\s*(?:\/\/.*)?$/;
+const KV_LINE_RE = /^\s*\[\s*([A-Z][A-Z0-9_]*)\s*,\s*(.*?)\s*\]\s*,?\s*(?:\/\/.*)?$/;
 
-function isKVTable(arr) {
-  return Array.isArray(arr) && arr.length > 0 && arr.every(item => isKVPair(item));
-}
+// Structural patterns — all allow optional trailing // comments
+const DATA_ASSIGN_RE = /^\s*data\s*=\s*\[\s*(?:\/\/.*)?$/;           // data = [
+const DATA_ASSIGN_INLINE_RE = /^\s*data\s*=\s*(?:\/\/.*)?$/;          // data =
+const ELEMENT_OPEN_RE = /^\s*\[\s*"([^"]+)"\s*,\s*(?:\/\/.*)?$/;      // [ "name",
+const KEY_OPEN_RE = /^\s*\[\s*([A-Z][A-Z0-9_]*)\s*,\s*(?:\/\/.*)?$/;  // [ KEY,
+const BARE_OPEN_RE = /^\s*\[\s*(?:\/\/.*)?$/;                          // [
+const CLOSE_RE = /^\s*\]\s*,?\s*(?:\/\/.*)?$/;                         // ] or ],
+const CLOSE_SEMI_RE = /^\s*\]\s*;\s*(?:\/\/.*)?$/;                     // ];
 
-function resolveValue(val) {
-  if (val && typeof val === "object" && val.__key) return val.__key;
-  if (val && typeof val === "object" && val.__expr) return val;
-  if (Array.isArray(val)) {
-    const resolved = val.map(resolveValue);
-    if (resolved.some(v => v && typeof v === "object" && v.__expr)) {
-      return { __expr: "[" + resolved.map(v => v && v.__expr ? v.__expr : JSON.stringify(v)).join(", ") + "]" };
+function parseSimpleValue(text) {
+  const t = text.trim();
+  if (t === "true" || t === "t") return { value: true, ok: true };
+  if (t === "false" || t === "f") return { value: false, ok: true };
+  if (t in KNOWN_CONSTANTS) return { value: KNOWN_CONSTANTS[t], ok: true };
+  const strMatch = t.match(/^"([^"]*)"$/);
+  if (strMatch) return { value: strMatch[1], ok: true };
+  if (/^-?\d+(\.\d+)?$/.test(t)) return { value: parseFloat(t), ok: true };
+  const arrMatch = t.match(/^\[(.+)\]$/);
+  if (arrMatch) {
+    const inner = arrMatch[1];
+    if (inner.includes("[")) return { ok: false };
+    const parts = inner.split(",").map(s => s.trim());
+    const vals = [];
+    let hasExpr = false;
+    for (const part of parts) {
+      const sub = parseSimpleValue(part);
+      if (!sub.ok) { vals.push(part); hasExpr = true; }
+      else { vals.push(hasExpr ? String(sub.value) : sub.value); }
     }
-    return resolved;
+    if (hasExpr) return { value: vals.map(String), ok: true, hasExpr: true };
+    return { value: vals, ok: true };
   }
-  return val;
-}
-
-function convertParams(kvPairs) {
-  const params = [];
-  for (const pair of kvPairs) {
-    if (!isKVPair(pair)) continue;
-    const key = pair[0].__key;
-    let value = pair[1];
-
-    if (key === "BOX_COMPONENT") {
-      const existing = params.find(p => p.key === "BOX_COMPONENT");
-      const componentParams = isKVTable(value) ? convertParams(value) : [];
-      if (existing) {
-        existing.value.push(componentParams);
-      } else {
-        params.push({ key: "BOX_COMPONENT", value: [componentParams] });
-      }
-    } else if (key === "BOX_LID" || key === "LABEL") {
-      const childParams = isKVTable(value) ? convertParams(value) : [];
-      params.push({ key, value: childParams });
-    } else {
-      params.push({ key, value: resolveValue(value) });
-    }
-  }
-  return params;
+  return { ok: false };
 }
 
 /**
- * Parse a BIT SCAD file.
- * Returns { version, globals, data, preamble, postamble, hasMarker }
- *
- * preamble: all text before "data = [" (minus extracted globals)
- * postamble: all text after the data array's closing "];"
- * hasMarker: true if file contains "// BITGUI" marker
+ * Extract trailing // comment from a line.
+ * Returns { code, comment } where comment is the text after // (without //).
+ * Handles strings correctly — // inside "..." is not a comment.
  */
-function importScad(scadText) {
-  const hasMarker = /\/\/\s*BITGUI\b/.test(scadText);
-
-  // Find data array boundaries
-  const dataMatch = scadText.match(/data\s*=\s*\[/);
-  if (!dataMatch) throw new Error("Could not find 'data = [' in the SCAD file");
-
-  const dataStart = dataMatch.index;
-
-  // Parse the data array to find where it ends
-  const parser = new Parser(scadText);
-  parser.pos = dataStart + dataMatch[0].length - 1;
-  const dataArray = parser.parseArray();
-
-  // Skip trailing semicolon
-  parser.skipWS();
-  if (parser.pos < scadText.length && scadText[parser.pos] === ";") parser.pos++;
-
-  const dataEnd = parser.pos;
-
-  // Extract preamble: everything before data=, minus globals we recognize
-  let preamble = scadText.slice(0, dataStart);
-
-  // Extract globals from preamble
-  const globals = {};
-  for (const { re, key, convert } of GLOBAL_PATTERNS) {
-    const m = preamble.match(re);
-    if (m) {
-      globals[key] = convert(m[2] || m[1]);
-      // Remove the global line from preamble (we'll regenerate it)
-      preamble = preamble.replace(re, "").replace(/\n\n\n+/g, "\n\n");
+function extractComment(raw) {
+  let inStr = false;
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i];
+    if (ch === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (ch === '/' && raw[i + 1] === '/') {
+      const code = raw.slice(0, i).trimEnd();
+      const comment = raw.slice(i + 2).trim();
+      return { code, comment: comment || "" };
     }
   }
-  if (!("g_b_print_lid" in globals)) globals.g_b_print_lid = true;
-  if (!("g_b_print_box" in globals)) globals.g_b_print_box = true;
-  if (!("g_isolated_print_box" in globals)) globals.g_isolated_print_box = "";
+  return { code: raw, comment: undefined };
+}
 
-  // Clean up preamble — remove BITGUI marker (we'll add it back)
-  preamble = preamble.replace(/\/\/\s*BITGUI\b[^\n]*/g, "").replace(/^\n+/, "").replace(/\n\n\n+/g, "\n\n");
+function importScad(scadText) {
+  const hasMarker = MARKER_RE.test(scadText);
+  const rawLines = scadText.replace(/\r\n/g, "\n").split("\n");
+  const lines = [];
 
-  // Postamble: everything after data array
-  let postamble = scadText.slice(dataEnd).replace(/^\n+/, "");
+  // Stack tracks what each bracket level means.
+  const stack = [];
+  let depth = 0;
 
-  // Convert elements
-  const elements = [];
-  for (const elem of dataArray) {
-    // Function call or expression entry (e.g. makeFaction("ATREIDES"))
-    if (elem && typeof elem === "object" && elem.__expr) {
-      elements.push({ name: elem.__expr, type: "__EXPR__", params: [], __expr: elem.__expr });
+  // When we're inside an unrecognized block, rawDepth > 0.
+  // Everything is forced to raw until brackets balance out.
+  let rawDepth = 0;
+
+  // Count net bracket delta on a line (outside strings/comments)
+  function bracketDelta(line) {
+    let delta = 0, inStr = false, inLine = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i], next = line[i + 1];
+      if (inLine) continue;
+      if (!inStr && ch === "/" && next === "/") { inLine = true; continue; }
+      if (ch === '"') { inStr = !inStr; continue; }
+      if (inStr) continue;
+      if (ch === "[") delta++;
+      if (ch === "]") delta--;
+    }
+    return delta;
+  }
+
+  for (const raw of rawLines) {
+    if (!raw.trim()) continue;
+
+    // --- If inside an unrecognized block, everything is raw ---
+    if (rawDepth > 0) {
+      rawDepth += bracketDelta(raw);
+      lines.push({ raw, kind: "raw", depth });
       continue;
     }
 
-    if (!Array.isArray(elem) || elem.length < 2) continue;
-    const name = typeof elem[0] === "string" ? elem[0] : String(elem[0]);
-    const kvTable = elem[1];
-    if (!Array.isArray(kvTable)) continue;
+    // --- Non-structural lines ---
 
-    const params = convertParams(kvTable);
-    const typeParam = params.find(p => p.key === "TYPE");
-    const type = typeParam ? String(typeParam.value) : "BOX";
-    const filteredParams = params.filter(p => p.key !== "TYPE");
+    const boolMatch = raw.match(GLOBAL_BOOL_RE);
+    if (boolMatch) {
+      const v = boolMatch[2].toLowerCase();
+      lines.push({ raw, kind: "global", depth, globalKey: boolMatch[1], globalValue: v === "true" || v === "t" || v === "1" });
+      continue;
+    }
+    const strMatch = raw.match(GLOBAL_STR_RE);
+    if (strMatch) {
+      lines.push({ raw, kind: "global", depth, globalKey: strMatch[1], globalValue: strMatch[2] });
+      continue;
+    }
+    if (INCLUDE_RE.test(raw)) { lines.push({ raw, kind: "include", depth }); continue; }
+    if (MARKER_RE.test(raw)) { lines.push({ raw, kind: "marker", depth }); continue; }
+    if (MAKEALL_RE.test(raw)) { lines.push({ raw, kind: "makeall", depth }); continue; }
 
-    elements.push({ name, type, params: filteredParams });
+    // KV line (self-contained: [ KEY, value ])
+    const kvMatch = raw.match(KV_LINE_RE);
+    if (kvMatch && ALL_KEYS.has(kvMatch[1])) {
+      const parsed = parseSimpleValue(kvMatch[2]);
+      if (parsed.ok) {
+        lines.push({ raw, kind: "kv", depth, kvKey: kvMatch[1], kvValue: parsed.value });
+        continue;
+      }
+    }
+
+    // --- Structural: opening brackets ---
+
+    // data = [
+    if (DATA_ASSIGN_RE.test(raw)) {
+      lines.push({ raw, kind: "open", depth, role: "data", label: "data" });
+      stack.push({ role: "data" });
+      depth++;
+      continue;
+    }
+    if (DATA_ASSIGN_INLINE_RE.test(raw)) {
+      lines.push({ raw, kind: "raw", depth });
+      continue;
+    }
+
+    // [ "name",  — element opener
+    const elemMatch = raw.match(ELEMENT_OPEN_RE);
+    if (elemMatch) {
+      lines.push({ raw, kind: "open", depth, role: "element", label: elemMatch[1] });
+      stack.push({ role: "element", label: elemMatch[1] });
+      depth++;
+      continue;
+    }
+
+    // [ KEY,  — only for recognized structural schema keys
+    const keyOpenMatch = raw.match(KEY_OPEN_RE);
+    if (keyOpenMatch) {
+      const key = keyOpenMatch[1];
+      let role = null;
+      if (key === "BOX_COMPONENT") role = "component_list";
+      else if (key === "BOX_LID") role = "lid";
+      else if (key === "LABEL") role = "label";
+
+      if (role) {
+        lines.push({ raw, kind: "open", depth, role, label: key });
+        stack.push({ role, label: key });
+        depth++;
+        continue;
+      }
+      // Unknown key — this line is raw, and everything inside its brackets is raw too
+      const delta = bracketDelta(raw);
+      if (delta > 0) rawDepth = delta; // opened brackets that need closing
+      lines.push({ raw, kind: "raw", depth });
+      continue;
+    }
+
+    // bare [
+    if (BARE_OPEN_RE.test(raw)) {
+      const parent = stack.length > 0 ? stack[stack.length - 1] : null;
+      let role = "list";
+      let label = "[";
+      if (parent?.role === "element") { role = "params"; label = "element params"; }
+      else if (parent?.role === "component_list") { role = "component"; label = "component list"; }
+      else if (parent?.role === "lid") { role = "lid_params"; label = "lid params"; }
+      else if (parent?.role === "label") { role = "label_params"; label = "label params"; }
+      else if (parent?.role === "data") { role = "data_list"; label = "data list"; }
+
+      lines.push({ raw, kind: "open", depth, role, label });
+      stack.push({ role, label });
+      depth++;
+      continue;
+    }
+
+    // --- Structural: closing brackets ---
+
+    if (CLOSE_SEMI_RE.test(raw)) {
+      depth = Math.max(0, depth - 1);
+      const popped = stack.pop();
+      lines.push({ raw, kind: "close", depth, role: popped?.role || "unknown", label: popped?.label || "" });
+      continue;
+    }
+
+    if (CLOSE_RE.test(raw)) {
+      depth = Math.max(0, depth - 1);
+      const popped = stack.pop();
+      lines.push({ raw, kind: "close", depth, role: popped?.role || "unknown", label: popped?.label || "" });
+      continue;
+    }
+
+    // --- Everything else: raw ---
+    lines.push({ raw, kind: "raw", depth });
   }
 
-  return {
-    version: 1,
-    globals,
-    data: elements,
-    preamble: preamble.trimEnd() + "\n",
-    postamble: postamble.trimStart(),
-    hasMarker,
-  };
+  // Post-process: extract trailing comments from all non-raw lines.
+  // (Raw lines keep their comments as part of the raw text.)
+  for (const line of lines) {
+    if (line.kind === "raw") continue;
+    const { comment } = extractComment(line.raw);
+    if (comment !== undefined) {
+      line.comment = comment;
+    }
+  }
+
+  return { version: 4, lines, hasMarker };
 }
 
-module.exports = { importScad };
+/**
+ * Re-import a block of raw text lines using the full structural parser.
+ * Used when the user edits a raw group textarea and we need to re-evaluate
+ * whether the text now contains recognizable structure.
+ *
+ * @param {string} text - The raw text block (may be multi-line)
+ * @param {number} baseDepth - The depth at which these lines sit in the tree
+ * @returns {Line[]} - Classified lines
+ */
+function reimportBlock(text, baseDepth) {
+  // Wrap in a minimal SCAD that places the text at the right bracket depth.
+  // We just run the text through the same import logic but adjust depths.
+  const rawLines = text.replace(/\r\n/g, "\n").split("\n");
+  const lines = [];
+
+  const stack = [];
+  let depth = baseDepth;
+  let rawDepth = 0;
+
+  function bracketDeltaLocal(line) {
+    let delta = 0, inStr = false, inLine = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i], next = line[i + 1];
+      if (inLine) continue;
+      if (!inStr && ch === "/" && next === "/") { inLine = true; continue; }
+      if (ch === '"') { inStr = !inStr; continue; }
+      if (inStr) continue;
+      if (ch === "[") delta++;
+      if (ch === "]") delta--;
+    }
+    return delta;
+  }
+
+  for (const raw of rawLines) {
+    if (!raw.trim()) continue;
+
+    if (rawDepth > 0) {
+      rawDepth += bracketDeltaLocal(raw);
+      lines.push({ raw, kind: "raw", depth });
+      continue;
+    }
+
+    // Globals
+    const boolMatch = raw.match(GLOBAL_BOOL_RE);
+    if (boolMatch) {
+      const v = boolMatch[2].toLowerCase();
+      lines.push({ raw, kind: "global", depth, globalKey: boolMatch[1], globalValue: v === "true" || v === "t" || v === "1" });
+      continue;
+    }
+    const strMatch = raw.match(GLOBAL_STR_RE);
+    if (strMatch) {
+      lines.push({ raw, kind: "global", depth, globalKey: strMatch[1], globalValue: strMatch[2] });
+      continue;
+    }
+    if (INCLUDE_RE.test(raw)) { lines.push({ raw, kind: "include", depth }); continue; }
+    if (MARKER_RE.test(raw)) { lines.push({ raw, kind: "marker", depth }); continue; }
+    if (MAKEALL_RE.test(raw)) { lines.push({ raw, kind: "makeall", depth }); continue; }
+
+    // KV
+    const kvMatch = raw.match(KV_LINE_RE);
+    if (kvMatch && ALL_KEYS.has(kvMatch[1])) {
+      const parsed = parseSimpleValue(kvMatch[2]);
+      if (parsed.ok) {
+        lines.push({ raw, kind: "kv", depth, kvKey: kvMatch[1], kvValue: parsed.value });
+        continue;
+      }
+    }
+
+    // data = [
+    if (DATA_ASSIGN_RE.test(raw)) {
+      lines.push({ raw, kind: "open", depth, role: "data", label: "data" });
+      stack.push({ role: "data" });
+      depth++;
+      continue;
+    }
+
+    // [ "name",
+    const elemMatch = raw.match(ELEMENT_OPEN_RE);
+    if (elemMatch) {
+      lines.push({ raw, kind: "open", depth, role: "element", label: elemMatch[1] });
+      stack.push({ role: "element", label: elemMatch[1] });
+      depth++;
+      continue;
+    }
+
+    // [ KEY, (structural)
+    const keyOpenMatch = raw.match(KEY_OPEN_RE);
+    if (keyOpenMatch) {
+      const key = keyOpenMatch[1];
+      let role = null;
+      if (key === "BOX_COMPONENT") role = "component_list";
+      else if (key === "BOX_LID") role = "lid";
+      else if (key === "LABEL") role = "label";
+      if (role) {
+        lines.push({ raw, kind: "open", depth, role, label: key });
+        stack.push({ role, label: key });
+        depth++;
+        continue;
+      }
+      const delta = bracketDeltaLocal(raw);
+      if (delta > 0) rawDepth = delta;
+      lines.push({ raw, kind: "raw", depth });
+      continue;
+    }
+
+    // bare [
+    if (BARE_OPEN_RE.test(raw)) {
+      const parent = stack.length > 0 ? stack[stack.length - 1] : null;
+      let role = "list";
+      let label = "[";
+      if (parent?.role === "element") { role = "params"; label = "element params"; }
+      else if (parent?.role === "component_list") { role = "component"; label = "component list"; }
+      else if (parent?.role === "lid") { role = "lid_params"; label = "lid params"; }
+      else if (parent?.role === "label") { role = "label_params"; label = "label params"; }
+      else if (parent?.role === "data") { role = "data_list"; label = "data list"; }
+      lines.push({ raw, kind: "open", depth, role, label });
+      stack.push({ role, label });
+      depth++;
+      continue;
+    }
+
+    // ];
+    if (CLOSE_SEMI_RE.test(raw)) {
+      depth = Math.max(baseDepth, depth - 1);
+      const popped = stack.pop();
+      lines.push({ raw, kind: "close", depth, role: popped?.role || "unknown", label: popped?.label || "" });
+      continue;
+    }
+
+    // ] or ],
+    if (CLOSE_RE.test(raw)) {
+      depth = Math.max(baseDepth, depth - 1);
+      const popped = stack.pop();
+      lines.push({ raw, kind: "close", depth, role: popped?.role || "unknown", label: popped?.label || "" });
+      continue;
+    }
+
+    lines.push({ raw, kind: "raw", depth });
+  }
+
+  return lines;
+}
+
+module.exports = { importScad, reimportBlock };

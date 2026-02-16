@@ -127,7 +127,7 @@ async function handleCommand(line) {
 async function main() {
   console.log("Launching Electron...");
   app = await electron.launch({
-    args: [path.join(BIT_GUI, "main.js")],
+    args: [path.join(BIT_GUI, "main.js"), "--disable-gpu", "--no-sandbox"],
     env: {
       ...process.env,
       BITGUI_WINDOW_WIDTH: "800",

@@ -32,22 +32,15 @@ export function mergeWithDefaults(
   elementType?: string,
 ): { key: string; value: any }[] {
   const keys = getContextKeys(context);
-  const existingMap = new Map(params.map((p) => [p.key, p.value]));
-  const result: { key: string; value: any }[] = [];
+  const result: { key: string; value: any }[] = params.map((p) => ({ key: p.key, value: p.value }));
+  const existingKeys = new Set(result.map((p) => p.key));
 
+  // Append scalar defaults that are missing (keep existing order intact).
   for (const [key, def] of Object.entries(keys)) {
-    // Filter by element type context if specified
-    if (def.contexts && elementType && !def.contexts.includes(elementType)) {
-      continue;
-    }
-
-    if (existingMap.has(key)) {
-      result.push({ key, value: existingMap.get(key) });
-    } else if (!isOptionalNode(def)) {
-      // Add scalar keys with their defaults
-      result.push({ key, value: def.default ?? null });
-    }
-    // Optional nodes (table, table_list) are omitted unless already present
+    if (def.contexts && elementType && !def.contexts.includes(elementType)) continue;
+    if (existingKeys.has(key)) continue;
+    if (isOptionalNode(def)) continue;
+    result.push({ key, value: def.default ?? null });
   }
 
   return result;

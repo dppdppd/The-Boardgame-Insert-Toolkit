@@ -9,11 +9,13 @@
 
   let keyDefs = $derived.by(() => getContextKeys(context));
   let keySchema = $derived(keyDefs[param.key] || null);
+  let isUnknownKey = $derived(!keySchema && !param.key?.startsWith("__RAW__"));
   let keyType = $derived(keySchema?.type || "unknown");
   let isNested = $derived(keyType === "table" || keyType === "table_list");
   let childContext = $derived(keySchema?.child_context || context);
   let defaultVal = $derived(keySchema?.default);
   let isExpr = $derived(param.value && typeof param.value === "object" && "__expr" in param.value);
+  let isRawRow = $derived((param.key?.startsWith("__RAW__") || isUnknownKey) && isExpr);
   let isDefault = $derived(!isNested && !isExpr && JSON.stringify(param.value) === JSON.stringify(defaultVal));
 
   function update(newValue) {
@@ -89,10 +91,17 @@
     style="padding-left: {depth * 16}px"
     data-testid="kv-{param.key}"
   >
-    <span class="key" class:muted={isDefault}>{param.key}</span>
+    <span class="key" class:muted={isDefault}>{isRawRow ? "RAW" : param.key}</span>
 
     <span class="value" data-testid="kv-{param.key}-editor">
-      {#if isExpr}
+      {#if isRawRow}
+        <textarea
+          class="raw-area"
+          value={param.value.__expr}
+          oninput={(e) => update({ __expr: e.currentTarget.value })}
+          data-testid="kv-{param.key}-expr"
+        />
+      {:else if isExpr}
         <input
           class="str-input wide expr"
           type="text"
@@ -230,7 +239,7 @@
       {/if}
     </span>
 
-    {#if !isDefault}
+    {#if !isDefault && !isRawRow}
       <button class="revert-btn" data-testid="kv-{param.key}-delete" title="Revert to default" onclick={revert}>✕</button>
     {/if}
   </div>
@@ -286,6 +295,18 @@
   .str-input.sm { width: 56px; }
   .str-input.wide { width: 180px; }
   .str-input.expr { color: #e67e22; font-style: italic; }
+  .raw-area {
+    width: 100%;
+    min-height: 44px;
+    resize: vertical;
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+    padding: 4px 6px;
+    border: 1px solid #f0c040;
+    border-radius: 2px;
+    background: #fffdf4;
+    color: #a85d00;
+  }
   select { padding: 1px 2px; }
   input[type="checkbox"] { margin: 0; }
 

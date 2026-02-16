@@ -9,4 +9,10 @@ contextBridge.exposeInMainWorld("bitgui", {
   saveFile: (filePath, scadText, needsBackup) => ipcRenderer.invoke("save-file", filePath, scadText, needsBackup),
   saveFileAs: (scadText) => ipcRenderer.invoke("save-file-as", scadText),
   openInOpenScad: (filePath) => ipcRenderer.invoke("open-in-openscad", filePath),
+
+  // Menu event listeners
+  onMenuNew: (callback) => ipcRenderer.on("menu-new", callback),
+  onMenuOpen: (callback) => ipcRenderer.on("menu-open", (_event, data) => callback(data)),
+  onMenuSaveAs: (callback) => ipcRenderer.on("menu-save-as", callback),
+  onMenuOpenInOpenScad: (callback) => ipcRenderer.on("menu-open-in-openscad", callback),
 });

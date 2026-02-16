@@ -12,7 +12,7 @@ g_b_print_lid = true;
 g_b_print_box = true; 
 
 // Only render specified box
-g_isolated_print_box = "components"; 
+g_isolated_print_box = ""; 
 
 // Used to visualize how all of the boxes fit together. 
 g_b_visualization = false;          

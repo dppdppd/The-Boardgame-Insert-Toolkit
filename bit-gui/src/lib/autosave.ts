@@ -21,6 +21,10 @@ export function setNeedsBackup(val: boolean) {
   needsBackup = val;
 }
 
+export function getNeedsBackup(): boolean {
+  return needsBackup;
+}
+
 export function onSaveStatus(cb: (msg: string) => void) {
   saveStatus = cb;
 }
@@ -34,11 +38,19 @@ async function doSave() {
   saveStatus("Saving...");
   const result = await bitgui.saveFile(filePath, scadText, needsBackup);
   if (result.ok) {
+    if (result.filePath && typeof result.filePath === "string") {
+      filePath = result.filePath;
+    }
     needsBackup = false; // Only backup once
     saveStatus(`Saved ${new Date().toLocaleTimeString()}`);
   } else {
     saveStatus(`Save failed: ${result.error}`);
   }
+}
+
+export async function saveNow(): Promise<string | null> {
+  await doSave();
+  return filePath;
 }
 
 export function triggerSave() {

@@ -1,9 +1,106 @@
-const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { importScad } = require("./importer");
 
 let mainWindow;
+
+// --- Recent files ---
+const RECENT_FILE = path.join(app.getPath("userData"), "recent-files.json");
+const MAX_RECENT = 10;
+
+function loadRecent() {
+  try {
+    if (fs.existsSync(RECENT_FILE)) return JSON.parse(fs.readFileSync(RECENT_FILE, "utf-8"));
+  } catch (_) {}
+  return [];
+}
+
+function saveRecent(list) {
+  try { fs.writeFileSync(RECENT_FILE, JSON.stringify(list), "utf-8"); } catch (_) {}
+}
+
+function addRecent(filePath) {
+  let list = loadRecent().filter(f => f !== filePath);
+  list.unshift(filePath);
+  if (list.length > MAX_RECENT) list = list.slice(0, MAX_RECENT);
+  saveRecent(list);
+  rebuildMenu();
+}
+
+function openFilePath(filePath) {
+  try {
+    const content = fs.readFileSync(filePath, "utf-8");
+    const project = importScad(content);
+    mainWindow.webContents.send("menu-open", { data: project, filePath });
+    addRecent(filePath);
+  } catch (err) {
+    console.error("Open failed:", err.message);
+  }
+}
+
+function rebuildMenu() {
+  const recentFiles = loadRecent();
+  const recentSubmenu = recentFiles.length > 0
+    ? [
+        ...recentFiles.map(f => ({
+          label: path.basename(f),
+          sublabel: f,
+          click: () => openFilePath(f),
+        })),
+        { type: "separator" },
+        { label: "Clear Recent", click: () => { saveRecent([]); rebuildMenu(); } },
+      ]
+    : [{ label: "No Recent Files", enabled: false }];
+
+  const menuTemplate = [
+    {
+      label: "File",
+      submenu: [
+        {
+          label: "New",
+          accelerator: "CmdOrCtrl+N",
+          click: () => mainWindow.webContents.send("menu-new"),
+        },
+        {
+          label: "Open...",
+          accelerator: "CmdOrCtrl+O",
+          click: async () => {
+            const result = await dialog.showOpenDialog(mainWindow, {
+              title: "Open SCAD File",
+              filters: [{ name: "OpenSCAD", extensions: ["scad"] }],
+              properties: ["openFile"],
+            });
+            if (!result.canceled) openFilePath(result.filePaths[0]);
+          },
+        },
+        {
+          label: "Open Recent",
+          submenu: recentSubmenu,
+        },
+        {
+          label: "Save As...",
+          accelerator: "CmdOrCtrl+Shift+S",
+          click: () => mainWindow.webContents.send("menu-save-as"),
+        },
+        { type: "separator" },
+        { role: "quit" },
+      ],
+    },
+    {
+      label: "Tools",
+      submenu: [
+        {
+          label: "Open in OpenSCAD",
+          accelerator: "CmdOrCtrl+E",
+          click: () => mainWindow.webContents.send("menu-open-in-openscad"),
+        },
+      ],
+    },
+  ];
+  const menu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(menu);
+}
 
 function createWindow() {
   const width = parseInt(process.env.BITGUI_WINDOW_WIDTH || "800", 10);
@@ -21,6 +118,8 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, "dist", "index.html"));
 
+  rebuildMenu();
+
   // Auto-load file from env or CLI arg
   const autoLoad = process.env.BITGUI_OPEN || process.argv.find(a => a.endsWith(".scad"));
   if (autoLoad) {
@@ -28,8 +127,9 @@ function createWindow() {
       console.log("Auto-loading:", autoLoad);
       const content = fs.readFileSync(autoLoad, "utf-8");
       const proj = importScad(content);
-      console.log("Parsed", proj.data.length, "elements");
+      console.log("Parsed", proj.lines.length, "lines");
       pendingLoad = { data: proj, filePath: autoLoad };
+      addRecent(autoLoad);
     } catch (err) {
       console.error("Auto-load failed:", err.message);
     }
@@ -42,6 +142,22 @@ function atomicWrite(filePath, content) {
   const tmp = filePath + ".tmp";
   fs.writeFileSync(tmp, content, "utf-8");
   fs.renameSync(tmp, filePath);
+}
+
+function bgPathFor(originalPath) {
+  const ext = path.extname(originalPath);
+  const base = ext ? originalPath.slice(0, -ext.length) : originalPath;
+  const outExt = ext || ".scad";
+  let candidate = `${base}_bg${outExt}`;
+  if (!fs.existsSync(candidate)) return candidate;
+
+  // Avoid overwriting an existing *_bg.scad file.
+  for (let i = 2; i < 1000; i++) {
+    candidate = `${base}_bg${i}${outExt}`;
+    if (!fs.existsSync(candidate)) return candidate;
+  }
+
+  return `${base}_bg_${Date.now()}${outExt}`;
 }
 
 // --- Auto-load state ---
@@ -66,6 +182,7 @@ ipcMain.handle("open-file", async () => {
     const filePath = result.filePaths[0];
     const content = fs.readFileSync(filePath, "utf-8");
     const project = importScad(content);
+    addRecent(filePath);
     return { ok: true, filePath, data: project };
   } catch (err) {
     return { ok: false, error: err.message };
@@ -74,14 +191,14 @@ ipcMain.handle("open-file", async () => {
 
 ipcMain.handle("save-file", async (_event, filePath, scadText, needsBackup) => {
   try {
-    if (needsBackup && fs.existsSync(filePath)) {
-      const bakPath = filePath + ".bak";
-      if (!fs.existsSync(bakPath)) {
-        fs.copyFileSync(filePath, bakPath);
-      }
+    if (needsBackup) {
+      const outPath = bgPathFor(filePath);
+      atomicWrite(outPath, scadText);
+      return { ok: true, filePath: outPath };
     }
+
     atomicWrite(filePath, scadText);
-    return { ok: true };
+    return { ok: true, filePath };
   } catch (err) {
     return { ok: false, error: err.message };
   }

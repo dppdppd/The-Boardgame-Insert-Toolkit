@@ -1,236 +1,202 @@
-import { writable, get } from "svelte/store";
-import { createDefaultNode } from "../schema";
+import { writable } from "svelte/store";
 
-export interface KVParam {
-  key: string;
-  value: any;
-}
-
-export interface Element {
-  name: string;
-  type: string;
-  params: KVParam[];
-  __expr?: string; // Raw expression element (not editable)
+/** A single line in the SCAD file. */
+export interface Line {
+  /** The original raw text of this line. */
+  raw: string;
+  /**
+   * What we recognised this line as:
+   *  - "raw"     : unrecognised → editable text input
+   *  - "include" : BIT lib include → badge (regenerated as v4)
+   *  - "global"  : recognized global → inline control
+   *  - "marker"  : // BITGUI → badge (regenerated)
+   *  - "makeall" : MakeAll(); → badge (regenerated)
+   *  - "kv"      : recognized [ KEY, VALUE ] → native control
+   *  - "open"    : structural opening bracket
+   *  - "close"   : structural closing bracket
+   */
+  kind: string;
+  /** Bracket nesting depth (0 = top level). */
+  depth: number;
+  /** For "open"/"close": structural role (data, element, params, label, lid, component_list, component, etc.) */
+  role?: string;
+  /** For "open"/"close": display label */
+  label?: string;
+  /** For "global" lines */
+  globalKey?: string;
+  globalValue?: any;
+  /** For "kv" lines: recognized BIT key-value pair */
+  kvKey?: string;
+  kvValue?: any;
+  /** Trailing comment (without the //) */
+  comment?: string;
 }
 
 export interface Project {
   version: number;
-  globals: Record<string, any>;
-  data: Element[];
-  preamble?: string;
-  postamble?: string;
+  lines: Line[];
   hasMarker?: boolean;
 }
 
 const emptyProject: Project = {
   version: 1,
-  globals: { g_b_print_lid: true, g_b_print_box: true, g_isolated_print_box: "" },
-  data: [],
+  lines: [],
 };
 
 export const project = writable<Project>(emptyProject);
 
-/** Update a param value at a path within the project.
- *  path is [elementIndex, ...nested keys/indices] */
-export function updateParam(
-  elementIndex: number,
-  paramPath: (string | number)[],
-  value: any,
-) {
-  project.update((p) => {
-    let params = p.data[elementIndex].params;
+// --- Line operations ---
 
-    // Walk the path to find the target param
-    for (let i = 0; i < paramPath.length - 1; i++) {
-      const seg = paramPath[i];
-      if (typeof seg === "string") {
-        const found = params.find((p) => p.key === seg);
-        if (!found) return p;
-        if (Array.isArray(found.value) && typeof paramPath[i + 1] === "number") {
-          // table_list: next segment is an index into the list
-          params = found.value[paramPath[i + 1] as number];
-          i++; // skip the index segment
-        } else {
-          params = found.value;
-        }
+export function updateLineRaw(index: number, raw: string) {
+  project.update((p) => {
+    p.lines[index] = { ...p.lines[index], raw };
+    return { ...p };
+  });
+}
+
+/** Replace a line entirely (e.g. after re-classification). */
+export function replaceLine(index: number, line: Line) {
+  project.update((p) => {
+    const existing = p.lines[index];
+    // Cannot replace a structural bracket with a non-bracket.
+    if ((existing?.kind === "open" || existing?.kind === "close") &&
+        line.kind !== "open" && line.kind !== "close") return p;
+    p.lines[index] = line;
+    return { ...p };
+  });
+}
+
+export function deleteLine(index: number) {
+  project.update((p) => {
+    const line = p.lines[index];
+    // Structural brackets cannot be deleted individually.
+    if (line?.kind === "open" || line?.kind === "close") return p;
+    p.lines = p.lines.filter((_, i) => i !== index);
+    return { ...p };
+  });
+}
+
+/**
+ * Delete a matched block: from the open bracket at `index` through its matching close.
+ * The `data` block cannot be deleted.
+ */
+export function deleteBlock(index: number) {
+  project.update((p) => {
+    const line = p.lines[index];
+    if (line?.kind !== "open") return p;
+    if (line.role === "data") return p; // never delete the data block
+
+    // Find matching close by tracking depth
+    let depth = 0;
+    let closeIdx = -1;
+    for (let i = index; i < p.lines.length; i++) {
+      if (p.lines[i].kind === "open") depth++;
+      if (p.lines[i].kind === "close") {
+        depth--;
+        if (depth === 0) { closeIdx = i; break; }
       }
     }
+    if (closeIdx < 0) return p; // unmatched — shouldn't happen
 
-    const lastKey = paramPath[paramPath.length - 1];
-    if (typeof lastKey === "string") {
-      const target = params.find((p) => p.key === lastKey);
-      if (target) {
-        target.value = value;
-      } else {
-        params.push({ key: lastKey, value });
-      }
-    }
-
+    p.lines.splice(index, closeIdx - index + 1);
     return { ...p };
   });
 }
 
-/** Add an element */
-export function addElement(type: string = "BOX") {
+export function insertLine(index: number, line: Line) {
   project.update((p) => {
-    const name = `box ${p.data.length + 1}`;
-    const params: KVParam[] = [];
-    p.data = [...p.data, { name, type, params }];
+    p.lines.splice(index, 0, line);
     return { ...p };
   });
 }
 
-/** Delete an element */
-export function deleteElement(index: number) {
+/** Update a global line's value. */
+export function updateGlobal(index: number, value: any) {
   project.update((p) => {
-    p.data = p.data.filter((_, i) => i !== index);
-    return { ...p };
-  });
-}
-
-/** Rename an element */
-export function renameElement(index: number, name: string) {
-  project.update((p) => {
-    p.data[index].name = name;
-    return { ...p };
-  });
-}
-
-/** Add an optional sub-node (BOX_LID, LABEL, etc.) to an element */
-export function addSubNode(
-  elementIndex: number,
-  key: string,
-  childContext: string,
-  paramPath?: (string | number)[],
-) {
-  project.update((p) => {
-    let params = p.data[elementIndex].params;
-
-    // Navigate to the parent if paramPath is given
-    if (paramPath) {
-      for (let i = 0; i < paramPath.length; i++) {
-        const seg = paramPath[i];
-        if (typeof seg === "string") {
-          const found = params.find((p) => p.key === seg);
-          if (!found) return p;
-          if (Array.isArray(found.value) && typeof paramPath[i + 1] === "number") {
-            params = found.value[paramPath[i + 1] as number];
-            i++;
-          } else {
-            params = found.value;
-          }
-        }
-      }
-    }
-
-    const defaults = createDefaultNode(childContext);
-    params.push({ key, value: defaults });
-    return { ...p };
-  });
-}
-
-/** Add a new component to a BOX_COMPONENT table_list */
-export function addComponent(elementIndex: number) {
-  project.update((p) => {
-    const params = p.data[elementIndex].params;
-    let comp = params.find((p) => p.key === "BOX_COMPONENT");
-    if (!comp) {
-      comp = { key: "BOX_COMPONENT", value: [] };
-      params.push(comp);
-    }
-    const defaults = createDefaultNode("component");
-    comp.value = [...comp.value, defaults];
-    return { ...p };
-  });
-}
-
-/** Delete a component from BOX_COMPONENT */
-export function deleteComponent(elementIndex: number, componentIndex: number) {
-  project.update((p) => {
-    const comp = p.data[elementIndex].params.find(
-      (p) => p.key === "BOX_COMPONENT",
-    );
-    if (comp) {
-      comp.value = comp.value.filter((_: any, i: number) => i !== componentIndex);
+    const line = p.lines[index];
+    if (line?.kind !== "global" || !line.globalKey) return p;
+    line.globalValue = value;
+    if (typeof value === "boolean") {
+      line.raw = `${line.globalKey} = ${value ? "true" : "false"};`;
+    } else {
+      line.raw = `${line.globalKey} = "${value}";`;
     }
     return { ...p };
   });
 }
 
-/** Move an element up or down */
-export function moveElement(index: number, direction: -1 | 1) {
+/** Update a kv line's value. If the new value equals the schema default, delete the line. */
+export function updateKv(index: number, value: any, schemaDefault?: any) {
   project.update((p) => {
-    const target = index + direction;
-    if (target < 0 || target >= p.data.length) return p;
-    const tmp = p.data[index];
-    p.data[index] = p.data[target];
-    p.data[target] = tmp;
-    return { ...p };
-  });
-}
+    const line = p.lines[index];
+    if (line?.kind !== "kv" || !line.kvKey) return p;
 
-/** Move a component up or down within BOX_COMPONENT */
-export function moveComponent(elementIndex: number, componentIndex: number, direction: -1 | 1) {
-  project.update((p) => {
-    const comp = p.data[elementIndex].params.find((p) => p.key === "BOX_COMPONENT");
-    if (!comp) return p;
-    const target = componentIndex + direction;
-    if (target < 0 || target >= comp.value.length) return p;
-    const tmp = comp.value[componentIndex];
-    comp.value[componentIndex] = comp.value[target];
-    comp.value[target] = tmp;
-    return { ...p };
-  });
-}
-
-/** Duplicate an element */
-export function duplicateElement(index: number) {
-  project.update((p) => {
-    const copy = structuredClone(p.data[index]);
-    if (!copy.__expr) copy.name = copy.name + " copy";
-    p.data.splice(index + 1, 0, copy);
-    return { ...p };
-  });
-}
-
-/** Duplicate a component within BOX_COMPONENT */
-export function duplicateComponent(elementIndex: number, componentIndex: number) {
-  project.update((p) => {
-    const comp = p.data[elementIndex].params.find((p) => p.key === "BOX_COMPONENT");
-    if (!comp) return p;
-    const copy = structuredClone(comp.value[componentIndex]);
-    comp.value.splice(componentIndex + 1, 0, copy);
-    return { ...p };
-  });
-}
-
-/** Remove an optional sub-node (BOX_LID, LABEL) from params */
-export function removeSubNode(
-  elementIndex: number,
-  key: string,
-  paramPath?: (string | number)[],
-) {
-  project.update((p) => {
-    let params = p.data[elementIndex].params;
-
-    if (paramPath) {
-      for (let i = 0; i < paramPath.length; i++) {
-        const seg = paramPath[i];
-        if (typeof seg === "string") {
-          const found = params.find((p) => p.key === seg);
-          if (!found) return p;
-          if (Array.isArray(found.value) && typeof paramPath[i + 1] === "number") {
-            params = found.value[paramPath[i + 1] as number];
-            i++;
-          } else {
-            params = found.value;
-          }
-        }
-      }
+    // If value matches default, dematerialize (delete the line)
+    if (schemaDefault !== undefined && JSON.stringify(value) === JSON.stringify(schemaDefault)) {
+      p.lines.splice(index, 1);
+      return { ...p };
     }
 
-    const idx = params.findIndex((p) => p.key === key);
-    if (idx >= 0) params.splice(idx, 1);
+    line.kvValue = value;
+    const indent = line.raw.match(/^(\s*)/)?.[1] || "";
+    line.raw = `${indent}[ ${line.kvKey}, ${formatKvValue(value)} ],`;
     return { ...p };
   });
+}
+
+/**
+ * Materialize a virtual default row: insert a real kv line before `beforeIndex`
+ * at the given depth.
+ */
+export function materializeKv(beforeIndex: number, key: string, value: any, depth: number) {
+  project.update((p) => {
+    const indent = "    ".repeat(depth);
+    const raw = `${indent}[ ${key}, ${formatKvValue(value)} ],`;
+    p.lines.splice(beforeIndex, 0, { raw, kind: "kv", depth, kvKey: key, kvValue: value });
+    return { ...p };
+  });
+}
+
+/**
+ * Replace a contiguous run of lines [startIndex..startIndex+count) with new lines.
+ */
+export function spliceLines(startIndex: number, count: number, newLines: Line[]) {
+  project.update((p) => {
+    p.lines.splice(startIndex, count, ...newLines);
+    return { ...p };
+  });
+}
+
+/** Update a line's trailing comment. */
+export function updateComment(index: number, comment: string) {
+  project.update((p) => {
+    const line = p.lines[index];
+    if (!line) return p;
+    line.comment = comment || undefined;
+    // Rebuild raw: strip old comment, append new one
+    const stripped = line.raw.replace(/\s*\/\/.*$/, "");
+    line.raw = comment ? `${stripped} // ${comment}` : stripped;
+    return { ...p };
+  });
+}
+
+function formatKvValue(value: any): string {
+  if (value === true) return "true";
+  if (value === false) return "false";
+  if (typeof value === "number") return String(value);
+  if (typeof value === "string") {
+    // Check for known constants
+    const CONSTANTS = new Set([
+      "BOX","DIVIDERS","SPACER","SQUARE","HEX","HEX2","OCT","OCT2",
+      "ROUND","FILLET","INTERIOR","EXTERIOR","BOTH","FRONT","BACK",
+      "LEFT","RIGHT","FRONT_WALL","BACK_WALL","LEFT_WALL","RIGHT_WALL",
+      "CENTER","BOTTOM","AUTO","MAX",
+    ]);
+    if (CONSTANTS.has(value) || /^[A-Z][A-Z0-9_]*$/.test(value)) return value;
+    return `"${value}"`;
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map(formatKvValue).join(", ")}]`;
+  }
+  return String(value);
 }

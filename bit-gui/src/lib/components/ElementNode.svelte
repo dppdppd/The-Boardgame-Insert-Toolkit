@@ -19,7 +19,7 @@
   let fullParams = $derived(mergeWithDefaults(element.params, context, element.type));
   let addable = $derived(getAddableNodes(element.params, context, element.type));
 
-  function handleParamChange(e: CustomEvent, paramKey: string) {
+  function handleParamChange(e: any, paramKey: string) {
     updateParam(index, [paramKey], e.detail.value);
   }
 
@@ -43,29 +43,19 @@
 {:else}
 <div class="element-node" data-testid="element-{index}">
   <div class="element-header" data-testid="element-{index}-header">
-    <button
-      class="toggle"
-      data-testid="element-{index}-expand"
-      onclick={() => (expanded = !expanded)}
-    >
+    <button class="toggle" data-testid="element-{index}-expand"
+      onclick={() => (expanded = !expanded)}>
       {expanded ? "▼" : "▶"}
     </button>
 
     {#if editingName}
-      <input
-        class="name-input"
-        type="text"
-        bind:value={nameInput}
+      <input class="name-input" type="text" bind:value={nameInput}
         onblur={commitName}
         onkeydown={(e) => { if (e.key === "Enter") commitName(); if (e.key === "Escape") { editingName = false; nameInput = element.name; } }}
-        data-testid="element-{index}-name-input"
-      />
+        data-testid="element-{index}-name-input" />
     {:else}
-      <span
-        class="element-name"
-        data-testid="element-{index}-name"
-        ondblclick={() => { editingName = true; nameInput = element.name; }}
-      >
+      <span class="element-name" data-testid="element-{index}-name"
+        ondblclick={() => { editingName = true; nameInput = element.name; }}>
         "{element.name}"
       </span>
     {/if}
@@ -94,11 +84,8 @@
       {#if addable.length > 0 || element.type === "BOX"}
         <div class="add-nodes" style="padding-left: 16px">
           {#each addable as { key, def }}
-            <button
-              class="add-node-btn"
-              data-testid="element-{index}-add-{key}"
-              onclick={() => addSubNode(index, key, def.child_context || context)}
-            >
+            <button class="add-node-btn" data-testid="element-{index}-add-{key}"
+              onclick={() => addSubNode(index, key, def.child_context || context)}>
               + {key.replace("BOX_", "")}
             </button>
           {/each}
@@ -136,75 +123,35 @@
     border-radius: 3px 3px 0 0;
   }
   .toggle {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0 4px;
-    font-size: 10px;
-    color: #666;
+    background: none; border: none; cursor: pointer;
+    padding: 0 4px; font-size: 10px; color: #666;
   }
   .element-name {
-    font-weight: 600;
-    color: #2c3e50;
-    font-size: 12px;
-    cursor: pointer;
+    font-weight: 600; color: #2c3e50; font-size: 12px; cursor: pointer;
   }
   .element-name:hover { text-decoration: underline; }
   .name-input {
-    font-weight: 600;
-    font-size: 12px;
-    border: 1px solid #3498db;
-    border-radius: 2px;
-    padding: 0px 3px;
-    width: 120px;
-    height: 18px;
+    font-weight: 600; font-size: 12px;
+    border: 1px solid #3498db; border-radius: 2px;
+    padding: 0px 3px; width: 120px; height: 18px;
   }
-  .element-type {
-    color: #7f8c8d;
-    font-size: 10px;
-  }
-  .element-actions {
-    margin-left: auto;
-    display: flex;
-    gap: 2px;
-  }
+  .element-type { color: #7f8c8d; font-size: 10px; }
+  .element-actions { margin-left: auto; display: flex; gap: 2px; }
   .action-btn {
-    background: none;
-    border: none;
-    color: #999;
-    cursor: pointer;
-    font-size: 11px;
-    padding: 0 3px;
+    background: none; border: none; color: #999;
+    cursor: pointer; font-size: 11px; padding: 0 3px;
   }
   .action-btn:hover { color: #3498db; }
   .delete-btn {
-    background: none;
-    border: none;
-    color: #ccc;
-    cursor: pointer;
-    font-size: 14px;
-    padding: 0 4px;
+    background: none; border: none; color: #ccc;
+    cursor: pointer; font-size: 14px; padding: 0 4px;
   }
   .delete-btn:hover { color: #e74c3c; }
-  .element-body {
-    padding: 2px 0;
-  }
-  .add-nodes {
-    display: flex;
-    gap: 4px;
-    padding: 2px 0 4px;
-  }
+  .element-body { padding: 2px 0; }
+  .add-nodes { display: flex; gap: 4px; padding: 2px 0 4px; }
   .add-node-btn {
-    background: none;
-    border: 1px dashed #ccc;
-    color: #999;
-    padding: 1px 8px;
-    border-radius: 2px;
-    cursor: pointer;
-    font-size: 10px;
+    background: none; border: 1px dashed #ccc; color: #999;
+    padding: 1px 8px; border-radius: 2px; cursor: pointer; font-size: 10px;
   }
-  .add-node-btn:hover {
-    border-color: #3498db;
-    color: #3498db;
-  }
+  .add-node-btn:hover { border-color: #3498db; color: #3498db; }
 </style>
