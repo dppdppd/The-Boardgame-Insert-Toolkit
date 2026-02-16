@@ -64,6 +64,11 @@ function formatScadOnLoad(scadText) {
     return { text, changed: false };
   }
 
+  // Best-effort v2 -> v4 normalization inside data[]:
+  // - BOX_COMPONENTS => multiple BOX_COMPONENT entries
+  // - BOX_LID_* keys => BOX_LID block with LID_* keys
+  try { transformV2ToV4(root); } catch { /* non-fatal */ }
+
   const out = [];
   const headerLine = `${baseIndent}data = [` + (headerComment ? ` //${headerComment}` : "");
   out.push(headerLine);
@@ -87,6 +92,129 @@ function formatScadOnLoad(scadText) {
   const needsSep = suffix.length > 0 && !formattedStmt.endsWith("\n") && !suffix.startsWith("\n");
   const newText = text.slice(0, stmtStart) + formattedStmt + (needsSep ? "\n" : "") + suffix;
   return { text: newText, changed: newText !== text };
+}
+
+function transformV2ToV4(node) {
+  if (!node) return;
+  if (node.type === "array") transformArrayNode(node);
+}
+
+function transformArrayNode(arr) {
+  // First recurse into children so we normalize deepest blocks too.
+  for (const el of arr.elements) {
+    if (el && el.type === "array") transformArrayNode(el);
+  }
+
+  // 1) BOX_COMPONENTS => flatten to BOX_COMPONENT entries
+  const flattened = [];
+  for (const el of arr.elements) {
+    if (isPairArray(el, "BOX_COMPONENTS")) {
+      const [, v] = getPairValues(el);
+      if (v && v.type === "array") {
+        for (const compEl of v.elements) {
+          if (compEl?.type === "comment") {
+            // Preserve comments at same level as components
+            flattened.push(compEl);
+            continue;
+          }
+          const compPair = parseComponentV2Entry(compEl);
+          if (!compPair) {
+            flattened.push(compEl);
+            continue;
+          }
+          flattened.push(makeArray([makeAtom("BOX_COMPONENT"), compPair.paramsArray]));
+        }
+        continue; // drop the BOX_COMPONENTS wrapper
+      }
+    }
+    flattened.push(el);
+  }
+  arr.elements = flattened;
+
+  // 2) BOX_LID_* => BOX_LID with LID_* keys (only if BOX_LID not already present)
+  const lidMap = {
+    BOX_LID_SOLID_B: "LID_SOLID_B",
+    BOX_LID_FIT_UNDER_B: "LID_FIT_UNDER_B",
+    BOX_LID_HEIGHT: "LID_HEIGHT",
+    BOX_LID_INSET_B: "LID_INSET_B",
+  };
+
+  const hasBoxLid = arr.elements.some((e) => isPairArray(e, "BOX_LID"));
+  if (!hasBoxLid) {
+    let firstIdx = -1;
+    const lidItems = [];
+    const kept = [];
+
+    for (let i = 0; i < arr.elements.length; i++) {
+      const el = arr.elements[i];
+      const key = pairKey(el);
+      if (key && lidMap[key]) {
+        if (firstIdx < 0) firstIdx = kept.length;
+        const [, v] = getPairValues(el);
+        lidItems.push(makeArray([makeAtom(lidMap[key]), cloneNode(v)]));
+        continue; // drop old BOX_LID_* entry
+      }
+      kept.push(el);
+    }
+
+    if (lidItems.length > 0) {
+      const lidBlock = makeArray([
+        makeAtom("BOX_LID"),
+        makeArray(lidItems),
+      ]);
+      kept.splice(firstIdx < 0 ? kept.length : firstIdx, 0, lidBlock);
+      arr.elements = kept;
+    }
+  }
+}
+
+function parseComponentV2Entry(node) {
+  // v2: [ "name", [ <params...> ] ]
+  if (!node || node.type !== "array") return null;
+  const vals = node.elements.filter(e => e.type !== "comment");
+  if (vals.length !== 2) return null;
+  const name = vals[0];
+  const params = vals[1];
+  if (!name || name.type !== "atom") return null;
+  if (!String(name.text || "").trim().startsWith('"')) return null;
+  if (!params || params.type !== "array") return null;
+  return { nameAtom: name, paramsArray: params };
+}
+
+function pairKey(node) {
+  if (!node || node.type !== "array") return null;
+  const vals = node.elements.filter(e => e.type !== "comment");
+  if (vals.length !== 2) return null;
+  const k = vals[0];
+  if (!k || k.type !== "atom") return null;
+  const t = String(k.text || "").trim();
+  if (!t || t.startsWith('"')) return null;
+  return t;
+}
+
+function isPairArray(node, key) {
+  return pairKey(node) === key;
+}
+
+function getPairValues(node) {
+  const vals = node.elements.filter(e => e.type !== "comment");
+  return [vals[0], vals[1]];
+}
+
+function makeAtom(text) {
+  return { type: "atom", text: String(text ?? "") };
+}
+
+function makeArray(elements) {
+  return { type: "array", elements: Array.isArray(elements) ? elements : [] };
+}
+
+function cloneNode(node) {
+  if (!node) return makeAtom("");
+  if (node.type === "atom") return makeAtom(node.text);
+  if (node.type === "comment") return { type: "comment", text: node.text };
+  if (node.type === "array") return makeArray(node.elements.map(cloneNode));
+  return makeAtom(node.text || "");
 }
 
 function nonCommentElements(arrNode) {
