@@ -80,7 +80,12 @@ function formatScadOnLoad(scadText) {
   out.push(`${baseIndent}];` + (footerComment ? ` //${footerComment}` : ""));
 
   const formattedStmt = out.join("\n");
-  const newText = text.slice(0, stmtStart) + formattedStmt + text.slice(stmtEnd);
+
+  // Preserve a line break between the data statement and whatever follows.
+  // (Without this, files that had `];\nMakeAll();` could become `];MakeAll();`)
+  const suffix = text.slice(stmtEnd);
+  const needsSep = suffix.length > 0 && !formattedStmt.endsWith("\n") && !suffix.startsWith("\n");
+  const newText = text.slice(0, stmtStart) + formattedStmt + (needsSep ? "\n" : "") + suffix;
   return { text: newText, changed: newText !== text };
 }
 
