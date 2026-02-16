@@ -1,0 +1,23 @@
+{
+  "name": "bit-gui",
+  "private": true,
+  "version": "0.1.0",
+  "main": "main.js",
+  "scripts": {
+    "dev": "concurrently \"vite build --watch\" \"electron . --disable-gpu --no-sandbox\"",
+    "build": "vite build",
+    "start": "electron . --disable-gpu --no-sandbox",
+    "harness": "node harness/run.js"
+  },
+  "dependencies": {
+    "electron-serve": "^2.1.1"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.1.1",
+    "concurrently": "^9",
+    "electron": "^33.4.11",
+    "playwright": "^1.49",
+    "svelte": "^5.51.2",
+    "vite": "^6"
+  }
+}

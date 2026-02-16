@@ -1,0 +1,249 @@
+const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
+const path = require("path");
+const fs = require("fs");
+const { importScad } = require("./importer");
+
+let mainWindow;
+
+// --- Recent files ---
+const RECENT_FILE = path.join(app.getPath("userData"), "recent-files.json");
+const MAX_RECENT = 10;
+
+function loadRecent() {
+  try {
+    if (fs.existsSync(RECENT_FILE)) return JSON.parse(fs.readFileSync(RECENT_FILE, "utf-8"));
+  } catch (_) {}
+  return [];
+}
+
+function saveRecent(list) {
+  try { fs.writeFileSync(RECENT_FILE, JSON.stringify(list), "utf-8"); } catch (_) {}
+}
+
+function addRecent(filePath) {
+  let list = loadRecent().filter(f => f !== filePath);
+  list.unshift(filePath);
+  if (list.length > MAX_RECENT) list = list.slice(0, MAX_RECENT);
+  saveRecent(list);
+  rebuildMenu();
+}
+
+function openFilePath(filePath) {
+  try {
+    const content = fs.readFileSync(filePath, "utf-8");
+    const project = importScad(content);
+    mainWindow.webContents.send("menu-open", { data: project, filePath });
+    addRecent(filePath);
+  } catch (err) {
+    console.error("Open failed:", err.message);
+  }
+}
+
+function rebuildMenu() {
+  const recentFiles = loadRecent();
+  const recentSubmenu = recentFiles.length > 0
+    ? [
+        ...recentFiles.map(f => ({
+          label: path.basename(f),
+          sublabel: f,
+          click: () => openFilePath(f),
+        })),
+        { type: "separator" },
+        { label: "Clear Recent", click: () => { saveRecent([]); rebuildMenu(); } },
+      ]
+    : [{ label: "No Recent Files", enabled: false }];
+
+  const menuTemplate = [
+    {
+      label: "File",
+      submenu: [
+        {
+          label: "New",
+          accelerator: "CmdOrCtrl+N",
+          click: () => mainWindow.webContents.send("menu-new"),
+        },
+        {
+          label: "Open...",
+          accelerator: "CmdOrCtrl+O",
+          click: async () => {
+            const result = await dialog.showOpenDialog(mainWindow, {
+              title: "Open SCAD File",
+              filters: [{ name: "OpenSCAD", extensions: ["scad"] }],
+              properties: ["openFile"],
+            });
+            if (!result.canceled) openFilePath(result.filePaths[0]);
+          },
+        },
+        {
+          label: "Open Recent",
+          submenu: recentSubmenu,
+        },
+        {
+          label: "Save As...",
+          accelerator: "CmdOrCtrl+Shift+S",
+          click: () => mainWindow.webContents.send("menu-save-as"),
+        },
+        { type: "separator" },
+        { role: "quit" },
+      ],
+    },
+    {
+      label: "Tools",
+      submenu: [
+        {
+          label: "Open in OpenSCAD",
+          accelerator: "CmdOrCtrl+E",
+          click: () => mainWindow.webContents.send("menu-open-in-openscad"),
+        },
+      ],
+    },
+  ];
+  const menu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(menu);
+}
+
+function createWindow() {
+  const width = parseInt(process.env.BITGUI_WINDOW_WIDTH || "800", 10);
+  const height = parseInt(process.env.BITGUI_WINDOW_HEIGHT || "600", 10);
+
+  mainWindow = new BrowserWindow({
+    width,
+    height,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, "preload.js"),
+    },
+  });
+
+  mainWindow.loadFile(path.join(__dirname, "dist", "index.html"));
+
+  rebuildMenu();
+
+  // Auto-load file from env or CLI arg
+  const autoLoad = process.env.BITGUI_OPEN || process.argv.find(a => a.endsWith(".scad"));
+  if (autoLoad) {
+    try {
+      console.log("Auto-loading:", autoLoad);
+      const content = fs.readFileSync(autoLoad, "utf-8");
+      const proj = importScad(content);
+      console.log("Parsed", proj.lines.length, "lines");
+      pendingLoad = { data: proj, filePath: autoLoad };
+      addRecent(autoLoad);
+    } catch (err) {
+      console.error("Auto-load failed:", err.message);
+    }
+  }
+}
+
+// --- Helpers ---
+
+function atomicWrite(filePath, content) {
+  const tmp = filePath + ".tmp";
+  fs.writeFileSync(tmp, content, "utf-8");
+  fs.renameSync(tmp, filePath);
+}
+
+function bgPathFor(originalPath) {
+  const ext = path.extname(originalPath);
+  const base = ext ? originalPath.slice(0, -ext.length) : originalPath;
+  const outExt = ext || ".scad";
+  let candidate = `${base}_bg${outExt}`;
+  if (!fs.existsSync(candidate)) return candidate;
+
+  // Avoid overwriting an existing *_bg.scad file.
+  for (let i = 2; i < 1000; i++) {
+    candidate = `${base}_bg${i}${outExt}`;
+    if (!fs.existsSync(candidate)) return candidate;
+  }
+
+  return `${base}_bg_${Date.now()}${outExt}`;
+}
+
+// --- Auto-load state ---
+let pendingLoad = null;
+
+ipcMain.handle("get-pending-load", () => {
+  const p = pendingLoad;
+  pendingLoad = null;
+  return p;
+});
+
+// --- IPC Handlers ---
+
+ipcMain.handle("open-file", async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: "Open SCAD File",
+    filters: [{ name: "OpenSCAD", extensions: ["scad"] }],
+    properties: ["openFile"],
+  });
+  if (result.canceled) return { ok: false };
+  try {
+    const filePath = result.filePaths[0];
+    const content = fs.readFileSync(filePath, "utf-8");
+    const project = importScad(content);
+    addRecent(filePath);
+    return { ok: true, filePath, data: project };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle("save-file", async (_event, filePath, scadText, needsBackup) => {
+  try {
+    if (needsBackup) {
+      const outPath = bgPathFor(filePath);
+      atomicWrite(outPath, scadText);
+      return { ok: true, filePath: outPath };
+    }
+
+    atomicWrite(filePath, scadText);
+    return { ok: true, filePath };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle("save-file-as", async (_event, scadText) => {
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: "Save SCAD File",
+    filters: [{ name: "OpenSCAD", extensions: ["scad"] }],
+    defaultPath: "design.scad",
+  });
+  if (result.canceled) return { ok: false };
+  try {
+    atomicWrite(result.filePath, scadText);
+    return { ok: true, filePath: result.filePath };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle("open-in-openscad", async (_event, filePath) => {
+  const { exec } = require("child_process");
+  if (!fs.existsSync(filePath)) {
+    return { ok: false, error: "File not found" };
+  }
+  const candidates = process.platform === "win32"
+    ? ["C:\\Program Files\\OpenSCAD\\openscad.exe", "openscad"]
+    : ["/usr/bin/openscad", "/usr/local/bin/openscad", "/snap/bin/openscad",
+       "/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD", "openscad"];
+
+  let cmd = null;
+  for (const c of candidates) {
+    if (c.includes("/") || c.includes("\\")) {
+      if (fs.existsSync(c)) { cmd = c; break; }
+    } else { cmd = c; break; }
+  }
+  if (!cmd) return { ok: false, error: "OpenSCAD not found" };
+
+  try {
+    exec(`"${cmd}" "${filePath}"`);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+app.whenReady().then(createWindow);
+app.on("window-all-closed", () => app.quit());

@@ -1,0 +1,841 @@
+<script lang="ts">
+  import { onMount } from "svelte";
+  import {
+    project,
+    updateLineRaw,
+    replaceLine,
+    deleteLine,
+    deleteBlock,
+    updateGlobal,
+    updateKv,
+    updateComment,
+    materializeKv,
+    insertLine,
+    spliceLines,
+    type Line,
+  } from "./lib/stores/project";
+  import { generateScad } from "./lib/scad";
+  import { startAutosave, onSaveStatus, setFilePath, getFilePath, setNeedsBackup, saveNow, triggerSave } from "./lib/autosave";
+  import { schema } from "./lib/schema";
+
+  let intentText = $state("");
+  let showIntent = $state(false);
+  let statusMsg = $state("No file open");
+
+  let scadOutput = $derived(generateScad($project));
+
+  onSaveStatus((msg: string) => { statusMsg = msg; });
+
+  function handleLoad(payload: any) {
+    const { data, filePath } = payload;
+    project.set(data);
+    setFilePath(filePath);
+    setNeedsBackup(!data.hasMarker);
+    const name = filePath.replace(/.*[/\\]/, "");
+    statusMsg = data.hasMarker ? name : `${name} (will write _bg.scad)`;
+  }
+
+  onMount(async () => {
+    showIntent = !!(window as any).bitgui?.harness;
+    startAutosave();
+    const bitgui = (window as any).bitgui;
+    if (bitgui?.onMenuNew) bitgui.onMenuNew(newFile);
+    if (bitgui?.onMenuOpen) bitgui.onMenuOpen(handleLoad);
+    if (bitgui?.onMenuSaveAs) bitgui.onMenuSaveAs(saveFileAs);
+    if (bitgui?.onMenuOpenInOpenScad) bitgui.onMenuOpenInOpenScad(openInOpenScad);
+
+    // Check for pending auto-load
+    let loaded = false;
+    for (let i = 0; i < 50; i++) {
+      const pending = await (window as any).bitgui?.getPendingLoad?.();
+      if (pending) { handleLoad(pending); loaded = true; break; }
+      await new Promise(r => setTimeout(r, 200));
+    }
+    // If nothing was auto-loaded, start with a new project
+    if (!loaded) newFile();
+  });
+
+  function newFile() {
+    project.set({ version: 1, lines: [
+      { raw: "g_b_print_lid = true;", kind: "global", depth: 0, globalKey: "g_b_print_lid", globalValue: true },
+      { raw: "g_b_print_box = true;", kind: "global", depth: 0, globalKey: "g_b_print_box", globalValue: true },
+      { raw: 'g_isolated_print_box = "";', kind: "global", depth: 0, globalKey: "g_isolated_print_box", globalValue: "" },
+      { raw: "data = [", kind: "open", depth: 0, role: "data", label: "data" },
+      { raw: "];", kind: "close", depth: 0, role: "data", label: "data" },
+    ], hasMarker: false });
+    setFilePath(""); setNeedsBackup(false); statusMsg = "New file";
+  }
+
+  async function openFile() {
+    const bitgui = (window as any).bitgui;
+    if (!bitgui?.openFile) return;
+    const res = await bitgui.openFile();
+    if (!res.ok) { if (res.error) statusMsg = `Open failed: ${res.error}`; return; }
+    project.set(res.data);
+    setFilePath(res.filePath); setNeedsBackup(!res.data.hasMarker);
+    const name = res.filePath.replace(/.*[/\\]/, "");
+    statusMsg = res.data.hasMarker ? name : `${name} (will write _bg.scad on save)`;
+  }
+
+  async function saveFileAs() {
+    const bitgui = (window as any).bitgui;
+    if (!bitgui?.saveFileAs) return;
+    const res = await bitgui.saveFileAs(scadOutput);
+    if (!res.ok) return;
+    setFilePath(res.filePath);
+    statusMsg = `Saved ${res.filePath.replace(/.*[/\\]/, "")}`;
+  }
+
+  async function openInOpenScad() {
+    const bitgui = (window as any).bitgui;
+    const fp = getFilePath();
+    if (!bitgui?.openInOpenScad || !fp) return;
+    const savedPath = await saveNow();
+    const res = await bitgui.openInOpenScad(savedPath || fp);
+    if (!res.ok) statusMsg = `OpenSCAD: ${res.error}`;
+  }
+
+  // --- Schema lookup ---
+  const ALL_KEYS: Set<string> = new Set();
+  const KEY_TYPE_MAP: Record<string, string> = {};
+  const KEY_SCHEMA_MAP: Record<string, any> = {};
+  for (const ctx of Object.values((schema as any).contexts)) {
+    for (const [k, def] of Object.entries((ctx as any).keys || {})) {
+      ALL_KEYS.add(k); KEY_TYPE_MAP[k] = (def as any).type; KEY_SCHEMA_MAP[k] = def;
+    }
+  }
+
+  const KNOWN_CONSTANTS: Record<string, any> = {
+    BOX:"BOX",DIVIDERS:"DIVIDERS",SPACER:"SPACER",SQUARE:"SQUARE",
+    HEX:"HEX",HEX2:"HEX2",OCT:"OCT",OCT2:"OCT2",ROUND:"ROUND",FILLET:"FILLET",
+    INTERIOR:"INTERIOR",EXTERIOR:"EXTERIOR",BOTH:"BOTH",
+    FRONT:"FRONT",BACK:"BACK",LEFT:"LEFT",RIGHT:"RIGHT",
+    FRONT_WALL:"FRONT_WALL",BACK_WALL:"BACK_WALL",LEFT_WALL:"LEFT_WALL",RIGHT_WALL:"RIGHT_WALL",
+    CENTER:"CENTER",BOTTOM:"BOTTOM",AUTO:"AUTO",MAX:"MAX",
+    true:true,false:false,t:true,f:false,
+  };
+
+  function parseSimpleValue(text: string): { value: any; ok: boolean } {
+    const t = text.trim();
+    if (t === "true" || t === "t") return { value: true, ok: true };
+    if (t === "false" || t === "f") return { value: false, ok: true };
+    if (t in KNOWN_CONSTANTS) return { value: KNOWN_CONSTANTS[t], ok: true };
+    const sm = t.match(/^"([^"]*)"$/);
+    if (sm) return { value: sm[1], ok: true };
+    if (/^-?\d+(\.\d+)?$/.test(t)) return { value: parseFloat(t), ok: true };
+    const am = t.match(/^\[(.+)\]$/);
+    if (am) {
+      const inner = am[1];
+      if (inner.includes("[")) return { ok: false, value: null };
+      const parts = inner.split(",").map((s: string) => s.trim());
+      const vals: any[] = []; let hasExpr = false;
+      for (const part of parts) {
+        const sub = parseSimpleValue(part);
+        if (!sub.ok) { vals.push(part); hasExpr = true; }
+        else { vals.push(hasExpr ? String(sub.value) : sub.value); }
+      }
+      if (hasExpr) return { value: vals.map(String), ok: true };
+      return { value: vals, ok: true };
+    }
+    return { ok: false, value: null };
+  }
+
+  const KV_RE = /^\s*\[\s*([A-Z][A-Z0-9_]*)\s*,\s*(.*?)\s*\]\s*,?\s*(?:\/\/.*)?$/;
+
+  function classifyLocal(raw: string, depth: number = 0): Line {
+    const bm = raw.match(/^\s*(g_b_print_lid|g_b_print_box)\s*=\s*(true|false|t|f|0|1)\s*;\s*(?:\/\/.*)?$/i);
+    if (bm) { const v = bm[2].toLowerCase(); return { raw, kind: "global", depth, globalKey: bm[1], globalValue: v === "true" || v === "t" || v === "1" }; }
+    const sm = raw.match(/^\s*(g_isolated_print_box)\s*=\s*"([^"]*)"\s*;\s*(?:\/\/.*)?$/i);
+    if (sm) return { raw, kind: "global", depth, globalKey: sm[1], globalValue: sm[2] };
+    if (/^\s*include\s*<\s*(?:lib\/)?(?:boardgame_insert_toolkit_lib\.|bit_functions_lib\.)\d+\.scad\s*>\s*;?\s*(?:\/\/.*)?$/i.test(raw)) return { raw, kind: "include", depth };
+    if (/^\s*\/\/\s*BITGUI\b/i.test(raw)) return { raw, kind: "marker", depth };
+    if (/^\s*MakeAll\s*\(\s*\)\s*;\s*(?:\/\/.*)?$/.test(raw)) return { raw, kind: "makeall", depth };
+    // KV line
+    const kv = raw.match(KV_RE);
+    if (kv && ALL_KEYS.has(kv[1])) { const p = parseSimpleValue(kv[2]); if (p.ok) return { raw, kind: "kv", depth, kvKey: kv[1], kvValue: p.value }; }
+    // Brackets are never produced by classifyLocal — they only come from the importer's stack-based parsing.
+    return { raw, kind: "raw", depth };
+  }
+
+  function handleLineEdit(i: number, newRaw: string) { replaceLine(i, classifyLocal(newRaw, $project.lines[i]?.depth ?? 0)); }
+  function getKeyType(k: string) { return KEY_TYPE_MAP[k] || "unknown"; }
+  function getKeySchema(k: string) { return KEY_SCHEMA_MAP[k] || null; }
+  function parseNum(s: string) { const n = parseFloat(s); return isNaN(n) ? 0 : n; }
+  function smartParseNum(s: string) { const t = s.trim(); return /^-?\d+(\.\d+)?$/.test(t) ? parseFloat(t) : t; }
+  function updateKvIdx(li: number, arr: any[], j: number, val: any) { const c = [...arr]; c[j] = val; updateKv(li, c); }
+  function canParse(raw: string) { return classifyLocal(raw).kind !== "raw"; }
+  function toRaw(i: number) {
+    const l = $project.lines[i];
+    if (!l || l.kind === "open" || l.kind === "close") return; // brackets are never raw
+    replaceLine(i, { raw: l.raw, kind: "raw", depth: l.depth });
+  }
+  function toParsed(i: number) { const l = $project.lines[i]; if (!l) return; const c = classifyLocal(l.raw, l.depth); if (c.kind !== "raw") replaceLine(i, c); }
+
+  /**
+   * For each line index, rawGroupStart[i] is:
+   *  - i itself if line i is "raw" and is the first in a contiguous run of raw lines
+   *  - -1 if line i is "raw" but NOT the first in its group (skip rendering)
+   *  - undefined if line i is not "raw"
+   * rawGroupEnd[i] = last index (exclusive) of the raw group starting at i.
+   */
+  let rawGroups = $derived.by(() => {
+    const lines = $project.lines;
+    const startOf: Record<number, number> = {}; // startIndex → count
+    let i = 0;
+    while (i < lines.length) {
+      if (lines[i].kind === "raw") {
+        const start = i;
+        while (i < lines.length && lines[i].kind === "raw") i++;
+        startOf[start] = i - start;
+      } else {
+        i++;
+      }
+    }
+    return startOf;
+  });
+
+  function isRawGroupStart(i: number): boolean {
+    return i in rawGroups;
+  }
+  function isRawGroupMember(i: number): boolean {
+    // Check if this index is inside a group but not the start
+    const lines = $project.lines;
+    return lines[i]?.kind === "raw" && !(i in rawGroups);
+  }
+  function rawGroupText(startIndex: number): string {
+    const count = rawGroups[startIndex] || 1;
+    return $project.lines.slice(startIndex, startIndex + count).map(l => l.raw).join("\n");
+  }
+  function rawGroupLineCount(startIndex: number): number {
+    return rawGroups[startIndex] || 1;
+  }
+
+  /** When a raw group textarea is edited, re-split into raw lines (no re-classification). */
+  function handleRawGroupEdit(startIndex: number, newText: string) {
+    const oldCount = rawGroups[startIndex] || 1;
+    const oldText = rawGroupText(startIndex);
+    // If nothing changed, do nothing.
+    if (newText === oldText) return;
+    const depth = $project.lines[startIndex]?.depth ?? 0;
+    const newRawLines = newText.split("\n");
+    // Keep as raw — don't re-classify. The user can use the full reimport
+    // (via the importer) if they want to convert to structured.
+    const newLines: Line[] = newRawLines
+      .filter(r => r.trim() !== "")
+      .map(r => ({ raw: r, kind: "raw" as const, depth }));
+    if (newLines.length === 0) {
+      newLines.push({ raw: "    ".repeat(depth), kind: "raw", depth });
+    }
+    spliceLines(startIndex, oldCount, newLines);
+  }
+
+  const DEPTH_PX = 24;
+  function pad(line: Line) { return `padding-left: ${8 + (line.depth ?? 0) * DEPTH_PX}px`; }
+  function padDepth(d: number) { return `padding-left: ${8 + d * DEPTH_PX}px`; }
+
+  // --- Collapse/expand ---
+  let collapsed = $state(new Set<number>());
+
+  function toggleCollapse(i: number) {
+    const next = new Set(collapsed);
+    if (next.has(i)) next.delete(i); else next.add(i);
+    collapsed = next;
+  }
+
+  /** Find the matching close bracket index for an open at `openIdx`. */
+  function findMatchingClose(openIdx: number): number {
+    let depth = 0;
+    for (let j = openIdx; j < $project.lines.length; j++) {
+      if ($project.lines[j].kind === "open") depth++;
+      if ($project.lines[j].kind === "close") {
+        depth--;
+        if (depth === 0) return j;
+      }
+    }
+    return -1;
+  }
+
+  /**
+   * Check if line at index `i` should be hidden because a parent open bracket is collapsed.
+   * We need to check all open brackets above this line.
+   */
+  let hiddenLines = $derived.by(() => {
+    const hidden = new Set<number>();
+    const lines = $project.lines;
+    for (const openIdx of collapsed) {
+      if (openIdx >= lines.length || lines[openIdx].kind !== "open") continue;
+      const closeIdx = findMatchingClose(openIdx);
+      if (closeIdx < 0) continue;
+      // Hide everything between open and close (exclusive of both)
+      // Also hide the close bracket itself — we'll show "]" inline on the open line
+      for (let j = openIdx + 1; j <= closeIdx; j++) {
+        hidden.add(j);
+      }
+    }
+    return hidden;
+  });
+
+  // Map role → schema context for virtual defaults
+  const ROLE_TO_CONTEXT: Record<string, string> = {
+    params: "element",
+    component: "component",
+    label_params: "label",
+    lid_params: "lid",
+  };
+
+  // Get all scalar schema keys for a context (skip table/table_list)
+  function getScalarKeysForContext(ctx: string): { key: string; def: any }[] {
+    const ctxDef = (schema as any).contexts?.[ctx];
+    if (!ctxDef) return [];
+    return Object.entries(ctxDef.keys || {})
+      .filter(([_, d]: [string, any]) => d.type !== "table" && d.type !== "table_list")
+      .map(([k, d]) => ({ key: k, def: d }));
+  }
+
+  /**
+   * Compute virtual default rows that should appear before a given close bracket.
+   * Returns keys from the schema context that are NOT present as real kv lines
+   * between the matching open and this close.
+   */
+  function getVirtualDefaults(closeIndex: number): { key: string; def: any; depth: number }[] {
+    const closeLine = $project.lines[closeIndex];
+    if (!closeLine || closeLine.kind !== "close") return [];
+    const role = closeLine.role || "";
+    const ctx = ROLE_TO_CONTEXT[role];
+    if (!ctx) return [];
+
+    // Find the matching open bracket
+    let depth = 0;
+    let openIdx = -1;
+    for (let i = closeIndex; i >= 0; i--) {
+      if ($project.lines[i].kind === "close") depth++;
+      if ($project.lines[i].kind === "open") {
+        depth--;
+        if (depth === 0) { openIdx = i; break; }
+      }
+    }
+    if (openIdx < 0) return [];
+
+    // Collect existing kv keys between open and close (only direct children, same depth)
+    const childDepth = (closeLine.depth ?? 0) + 1;
+    const existing = new Set<string>();
+    for (let i = openIdx + 1; i < closeIndex; i++) {
+      const l = $project.lines[i];
+      if (l.kind === "kv" && l.kvKey && l.depth === childDepth) {
+        existing.add(l.kvKey);
+      }
+    }
+
+    const scalars = getScalarKeysForContext(ctx);
+    return scalars
+      .filter(({ key }) => !existing.has(key))
+      .map(({ key, def }) => ({ key, def, depth: childDepth }));
+  }
+
+  /** When a virtual default is changed from its default value, materialize it. */
+  function onVirtualChange(closeIndex: number, key: string, def: any, newValue: any) {
+    if (JSON.stringify(newValue) === JSON.stringify(def.default)) return; // still default, ignore
+    const depth = (($project.lines[closeIndex]?.depth ?? 0)) + 1;
+    materializeKv(closeIndex, key, newValue, depth);
+  }
+
+  /** Check if a kv line's value equals its schema default. */
+  function isDefault(key: string, value: any): boolean {
+    const def = KEY_SCHEMA_MAP[key];
+    if (!def || def.default === undefined) return false;
+    return JSON.stringify(value) === JSON.stringify(def.default);
+  }
+
+  function getSchemaDefault(key: string): any {
+    return KEY_SCHEMA_MAP[key]?.default;
+  }
+
+  // Structural label for open/close brackets.
+  // Returns { text, inferred } where inferred=true means the label is our interpretation, not from the file.
+  function structLabel(line: Line): { text: string; inferred: boolean } {
+    if (line.role === "data") return { text: "data", inferred: false };
+    if (line.role === "data_list") return { text: "data list", inferred: true };
+    if (line.role === "element") return { text: `element "${line.label}"`, inferred: false };
+    if (line.role === "params") return { text: "element params", inferred: true };
+    if (line.role === "component_list") return { text: line.label || "BOX_COMPONENT", inferred: false };
+    if (line.role === "component") return { text: "component list", inferred: true };
+    if (line.role === "label") return { text: line.label || "LABEL", inferred: false };
+    if (line.role === "label_params") return { text: "label params", inferred: true };
+    if (line.role === "lid") return { text: line.label || "BOX_LID", inferred: false };
+    if (line.role === "lid_params") return { text: "lid params", inferred: true };
+    if (line.role === "list") return { text: "list", inferred: true };
+    return { text: line.label || "block", inferred: true };
+  }
+
+  // --- Comment editing ---
+  let editingComment = $state<number | null>(null);
+
+  function toggleCommentEdit(i: number) {
+    editingComment = editingComment === i ? null : i;
+  }
+
+  function addRawLine(afterIndex: number, depth: number) {
+    const indent = "    ".repeat(depth);
+    insertLine(afterIndex + 1, { raw: indent, kind: "raw", depth });
+  }
+
+  /** Insert a full element skeleton before a close bracket at `closeIndex`. */
+  function addElement(closeIndex: number, depth: number) {
+    const d = depth + 1; // inside the data array
+    const ind = (n: number) => "    ".repeat(n);
+    const count = $project.lines.filter(l => l.kind === "open" && l.role === "element").length;
+    const name = `box ${count + 1}`;
+    const lines: Line[] = [
+      { raw: `${ind(d)}[ "${name}",`, kind: "open", depth: d, role: "element", label: name },
+      { raw: `${ind(d+1)}[`, kind: "open", depth: d + 1, role: "params", label: "params" },
+      { raw: `${ind(d+2)}[ TYPE, BOX ],`, kind: "kv", depth: d + 2, kvKey: "TYPE", kvValue: "BOX" },
+      { raw: `${ind(d+2)}[ BOX_SIZE_XYZ, [50, 50, 20] ],`, kind: "kv", depth: d + 2, kvKey: "BOX_SIZE_XYZ", kvValue: [50, 50, 20] },
+      { raw: `${ind(d+1)}]`, kind: "close", depth: d + 1, role: "params", label: "params" },
+      { raw: `${ind(d)}],`, kind: "close", depth: d, role: "element", label: name },
+    ];
+    // Insert all lines before the close bracket
+    project.update((p) => {
+      p.lines.splice(closeIndex, 0, ...lines);
+      return { ...p };
+    });
+  }
+
+  /** Insert a component skeleton inside a component_list before `closeIndex`. */
+  function addComponent(closeIndex: number, depth: number) {
+    const d = depth + 1;
+    const ind = (n: number) => "    ".repeat(n);
+    const name = "comp";
+    const lines: Line[] = [
+      { raw: `${ind(d)}[ "${name}",`, kind: "open", depth: d, role: "element", label: name },
+      { raw: `${ind(d+1)}[`, kind: "open", depth: d + 1, role: "params", label: "params" },
+      { raw: `${ind(d+2)}[ CMP_COMPARTMENT_SIZE_XYZ, [40, 40, 15] ],`, kind: "kv", depth: d + 2, kvKey: "CMP_COMPARTMENT_SIZE_XYZ", kvValue: [40, 40, 15] },
+      { raw: `${ind(d+1)}]`, kind: "close", depth: d + 1, role: "params", label: "params" },
+      { raw: `${ind(d)}],`, kind: "close", depth: d, role: "element", label: name },
+    ];
+    project.update((p) => {
+      p.lines.splice(closeIndex, 0, ...lines);
+      return { ...p };
+    });
+  }
+
+  /** Insert a BOX_COMPONENT block before `closeIndex` (inside a params close). */
+  function addComponentList(closeIndex: number, depth: number) {
+    const d = depth;
+    const ind = (n: number) => "    ".repeat(n);
+    const lines: Line[] = [
+      { raw: `${ind(d)}[ BOX_COMPONENT,`, kind: "open", depth: d, role: "component_list", label: "BOX_COMPONENT" },
+      { raw: `${ind(d+1)}[`, kind: "open", depth: d + 1, role: "component", label: "component list" },
+      { raw: `${ind(d+2)}[ "comp 1",`, kind: "open", depth: d + 2, role: "element", label: "comp 1" },
+      { raw: `${ind(d+3)}[`, kind: "open", depth: d + 3, role: "params", label: "element params" },
+      { raw: `${ind(d+4)}[ CMP_COMPARTMENT_SIZE_XYZ, [40, 40, 15] ],`, kind: "kv", depth: d + 4, kvKey: "CMP_COMPARTMENT_SIZE_XYZ", kvValue: [40, 40, 15] },
+      { raw: `${ind(d+3)}]`, kind: "close", depth: d + 3, role: "params", label: "element params" },
+      { raw: `${ind(d+2)}],`, kind: "close", depth: d + 2, role: "element", label: "comp 1" },
+      { raw: `${ind(d+1)}]`, kind: "close", depth: d + 1, role: "component", label: "component list" },
+      { raw: `${ind(d)}]`, kind: "close", depth: d, role: "component_list", label: "BOX_COMPONENT" },
+    ];
+    project.update((p) => {
+      p.lines.splice(closeIndex, 0, ...lines);
+      return { ...p };
+    });
+  }
+
+  /** Insert a LABEL block before `closeIndex`. */
+  function addLabel(closeIndex: number, depth: number) {
+    const d = depth;
+    const ind = (n: number) => "    ".repeat(n);
+    const lines: Line[] = [
+      { raw: `${ind(d)}[ LABEL,`, kind: "open", depth: d, role: "label", label: "LABEL" },
+      { raw: `${ind(d+1)}[`, kind: "open", depth: d + 1, role: "label_params", label: "label params" },
+      { raw: `${ind(d+2)}[ LBL_TEXT, "" ],`, kind: "kv", depth: d + 2, kvKey: "LBL_TEXT", kvValue: "" },
+      { raw: `${ind(d+1)}]`, kind: "close", depth: d + 1, role: "label_params", label: "label params" },
+      { raw: `${ind(d)}],`, kind: "close", depth: d, role: "label", label: "LABEL" },
+    ];
+    project.update((p) => {
+      p.lines.splice(closeIndex, 0, ...lines);
+      return { ...p };
+    });
+  }
+</script>
+
+{#snippet commentBtn(line, i)}
+  {#if line.comment || editingComment === i}
+    <span class="comment-area">
+      <span class="comment-slash">//</span>
+      <input class="comment-input" type="text" value={line.comment ?? ""}
+        onblur={(e) => { updateComment(i, e.currentTarget.value); editingComment = null; }}
+        onkeydown={(e) => { if (e.key === "Enter") { e.currentTarget.blur(); } if (e.key === "Escape") { editingComment = null; } }}
+      />
+    </span>
+  {:else}
+    <button class="comment-btn" title="Add comment" onclick={() => toggleCommentEdit(i)}>//</button>
+  {/if}
+{/snippet}
+
+<main data-testid="app-root">
+  <section class="content" data-testid="content-area">
+    {#each $project.lines as line, i (i)}
+
+      {#if hiddenLines.has(i)}
+        <!-- Hidden by collapsed parent -->
+
+      {:else if line.kind === "open"}
+        {@const collapsible = !["params", "label_params", "lid_params", "component"].includes(line.role || "")}
+        {@const deletable = !["data", "data_list", "params", "label_params", "lid_params", "component"].includes(line.role || "")}
+        <div class="line-row struct open" style={pad(line)} data-testid="line-{i}">
+          {#if collapsible}
+            <button class="collapse-btn" title={collapsed.has(i) ? "Expand" : "Collapse"}
+              onclick={() => toggleCollapse(i)}>{collapsed.has(i) ? "▶" : "▼"}</button>
+          {/if}
+          <span class={structLabel(line).inferred ? "struct-label inferred" : "struct-label"}>{structLabel(line).text}</span>
+          <span class="struct-bracket">{collapsed.has(i) ? "[ ... ]" : "["}</span>
+          <span class="spacer"></span>
+          {@render commentBtn(line, i)}
+          {#if deletable}
+            <button class="delete-btn" title="Delete block" onclick={() => deleteBlock(i)}>✕</button>
+          {/if}
+        </div>
+
+      {:else if line.kind === "close"}
+        <!-- Virtual default rows before close -->
+        {#each getVirtualDefaults(i) as vd (vd.key)}
+          {@const vkt = getKeyType(vd.key)}
+          <div class="line-row kv virtual" style={padDepth(vd.depth)} data-testid="virtual-{vd.key}">
+            <span class="kv-key virtual-key">{vd.key}</span>
+            <span class="kv-control">
+              {#if vkt === "bool"}
+                <input type="checkbox" checked={vd.def.default === true}
+                  onchange={(e) => onVirtualChange(i, vd.key, vd.def, e.currentTarget.checked)} />
+              {:else if vkt === "enum"}
+                <select value={vd.def.default} onchange={(e) => onVirtualChange(i, vd.key, vd.def, e.currentTarget.value)}>
+                  {#each vd.def.values || [] as v}<option value={v}>{v}</option>{/each}
+                </select>
+              {:else if vkt === "number"}
+                <input class="kv-num" type="number" step="any" value={vd.def.default ?? 0}
+                  onchange={(e) => onVirtualChange(i, vd.key, vd.def, parseNum(e.currentTarget.value))} />
+              {:else if vkt === "string"}
+                <input class="kv-str" type="text" value={vd.def.default ?? ""}
+                  onchange={(e) => onVirtualChange(i, vd.key, vd.def, e.currentTarget.value)} />
+              {:else if vkt === "xyz"}
+                {#each [0,1,2] as j}
+                  <input class="kv-str sm" type="text" value={(vd.def.default ?? [0,0,0])[j]}
+                    onchange={(e) => {
+                      const copy = [...(vd.def.default ?? [0,0,0])];
+                      copy[j] = smartParseNum(e.currentTarget.value);
+                      onVirtualChange(i, vd.key, vd.def, copy);
+                    }} />
+                {/each}
+              {:else if vkt === "xy"}
+                {#each [0,1] as j}
+                  <input class="kv-str sm" type="text" value={(vd.def.default ?? [0,0])[j]}
+                    onchange={(e) => {
+                      const copy = [...(vd.def.default ?? [0,0])];
+                      copy[j] = smartParseNum(e.currentTarget.value);
+                      onVirtualChange(i, vd.key, vd.def, copy);
+                    }} />
+                {/each}
+              {:else if vkt === "position_xy"}
+                {#each [0,1] as j}
+                  <input class="kv-str sm" type="text" value={(vd.def.default ?? [0,0])[j]}
+                    onchange={(e) => {
+                      const copy = [...(vd.def.default ?? [0,0])];
+                      const r = e.currentTarget.value.trim();
+                      copy[j] = (r==="CENTER"||r==="MAX") ? r : smartParseNum(r);
+                      onVirtualChange(i, vd.key, vd.def, copy);
+                    }} />
+                {/each}
+              {:else if vkt === "4bool"}
+                {#each ["F","B","L","R"] as lb, j}
+                  <label class="side-label"><span class="side-tag">{lb}</span>
+                    <input type="checkbox" checked={(vd.def.default ?? [false,false,false,false])[j]}
+                      onchange={(e) => {
+                        const copy = [...(vd.def.default ?? [false,false,false,false])];
+                        copy[j] = e.currentTarget.checked;
+                        onVirtualChange(i, vd.key, vd.def, copy);
+                      }} />
+                  </label>
+                {/each}
+              {:else if vkt === "4num"}
+                {#each ["F","B","L","R"] as lb, j}
+                  <label class="side-label"><span class="side-tag">{lb}</span>
+                    <input class="kv-num xs" type="number" step="any" value={(vd.def.default ?? [0,0,0,0])[j]}
+                      onchange={(e) => {
+                        const copy = [...(vd.def.default ?? [0,0,0,0])];
+                        copy[j] = parseNum(e.currentTarget.value);
+                        onVirtualChange(i, vd.key, vd.def, copy);
+                      }} />
+                  </label>
+                {/each}
+              {:else}
+                <span class="kv-fallback">{JSON.stringify(vd.def.default)}</span>
+              {/if}
+            </span>
+          </div>
+        {/each}
+        <!-- Close bracket with context-aware add buttons -->
+        <div class="line-row struct close" style={pad(line)} data-testid="line-{i}">
+          <span class="struct-bracket">{line.raw.trim()}</span>
+          {#if line.role === "data"}
+            <button class="add-btn" title="Add element" onclick={() => addElement(i, line.depth ?? 0)}>+ Element</button>
+          {:else if line.role === "component" || line.role === "component_list"}
+            <button class="add-btn" title="Add component" onclick={() => addComponent(i, line.depth ?? 0)}>+ Component</button>
+          {:else if line.role === "params"}
+            <button class="add-btn" title="Add line" onclick={() => addRawLine(i - 1, (line.depth ?? 0) + 1)}>+ Line</button>
+            <button class="add-btn" title="Add LABEL block" onclick={() => addLabel(i, (line.depth ?? 0) + 1)}>+ Label</button>
+            <button class="add-btn" title="Add BOX_COMPONENT block" onclick={() => addComponentList(i, (line.depth ?? 0) + 1)}>+ Component</button>
+          {:else}
+            <button class="add-btn" title="Add line" onclick={() => addRawLine(i - 1, (line.depth ?? 0) + 1)}>+</button>
+          {/if}
+        </div>
+
+      {:else if line.kind === "global" && (line.globalKey === "g_b_print_lid" || line.globalKey === "g_b_print_box")}
+        <div class="line-row control" style={pad(line)} data-testid="line-{i}">
+          <span class="control-label">{line.globalKey}</span>
+          <input type="checkbox" checked={line.globalValue === true}
+            onchange={(e) => updateGlobal(i, e.currentTarget.checked)} />
+          <span class="spacer"></span>
+          {@render commentBtn(line, i)}
+          <button class="toggle-btn" title="Edit as raw text" onclick={() => toRaw(i)}>{"{}"}</button>
+        </div>
+
+      {:else if line.kind === "global"}
+        <div class="line-row control" style={pad(line)} data-testid="line-{i}">
+          <span class="control-label">{line.globalKey}</span>
+          <input class="control-text" type="text" value={line.globalValue ?? ""}
+            onchange={(e) => updateGlobal(i, e.currentTarget.value)} />
+          <span class="spacer"></span>
+          {@render commentBtn(line, i)}
+          <button class="toggle-btn" title="Edit as raw text" onclick={() => toRaw(i)}>{"{}"}</button>
+        </div>
+
+      {:else if line.kind === "kv" && line.kvKey}
+        {@const kt = getKeyType(line.kvKey)}
+        {@const ks = getKeySchema(line.kvKey)}
+        {@const sd = getSchemaDefault(line.kvKey)}
+        <div class="line-row kv" class:is-default={isDefault(line.kvKey, line.kvValue)} style={pad(line)} data-testid="line-{i}">
+          <span class="kv-key">{line.kvKey}</span>
+          <span class="kv-control">
+            {#if kt === "bool"}
+              <input type="checkbox" checked={line.kvValue === true}
+                onchange={(e) => updateKv(i, e.currentTarget.checked, sd)} />
+            {:else if kt === "enum"}
+              <select value={line.kvValue} onchange={(e) => updateKv(i, e.currentTarget.value, sd)}>
+                {#each ks?.values || [] as v}<option value={v}>{v}</option>{/each}
+              </select>
+            {:else if kt === "number"}
+              <input class="kv-num" type="number" step="any" value={line.kvValue}
+                onchange={(e) => updateKv(i, parseNum(e.currentTarget.value), sd)} />
+            {:else if kt === "string"}
+              <input class="kv-str" type="text" value={line.kvValue ?? ""}
+                onchange={(e) => updateKv(i, e.currentTarget.value, sd)} />
+            {:else if kt === "xyz" && Array.isArray(line.kvValue)}
+              {#each [0,1,2] as j}
+                <input class="kv-str sm" type="text" value={line.kvValue[j] ?? 0}
+                  onchange={(e) => updateKvIdx(i, line.kvValue, j, smartParseNum(e.currentTarget.value))} />
+              {/each}
+            {:else if kt === "xy" && Array.isArray(line.kvValue)}
+              {#each [0,1] as j}
+                <input class="kv-str sm" type="text" value={line.kvValue[j] ?? 0}
+                  onchange={(e) => updateKvIdx(i, line.kvValue, j, smartParseNum(e.currentTarget.value))} />
+              {/each}
+            {:else if kt === "position_xy" && Array.isArray(line.kvValue)}
+              {#each [0,1] as j}
+                <input class="kv-str sm" type="text" value={line.kvValue[j] ?? ""}
+                  onchange={(e) => { const r = e.currentTarget.value.trim(); updateKvIdx(i, line.kvValue, j, (r==="CENTER"||r==="MAX") ? r : smartParseNum(r)); }} />
+              {/each}
+            {:else if kt === "4bool" && Array.isArray(line.kvValue)}
+              {#each ["F","B","L","R"] as lb, j}
+                <label class="side-label"><span class="side-tag">{lb}</span>
+                  <input type="checkbox" checked={line.kvValue[j] ?? false}
+                    onchange={(e) => updateKvIdx(i, line.kvValue, j, e.currentTarget.checked)} />
+                </label>
+              {/each}
+            {:else if kt === "4num" && Array.isArray(line.kvValue)}
+              {#each ["F","B","L","R"] as lb, j}
+                <label class="side-label"><span class="side-tag">{lb}</span>
+                  <input class="kv-num xs" type="number" step="any" value={line.kvValue[j] ?? 0}
+                    onchange={(e) => updateKvIdx(i, line.kvValue, j, parseNum(e.currentTarget.value))} />
+                </label>
+              {/each}
+            {:else}
+              <span class="kv-fallback">{JSON.stringify(line.kvValue)}</span>
+            {/if}
+          </span>
+          <span class="spacer"></span>
+          {@render commentBtn(line, i)}
+          <button class="toggle-btn" title="Edit as raw text" onclick={() => toRaw(i)}>{"{}"}</button>
+        </div>
+
+      {:else if line.kind === "include" || line.kind === "marker" || line.kind === "makeall"}
+        <div class="line-row muted" style={pad(line)} data-testid="line-{i}">
+          <span class="line-text">{line.raw}</span>
+          <span class="line-badge">{line.kind}</span>
+        </div>
+
+      {:else if line.kind === "raw" && isRawGroupStart(i)}
+        <div class="raw-block" data-testid="line-{i}">
+          <textarea class="raw-textarea"
+            rows={rawGroupLineCount(i)}
+            value={rawGroupText(i)}
+            onblur={(e) => handleRawGroupEdit(i, e.currentTarget.value)}
+          ></textarea>
+          <button class="raw-delete" title="Delete raw block"
+            onclick={() => spliceLines(i, rawGroupLineCount(i), [])}>✕</button>
+        </div>
+
+      {:else if line.kind === "raw" && isRawGroupMember(i)}
+        <!-- Skip: this raw line is rendered as part of a group above -->
+
+      {:else}
+        <!-- Fallback for any other unhandled kind -->
+        <div class="line-row raw" style={pad(line)} data-testid="line-{i}">
+          <input class="raw-input" type="text" value={line.raw}
+            onchange={(e) => handleLineEdit(i, e.currentTarget.value)} />
+          <span class="spacer"></span>
+          <button class="delete-btn" onclick={() => deleteLine(i)}>✕</button>
+        </div>
+      {/if}
+
+    {/each}
+  </section>
+
+  <footer class="status-bar" data-testid="status-bar">
+    <span data-testid="save-status">{statusMsg}</span>
+  </footer>
+
+  {#if showIntent}
+    <div class="intent-pane" data-testid="intent-pane">
+      <input data-testid="intent-text" type="text" bind:value={intentText}
+        placeholder="Describe what you expect to happen..." />
+    </div>
+  {/if}
+</main>
+
+<style>
+  :global(body) {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px; color: #1a1a1a; background: #f5f5f5;
+  }
+  main { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  .content { flex: 1; overflow-y: auto; padding: 4px 0; }
+
+  .line-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 3px 8px; min-height: 28px;
+    font-family: "Courier New", monospace; font-size: 15px; font-weight: 500;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .line-row.muted { opacity: 0.35; font-style: italic; }
+  .line-row.control { background: #f0f7ff; }
+  .line-row.raw { background: white; }
+  .line-row.kv { background: #f0faf0; }
+  .line-row.kv.virtual { background: #fafafa; opacity: 0.5; font-style: italic; }
+  .line-row.kv.virtual:hover { opacity: 0.8; }
+  .line-row.kv.virtual .kv-key { font-weight: 500; }
+  .virtual-key { font-style: italic; }
+  .line-row.kv.is-default { opacity: 0.5; }
+  .line-row.struct { background: #f8f4ff; }
+  .line-row.struct.open { border-left: 3px solid #8e44ad; }
+  .line-row.struct.close { border-left: 3px solid #cbb4d8; opacity: 0.6; }
+
+  .collapse-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 0 2px; font-size: 12px; color: #888; flex-shrink: 0;
+  }
+  .collapse-btn:hover { color: #6c3483; }
+  .struct-label { font-weight: 700; color: #6c3483; }
+  .struct-label.inferred { font-style: italic; font-weight: 500; color: #9b7fb8; }
+  .struct-bracket { color: #999; font-weight: 700; }
+  .spacer { flex: 1; }
+
+  .line-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .line-badge { font-size: 11px; color: #999; background: #eee; padding: 1px 5px; border-radius: 2px; font-weight: 500; }
+
+  .control-label { font-weight: 700; color: #2c3e50; min-width: 200px; font-size: 15px; }
+  .control-text {
+    flex: 1; max-width: 300px;
+    font-family: "Courier New", monospace; font-size: 15px; font-weight: 500;
+    padding: 3px 6px; border: 1px solid #ddd; border-radius: 2px;
+  }
+
+  .kv-key { font-weight: 700; color: #2c3e50; min-width: 220px; flex-shrink: 0; }
+  .kv-control { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+  .kv-num { font-family: "Courier New", monospace; font-size: 15px; font-weight: 500; padding: 3px 6px; border: 1px solid #ddd; border-radius: 2px; width: 80px; background: white; }
+  .kv-num.sm { width: 60px; }
+  .kv-num.xs { width: 48px; }
+  .kv-str { font-family: "Courier New", monospace; font-size: 15px; font-weight: 500; padding: 3px 6px; border: 1px solid #ddd; border-radius: 2px; width: 180px; background: white; }
+  .kv-str.sm { width: 80px; }
+  .kv-control select { font-family: "Courier New", monospace; font-size: 15px; font-weight: 500; padding: 3px 4px; border: 1px solid #ddd; border-radius: 2px; }
+  .kv-control input[type="checkbox"] { width: 18px; height: 18px; }
+  .kv-fallback { color: #999; font-size: 13px; }
+  .side-label { display: inline-flex; align-items: center; gap: 2px; font-size: 13px; }
+  .side-tag { color: #999; font-size: 11px; font-weight: 600; width: 12px; text-align: center; }
+
+  .raw-block {
+    position: relative;
+    width: 100%;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .raw-textarea {
+    display: block;
+    width: 100%; box-sizing: border-box;
+    resize: none; overflow: hidden;
+    font-family: "Courier New", monospace; font-size: 15px; font-weight: 500;
+    line-height: 28px; /* matches .line-row min-height */
+    padding: 3px 28px 3px 8px;
+    border: none; border-left: 3px solid transparent;
+    background: transparent; color: #1a1a1a;
+    outline: none;
+  }
+  .raw-textarea:focus { border-left-color: #ddd; background: #fefefe; }
+  .raw-delete {
+    position: absolute; top: 4px; right: 6px;
+    background: none; border: none; color: #ccc;
+    cursor: pointer; font-size: 16px; padding: 0 4px;
+  }
+  .raw-delete:hover { color: #e74c3c; }
+  .raw-input {
+    flex: 1; min-width: 0;
+    font-family: "Courier New", monospace; font-size: 15px; font-weight: 500;
+    padding: 3px 6px; border: 1px solid #ddd; border-radius: 2px; background: white;
+  }
+  .toggle-btn {
+    background: none; border: 1px solid #ccc; color: #888;
+    cursor: pointer; font-size: 11px; font-weight: 700;
+    padding: 1px 5px; border-radius: 3px; flex-shrink: 0;
+    font-family: "Courier New", monospace;
+  }
+  .toggle-btn:hover:not(:disabled) { border-color: #3498db; color: #3498db; }
+  .toggle-btn:disabled, .toggle-btn.disabled { opacity: 0.3; cursor: default; }
+  .add-btn {
+    background: none; border: 1px dashed #bbb; color: #7f8c8d;
+    padding: 0 8px; border-radius: 3px; cursor: pointer;
+    font-size: 14px; font-weight: 700; line-height: 1.4;
+  }
+  .add-btn:hover { border-color: #3498db; color: #3498db; }
+  .comment-btn {
+    background: none; border: none; color: #ccc; cursor: pointer;
+    font-family: "Courier New", monospace; font-size: 13px; font-weight: 700;
+    padding: 0 3px; flex-shrink: 0;
+  }
+  .comment-btn:hover { color: #27ae60; }
+  .comment-area {
+    display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0;
+  }
+  .comment-slash {
+    color: #27ae60; font-family: "Courier New", monospace; font-size: 13px; font-weight: 700;
+  }
+  .comment-input {
+    font-family: "Courier New", monospace; font-size: 13px; font-weight: 400;
+    color: #27ae60; font-style: italic;
+    border: none; border-bottom: 1px solid #a3d9a5; background: transparent;
+    padding: 0 4px; width: 180px; outline: none;
+  }
+  .comment-input:focus { border-bottom-color: #27ae60; }
+  .delete-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 16px; padding: 0 4px; }
+  .delete-btn:hover { color: #e74c3c; }
+
+  .status-bar { display: flex; justify-content: space-between; padding: 3px 12px; background: #ecf0f1; border-top: 1px solid #ddd; font-size: 13px; color: #666; }
+  .intent-pane { background: #1a1a2e; padding: 6px 12px; border-top: 2px solid #e74c3c; }
+  .intent-pane input { width: 100%; box-sizing: border-box; background: #16213e; border: 1px solid #444; color: #e0e0e0; padding: 4px 8px; font-family: "Courier New", monospace; font-size: 13px; border-radius: 2px; }
+</style>

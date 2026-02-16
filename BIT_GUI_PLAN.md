@@ -8,10 +8,10 @@ Eliminates the need to memorize parameter keys/types/defaults.
 This is the most important section. Every code change follows this loop:
 
 ```
-1. Edit code
-2. Build:   cd bit-gui && npm run tauri dev   (or rebuild)
-3. Launch:  ./bit-gui/harness/run.sh
-4. Drive:   type intent + interact via REPL
+1. Edit code (Svelte components in src/)
+2. Build:   cd bit-gui && npm run build
+3. Launch:  xvfb-run -a node bit-gui/harness/run.js
+4. Drive:   type intent + interact via REPL (Playwright controls Electron)
 5. Inspect: view screenshots in bit-gui/harness/out/
 6. Repeat
 ```
@@ -21,9 +21,9 @@ This is the most important section. Every code change follows this loop:
 The harness runs the real app headless inside this container and gives
 the developer (me) hands and eyes on every change.
 
-**Launch**: `./bit-gui/harness/run.sh`
-- Starts the app under `xvfb-run` (virtual display).
-- Connects via `tauri-driver` (WebDriver).
+**Launch**: `xvfb-run -a node bit-gui/harness/run.js`
+- Launches Electron via Playwright (virtual display).
+- Playwright controls the app natively (no WebDriver needed).
 - Opens an interactive REPL on stdin.
 
 **REPL commands** (every command auto-screenshots after execution):
@@ -69,7 +69,8 @@ interacts to confirm it, and the screenshots are the evidence.
 | `BITGUI_TEST_PROJECT_DIR=/path` | Auto-open this project on startup |
 | `BITGUI_AUTOSAVE_DEBOUNCE_MS=0` | Instant save (no debounce delay) |
 | `BITGUI_DISABLE_PROMPTS=1` | Suppress modal dialogs |
-| `BITGUI_WINDOW_SIZE=1200x900` | Consistent screenshot dimensions |
+| `BITGUI_WINDOW_WIDTH=1200` | Window width for screenshots |
+| `BITGUI_WINDOW_HEIGHT=900` | Window height for screenshots |
 
 ### data-testid Convention
 
@@ -97,7 +98,7 @@ can target by intent, not by pixel coordinates:
 1. **Visual key-value constructor** — structured editor for BIT `data[]` arrays.
 2. **Autosave on every change** — writes a real `.scad` file so OpenSCAD renders live.
 3. **Schema-driven** — keys, types, defaults derived from v4 library; no custom keys.
-4. **Cross-platform** — Windows, macOS, Linux (Tauri).
+4. **Cross-platform** — Windows, macOS, Linux (Electron).
 5. **Project-centric** — each project is a self-contained folder.
 
 ## Architecture
@@ -106,10 +107,15 @@ can target by intent, not by pixel coordinates:
 
 | Layer | Technology | Why |
 |-------|-----------|-----|
-| Desktop shell | **Tauri** (Rust) | Cross-OS, small binaries, native file I/O |
-| Frontend | **Svelte** | Lightweight, reactive, good tree UI ergonomics |
+| Desktop shell | **Electron** | Cross-OS, Chromium-based (reliable rendering), native file I/O |
+| Frontend | **Svelte 4** | Lightweight, reactive, good tree UI ergonomics |
 | Schema | `bit.schema.json` | Machine-readable; derived from v4 source |
-| Build | Vite + Tauri CLI | Standard Tauri dev/build pipeline |
+| Build | Vite + Electron | Vite builds frontend, Electron loads from dist/ |
+| Harness | **Playwright** | Controls Electron natively, screenshots, REPL |
+
+> **Note**: Tauri was attempted first but WebKit2GTK had fundamental JS execution
+> issues in the container (modules not loading, CSP blocking inline scripts).
+> Electron works reliably headless with zero configuration.
 
 ### Repo Layout
 
@@ -123,24 +129,17 @@ The-Boardgame-Insert-Toolkit/
         stores/             # Svelte stores (project state, autosave, settings)
       App.svelte
       main.ts
-    src-tauri/              # Rust backend
-      src/
-        main.rs             # Tauri entry
-        project.rs          # Project I/O (create, open, save, atomic write)
-        checksum.rs         # Lib staleness detection (SHA-256)
-        settings.rs         # App settings persistence
-      tauri.conf.json
-      Cargo.toml
+    main.js                 # Electron main process
+    preload.js              # Electron preload (contextBridge)
     schema/
       bit.schema.json       # Authoritative GUI schema
       generate_schema.py    # Script: parse v4 .scad -> regenerate schema
     harness/
-      run.sh                # Launch app headless + REPL
-      repl.js               # REPL driver (WebDriver commands + screenshots)
+      run.js                # Playwright-driven REPL (launch + screenshot + interact)
       out/                  # Screenshot output (accumulates, never cleared)
+    dist/                   # Vite build output (loaded by Electron)
     package.json
-    vite.config.ts
-    README.md
+    vite.config.mjs
 ```
 
 ## Project Model
@@ -309,40 +308,44 @@ No custom keys allowed — if it's not in the schema, you can't add it.
 
 ### Single-Panel Tree View
 
+Every node shows **all keys with their defaults** — no "Add Parameter" picker.
+Users edit values in-place; unchanged values emit as defaults (or are omitted
+in the generated SCAD if they match the default).
+
+Optional **sub-nodes** (BOX_COMPONENT, BOX_LID, LABEL) are added/removed
+with `[+]` / `[trash]` buttons. These are the only structural add/delete actions.
+
 ```
 +-----------------------------------------------+
-| BIT GUI - MyInsert              [Options] [?]  |
+| BIT GUI                             [Options]  |
 +-----------------------------------------------+
 | [+ Add Element]                                |
 |                                                |
 | v "tray" (BOX)                          [trash]|
 |   TYPE          [BOX       v]                  |
 |   BOX_SIZE_XYZ  [100] [80] [30]               |
-|   v BOX_COMPONENT                    [+ | trash]|
+|   BOX_NO_LID_B  [ ]                           |
+|   BOX_STACKABLE_B [ ]                          |
+|   BOX_WALL_THICKNESS [1.5]                     |
+|   ... (all box-level keys with defaults)       |
+|   v BOX_COMPONENT                          [+] |
 |     v Component 1                      [trash] |
-|       CMP_COMPARTMENT_SIZE_XYZ [40] [70] [25]  |
-|       CMP_NUM_COMPARTMENTS_XY  [2] [1]         |
+|       CMP_COMPARTMENT_SIZE_XYZ [10] [10] [10]  |
+|       CMP_NUM_COMPARTMENTS_XY  [1] [1]         |
 |       CMP_SHAPE  [SQUARE v]                    |
-|       [+ Add Parameter]                        |
-|     v Component 2                      [trash] |
-|       ...                                      |
-|   v BOX_LID                          [+ | trash]|
-|     LID_SOLID_B  [x]                           |
-|     v LABEL                          [+ | trash]|
-|       LBL_TEXT   [Game Name]                   |
-|       [+ Add Parameter]                        |
-|   [+ Add Parameter]                            |
+|       ... (all component keys with defaults)   |
+|       [+ Label]                                |
+|   v BOX_LID                            [trash] |
+|     LID_FIT_UNDER_B  [x]                       |
+|     LID_SOLID_B  [ ]                           |
+|     ... (all lid keys with defaults)           |
+|     [+ Label]                                  |
+|   [+ Lid] [+ Label]                            |
 |                                                |
-| v "dividers" (DIVIDERS)                 [trash]|
-|   TYPE              [DIVIDERS v]               |
-|   DIV_TAB_TEXT      ["A", "B", "C"]   [edit]   |
-|   DIV_TAB_TEXT_EMBOSSED_B  [ ]                 |
-|   [+ Add Parameter]                            |
 +-----------------------------------------------+
 | design.scad saved | Libs: current              |
 +-----------------------------------------------+
-| Intent: [                                     ]|
-| Step: 042                                      |
+| [intent input field]                           |
 +-----------------------------------------------+
 ```
 
@@ -357,17 +360,23 @@ No custom keys allowed — if it's not in the schema, you can't add it.
 | `xy` | 2 numeric inputs | `[1] [1]` |
 | `xyz` | 3 numeric inputs | `[100] [80] [30]` |
 | `4bool` | 4 labeled checkboxes | `F[ ] B[ ] L[x] R[x]` |
-| `table` | Expandable node | disclosure triangle |
-| `table_list` | Expandable list + "Add" | list of expandable nodes |
+| `4num` | 4 labeled numeric inputs | `F[0] B[0] L[0] R[0]` |
+| `table` | Expandable node (optional, added via [+]) | disclosure triangle |
+| `table_list` | Expandable list + [+] to add items | list of expandable nodes |
 | `string_list` | Editable list of strings | `["A", "B", "C"] [edit]` |
+| `position_xy` | 2 inputs (number/CENTER/MAX) | `[CENTER] [CENTER]` |
 
-### Key Picker ("+ Add Parameter")
+### Optional Sub-Nodes
 
-- Opens a filtered list of keys valid for the current context (schema-driven).
-- Search-as-you-type filter.
-- Shows: key name, type icon, default value, help text.
-- Keys already present are grayed out (no duplicates).
-- Selecting a key adds it with its default value, inline-editable immediately.
+These are the only things users add/remove structurally:
+
+| Sub-node | Where it appears | Add button |
+|----------|-----------------|------------|
+| BOX_COMPONENT item | Inside BOX_COMPONENT list | `[+]` on BOX_COMPONENT header |
+| BOX_LID | Element level | `[+ Lid]` at bottom of element |
+| LABEL | Element, component, or lid level | `[+ Label]` at bottom of parent |
+
+When added, a sub-node is populated with all its schema defaults.
 
 ### Options Menu
 
@@ -379,7 +388,7 @@ No custom keys allowed — if it's not in the schema, you can't add it.
 | Backup on Lib Update | true | Checkbox |
 | OpenSCAD Path | (auto-detect) | For "Open in OpenSCAD" button |
 
-Settings stored in Tauri app data dir (OS-appropriate).
+Settings stored in Electron app data dir (OS-appropriate).
 
 ## Autosave Pipeline
 
@@ -439,43 +448,42 @@ Settings stored in Tauri app data dir (OS-appropriate).
 ## Implementation Phases
 
 ### Phase 0: Harness + Skeleton
-- [ ] Install Rust/Tauri toolchain in container
-- [ ] Scaffold Tauri + Svelte project in `bit-gui/`
-- [ ] Add intent pane (always visible bottom strip with text + step counter)
-- [ ] Add `data-testid` attributes to all elements from day 1
-- [ ] Implement harness: `run.sh` + `repl.js` (xvfb-run + tauri-driver + REPL)
-- [ ] Confirm: app loads headless, intent pane visible, screenshot works
+- [x] Scaffold Electron + Svelte 4 project in `bit-gui/`
+- [x] Add intent pane (always visible bottom strip with text + step counter)
+- [x] Add `data-testid` attributes to all elements from day 1
+- [x] Implement harness: Playwright-driven REPL (`harness/run.js`)
+- [x] Confirm: app loads headless, intent pane visible, screenshot works
 
 ### Phase 1: Schema + Tree View
-- [ ] Create `bit.schema.json` (from v4 valid keys + validation + accessors)
-- [ ] Basic tree view (expand/collapse, display key-value pairs from fixture project)
-- [ ] Inline editor widgets (bool, number, string, enum, xy, xyz, 4bool, string_list)
+- [x] Create `bit.schema.json` (from v4 valid keys + validation + accessors)
+- [x] Basic tree view (expand/collapse, display key-value pairs from fixture project)
+- [x] Nodes show all keys with defaults (populated from schema, muted styling)
+- [x] Inline editor widgets (bool, number, string, enum, xy, xyz, 4bool, 4num, string_list, position_xy)
 
 ### Phase 2: Editing + Autosave
-- [ ] Schema-driven "Add Parameter" key picker
-- [ ] Delete node/row
-- [ ] Reorder list items
-- [ ] SCAD text generator
-- [ ] Atomic file writer (Rust backend)
-- [ ] Autosave pipeline (debounced)
-- [ ] JSON project model (create, load, save)
+- [x] All keys shown with defaults, revert button on non-defaults
+- [x] Store actions: add/delete elements, rename, update params
+- [x] Add/remove optional sub-nodes (BOX_COMPONENT items, BOX_LID, LABEL)
+- [x] SCAD text generator (omit keys matching defaults)
+- [x] SCAD preview toggle
+- [x] Atomic file writer (Electron main process via IPC)
+- [x] Autosave pipeline (debounced)
+- [x] Open/Save As via Electron dialogs
+- [x] SCAD is sole source of truth (no JSON project file)
+- [x] Preamble/postamble preserved (user code outside data[] survives)
+- [x] BITGUI marker comment; .bak backup on first save of unmarked files
+- [x] Expression support (__expr for function calls, arithmetic)
+- [x] Expression elements in data[] (e.g. makeFaction()) preserved as read-only
+- [x] Open in OpenSCAD button
+- [ ] Reorder list items (components)
 
-### Phase 3: Project Management
-- [ ] New Project wizard (name, folder, copy libs)
-- [ ] Open Project (file browser -> select `project.bitgui.json`)
-- [ ] Recent Projects list
-- [ ] Stale-lib detection + update prompt
-
-### Phase 4: Polish
-- [ ] Options menu (settings persistence)
-- [ ] "Open in OpenSCAD" button
-- [ ] Validation warnings inline in tree
-- [ ] Schema generation script (`generate_schema.py`)
-- [ ] Cross-platform release builds
-
-### Phase 5: Optional
-- [ ] Import existing `.scad` design file
-- [ ] Undo/redo
-- [ ] Keyboard shortcuts
-- [ ] Dark/light theme
+### Phase 3: Polish + Release
 - [ ] Duplicate element/component
+- [ ] Cross-platform release builds (electron-builder)
+- [ ] Keyboard shortcuts (Ctrl+O, Ctrl+S, Ctrl+Shift+S)
+
+### Backlog
+- [ ] Undo/redo
+- [ ] Dark/light theme
+- [ ] Recent files list
+- [ ] Schema generation script (`generate_schema.py`)

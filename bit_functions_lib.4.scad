@@ -4,8 +4,8 @@
 // (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
 // lbl:          Optional parameter - Text to include on the bottom - defaults to blank
 // font:         Optional parameter - OpensSCAD font specifier - defaults to g_default_font
-// size:         Optional parameter - Size of label - defaults to AuTO
-function cmp_parms( dx, dy, dz, llx=0, lly=0, lbl="", font=g_default_font, size="AUTO" ) =
+// size:         Optional parameter - Size of label - defaults to AUTO
+function cmp_parms( dx, dy, dz, llx=0, lly=0, lbl="", font=g_default_font, size=AUTO ) =
 [
     [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
     [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
@@ -31,7 +31,7 @@ function cmp_parms( dx, dy, dz, llx=0, lly=0, lbl="", font=g_default_font, size=
 // lbl:          Optional parameter - Text to include on the bottom - defaults to blank
 // font:         Optional parameter - OpensSCAD font specifier - defaults to g_default_font
 // size:         Optional parameter - Size of label - defaults to AuTO
-function cmp_parms_fillet( dx, dy, dz, llx=0, lly=0, radius=5, rot=t, vert=f, lbl="", font=g_default_font, size="AUTO" ) =
+function cmp_parms_fillet( dx, dy, dz, llx=0, lly=0, radius=5, rot=t, vert=f, lbl="", font=g_default_font, size=AUTO ) =
 [
     [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
     [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
@@ -154,7 +154,7 @@ function cmp_parms_disc( llx=0, lly=0, dx, dy, dz ) =
 // lbl:          Optional parameter - Text to include on the bottom - defaults to blank
 // font:         Optional parameter - OpensSCAD font specifier - defaults to g_default_font
 // size:         Optional parameter - Size of label - defaults to AuTO
-function cmp_parms_hex_tile( llx=0, lly=0, d, dz, lbl="", font=g_default_font, size="AUTO" ) =
+function cmp_parms_hex_tile( llx=0, lly=0, d, dz, lbl="", font=g_default_font, size=AUTO ) =
 [
     [CMP_COMPARTMENT_SIZE_XYZ,  [ d, d * sin(60), dz ] ],
     [POSITION_XY,  [ llx, lly ] ],
@@ -178,7 +178,7 @@ function cmp_parms_hex_tile( llx=0, lly=0, d, dz, lbl="", font=g_default_font, s
 // lbl:          Optional parameter - Text to include on the bottom - defaults to blank
 // font:         Optional parameter - OpensSCAD font specifier - defaults to g_default_font
 // size:         Optional parameter - Size of label - defaults to AuTO
-function lid_parms(radius=5, thickness=1, lbl="", font=g_default_font, size="AUTO") =
+function lid_parms(radius=5, thickness=1, lbl="", font=g_default_font, size=AUTO) =
 [
     [ LID_SOLID_B, f],
     [ LID_INSET_B, t],
