@@ -150,6 +150,30 @@ data = [
 MakeAll();
 ```
 
+## BIT GUI Harness
+
+The Playwright harness (`bit-gui/harness/run.js`) drives the Electron app headless for screenshots.
+
+**Prerequisite**: `xvfb` is NOT in the Docker image; install before first use:
+```bash
+sudo apt-get update && sudo apt-get install -y xvfb
+```
+
+**Launch** (interactive REPL):
+```bash
+cd bit-gui && xvfb-run -a node harness/run.js
+```
+
+**Launch** (scripted, non-interactive):
+```bash
+cd bit-gui && BITGUI_OPEN="../path/to.scad" \
+  BITGUI_WINDOW_WIDTH=1920 BITGUI_WINDOW_HEIGHT=1080 \
+  BITGUI_HARNESS_COMMANDS=$'wait app-root\nshot label' \
+  xvfb-run -a node harness/run.js
+```
+
+Screenshots go to `bit-gui/harness/out/` (monotonic counter, never cleared).
+
 ## Git Workflow
 
 - Branch: `master`

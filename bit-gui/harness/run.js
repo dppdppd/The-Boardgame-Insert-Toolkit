@@ -126,19 +126,23 @@ async function handleCommand(line) {
 
 async function main() {
   console.log("Launching Electron...");
+
+  const width = parseInt(process.env.BITGUI_WINDOW_WIDTH || "1000", 10);
+  const height = parseInt(process.env.BITGUI_WINDOW_HEIGHT || "1200", 10);
+
   app = await electron.launch({
     args: [path.join(BIT_GUI, "main.js"), "--disable-gpu", "--no-sandbox"],
     env: {
       ...process.env,
-      BITGUI_WINDOW_WIDTH: "1000",
-      BITGUI_WINDOW_HEIGHT: "1200",
+      BITGUI_WINDOW_WIDTH: String(width),
+      BITGUI_WINDOW_HEIGHT: String(height),
       BITGUI_HARNESS: "1",
     },
   });
 
   page = await app.firstWindow();
   await page.waitForLoadState("domcontentloaded");
-  await page.setViewportSize({ width: 1000, height: 1200 });
+  await page.setViewportSize({ width, height });
   console.log(`Window title: ${await page.title()}`);
 
   // Initial screenshot

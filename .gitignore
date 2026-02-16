@@ -3,6 +3,7 @@
 !.opencode/
 *.stl
 *.rsls
+*.bak
 old
 BIT_*.scad
 *.test.scad
