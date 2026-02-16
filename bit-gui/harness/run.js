@@ -130,19 +130,41 @@ async function main() {
     args: [path.join(BIT_GUI, "main.js"), "--disable-gpu", "--no-sandbox"],
     env: {
       ...process.env,
-      BITGUI_WINDOW_WIDTH: "800",
-      BITGUI_WINDOW_HEIGHT: "600",
+      BITGUI_WINDOW_WIDTH: "1000",
+      BITGUI_WINDOW_HEIGHT: "1200",
       BITGUI_HARNESS: "1",
     },
   });
 
   page = await app.firstWindow();
   await page.waitForLoadState("domcontentloaded");
-  await page.setViewportSize({ width: 800, height: 600 });
+  await page.setViewportSize({ width: 1000, height: 1200 });
   console.log(`Window title: ${await page.title()}`);
 
   // Initial screenshot
   await screenshot("initial");
+
+  // Optional non-interactive script mode (useful in CI / tool-driven runs)
+  // Provide either:
+  // - BITGUI_HARNESS_SCRIPT=/path/to/commands.txt
+  // - BITGUI_HARNESS_COMMANDS='cmd1\ncmd2\n...'
+  const scriptPath = process.env.BITGUI_HARNESS_SCRIPT;
+  const scriptInline = process.env.BITGUI_HARNESS_COMMANDS;
+  if (scriptPath || scriptInline) {
+    try {
+      const script = scriptPath
+        ? fs.readFileSync(scriptPath, "utf-8")
+        : String(scriptInline || "");
+      const cmds = script.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+      for (const cmd of cmds) {
+        await handleCommand(cmd);
+      }
+    } catch (err) {
+      console.error("Script failed:", err.message);
+    }
+    await app.close();
+    process.exit(0);
+  }
 
   const rl = readline.createInterface({
     input: process.stdin,

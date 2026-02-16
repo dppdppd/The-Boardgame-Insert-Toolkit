@@ -40,6 +40,434 @@ const BARE_OPEN_RE = /^\s*\[\s*(?:\/\/.*)?$/;                          // [
 const CLOSE_RE = /^\s*\]\s*,?\s*(?:\/\/.*)?$/;                         // ] or ],
 const CLOSE_SEMI_RE = /^\s*\]\s*;\s*(?:\/\/.*)?$/;                     // ];
 
+// --- Load-time formatter ---
+// Normalizes the `data = [ ... ];` table so the line-based editor can
+// reliably classify entries (KV on one line, structural openers/closers
+// on their own lines, and commas fixed).
+
+const FORMAT_STRUCTURAL_KEYS = new Set(["BOX_COMPONENT", "BOX_LID", "LABEL"]);
+
+function formatScadOnLoad(scadText) {
+  const text = String(scadText ?? "").replace(/\r\n/g, "\n");
+  const span = findDataAssignmentSpan(text);
+  if (!span) return { text, changed: false };
+
+  const { stmtStart, stmtEnd, baseIndent, headerComment, footerComment, arrayText } = span;
+
+  let root;
+  try {
+    const toks = tokenizeScad(arrayText);
+    const parser = makeParser(toks);
+    root = parser.parseArray();
+  } catch {
+    // If anything about parsing fails, don't risk rewriting the file.
+    return { text, changed: false };
+  }
+
+  const out = [];
+  const headerLine = `${baseIndent}data = [` + (headerComment ? ` //${headerComment}` : "");
+  out.push(headerLine);
+
+  // Root array elements (boxes/dividers)
+  for (const el of root.elements) {
+    if (el.type === "comment") {
+      out.push(`${baseIndent}${" ".repeat(4)}//${el.text}`);
+      continue;
+    }
+    renderEntryLines(el, baseIndent + " ".repeat(4), true, out);
+  }
+
+  out.push(`${baseIndent}];` + (footerComment ? ` //${footerComment}` : ""));
+
+  const formattedStmt = out.join("\n");
+  const newText = text.slice(0, stmtStart) + formattedStmt + text.slice(stmtEnd);
+  return { text: newText, changed: newText !== text };
+}
+
+function nonCommentElements(arrNode) {
+  const out = [];
+  for (let i = 0; i < arrNode.elements.length; i++) {
+    const el = arrNode.elements[i];
+    el._idx = i; // used only for comma logic at render time
+    if (el.type !== "comment") out.push(el);
+  }
+  return out;
+}
+
+function findDataAssignmentSpan(fullText) {
+  // Find: data = [ ... ];  (outside strings/comments)
+  let inStr = false;
+  let inLine = false;
+  const isIdentChar = (c) => /[A-Za-z0-9_]/.test(c);
+
+  for (let i = 0; i < fullText.length; i++) {
+    const ch = fullText[i];
+    const next = fullText[i + 1];
+    if (inLine) {
+      if (ch === "\n") inLine = false;
+      continue;
+    }
+    if (!inStr && ch === "/" && next === "/") { inLine = true; i++; continue; }
+    if (ch === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+
+    // identifier "data"
+    if (ch === "d" && fullText.slice(i, i + 4) === "data") {
+      const before = i > 0 ? fullText[i - 1] : "";
+      const after = fullText[i + 4] || "";
+      if ((before && isIdentChar(before)) || (after && isIdentChar(after))) continue;
+
+      let j = i + 4;
+      while (j < fullText.length && /\s/.test(fullText[j])) j++;
+      if (fullText[j] !== "=") continue;
+      j++;
+      while (j < fullText.length && /\s/.test(fullText[j])) j++;
+      if (fullText[j] !== "[") continue;
+
+      const arrayStart = j;
+      const arrayEnd = findMatchingBracket(fullText, arrayStart);
+      if (arrayEnd < 0) return null;
+
+      // Expand replacement to cover the whole statement lines.
+      const stmtLineStart = fullText.lastIndexOf("\n", i) + 1;
+      const stmtLineEnd = (() => {
+        // include optional semicolon and any trailing comment until end-of-line
+        let k = arrayEnd + 1;
+        while (k < fullText.length && /\s/.test(fullText[k]) && fullText[k] !== "\n") k++;
+        if (fullText[k] === ";") k++;
+        // include trailing comment
+        while (k < fullText.length && fullText[k] !== "\n") k++;
+        if (k < fullText.length) k++; // include newline
+        return k;
+      })();
+
+      const baseIndent = (fullText.slice(stmtLineStart, i).match(/^\s*/) || [""])[0];
+
+      const headerComment = (() => {
+        // data = [ // comment
+        const line = fullText.slice(stmtLineStart, fullText.indexOf("\n", stmtLineStart) >= 0 ? fullText.indexOf("\n", stmtLineStart) : stmtLineEnd);
+        const idx = line.indexOf("//");
+        if (idx < 0) return "";
+        // keep everything after // exactly (including leading space)
+        return line.slice(idx + 2);
+      })();
+
+      const footerComment = (() => {
+        const stmt = fullText.slice(arrayEnd + 1, stmtLineEnd);
+        const idx = stmt.indexOf("//");
+        if (idx < 0) return "";
+        return stmt.slice(idx + 2).replace(/\n/g, "");
+      })();
+
+      const arrayText = fullText.slice(arrayStart, arrayEnd + 1);
+
+      return {
+        stmtStart: stmtLineStart,
+        stmtEnd: stmtLineEnd,
+        baseIndent,
+        headerComment,
+        footerComment,
+        arrayText,
+      };
+    }
+  }
+
+  return null;
+}
+
+function findMatchingBracket(s, openIdx) {
+  let depth = 0;
+  let inStr = false;
+  let inLine = false;
+  for (let i = openIdx; i < s.length; i++) {
+    const ch = s[i];
+    const next = s[i + 1];
+    if (inLine) {
+      if (ch === "\n") inLine = false;
+      continue;
+    }
+    if (!inStr && ch === "/" && next === "/") { inLine = true; i++; continue; }
+    if (ch === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (ch === "[") depth++;
+    if (ch === "]") {
+      depth--;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
+}
+
+function tokenizeScad(s) {
+  const toks = [];
+  let i = 0;
+  while (i < s.length) {
+    const ch = s[i];
+    const next = s[i + 1];
+    if (ch === "\n") { toks.push({ type: "newline" }); i++; continue; }
+    if (/\s/.test(ch)) { i++; continue; }
+
+    if (ch === "/" && next === "/") {
+      const start = i + 2;
+      let j = start;
+      while (j < s.length && s[j] !== "\n") j++;
+      toks.push({ type: "comment", value: s.slice(start, j) });
+      i = j;
+      continue;
+    }
+
+    if (ch === '"') {
+      let j = i + 1;
+      while (j < s.length) {
+        const c = s[j];
+        if (c === "\\") { j += 2; continue; }
+        if (c === '"') { j++; break; }
+        j++;
+      }
+      toks.push({ type: "string", value: s.slice(i, j) });
+      i = j;
+      continue;
+    }
+
+    if ("[](),;={}".includes(ch)) {
+      toks.push({ type: "punct", value: ch });
+      i++;
+      continue;
+    }
+
+    // number
+    if (/[0-9]/.test(ch) || (ch === "-" && /[0-9]/.test(next))) {
+      let j = i + 1;
+      while (j < s.length && /[0-9.]/.test(s[j])) j++;
+      toks.push({ type: "number", value: s.slice(i, j) });
+      i = j;
+      continue;
+    }
+
+    // identifier
+    if (/[A-Za-z_]/.test(ch)) {
+      let j = i + 1;
+      while (j < s.length && /[A-Za-z0-9_]/.test(s[j])) j++;
+      toks.push({ type: "ident", value: s.slice(i, j) });
+      i = j;
+      continue;
+    }
+
+    // operator / other single char
+    toks.push({ type: "other", value: ch });
+    i++;
+  }
+  return toks;
+}
+
+function makeParser(tokens) {
+  let idx = 0;
+
+  function peek() { return tokens[idx]; }
+  function next() { return tokens[idx++]; }
+  function eof() { return idx >= tokens.length; }
+
+  function skipNewlines() {
+    while (!eof() && peek().type === "newline") next();
+  }
+
+  function parseArray() {
+    const t = next();
+    if (!t || t.type !== "punct" || t.value !== "[") throw new Error("expected [");
+    const elements = [];
+    const arrNode = { type: "array", elements };
+    let justConsumedComma = false;
+
+    while (!eof()) {
+      skipNewlines();
+      const p = peek();
+      if (!p) break;
+      if (p.type === "comment") {
+        // If this comment appears right after the comma between the first and
+        // second item of a pair ([ KEY, // comment\n [ ... ] ]), treat it as
+        // a comment on the opener line.
+        const nonCommentsSoFar = elements.filter(e => e.type !== "comment").length;
+        if (justConsumedComma && nonCommentsSoFar === 1 && !arrNode.commentAfterFirst) {
+          arrNode.commentAfterFirst = p.value;
+          next();
+          justConsumedComma = false;
+          continue;
+        }
+        elements.push({ type: "comment", text: p.value });
+        next();
+        continue;
+      }
+      if (p.type === "punct" && p.value === "]") { next(); break; }
+      if (p.type === "punct" && p.value === ",") { next(); continue; }
+
+      const value = parseValue();
+      justConsumedComma = false;
+      skipNewlines();
+      if (!eof() && peek().type === "comment") {
+        value.trailingComment = peek().value;
+        next();
+      }
+      elements.push(value);
+
+      skipNewlines();
+      if (!eof() && peek().type === "punct" && peek().value === ",") {
+        next();
+        justConsumedComma = true;
+        continue;
+      }
+    }
+
+    return arrNode;
+  }
+
+  function parseValue() {
+    skipNewlines();
+    const p = peek();
+    if (!p) return { type: "atom", text: "" };
+    if (p.type === "punct" && p.value === "[") return parseArray();
+
+    // Collect tokens until comma/close at this array nesting, while keeping
+    // nested parens/braces balanced.
+    let paren = 0;
+    let brace = 0;
+    const parts = [];
+    while (!eof()) {
+      const t = peek();
+      if (!t) break;
+      if (t.type === "newline") { next(); continue; }
+      if (t.type === "comment") break;
+      if (paren === 0 && brace === 0 && t.type === "punct" && (t.value === "," || t.value === "]")) break;
+
+      if (t.type === "punct" && t.value === "[") {
+        const a = parseArray();
+        parts.push(a);
+        continue;
+      }
+
+      if (t.type === "punct" && t.value === "(") paren++;
+      else if (t.type === "punct" && t.value === ")") paren = Math.max(0, paren - 1);
+      else if (t.type === "punct" && t.value === "{") brace++;
+      else if (t.type === "punct" && t.value === "}") brace = Math.max(0, brace - 1);
+
+      parts.push({ type: "tok", text: t.value });
+      next();
+    }
+
+    return { type: "atom", text: tokensToInline(parts) };
+  }
+
+  return { parseArray };
+}
+
+function tokensToInline(parts) {
+  // parts are {type:"tok",text} and/or nested array nodes.
+  const out = [];
+  let prev = "";
+
+  function pushToken(t) {
+    const cur = t;
+    const noSpaceBefore = [",", "]", ")", "}", ";", "(", "[", "{"].includes(cur);
+    const noSpaceAfterPrev = ["[", "(", "{", "="].includes(prev);
+    const needsSpace = out.length > 0 && !noSpaceBefore && !noSpaceAfterPrev;
+    if (needsSpace) out.push(" ");
+    out.push(cur);
+    prev = cur;
+  }
+
+  for (const p of parts) {
+    if (p.type === "tok") pushToken(p.text);
+    else if (p.type === "array") pushToken(inlineArray(p));
+  }
+
+  return out.join("").trim();
+}
+
+function canInlineArray(arr) {
+  for (const el of arr.elements) {
+    if (el.type === "comment") return false;
+    if (el.type === "array") return false;
+  }
+  return true;
+}
+
+function inlineArray(arr) {
+  if (!canInlineArray(arr)) return "[ ... ]";
+  const parts = [];
+  for (const el of arr.elements) {
+    if (el.type === "comment") continue;
+    parts.push(String(el.text ?? "").trim());
+  }
+  return `[${parts.join(", ")}]`;
+}
+
+function renderEntryLines(node, indent, needsComma, outLines) {
+  if (node.type === "atom") {
+    // Rare inside data tables, but keep it stable.
+    outLines.push(indent + node.text + (needsComma ? "," : "") + (node.trailingComment ? ` //${node.trailingComment}` : ""));
+    return;
+  }
+  if (node.type !== "array") return;
+
+  const vals = node.elements.filter(e => e.type !== "comment");
+  const commentLines = node.elements.filter(e => e.type === "comment");
+  for (const c of commentLines) {
+    outLines.push(`${indent}//${c.text}`);
+  }
+
+  if (vals.length === 2) {
+    const a = vals[0];
+    const b = vals[1];
+
+    // [ KEY, VALUE ]  => KV line
+    if (a.type === "atom" && b.type !== "array") {
+      const line = `${indent}[ ${a.text.trim()}, ${b.text.trim()} ]` + (needsComma ? "," : "") + (node.trailingComment ? ` //${node.trailingComment}` : "");
+      outLines.push(line);
+      return;
+    }
+
+    // [ "name", [ ... ] ]  => element entry
+    if (a.type === "atom" && a.text.trim().startsWith('"') && b.type === "array") {
+      outLines.push(`${indent}[ ${a.text.trim()},` + (node.commentAfterFirst ? ` //${node.commentAfterFirst}` : ""));
+      renderArrayBlock(b, indent + " ".repeat(4), outLines);
+      outLines.push(`${indent}]` + (needsComma ? "," : "") + (node.trailingComment ? ` //${node.trailingComment}` : ""));
+      return;
+    }
+
+    // [ KEY, [a,b,c] ] => KV with array value (inline when safe)
+    if (a.type === "atom" && b.type === "array") {
+      const key = a.text.trim();
+      if (!FORMAT_STRUCTURAL_KEYS.has(key) && canInlineArray(b)) {
+        const line = `${indent}[ ${key}, ${inlineArray(b)} ]` + (needsComma ? "," : "") + (node.trailingComment ? ` //${node.trailingComment}` : "");
+        outLines.push(line);
+        return;
+      }
+
+      // Structural-ish block (BOX_COMPONENT, BOX_LID, LABEL, and unknown pair blocks)
+      outLines.push(`${indent}[ ${key},` + (node.commentAfterFirst ? ` //${node.commentAfterFirst}` : ""));
+      renderArrayBlock(b, indent + " ".repeat(4), outLines);
+      outLines.push(`${indent}]` + (needsComma ? "," : "") + (node.trailingComment ? ` //${node.trailingComment}` : ""));
+      return;
+    }
+  }
+
+  // Fallback: keep as a multi-line array block
+  renderArrayBlock(node, indent, outLines, needsComma);
+}
+
+function renderArrayBlock(arr, indent, outLines, needsCommaForClose = false) {
+  outLines.push(`${indent}[`);
+
+  for (const el of arr.elements) {
+    if (el.type === "comment") {
+      outLines.push(`${indent}${" ".repeat(4)}//${el.text}`);
+      continue;
+    }
+    renderEntryLines(el, indent + " ".repeat(4), true, outLines);
+  }
+
+  outLines.push(`${indent}]` + (needsCommaForClose ? "," : ""));
+}
+
 function parseSimpleValue(text) {
   const t = text.trim();
   if (t === "true" || t === "t") return { value: true, ok: true };
@@ -87,6 +515,8 @@ function extractComment(raw) {
 }
 
 function importScad(scadText) {
+  const formatted = formatScadOnLoad(scadText);
+  scadText = formatted.text;
   const hasMarker = MARKER_RE.test(scadText);
   const rawLines = scadText.replace(/\r\n/g, "\n").split("\n");
   const lines = [];
@@ -389,4 +819,4 @@ function reimportBlock(text, baseDepth) {
   return lines;
 }
 
-module.exports = { importScad, reimportBlock };
+module.exports = { importScad, reimportBlock, formatScadOnLoad };
