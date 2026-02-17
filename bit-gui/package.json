@@ -2,22 +2,57 @@
   "name": "bit-gui",
   "private": true,
   "version": "0.1.0",
+  "description": "Visual editor for Boardgame Insert Toolkit .scad files",
+  "author": "BIT GUI Contributors",
   "main": "main.js",
   "scripts": {
     "dev": "concurrently \"vite build --watch\" \"electron . --disable-gpu --no-sandbox\"",
     "build": "vite build",
     "start": "electron . --disable-gpu --no-sandbox",
-    "harness": "node harness/run.js"
-  },
-  "dependencies": {
-    "electron-serve": "^2.1.1"
+    "harness": "node harness/run.js",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "dist:linux": "npm run build && electron-builder --linux",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.1.1",
     "concurrently": "^9",
     "electron": "^33.4.11",
+    "electron-builder": "^25",
     "playwright": "^1.49",
     "svelte": "^5.51.2",
     "vite": "^6"
+  },
+  "build": {
+    "appId": "com.bitgui.app",
+    "productName": "BIT GUI",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "importer.js",
+      "schema/**/*",
+      "dist/**/*",
+      "package.json"
+    ],
+    "linux": {
+      "target": ["AppImage"],
+      "category": "Utility"
+    },
+    "win": {
+      "target": ["nsis", "portable"]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": ["dmg"],
+      "category": "public.app-category.utilities"
+    }
   }
 }

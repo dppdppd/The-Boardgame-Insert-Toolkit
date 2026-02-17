@@ -3,3 +3,4 @@ node_modules_linux/
 node_modules_win/
 dist/
 harness/out/
+release/

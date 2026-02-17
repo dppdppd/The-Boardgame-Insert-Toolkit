@@ -3,6 +3,10 @@ const path = require("path");
 const fs = require("fs");
 const { importScad } = require("./importer");
 
+// Prevent GPU-related crashes on Windows (packaged exe doesn't get --disable-gpu)
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch("no-sandbox");
+
 let mainWindow;
 
 // --- Recent files ---
@@ -249,3 +253,10 @@ ipcMain.handle("open-in-openscad", async (_event, filePath) => {
 
 app.whenReady().then(createWindow);
 app.on("window-all-closed", () => app.quit());
+
+// Surface errors as a dialog instead of a silent crash
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught exception:", err);
+  try { dialog.showErrorBox("BIT GUI Error", err.stack || err.message); } catch (_) {}
+  app.exit(1);
+});

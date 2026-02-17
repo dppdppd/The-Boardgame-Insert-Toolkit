@@ -257,10 +257,10 @@
   function findMatchingClose(openIdx: number): number {
     let depth = 0;
     for (let j = openIdx; j < $project.lines.length; j++) {
-      if ($project.lines[j].kind === "open") depth++;
+      if ($project.lines[j].kind === "open") depth += ($project.lines[j] as any).mergedOpen ? 2 : 1;
       if ($project.lines[j].kind === "close") {
-        depth--;
-        if (depth === 0) return j;
+        depth -= ($project.lines[j] as any).mergedClose ? 2 : 1;
+        if (depth <= 0) return j;
       }
     }
     return -1;
@@ -294,6 +294,25 @@
     lid_params: "lid",
   };
 
+  // For merged closes, map outer role → inner role
+  const MERGED_INNER_ROLE: Record<string, string> = {
+    element: "params",
+    component_list: "component",
+    label: "label_params",
+    lid: "lid_params",
+  };
+
+  /** Get schema context for a close line, handling both normal and merged closes. */
+  function getCloseContext(line: Line): string | undefined {
+    const role = line.role || "";
+    if (ROLE_TO_CONTEXT[role]) return ROLE_TO_CONTEXT[role];
+    if (line.mergedClose) {
+      const innerRole = MERGED_INNER_ROLE[role];
+      if (innerRole) return ROLE_TO_CONTEXT[innerRole];
+    }
+    return undefined;
+  }
+
   // Get all scalar schema keys for a context (skip table/table_list)
   function getScalarKeysForContext(ctx: string): { key: string; def: any }[] {
     const ctxDef = (schema as any).contexts?.[ctx];
@@ -313,16 +332,18 @@
   }[] {
     const closeLine = $project.lines[closeIndex];
     if (!closeLine || closeLine.kind !== "close") return [];
-    const role = closeLine.role || "";
-    const ctx = ROLE_TO_CONTEXT[role];
+    const ctx = getCloseContext(closeLine);
     if (!ctx) return [];
 
-    // Find matching open bracket
+    // Find matching open bracket (merged brackets count as 2)
     let bd = 0;
     let openIdx = -1;
     for (let i = closeIndex; i >= 0; i--) {
-      if ($project.lines[i].kind === "close") bd++;
-      if ($project.lines[i].kind === "open") { bd--; if (bd === 0) { openIdx = i; break; } }
+      if ($project.lines[i].kind === "close") bd += ($project.lines[i] as any).mergedClose ? 2 : 1;
+      if ($project.lines[i].kind === "open") {
+        bd -= ($project.lines[i] as any).mergedOpen ? 2 : 1;
+        if (bd <= 0) { openIdx = i; break; }
+      }
     }
     if (openIdx < 0) return [];
 
@@ -360,8 +381,7 @@
     const lines = $project.lines;
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].kind !== "close") continue;
-      const role = lines[i].role || "";
-      if (!ROLE_TO_CONTEXT[role]) continue;
+      if (!getCloseContext(lines[i])) continue;
       const rows = getSortedSchemaRows(i);
       for (const r of rows) {
         if (r.lineIndex !== null) set.add(r.lineIndex);
@@ -428,12 +448,10 @@
     const count = $project.lines.filter(l => l.kind === "open" && l.role === "element").length;
     const name = `box ${count + 1}`;
     const lines: Line[] = [
-      { raw: `${ind(d)}[ "${name}",`, kind: "open", depth: d, role: "element", label: name },
-      { raw: `${ind(d+1)}[`, kind: "open", depth: d + 1, role: "params", label: "params" },
-      { raw: `${ind(d+2)}[ TYPE, BOX ],`, kind: "kv", depth: d + 2, kvKey: "TYPE", kvValue: "BOX" },
-      { raw: `${ind(d+2)}[ BOX_SIZE_XYZ, [50, 50, 20] ],`, kind: "kv", depth: d + 2, kvKey: "BOX_SIZE_XYZ", kvValue: [50, 50, 20] },
-      { raw: `${ind(d+1)}]`, kind: "close", depth: d + 1, role: "params", label: "params" },
-      { raw: `${ind(d)}],`, kind: "close", depth: d, role: "element", label: name },
+      { raw: `${ind(d)}[ "${name}", [`, kind: "open", depth: d, role: "element", label: name, mergedOpen: true },
+      { raw: `${ind(d+1)}[ TYPE, BOX ],`, kind: "kv", depth: d + 1, kvKey: "TYPE", kvValue: "BOX" },
+      { raw: `${ind(d+1)}[ BOX_SIZE_XYZ, [50, 50, 20] ],`, kind: "kv", depth: d + 1, kvKey: "BOX_SIZE_XYZ", kvValue: [50, 50, 20] },
+      { raw: `${ind(d)}]],`, kind: "close", depth: d, role: "element", label: name, mergedClose: true },
     ];
     // Insert all lines before the close bracket
     project.update((p) => {
@@ -448,11 +466,9 @@
     const ind = (n: number) => "    ".repeat(n);
     const name = "comp";
     const lines: Line[] = [
-      { raw: `${ind(d)}[ "${name}",`, kind: "open", depth: d, role: "element", label: name },
-      { raw: `${ind(d+1)}[`, kind: "open", depth: d + 1, role: "params", label: "params" },
-      { raw: `${ind(d+2)}[ CMP_COMPARTMENT_SIZE_XYZ, [40, 40, 15] ],`, kind: "kv", depth: d + 2, kvKey: "CMP_COMPARTMENT_SIZE_XYZ", kvValue: [40, 40, 15] },
-      { raw: `${ind(d+1)}]`, kind: "close", depth: d + 1, role: "params", label: "params" },
-      { raw: `${ind(d)}],`, kind: "close", depth: d, role: "element", label: name },
+      { raw: `${ind(d)}[ "${name}", [`, kind: "open", depth: d, role: "element", label: name, mergedOpen: true },
+      { raw: `${ind(d+1)}[ CMP_COMPARTMENT_SIZE_XYZ, [40, 40, 15] ],`, kind: "kv", depth: d + 1, kvKey: "CMP_COMPARTMENT_SIZE_XYZ", kvValue: [40, 40, 15] },
+      { raw: `${ind(d)}]],`, kind: "close", depth: d, role: "element", label: name, mergedClose: true },
     ];
     project.update((p) => {
       p.lines.splice(closeIndex, 0, ...lines);
@@ -465,15 +481,11 @@
     const d = depth;
     const ind = (n: number) => "    ".repeat(n);
     const lines: Line[] = [
-      { raw: `${ind(d)}[ BOX_COMPONENT,`, kind: "open", depth: d, role: "component_list", label: "BOX_COMPONENT" },
-      { raw: `${ind(d+1)}[`, kind: "open", depth: d + 1, role: "component", label: "component list" },
-      { raw: `${ind(d+2)}[ "comp 1",`, kind: "open", depth: d + 2, role: "element", label: "comp 1" },
-      { raw: `${ind(d+3)}[`, kind: "open", depth: d + 3, role: "params", label: "element params" },
-      { raw: `${ind(d+4)}[ CMP_COMPARTMENT_SIZE_XYZ, [40, 40, 15] ],`, kind: "kv", depth: d + 4, kvKey: "CMP_COMPARTMENT_SIZE_XYZ", kvValue: [40, 40, 15] },
-      { raw: `${ind(d+3)}]`, kind: "close", depth: d + 3, role: "params", label: "element params" },
-      { raw: `${ind(d+2)}],`, kind: "close", depth: d + 2, role: "element", label: "comp 1" },
-      { raw: `${ind(d+1)}]`, kind: "close", depth: d + 1, role: "component", label: "component list" },
-      { raw: `${ind(d)}]`, kind: "close", depth: d, role: "component_list", label: "BOX_COMPONENT" },
+      { raw: `${ind(d)}[ BOX_COMPONENT, [`, kind: "open", depth: d, role: "component_list", label: "BOX_COMPONENT", mergedOpen: true },
+      { raw: `${ind(d+1)}[ "comp 1", [`, kind: "open", depth: d + 1, role: "element", label: "comp 1", mergedOpen: true },
+      { raw: `${ind(d+2)}[ CMP_COMPARTMENT_SIZE_XYZ, [40, 40, 15] ],`, kind: "kv", depth: d + 2, kvKey: "CMP_COMPARTMENT_SIZE_XYZ", kvValue: [40, 40, 15] },
+      { raw: `${ind(d+1)}]],`, kind: "close", depth: d + 1, role: "element", label: "comp 1", mergedClose: true },
+      { raw: `${ind(d)}]],`, kind: "close", depth: d, role: "component_list", label: "BOX_COMPONENT", mergedClose: true },
     ];
     project.update((p) => {
       p.lines.splice(closeIndex, 0, ...lines);
@@ -486,11 +498,9 @@
     const d = depth;
     const ind = (n: number) => "    ".repeat(n);
     const lines: Line[] = [
-      { raw: `${ind(d)}[ LABEL,`, kind: "open", depth: d, role: "label", label: "LABEL" },
-      { raw: `${ind(d+1)}[`, kind: "open", depth: d + 1, role: "label_params", label: "label params" },
-      { raw: `${ind(d+2)}[ LBL_TEXT, "" ],`, kind: "kv", depth: d + 2, kvKey: "LBL_TEXT", kvValue: "" },
-      { raw: `${ind(d+1)}]`, kind: "close", depth: d + 1, role: "label_params", label: "label params" },
-      { raw: `${ind(d)}],`, kind: "close", depth: d, role: "label", label: "LABEL" },
+      { raw: `${ind(d)}[ LABEL, [`, kind: "open", depth: d, role: "label", label: "LABEL", mergedOpen: true },
+      { raw: `${ind(d+1)}[ LBL_TEXT, "" ],`, kind: "kv", depth: d + 1, kvKey: "LBL_TEXT", kvValue: "" },
+      { raw: `${ind(d)}]],`, kind: "close", depth: d, role: "label", label: "LABEL", mergedClose: true },
     ];
     project.update((p) => {
       p.lines.splice(closeIndex, 0, ...lines);
@@ -611,6 +621,11 @@
             <button class="add-btn" title="Add line" onclick={() => addRawLine(i - 1, (line.depth ?? 0) + 1)}>+ Line</button>
             <button class="add-btn" title="Add LABEL block" onclick={() => addLabel(i, (line.depth ?? 0) + 1)}>+ Label</button>
             <button class="add-btn" title="Add BOX_COMPONENT block" onclick={() => addComponentList(i, (line.depth ?? 0) + 1)}>+ Component</button>
+          {:else if line.role === "element" && line.mergedClose}
+            {@const innerDepth = (line.depth ?? 0) + 1}
+            <button class="add-btn" title="Add line" onclick={() => addRawLine(i - 1, innerDepth)}>+ Line</button>
+            <button class="add-btn" title="Add LABEL block" onclick={() => addLabel(i, innerDepth)}>+ Label</button>
+            <button class="add-btn" title="Add BOX_COMPONENT block" onclick={() => addComponentList(i, innerDepth)}>+ Component</button>
           {:else if line.role === "component" || line.role === "component_list" || line.role === "label" || line.role === "lid" || line.role === "label_params" || line.role === "lid_params" || line.role === "list" || line.role === "data_list"}
             <!-- No add buttons on these structural close brackets -->
           {:else}

@@ -41,21 +41,16 @@ A desktop app for visually editing BIT `.scad` files — no need to memorize par
 - Backs up the original `.scad` on first save
 - Launch OpenSCAD directly from the Tools menu
 
-### Install & Run
+### Download
 
-Requires [Node.js](https://nodejs.org) (v18+).
+Portable binaries — no install required (except the macOS DMG):
 
-```bash
-cd bit-gui
-npm install
-npm run build
-npm start
-```
-
-To open a file on launch:
-```bash
-npm start -- path/to/file.scad
-```
+| Platform | File | Link |
+|----------|------|------|
+| Linux | `BIT GUI-0.1.0.AppImage` | [Download](https://github.com/dppdppd/The-Boardgame-Insert-Toolkit/releases/latest/download/BIT.GUI-0.1.0.AppImage) |
+| Windows (portable) | `BIT GUI 0.1.0.exe` | [Download](https://github.com/dppdppd/The-Boardgame-Insert-Toolkit/releases/latest/download/BIT.GUI.0.1.0.exe) |
+| Windows (installer) | `BIT GUI Setup 0.1.0.exe` | [Download](https://github.com/dppdppd/The-Boardgame-Insert-Toolkit/releases/latest/download/BIT.GUI.Setup.0.1.0.exe) |
+All downloads are on the [Releases](https://github.com/dppdppd/The-Boardgame-Insert-Toolkit/releases) page.
 
 # How (Text Editor)
 - Download [Openscad](https://www.openscad.org).
@@ -638,6 +633,40 @@ Value is expected to be a number, and determines the letter spacing of the tab t
 
 #### `DIV_TAB_TEXT_CHAR_THRESHOLD`
 Value is expected to be a number, and determines the number of characters above which the size of the font should be determined automatically.
+
+# Developer
+
+### BIT GUI — Build from Source
+
+Requires [Node.js](https://nodejs.org) (v18+).
+
+```bash
+cd bit-gui
+npm install
+npm run build
+npm start
+```
+
+To open a file on launch:
+```bash
+npm start -- path/to/file.scad
+```
+
+### Packaging
+
+Build portable executables with [electron-builder](https://www.electron.build/):
+
+```bash
+npm run pack              # Unpacked app (for testing)
+npm run dist              # Current platform
+npm run dist:linux        # Linux AppImage
+npm run dist:win          # Windows portable + NSIS installer
+npm run dist:mac          # macOS DMG
+```
+
+Output goes to `bit-gui/release/`.
+
+Cross-compiling Windows from Linux requires [Wine](https://www.winehq.org/).
 
 # Published inserts:
 

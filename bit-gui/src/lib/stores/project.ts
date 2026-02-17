@@ -30,6 +30,10 @@ export interface Line {
   kvValue?: any;
   /** Trailing comment (without the //) */
   comment?: string;
+  /** For "open": true when this line opens two bracket levels (e.g. `[ "name", [`) */
+  mergedOpen?: boolean;
+  /** For "close": true when this line closes two bracket levels (e.g. `]],`) */
+  mergedClose?: boolean;
 }
 
 export interface Project {
@@ -86,14 +90,14 @@ export function deleteBlock(index: number) {
     if (line?.kind !== "open") return p;
     if (line.role === "data") return p; // never delete the data block
 
-    // Find matching close by tracking depth
+    // Find matching close by tracking depth (merged brackets count as 2)
     let depth = 0;
     let closeIdx = -1;
     for (let i = index; i < p.lines.length; i++) {
-      if (p.lines[i].kind === "open") depth++;
+      if (p.lines[i].kind === "open") depth += p.lines[i].mergedOpen ? 2 : 1;
       if (p.lines[i].kind === "close") {
-        depth--;
-        if (depth === 0) { closeIdx = i; break; }
+        depth -= p.lines[i].mergedClose ? 2 : 1;
+        if (depth <= 0) { closeIdx = i; break; }
       }
     }
     if (closeIdx < 0) return p; // unmatched — shouldn't happen

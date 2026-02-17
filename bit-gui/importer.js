@@ -40,6 +40,11 @@ const BARE_OPEN_RE = /^\s*\[\s*(?:\/\/.*)?$/;                          // [
 const CLOSE_RE = /^\s*\]\s*,?\s*(?:\/\/.*)?$/;                         // ] or ],
 const CLOSE_SEMI_RE = /^\s*\]\s*;\s*(?:\/\/.*)?$/;                     // ];
 
+// Merged bracket patterns — opening [ merged onto opener, or double ]] close
+const ELEMENT_OPEN_MERGED_RE = /^\s*\[\s*"([^"]+)"\s*,\s*\[\s*(?:\/\/.*)?$/;      // [ "name", [
+const KEY_OPEN_MERGED_RE = /^\s*\[\s*([A-Z][A-Z0-9_]*)\s*,\s*\[\s*(?:\/\/.*)?$/;  // [ KEY, [
+const CLOSE_DOUBLE_RE = /^\s*\]\s*\]\s*,?\s*(?:\/\/.*)?$/;                         // ]] or ]],
+
 // --- Load-time formatter ---
 // Normalizes the `data = [ ... ];` table so the line-based editor can
 // reliably classify entries (KV on one line, structural openers/closers
@@ -418,9 +423,11 @@ function makeParser(tokens) {
       if (p.type === "comment") {
         // If this comment appears right after the comma between the first and
         // second item of a pair ([ KEY, // comment\n [ ... ] ]), treat it as
-        // a comment on the opener line.
+        // a comment on the opener line. Only for pair arrays where the first
+        // element is an atom (key or string), not at the root data array level.
         const nonCommentsSoFar = elements.filter(e => e.type !== "comment").length;
-        if (justConsumedComma && nonCommentsSoFar === 1 && !arrNode.commentAfterFirst) {
+        const firstNonComment = elements.find(e => e.type !== "comment");
+        if (justConsumedComma && nonCommentsSoFar === 1 && !arrNode.commentAfterFirst && firstNonComment?.type === "atom") {
           arrNode.commentAfterFirst = p.value;
           next();
           justConsumedComma = false;
@@ -558,24 +565,42 @@ function renderEntryLines(node, indent, needsComma, outLines) {
       return;
     }
 
-    // [ "name", [ ... ] ]  => element entry
+    // [ "name", [ ... ] ]  => element entry (merged brackets)
     if (a.type === "atom" && a.text.trim().startsWith('"') && b.type === "array") {
-      outLines.push(`${indent}[ ${a.text.trim()},` + (node.commentAfterFirst ? ` //${node.commentAfterFirst}` : ""));
-      renderArrayBlock(b, indent + " ".repeat(4), outLines);
-      outLines.push(`${indent}]` + (needsComma ? "," : "") + (node.trailingComment ? ` //${node.trailingComment}` : ""));
+      outLines.push(`${indent}[ ${a.text.trim()}, [` + (node.commentAfterFirst ? ` //${node.commentAfterFirst}` : ""));
+      const childIndent = indent + " ".repeat(4);
+      for (const child of b.elements) {
+        if (child.type === "comment") { outLines.push(`${childIndent}//${child.text}`); continue; }
+        renderEntryLines(child, childIndent, true, outLines);
+      }
+      outLines.push(`${indent}]]` + (needsComma ? "," : "") + (node.trailingComment ? ` //${node.trailingComment}` : ""));
       return;
     }
 
     // [ KEY, [a,b,c] ] => KV with array value (inline when safe)
     if (a.type === "atom" && b.type === "array") {
       const key = a.text.trim();
-      if (!FORMAT_STRUCTURAL_KEYS.has(key) && canInlineArray(b)) {
+
+      // Known structural keys — merge brackets
+      if (FORMAT_STRUCTURAL_KEYS.has(key)) {
+        outLines.push(`${indent}[ ${key}, [` + (node.commentAfterFirst ? ` //${node.commentAfterFirst}` : ""));
+        const childIndent = indent + " ".repeat(4);
+        for (const child of b.elements) {
+          if (child.type === "comment") { outLines.push(`${childIndent}//${child.text}`); continue; }
+          renderEntryLines(child, childIndent, true, outLines);
+        }
+        outLines.push(`${indent}]]` + (needsComma ? "," : "") + (node.trailingComment ? ` //${node.trailingComment}` : ""));
+        return;
+      }
+
+      // Unknown key with inlinable array — KV line
+      if (canInlineArray(b)) {
         const line = `${indent}[ ${key}, ${inlineArray(b)} ]` + (needsComma ? "," : "") + (node.trailingComment ? ` //${node.trailingComment}` : "");
         outLines.push(line);
         return;
       }
 
-      // Structural-ish block (BOX_COMPONENT, BOX_LID, LABEL, and unknown pair blocks)
+      // Unknown pair block — keep separate bracket lines
       outLines.push(`${indent}[ ${key},` + (node.commentAfterFirst ? ` //${node.commentAfterFirst}` : ""));
       renderArrayBlock(b, indent + " ".repeat(4), outLines);
       outLines.push(`${indent}]` + (needsComma ? "," : "") + (node.trailingComment ? ` //${node.trailingComment}` : ""));
@@ -728,12 +753,53 @@ function importScad(scadText) {
       continue;
     }
 
+    // [ "name", [  — merged element opener (element + child open on one line)
+    const elemMergedMatch = raw.match(ELEMENT_OPEN_MERGED_RE);
+    if (elemMergedMatch) {
+      const name = elemMergedMatch[1];
+      lines.push({ raw, kind: "open", depth, role: "element", label: name, mergedOpen: true });
+      stack.push({ role: "element", label: name });
+      // Inner open: infer child role from parent (element → params)
+      stack.push({ role: "params", label: "element params" });
+      depth++; // visual depth increments by 1 (merged brackets share one indent level)
+      continue;
+    }
+
     // [ "name",  — element opener
     const elemMatch = raw.match(ELEMENT_OPEN_RE);
     if (elemMatch) {
       lines.push({ raw, kind: "open", depth, role: "element", label: elemMatch[1] });
       stack.push({ role: "element", label: elemMatch[1] });
       depth++;
+      continue;
+    }
+
+    // [ KEY, [  — merged structural key opener (key + child open on one line)
+    const keyMergedMatch = raw.match(KEY_OPEN_MERGED_RE);
+    if (keyMergedMatch) {
+      const key = keyMergedMatch[1];
+      let role = null;
+      if (key === "BOX_COMPONENT") role = "component_list";
+      else if (key === "BOX_LID") role = "lid";
+      else if (key === "LABEL") role = "label";
+
+      if (role) {
+        // Determine child role
+        let childRole = "list";
+        if (role === "component_list") { childRole = "component"; }
+        else if (role === "lid") { childRole = "lid_params"; }
+        else if (role === "label") { childRole = "label_params"; }
+
+        lines.push({ raw, kind: "open", depth, role, label: key, mergedOpen: true });
+        stack.push({ role, label: key });
+        stack.push({ role: childRole, label: childRole });
+        depth++; // visual depth increments by 1
+        continue;
+      }
+      // Unknown key with merged bracket — treat as raw
+      const delta = bracketDelta(raw);
+      if (delta > 0) rawDepth = delta;
+      lines.push({ raw, kind: "raw", depth });
       continue;
     }
 
@@ -782,6 +848,15 @@ function importScad(scadText) {
       depth = Math.max(0, depth - 1);
       const popped = stack.pop();
       lines.push({ raw, kind: "close", depth, role: popped?.role || "unknown", label: popped?.label || "" });
+      continue;
+    }
+
+    // ]] or ]],  — double close (merged)
+    if (CLOSE_DOUBLE_RE.test(raw)) {
+      depth = Math.max(0, depth - 1); // visual depth decrements by 1
+      const poppedInner = stack.pop();
+      const poppedOuter = stack.pop();
+      lines.push({ raw, kind: "close", depth, role: poppedOuter?.role || "unknown", label: poppedOuter?.label || "", mergedClose: true });
       continue;
     }
 
@@ -885,12 +960,48 @@ function reimportBlock(text, baseDepth) {
       continue;
     }
 
+    // [ "name", [  — merged element opener
+    const elemMergedMatch = raw.match(ELEMENT_OPEN_MERGED_RE);
+    if (elemMergedMatch) {
+      const name = elemMergedMatch[1];
+      lines.push({ raw, kind: "open", depth, role: "element", label: name, mergedOpen: true });
+      stack.push({ role: "element", label: name });
+      stack.push({ role: "params", label: "element params" });
+      depth++; // visual depth +1
+      continue;
+    }
+
     // [ "name",
     const elemMatch = raw.match(ELEMENT_OPEN_RE);
     if (elemMatch) {
       lines.push({ raw, kind: "open", depth, role: "element", label: elemMatch[1] });
       stack.push({ role: "element", label: elemMatch[1] });
       depth++;
+      continue;
+    }
+
+    // [ KEY, [  — merged structural key opener
+    const keyMergedMatch = raw.match(KEY_OPEN_MERGED_RE);
+    if (keyMergedMatch) {
+      const key = keyMergedMatch[1];
+      let role = null;
+      if (key === "BOX_COMPONENT") role = "component_list";
+      else if (key === "BOX_LID") role = "lid";
+      else if (key === "LABEL") role = "label";
+      if (role) {
+        let childRole = "list";
+        if (role === "component_list") { childRole = "component"; }
+        else if (role === "lid") { childRole = "lid_params"; }
+        else if (role === "label") { childRole = "label_params"; }
+        lines.push({ raw, kind: "open", depth, role, label: key, mergedOpen: true });
+        stack.push({ role, label: key });
+        stack.push({ role: childRole, label: childRole });
+        depth++; // visual depth +1
+        continue;
+      }
+      const delta = bracketDeltaLocal(raw);
+      if (delta > 0) rawDepth = delta;
+      lines.push({ raw, kind: "raw", depth });
       continue;
     }
 
@@ -935,6 +1046,15 @@ function reimportBlock(text, baseDepth) {
       depth = Math.max(baseDepth, depth - 1);
       const popped = stack.pop();
       lines.push({ raw, kind: "close", depth, role: popped?.role || "unknown", label: popped?.label || "" });
+      continue;
+    }
+
+    // ]] or ]],  — double close (merged)
+    if (CLOSE_DOUBLE_RE.test(raw)) {
+      depth = Math.max(baseDepth, depth - 1); // visual depth -1
+      const poppedInner = stack.pop();
+      const poppedOuter = stack.pop();
+      lines.push({ raw, kind: "close", depth, role: poppedOuter?.role || "unknown", label: poppedOuter?.label || "", mergedClose: true });
       continue;
     }
 
