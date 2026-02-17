@@ -9,9 +9,9 @@ data = [
     [ "centered component",
         [
             [ BOX_SIZE_XYZ, [80, 80, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [30, 30, 18] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [30, 30, 18] ],
                     [ POSITION_XY, [CENTER, CENTER] ],
                 ]
             ],
@@ -20,15 +20,15 @@ data = [
     [ "explicit positioned",
         [
             [ BOX_SIZE_XYZ, [80, 80, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
                     [ POSITION_XY, [5, 5] ],
                 ]
             ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
                     [ POSITION_XY, [50, 50] ],
                 ]
             ],

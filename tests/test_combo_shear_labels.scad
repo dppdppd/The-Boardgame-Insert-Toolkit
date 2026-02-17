@@ -14,11 +14,11 @@ data = [
                     [ LID_SOLID_B, t ],
                 ]
             ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [2, 4] ],
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [20, 5, 4] ],
-                    [ CMP_SHEAR, [0, 45] ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [2, 4] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 5, 4] ],
+                    [ FTR_SHEAR, [0, 45] ],
                     [ LABEL,
                         [
                             [ LBL_TEXT, [

@@ -9,13 +9,13 @@ data = [
     [ "small cutout",
         [
             [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [46, 46, 12] ],
-                    [ CMP_CUTOUT_SIDES_4B, [t, t, t, t] ],
-                    [ CMP_CUTOUT_HEIGHT_PCT, 50 ],
-                    [ CMP_CUTOUT_DEPTH_PCT, 30 ],
-                    [ CMP_CUTOUT_WIDTH_PCT, 50 ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [46, 46, 12] ],
+                    [ FTR_CUTOUT_SIDES_4B, [t, t, t, t] ],
+                    [ FTR_CUTOUT_HEIGHT_PCT, 50 ],
+                    [ FTR_CUTOUT_DEPTH_PCT, 30 ],
+                    [ FTR_CUTOUT_WIDTH_PCT, 50 ],
                 ]
             ]
         ]
@@ -23,13 +23,13 @@ data = [
     [ "full width cutout",
         [
             [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [46, 46, 12] ],
-                    [ CMP_CUTOUT_SIDES_4B, [t, t, f, f] ],
-                    [ CMP_CUTOUT_HEIGHT_PCT, 100 ],
-                    [ CMP_CUTOUT_DEPTH_PCT, 50 ],
-                    [ CMP_CUTOUT_WIDTH_PCT, 100 ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [46, 46, 12] ],
+                    [ FTR_CUTOUT_SIDES_4B, [t, t, f, f] ],
+                    [ FTR_CUTOUT_HEIGHT_PCT, 100 ],
+                    [ FTR_CUTOUT_DEPTH_PCT, 50 ],
+                    [ FTR_CUTOUT_WIDTH_PCT, 100 ],
                 ]
             ]
         ]

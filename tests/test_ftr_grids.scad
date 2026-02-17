@@ -9,10 +9,10 @@ data = [
     [ "1x1 grid",
         [
             [ BOX_SIZE_XYZ, [30, 30, 15] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [1, 1] ],
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [26, 26, 13] ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [1, 1] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [26, 26, 13] ],
                 ]
             ]
         ]
@@ -20,10 +20,10 @@ data = [
     [ "3x2 grid",
         [
             [ BOX_SIZE_XYZ, [70, 50, 15] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [3, 2] ],
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [20, 20, 13] ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [3, 2] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 13] ],
                 ]
             ]
         ]
@@ -31,10 +31,10 @@ data = [
     [ "6x1 row",
         [
             [ BOX_SIZE_XYZ, [140, 30, 15] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [6, 1] ],
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [20, 26, 13] ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [6, 1] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 26, 13] ],
                 ]
             ]
         ]

@@ -43,7 +43,7 @@ CI runs on push/PR to master: Docker OpenSCAD builds `starter.scad` and `example
 ### OpenSCAD Library Data Flow
 1. User defines `data[]` — array of named elements with `[KEY, VALUE]` pairs
 2. `MakeAll()` validates keys, dispatches to `MakeBox()` or `MakeDividers()` per element
-3. Each box: outer shell → component subtractions → additions → cutouts → lid (CSG pipeline)
+3. Each box: outer shell → feature subtractions → additions → cutouts → lid (CSG pipeline)
 4. Output: OpenSCAD geometry exportable as STL
 
 ### Key Library Sections (boardgame_insert_toolkit_lib.4.scad, ~3,343 lines)
@@ -73,7 +73,7 @@ Key modules:
 | `preload.js` | Context bridge (`window.bitgui` API) |
 | `schema/bit.schema.json` | Single source of truth for all parameter types, defaults, enums |
 
-**Schema contexts** (hierarchy): `element` → `component`, `lid`, `label`, `divider`
+**Schema contexts** (hierarchy): `element` → `feature`, `lid`, `label`, `divider`
 
 ### GUI Dev Loop
 ```
@@ -110,8 +110,8 @@ g_isolated_print_box = "";
 data = [
     ["test name", [
         [BOX_SIZE_XYZ, [50, 50, 20]],
-        [BOX_COMPONENT, [
-            [CMP_COMPARTMENT_SIZE_XYZ, [46, 46, 18]],
+        [BOX_FEATURE, [
+            [FTR_COMPARTMENT_SIZE_XYZ, [46, 46, 18]],
         ]]
     ]],
 ];

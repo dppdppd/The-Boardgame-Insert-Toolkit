@@ -9,11 +9,11 @@ data = [
     [ "round normal",
         [
             [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ CMP_SHAPE, ROUND ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
+                    [ FTR_SHAPE, ROUND ],
                 ]
             ]
         ]
@@ -21,12 +21,12 @@ data = [
     [ "round rotated",
         [
             [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ CMP_SHAPE, ROUND ],
-                    [ CMP_SHAPE_ROTATED_B, t ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
+                    [ FTR_SHAPE, ROUND ],
+                    [ FTR_SHAPE_ROTATED_B, t ],
                 ]
             ]
         ]
@@ -34,12 +34,12 @@ data = [
     [ "round vertical",
         [
             [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ CMP_SHAPE, ROUND ],
-                    [ CMP_SHAPE_VERTICAL_B, t ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
+                    [ FTR_SHAPE, ROUND ],
+                    [ FTR_SHAPE_VERTICAL_B, t ],
                 ]
             ]
         ]

@@ -1,4 +1,4 @@
-// Test: Bottom cutouts — FTR_CUTOUT_BOTTOM_B and FTR_CUTOUT_BOTTOM_PCT
+// Test: Compartment shear — FTR_SHEAR [x_angle, y_angle]
 include <../boardgame_insert_toolkit_lib.4.scad>;
 
 g_b_print_lid = false;
@@ -6,25 +6,26 @@ g_b_print_box = true;
 g_isolated_print_box = "";
 
 data = [
-    [ "bottom cutout",
+    [ "y-shear 45",
         [
             [ BOX_SIZE_XYZ, [50, 50, 20] ],
             [ BOX_FEATURE,
                 [
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [46, 46, 18] ],
-                    [ FTR_CUTOUT_BOTTOM_B, t ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [2, 4] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 5, 4] ],
+                    [ FTR_SHEAR, [0, 45] ],
                 ]
             ]
         ]
     ],
-    [ "bottom cutout 50pct",
+    [ "x-shear 30",
         [
             [ BOX_SIZE_XYZ, [50, 50, 20] ],
             [ BOX_FEATURE,
                 [
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [46, 46, 18] ],
-                    [ FTR_CUTOUT_BOTTOM_B, t ],
-                    [ FTR_CUTOUT_BOTTOM_PCT, 50 ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [4, 2] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [5, 20, 4] ],
+                    [ FTR_SHEAR, [30, 0] ],
                 ]
             ]
         ]

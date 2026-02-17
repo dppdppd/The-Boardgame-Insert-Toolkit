@@ -9,9 +9,9 @@ data = [
     [ "tiny box",
         [
             [ BOX_SIZE_XYZ, [20, 20, 10] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [16, 16, 8] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [16, 16, 8] ],
                 ]
             ]
         ]
@@ -19,9 +19,9 @@ data = [
     [ "wide flat box",
         [
             [ BOX_SIZE_XYZ, [120, 40, 10] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [116, 36, 8] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [116, 36, 8] ],
                 ]
             ]
         ]
@@ -29,9 +29,9 @@ data = [
     [ "tall narrow box",
         [
             [ BOX_SIZE_XYZ, [30, 30, 50] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [26, 26, 48] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [26, 26, 48] ],
                 ]
             ]
         ]

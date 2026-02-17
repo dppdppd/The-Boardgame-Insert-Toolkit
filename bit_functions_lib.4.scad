@@ -5,10 +5,10 @@
 // lbl:          Optional parameter - Text to include on the bottom - defaults to blank
 // font:         Optional parameter - OpensSCAD font specifier - defaults to g_default_font
 // size:         Optional parameter - Size of label - defaults to AUTO
-function cmp_parms( dx, dy, dz, llx=0, lly=0, lbl="", font=g_default_font, size=AUTO ) =
+function ftr_parms( dx, dy, dz, llx=0, lly=0, lbl="", font=g_default_font, size=AUTO ) =
 [
-    [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
-    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
+    [FTR_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
+    [FTR_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
     [POSITION_XY,  [ llx, lly ] ],
     [LABEL, 
     [
@@ -31,15 +31,15 @@ function cmp_parms( dx, dy, dz, llx=0, lly=0, lbl="", font=g_default_font, size=
 // lbl:          Optional parameter - Text to include on the bottom - defaults to blank
 // font:         Optional parameter - OpensSCAD font specifier - defaults to g_default_font
 // size:         Optional parameter - Size of label - defaults to AuTO
-function cmp_parms_fillet( dx, dy, dz, llx=0, lly=0, radius=5, rot=t, vert=f, lbl="", font=g_default_font, size=AUTO ) =
+function ftr_parms_fillet( dx, dy, dz, llx=0, lly=0, radius=5, rot=t, vert=f, lbl="", font=g_default_font, size=AUTO ) =
 [
-    [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
-    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
+    [FTR_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
+    [FTR_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
     [POSITION_XY,  [ llx, lly ] ],
-    [CMP_SHAPE, FILLET],
-    [CMP_FILLET_RADIUS, radius],
-    [CMP_SHAPE_ROTATED_B, rot],
-    [CMP_SHAPE_VERTICAL_B, vert],
+    [FTR_SHAPE, FILLET],
+    [FTR_FILLET_RADIUS, radius],
+    [FTR_SHAPE_ROTATED_B, rot],
+    [FTR_SHAPE_VERTICAL_B, vert],
     [LABEL, 
     [
         [LBL_TEXT, lbl],
@@ -57,14 +57,14 @@ function cmp_parms_fillet( dx, dy, dz, llx=0, lly=0, radius=5, rot=t, vert=f, lb
 // (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
 // rot:          Optional parameter - Is component rotated around Z axis - defaults to t. Valid values: t, f
 // vert:         Optional parameter - Is component for vertical stack of pieces - defaults to f. Valid values: t, f
-function cmp_parms_round( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
+function ftr_parms_round( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
 [
-    [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
-    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
+    [FTR_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
+    [FTR_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
     [POSITION_XY,  [ llx, lly ] ],
-    [CMP_SHAPE, ROUND],
-    [CMP_SHAPE_ROTATED_B, rot],
-    [CMP_SHAPE_VERTICAL_B, vert],
+    [FTR_SHAPE, ROUND],
+    [FTR_SHAPE_ROTATED_B, rot],
+    [FTR_SHAPE_VERTICAL_B, vert],
 ];
 
 // This function simplifies creating a hex component
@@ -73,14 +73,14 @@ function cmp_parms_round( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
 // (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
 // rot:          Optional parameter - Is component rotated around Z axis - defaults to t. Valid values: t, f
 // vert:         Optional parameter - Is component for vertical stack of pieces - defaults to f. Valid values: t, f
-function cmp_parms_hex( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
+function ftr_parms_hex( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
 [
-    [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
-    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
+    [FTR_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
+    [FTR_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
     [POSITION_XY,  [ llx, lly ] ],
-    [CMP_SHAPE, HEX],
-    [CMP_SHAPE_ROTATED_B, rot],
-    [CMP_SHAPE_VERTICAL_B, vert],
+    [FTR_SHAPE, HEX],
+    [FTR_SHAPE_ROTATED_B, rot],
+    [FTR_SHAPE_VERTICAL_B, vert],
 ];
 
 // This function simplifies creating a hex2 component
@@ -89,14 +89,14 @@ function cmp_parms_hex( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
 // (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
 // rot:          Optional parameter - Is component rotated around Z axis - defaults to t. Valid values: t, f
 // vert:         Optional parameter - Is component for vertical stack of pieces - defaults to f. Valid values: t, f
-function cmp_parms_hex2( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
+function ftr_parms_hex2( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
 [
-    [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
-    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
+    [FTR_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
+    [FTR_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
     [POSITION_XY,  [ llx, lly ] ],
-    [CMP_SHAPE, HEX2],
-    [CMP_SHAPE_ROTATED_B, rot],
-    [CMP_SHAPE_VERTICAL_B, vert],
+    [FTR_SHAPE, HEX2],
+    [FTR_SHAPE_ROTATED_B, rot],
+    [FTR_SHAPE_VERTICAL_B, vert],
 ];
 
 // This function simplifies creating a oct component
@@ -105,14 +105,14 @@ function cmp_parms_hex2( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
 // (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
 // rot:          Optional parameter - Is component rotated around Z axis - defaults to t. Valid values: t, f
 // vert:         Optional parameter - Is component for vertical stack of pieces - defaults to f. Valid values: t, f
-function cmp_parms_oct( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
+function ftr_parms_oct( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
 [
-    [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
-    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
+    [FTR_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
+    [FTR_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
     [POSITION_XY,  [ llx, lly ] ],
-    [CMP_SHAPE, OCT],
-    [CMP_SHAPE_ROTATED_B, rot],
-    [CMP_SHAPE_VERTICAL_B, vert],
+    [FTR_SHAPE, OCT],
+    [FTR_SHAPE_ROTATED_B, rot],
+    [FTR_SHAPE_VERTICAL_B, vert],
 ];
 
 // This function simplifies creating a oct2 component
@@ -121,14 +121,14 @@ function cmp_parms_oct( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
 // (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
 // rot:          Optional parameter - Is component rotated around Z axis - defaults to t. Valid values: t, f
 // vert:         Optional parameter - Is component for vertical stack of pieces - defaults to f. Valid values: t, f
-function cmp_parms_oct2( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
+function ftr_parms_oct2( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
 [
-    [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
-    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
+    [FTR_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
+    [FTR_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
     [POSITION_XY,  [ llx, lly ] ],
-    [CMP_SHAPE, OCT2],
-    [CMP_SHAPE_ROTATED_B, rot],
-    [CMP_SHAPE_VERTICAL_B, vert],
+    [FTR_SHAPE, OCT2],
+    [FTR_SHAPE_ROTATED_B, rot],
+    [FTR_SHAPE_VERTICAL_B, vert],
 ];
 
 
@@ -136,12 +136,12 @@ function cmp_parms_oct2( dx, dy, dz, llx=0, lly=0, rot=t, vert=f ) =
 // Inputs:
 // (dx, dy, dz): Size of the component
 // (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
-function cmp_parms_disc( llx=0, lly=0, dx, dy, dz ) =
+function ftr_parms_disc( llx=0, lly=0, dx, dy, dz ) =
 [
-    [CMP_SHAPE_VERTICAL_B, t],
-    [CMP_SHAPE, ROUND],
-    [CMP_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
-    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
+    [FTR_SHAPE_VERTICAL_B, t],
+    [FTR_SHAPE, ROUND],
+    [FTR_NUM_COMPARTMENTS_XY,   [ 1, 1 ] ],
+    [FTR_COMPARTMENT_SIZE_XYZ,  [ dx, dy, dz ] ],
     [POSITION_XY,  [ llx, lly] ],
 ];
 
@@ -154,12 +154,12 @@ function cmp_parms_disc( llx=0, lly=0, dx, dy, dz ) =
 // lbl:          Optional parameter - Text to include on the bottom - defaults to blank
 // font:         Optional parameter - OpensSCAD font specifier - defaults to g_default_font
 // size:         Optional parameter - Size of label - defaults to AuTO
-function cmp_parms_hex_tile( llx=0, lly=0, d, dz, lbl="", font=g_default_font, size=AUTO ) =
+function ftr_parms_hex_tile( llx=0, lly=0, d, dz, lbl="", font=g_default_font, size=AUTO ) =
 [
-    [CMP_COMPARTMENT_SIZE_XYZ,  [ d, d * sin(60), dz ] ],
+    [FTR_COMPARTMENT_SIZE_XYZ,  [ d, d * sin(60), dz ] ],
     [POSITION_XY,  [ llx, lly ] ],
-    [CMP_SHAPE, HEX2],
-    [CMP_SHAPE_VERTICAL_B, t],
+    [FTR_SHAPE, HEX2],
+    [FTR_SHAPE_VERTICAL_B, t],
     [LABEL, 
     [
         [LBL_TEXT, lbl],

@@ -14,9 +14,9 @@ data = [
                     [ LID_PATTERN_RADIUS, 8 ],
                 ]
             ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [56, 56, 13] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [56, 56, 13] ],
                 ]
             ],
         ]
@@ -29,9 +29,9 @@ data = [
                     [ LID_PATTERN_RADIUS, 3 ],
                 ]
             ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [56, 56, 13] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [56, 56, 13] ],
                 ]
             ],
         ]

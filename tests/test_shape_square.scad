@@ -9,11 +9,11 @@ data = [
     [ "square default",
         [
             [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ CMP_SHAPE, SQUARE ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
+                    [ FTR_SHAPE, SQUARE ],
                 ]
             ]
         ]

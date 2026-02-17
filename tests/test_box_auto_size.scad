@@ -11,9 +11,9 @@ data = [
     // Expected: box = [43, 33, 21.5] (40+3, 30+3, 20+1.5)
     [ "single_auto",
         [
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [ 40, 30, 20 ] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [ 40, 30, 20 ] ],
                 ]
             ],
         ]
@@ -23,14 +23,14 @@ data = [
     // Expected: box = [43, 33, 26.5] (max(40,20)+3, max(30,20)+3, max(15,25)+1.5)
     [ "multi_centered_auto",
         [
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [ 40, 30, 15 ] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [ 40, 30, 15 ] ],
                 ]
             ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [ 20, 20, 25 ] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [ 20, 20, 25 ] ],
                 ]
             ],
         ]
@@ -41,11 +41,11 @@ data = [
     // Expected: box = [45, 50, 11.5] (42+3, 47+3, 10+1.5)
     [ "grid_auto",
         [
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [ 20, 15, 10 ] ],
-                    [ CMP_NUM_COMPARTMENTS_XY, [ 2, 3 ] ],
-                    [ CMP_PADDING_XY, [ 2, 1 ] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [ 20, 15, 10 ] ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [ 2, 3 ] ],
+                    [ FTR_PADDING_XY, [ 2, 1 ] ],
                 ]
             ],
         ]

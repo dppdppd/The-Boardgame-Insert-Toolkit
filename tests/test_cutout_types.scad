@@ -9,14 +9,14 @@ data = [
     [ "interior cutout",
         [
             [ BOX_SIZE_XYZ, [58, 58, 10] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [25, 25, 8] ],
-                    [ CMP_SHAPE, HEX ],
-                    [ CMP_SHAPE_VERTICAL_B, t ],
-                    [ CMP_CUTOUT_TYPE, INTERIOR ],
-                    [ CMP_CUTOUT_SIDES_4B, [f, f, t, t] ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [25, 25, 8] ],
+                    [ FTR_SHAPE, HEX ],
+                    [ FTR_SHAPE_VERTICAL_B, t ],
+                    [ FTR_CUTOUT_TYPE, INTERIOR ],
+                    [ FTR_CUTOUT_SIDES_4B, [f, f, t, t] ],
                 ]
             ]
         ]
@@ -24,14 +24,14 @@ data = [
     [ "exterior cutout",
         [
             [ BOX_SIZE_XYZ, [58, 58, 10] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [25, 25, 8] ],
-                    [ CMP_SHAPE, HEX ],
-                    [ CMP_SHAPE_VERTICAL_B, t ],
-                    [ CMP_CUTOUT_TYPE, EXTERIOR ],
-                    [ CMP_CUTOUT_SIDES_4B, [f, f, t, t] ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [25, 25, 8] ],
+                    [ FTR_SHAPE, HEX ],
+                    [ FTR_SHAPE_VERTICAL_B, t ],
+                    [ FTR_CUTOUT_TYPE, EXTERIOR ],
+                    [ FTR_CUTOUT_SIDES_4B, [f, f, t, t] ],
                 ]
             ]
         ]
@@ -39,14 +39,14 @@ data = [
     [ "both cutout",
         [
             [ BOX_SIZE_XYZ, [58, 58, 10] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [25, 25, 8] ],
-                    [ CMP_SHAPE, HEX ],
-                    [ CMP_SHAPE_VERTICAL_B, t ],
-                    [ CMP_CUTOUT_TYPE, BOTH ],
-                    [ CMP_CUTOUT_SIDES_4B, [f, f, t, t] ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [25, 25, 8] ],
+                    [ FTR_SHAPE, HEX ],
+                    [ FTR_SHAPE_VERTICAL_B, t ],
+                    [ FTR_CUTOUT_TYPE, BOTH ],
+                    [ FTR_CUTOUT_SIDES_4B, [f, f, t, t] ],
                 ]
             ]
         ]

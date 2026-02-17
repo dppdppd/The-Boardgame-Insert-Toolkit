@@ -58,7 +58,7 @@ data = [
     [ "Box1", // Box name, used for g_isolated_print_box
         [
             [ BOX_SIZE_XYZ, [box_urx, box_ury, box_urz] ],
-            [ BOX_COMPONENT, cmp_parms(dx =cmp_dx, dy =cmp_dy, dz =cmp_dz) ],
+            [ BOX_FEATURE, ftr_parms(dx =cmp_dx, dy =cmp_dy, dz =cmp_dz) ],
             // Another Key-Value pair to create the compartment
             [ BOX_LID, lid_parms(radius =8) ],
             // Another Key-Value pair to create the lid

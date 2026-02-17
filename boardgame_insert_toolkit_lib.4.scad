@@ -132,7 +132,7 @@ DIV_FRAME_NUM_COLUMNS = "div_frame_num_columns"; // Number of columns in frame
 // BOX PARAMETERS
 // =============================================================================
 BOX_SIZE_XYZ = "box_size";              // Box dimensions [x,y,z]
-BOX_COMPONENT = "component";            // Component to be contained in box
+BOX_FEATURE = "component";            // Component to be contained in box
 BOX_VISUALIZATION = "visualization";    // Visualization settings
 
 BOX_WALL_THICKNESS = "wall_thickness";  // Per-box wall thickness override
@@ -167,26 +167,26 @@ LID_PATTERN_THICKNESS = "lid_pattern_thickness";  // Thickness of pattern elemen
 // =============================================================================
 // COMPARTMENT PARAMETERS
 // =============================================================================
-CMP_NUM_COMPARTMENTS_XY = "num_compartments";
-CMP_COMPARTMENT_SIZE_XYZ = "compartment_size";
-CMP_SHAPE = "shape";
-CMP_SHAPE_ROTATED_B = "shape_rotated_90";
-CMP_SHAPE_VERTICAL_B = "shape_vertical";
-CMP_PADDING_XY = "padding";
-CMP_PADDING_HEIGHT_ADJUST_XY = "padding_height_adjust";
-CMP_MARGIN_FBLR = "margin_dim";
-CMP_CUTOUT_SIDES_4B = "cutout_sides";
-CMP_CUTOUT_CORNERS_4B = "cutout_corners";
-CMP_CUTOUT_HEIGHT_PCT = "cutout_height_percent";
-CMP_CUTOUT_DEPTH_PCT = "cutout_depth_percent";
-CMP_CUTOUT_WIDTH_PCT = "cutout_width_percent";
-CMP_CUTOUT_BOTTOM_B = "cutout_bottom";
-CMP_CUTOUT_BOTTOM_PCT = "cutout_bottom_percent";
-CMP_CUTOUT_TYPE = "cutout_type";
-CMP_CUTOUT_DEPTH_MAX = "cutout_depth_max"; // Maximum absolute cutout depth in mm
-CMP_SHEAR = "shear";
-CMP_FILLET_RADIUS = "fillet_radius";
-CMP_PEDESTAL_BASE_B = "push_base";
+FTR_NUM_COMPARTMENTS_XY = "num_compartments";
+FTR_COMPARTMENT_SIZE_XYZ = "compartment_size";
+FTR_SHAPE = "shape";
+FTR_SHAPE_ROTATED_B = "shape_rotated_90";
+FTR_SHAPE_VERTICAL_B = "shape_vertical";
+FTR_PADDING_XY = "padding";
+FTR_PADDING_HEIGHT_ADJUST_XY = "padding_height_adjust";
+FTR_MARGIN_FBLR = "margin_dim";
+FTR_CUTOUT_SIDES_4B = "cutout_sides";
+FTR_CUTOUT_CORNERS_4B = "cutout_corners";
+FTR_CUTOUT_HEIGHT_PCT = "cutout_height_percent";
+FTR_CUTOUT_DEPTH_PCT = "cutout_depth_percent";
+FTR_CUTOUT_WIDTH_PCT = "cutout_width_percent";
+FTR_CUTOUT_BOTTOM_B = "cutout_bottom";
+FTR_CUTOUT_BOTTOM_PCT = "cutout_bottom_percent";
+FTR_CUTOUT_TYPE = "cutout_type";
+FTR_CUTOUT_DEPTH_MAX = "cutout_depth_max"; // Maximum absolute cutout depth in mm
+FTR_SHEAR = "shear";
+FTR_FILLET_RADIUS = "fillet_radius";
+FTR_PEDESTAL_BASE_B = "push_base";
 
 // =============================================================================
 // LABEL PARAMETERS
@@ -415,10 +415,10 @@ function __is_element_enabled( lmnt ) = __value( lmnt, ENABLED_B, default = true
 // --- Auto-size helpers ---
 // Compute a single component's total size from its parameter table.
 // Mirrors the formula in MakeLayer: compartment * num + (num-1) * padding + margins
-function __cmp_auto_compartment_size( comp ) = __value( comp, CMP_COMPARTMENT_SIZE_XYZ, default = [10, 10, 10] );
-function __cmp_auto_num( comp ) = __value( comp, CMP_NUM_COMPARTMENTS_XY, default = [1, 1] );
-function __cmp_auto_padding( comp ) = __value( comp, CMP_PADDING_XY, default = [1, 1] );
-function __cmp_auto_margin( comp ) = __value( comp, CMP_MARGIN_FBLR, default = [0, 0, 0, 0] );
+function __cmp_auto_compartment_size( comp ) = __value( comp, FTR_COMPARTMENT_SIZE_XYZ, default = [10, 10, 10] );
+function __cmp_auto_num( comp ) = __value( comp, FTR_NUM_COMPARTMENTS_XY, default = [1, 1] );
+function __cmp_auto_padding( comp ) = __value( comp, FTR_PADDING_XY, default = [1, 1] );
+function __cmp_auto_margin( comp ) = __value( comp, FTR_MARGIN_FBLR, default = [0, 0, 0, 0] );
 
 function __cmp_auto_size( comp, D ) = 
     D == k_z ? __cmp_auto_compartment_size( comp )[ k_z ] :
@@ -430,12 +430,12 @@ function __cmp_auto_size( comp, D ) =
                + max( 0, __cmp_auto_num( comp )[ k_y ] - 1 ) * __cmp_auto_padding( comp )[ k_y ]
                + __cmp_auto_margin( comp )[ k_front ] + __cmp_auto_margin( comp )[ k_back ];
 
-// Scan all BOX_COMPONENT entries in box, return the max component size per dimension.
+// Scan all BOX_FEATURE entries in box, return the max component size per dimension.
 // For centered components (default), the box needs to fit the largest one.
 // For explicitly positioned components, compute position + size to find the envelope.
 function __box_max_component_extent( box, D, i = 0 ) = 
     !is_list( box ) || i >= len( box ) ? 0 :
-    ( is_list( box[i] ) && len( box[i] ) >= 2 && box[i][ k_key ] == BOX_COMPONENT ) ?
+    ( is_list( box[i] ) && len( box[i] ) >= 2 && box[i][ k_key ] == BOX_FEATURE ) ?
         let(
             comp = box[i][ k_value ],
             pos_raw = __value( comp, POSITION_XY, default = [ CENTER, CENTER ] ),
@@ -670,7 +670,7 @@ function __is_valid_key( key, valid_keys ) =
 
 // Box-level valid keys (TYPE=BOX or TYPE=SPACER)
 __VALID_BOX_KEYS = [
-    TYPE, BOX_SIZE_XYZ, BOX_COMPONENT, BOX_LID, BOX_VISUALIZATION,
+    TYPE, BOX_SIZE_XYZ, BOX_FEATURE, BOX_LID, BOX_VISUALIZATION,
     BOX_NO_LID_B, BOX_STACKABLE_B, BOX_WALL_THICKNESS,
     ENABLED_B, LABEL, ROTATION, POSITION_XY
 ];
@@ -686,17 +686,17 @@ __VALID_DIVIDER_KEYS = [
     DIV_FRAME_RADIUS, DIV_FRAME_NUM_COLUMNS
 ];
 
-// Component-level valid keys (inside BOX_COMPONENT)
+// Component-level valid keys (inside BOX_FEATURE)
 __VALID_COMPONENT_KEYS = [
-    CMP_COMPARTMENT_SIZE_XYZ, CMP_NUM_COMPARTMENTS_XY,
-    CMP_SHAPE, CMP_SHAPE_ROTATED_B, CMP_SHAPE_VERTICAL_B,
-    CMP_PADDING_XY, CMP_PADDING_HEIGHT_ADJUST_XY,
-    CMP_MARGIN_FBLR,
-    CMP_CUTOUT_SIDES_4B, CMP_CUTOUT_CORNERS_4B,
-    CMP_CUTOUT_HEIGHT_PCT, CMP_CUTOUT_DEPTH_PCT, CMP_CUTOUT_WIDTH_PCT,
-    CMP_CUTOUT_BOTTOM_B, CMP_CUTOUT_BOTTOM_PCT, CMP_CUTOUT_TYPE,
-    CMP_CUTOUT_DEPTH_MAX,
-    CMP_SHEAR, CMP_FILLET_RADIUS, CMP_PEDESTAL_BASE_B,
+    FTR_COMPARTMENT_SIZE_XYZ, FTR_NUM_COMPARTMENTS_XY,
+    FTR_SHAPE, FTR_SHAPE_ROTATED_B, FTR_SHAPE_VERTICAL_B,
+    FTR_PADDING_XY, FTR_PADDING_HEIGHT_ADJUST_XY,
+    FTR_MARGIN_FBLR,
+    FTR_CUTOUT_SIDES_4B, FTR_CUTOUT_CORNERS_4B,
+    FTR_CUTOUT_HEIGHT_PCT, FTR_CUTOUT_DEPTH_PCT, FTR_CUTOUT_WIDTH_PCT,
+    FTR_CUTOUT_BOTTOM_B, FTR_CUTOUT_BOTTOM_PCT, FTR_CUTOUT_TYPE,
+    FTR_CUTOUT_DEPTH_MAX,
+    FTR_SHEAR, FTR_FILLET_RADIUS, FTR_PEDESTAL_BASE_B,
     ENABLED_B, LABEL, ROTATION, POSITION_XY
 ];
 
@@ -784,85 +784,85 @@ module __ValidateBoxTypes( table, ctx )
 // Validate value types for component-level keys
 module __ValidateComponentTypes( table, ctx )
 {
-    v_size = __value( table, CMP_COMPARTMENT_SIZE_XYZ, default = false );
+    v_size = __value( table, FTR_COMPARTMENT_SIZE_XYZ, default = false );
     if ( v_size != false && !__all_num_list( v_size, 3 ) )
-        __TypeMsg( CMP_COMPARTMENT_SIZE_XYZ, ctx, "[x, y, z] (3 numbers)", v_size );
+        __TypeMsg( FTR_COMPARTMENT_SIZE_XYZ, ctx, "[x, y, z] (3 numbers)", v_size );
 
-    v_num = __value( table, CMP_NUM_COMPARTMENTS_XY, default = false );
+    v_num = __value( table, FTR_NUM_COMPARTMENTS_XY, default = false );
     if ( v_num != false && !__all_num_list( v_num, 2 ) )
-        __TypeMsg( CMP_NUM_COMPARTMENTS_XY, ctx, "[nx, ny] (2 numbers)", v_num );
+        __TypeMsg( FTR_NUM_COMPARTMENTS_XY, ctx, "[nx, ny] (2 numbers)", v_num );
 
-    v_shape = __value( table, CMP_SHAPE, default = false );
+    v_shape = __value( table, FTR_SHAPE, default = false );
     if ( v_shape != false && !__is_valid_key( v_shape, __VALID_SHAPES ) )
-        __TypeMsg( CMP_SHAPE, ctx, "one of SQUARE, HEX, HEX2, OCT, OCT2, ROUND, FILLET", v_shape );
+        __TypeMsg( FTR_SHAPE, ctx, "one of SQUARE, HEX, HEX2, OCT, OCT2, ROUND, FILLET", v_shape );
 
-    v_sr = __value( table, CMP_SHAPE_ROTATED_B, default = false );
-    if ( __is_valid_key( CMP_SHAPE_ROTATED_B, table ) && !is_bool( v_sr ) )
-        __TypeMsg( CMP_SHAPE_ROTATED_B, ctx, "boolean (true/false)", v_sr );
+    v_sr = __value( table, FTR_SHAPE_ROTATED_B, default = false );
+    if ( __is_valid_key( FTR_SHAPE_ROTATED_B, table ) && !is_bool( v_sr ) )
+        __TypeMsg( FTR_SHAPE_ROTATED_B, ctx, "boolean (true/false)", v_sr );
 
-    v_sv = __value( table, CMP_SHAPE_VERTICAL_B, default = false );
-    if ( __is_valid_key( CMP_SHAPE_VERTICAL_B, table ) && !is_bool( v_sv ) )
-        __TypeMsg( CMP_SHAPE_VERTICAL_B, ctx, "boolean (true/false)", v_sv );
+    v_sv = __value( table, FTR_SHAPE_VERTICAL_B, default = false );
+    if ( __is_valid_key( FTR_SHAPE_VERTICAL_B, table ) && !is_bool( v_sv ) )
+        __TypeMsg( FTR_SHAPE_VERTICAL_B, ctx, "boolean (true/false)", v_sv );
 
-    v_pad = __value( table, CMP_PADDING_XY, default = false );
+    v_pad = __value( table, FTR_PADDING_XY, default = false );
     if ( v_pad != false && !__all_num_list( v_pad, 2 ) )
-        __TypeMsg( CMP_PADDING_XY, ctx, "[px, py] (2 numbers)", v_pad );
+        __TypeMsg( FTR_PADDING_XY, ctx, "[px, py] (2 numbers)", v_pad );
 
-    v_padh = __value( table, CMP_PADDING_HEIGHT_ADJUST_XY, default = false );
+    v_padh = __value( table, FTR_PADDING_HEIGHT_ADJUST_XY, default = false );
     if ( v_padh != false && !__all_num_list( v_padh, 2 ) )
-        __TypeMsg( CMP_PADDING_HEIGHT_ADJUST_XY, ctx, "[ax, ay] (2 numbers)", v_padh );
+        __TypeMsg( FTR_PADDING_HEIGHT_ADJUST_XY, ctx, "[ax, ay] (2 numbers)", v_padh );
 
-    v_margin = __value( table, CMP_MARGIN_FBLR, default = false );
+    v_margin = __value( table, FTR_MARGIN_FBLR, default = false );
     if ( v_margin != false && !__all_num_list( v_margin, 4 ) )
-        __TypeMsg( CMP_MARGIN_FBLR, ctx, "[front, back, left, right] (4 numbers)", v_margin );
+        __TypeMsg( FTR_MARGIN_FBLR, ctx, "[front, back, left, right] (4 numbers)", v_margin );
 
-    v_cs = __value( table, CMP_CUTOUT_SIDES_4B, default = false );
+    v_cs = __value( table, FTR_CUTOUT_SIDES_4B, default = false );
     if ( v_cs != false && !__all_bool_4( v_cs ) )
-        __TypeMsg( CMP_CUTOUT_SIDES_4B, ctx, "[f,b,l,r] (4 booleans)", v_cs );
+        __TypeMsg( FTR_CUTOUT_SIDES_4B, ctx, "[f,b,l,r] (4 booleans)", v_cs );
 
-    v_cc = __value( table, CMP_CUTOUT_CORNERS_4B, default = false );
+    v_cc = __value( table, FTR_CUTOUT_CORNERS_4B, default = false );
     if ( v_cc != false && !__all_bool_4( v_cc ) )
-        __TypeMsg( CMP_CUTOUT_CORNERS_4B, ctx, "[fl,br,bl,fr] (4 booleans)", v_cc );
+        __TypeMsg( FTR_CUTOUT_CORNERS_4B, ctx, "[fl,br,bl,fr] (4 booleans)", v_cc );
 
-    v_chp = __value( table, CMP_CUTOUT_HEIGHT_PCT, default = false );
+    v_chp = __value( table, FTR_CUTOUT_HEIGHT_PCT, default = false );
     if ( v_chp != false && !is_num( v_chp ) )
-        __TypeMsg( CMP_CUTOUT_HEIGHT_PCT, ctx, "number (0-100)", v_chp );
+        __TypeMsg( FTR_CUTOUT_HEIGHT_PCT, ctx, "number (0-100)", v_chp );
 
-    v_cdp = __value( table, CMP_CUTOUT_DEPTH_PCT, default = false );
+    v_cdp = __value( table, FTR_CUTOUT_DEPTH_PCT, default = false );
     if ( v_cdp != false && !is_num( v_cdp ) )
-        __TypeMsg( CMP_CUTOUT_DEPTH_PCT, ctx, "number (0-100)", v_cdp );
+        __TypeMsg( FTR_CUTOUT_DEPTH_PCT, ctx, "number (0-100)", v_cdp );
 
-    v_cwp = __value( table, CMP_CUTOUT_WIDTH_PCT, default = false );
+    v_cwp = __value( table, FTR_CUTOUT_WIDTH_PCT, default = false );
     if ( v_cwp != false && !is_num( v_cwp ) )
-        __TypeMsg( CMP_CUTOUT_WIDTH_PCT, ctx, "number (0-100)", v_cwp );
+        __TypeMsg( FTR_CUTOUT_WIDTH_PCT, ctx, "number (0-100)", v_cwp );
 
-    v_cb = __value( table, CMP_CUTOUT_BOTTOM_B, default = false );
-    if ( __is_valid_key( CMP_CUTOUT_BOTTOM_B, table ) && !is_bool( v_cb ) )
-        __TypeMsg( CMP_CUTOUT_BOTTOM_B, ctx, "boolean (true/false)", v_cb );
+    v_cb = __value( table, FTR_CUTOUT_BOTTOM_B, default = false );
+    if ( __is_valid_key( FTR_CUTOUT_BOTTOM_B, table ) && !is_bool( v_cb ) )
+        __TypeMsg( FTR_CUTOUT_BOTTOM_B, ctx, "boolean (true/false)", v_cb );
 
-    v_cbp = __value( table, CMP_CUTOUT_BOTTOM_PCT, default = false );
+    v_cbp = __value( table, FTR_CUTOUT_BOTTOM_PCT, default = false );
     if ( v_cbp != false && !is_num( v_cbp ) )
-        __TypeMsg( CMP_CUTOUT_BOTTOM_PCT, ctx, "number (0-100)", v_cbp );
+        __TypeMsg( FTR_CUTOUT_BOTTOM_PCT, ctx, "number (0-100)", v_cbp );
 
-    v_ct = __value( table, CMP_CUTOUT_TYPE, default = false );
+    v_ct = __value( table, FTR_CUTOUT_TYPE, default = false );
     if ( v_ct != false && !__is_valid_key( v_ct, __VALID_CUTOUT_TYPES ) )
-        __TypeMsg( CMP_CUTOUT_TYPE, ctx, "one of INTERIOR, EXTERIOR, BOTH", v_ct );
+        __TypeMsg( FTR_CUTOUT_TYPE, ctx, "one of INTERIOR, EXTERIOR, BOTH", v_ct );
 
-    v_cdm = __value( table, CMP_CUTOUT_DEPTH_MAX, default = false );
+    v_cdm = __value( table, FTR_CUTOUT_DEPTH_MAX, default = false );
     if ( v_cdm != false && !is_num( v_cdm ) )
-        __TypeMsg( CMP_CUTOUT_DEPTH_MAX, ctx, "number (mm)", v_cdm );
+        __TypeMsg( FTR_CUTOUT_DEPTH_MAX, ctx, "number (mm)", v_cdm );
 
-    v_shear = __value( table, CMP_SHEAR, default = false );
+    v_shear = __value( table, FTR_SHEAR, default = false );
     if ( v_shear != false && !__all_num_list( v_shear, 2 ) )
-        __TypeMsg( CMP_SHEAR, ctx, "[sx, sy] (2 numbers)", v_shear );
+        __TypeMsg( FTR_SHEAR, ctx, "[sx, sy] (2 numbers)", v_shear );
 
-    v_fr = __value( table, CMP_FILLET_RADIUS, default = false );
+    v_fr = __value( table, FTR_FILLET_RADIUS, default = false );
     if ( v_fr != false && !is_num( v_fr ) )
-        __TypeMsg( CMP_FILLET_RADIUS, ctx, "number", v_fr );
+        __TypeMsg( FTR_FILLET_RADIUS, ctx, "number", v_fr );
 
-    v_pb = __value( table, CMP_PEDESTAL_BASE_B, default = false );
-    if ( __is_valid_key( CMP_PEDESTAL_BASE_B, table ) && !is_bool( v_pb ) )
-        __TypeMsg( CMP_PEDESTAL_BASE_B, ctx, "boolean (true/false)", v_pb );
+    v_pb = __value( table, FTR_PEDESTAL_BASE_B, default = false );
+    if ( __is_valid_key( FTR_PEDESTAL_BASE_B, table ) && !is_bool( v_pb ) )
+        __TypeMsg( FTR_PEDESTAL_BASE_B, ctx, "boolean (true/false)", v_pb );
 
     v_en = __value( table, ENABLED_B, default = false );
     if ( __is_valid_key( ENABLED_B, table ) && !is_bool( v_en ) )
@@ -1133,7 +1133,7 @@ module __ValidateElement( element, element_name )
         {
             if ( is_list( element[i] ) && len( element[i] ) >= 2 )
             {
-                if ( element[i][ k_key ] == BOX_COMPONENT )
+                if ( element[i][ k_key ] == BOX_FEATURE )
                 {
                     comp = element[i][ k_value ];
                     _comp_ctx = str( _ctx, " > component[", i, "]" );
@@ -1141,10 +1141,10 @@ module __ValidateElement( element, element_name )
                     __ValidateComponentTypes( comp, _comp_ctx );
                     __ValidateLabels( comp, _comp_ctx );
 
-                    // #3: Warn when CMP_COMPARTMENT_SIZE_XYZ is missing
-                    if ( __value( comp, CMP_COMPARTMENT_SIZE_XYZ, default = false ) == false )
+                    // #3: Warn when FTR_COMPARTMENT_SIZE_XYZ is missing
+                    if ( __value( comp, FTR_COMPARTMENT_SIZE_XYZ, default = false ) == false )
                         echo( str( "BIT: ", _comp_ctx,
-                            " has no CMP_COMPARTMENT_SIZE_XYZ — using default [10, 10, 10].",
+                            " has no FTR_COMPARTMENT_SIZE_XYZ — using default [10, 10, 10].",
                             " This is probably not what you want." ) );
                 }
             }
@@ -1376,7 +1376,7 @@ module MakeDividers( div )
  * @param box A data structure containing all the parameters for the box:
  *   - TYPE: The type of component ("box", "spacer", etc.)
  *   - BOX_SIZE_XYZ: [x,y,z] dimensions of the box
- *   - BOX_COMPONENT: Sub-components like compartments
+ *   - BOX_FEATURE: Sub-components like compartments
  *   - BOX_LID: Lid parameters
  *   - BOX_STACKABLE_B: Whether the box should be stackable
  *   - BOX_NO_LID_B: Whether the box should have no lid
@@ -1496,7 +1496,7 @@ module MakeBox( box )
                         // create a negative of the component
                         for( i = [ 0: m_num_components - 1 ] )
                         {
-                            if ( box[ i ][ k_key ] == BOX_COMPONENT )
+                            if ( box[ i ][ k_key ] == BOX_FEATURE )
                             {
                                 component = box[ i ][ k_value ];
                                 union()
@@ -1541,17 +1541,17 @@ module MakeBox( box )
         m_is_component_additions = layer == "component_additions";
         m_is_final_component_subtractions = layer == "final_component_subtractions";
 
-        m_push_base = __value( component, CMP_PEDESTAL_BASE_B, default = f );
+        m_push_base = __value( component, FTR_PEDESTAL_BASE_B, default = f );
 
-        function __compartment_size( D ) = __value( component, CMP_COMPARTMENT_SIZE_XYZ, default = [10.0, 10.0, 10.0] )[ D ];
-        function __compartments_num( D ) = __value( component, CMP_NUM_COMPARTMENTS_XY, default = [1,1] )[ D ];
+        function __compartment_size( D ) = __value( component, FTR_COMPARTMENT_SIZE_XYZ, default = [10.0, 10.0, 10.0] )[ D ];
+        function __compartments_num( D ) = __value( component, FTR_NUM_COMPARTMENTS_XY, default = [1,1] )[ D ];
 
         function __component_rotation() = __value( component, ROTATION, default = 0 );
         function __is_component_enabled() = __value( component, ENABLED_B, default = true);
 
         /////////
 
-        m_component_margin_side = __value( component, CMP_MARGIN_FBLR, default = [0,0,0,0] );
+        m_component_margin_side = __value( component, FTR_MARGIN_FBLR, default = [0,0,0,0] );
 
         function __component_margin_start_axis( D ) = D == k_x ? m_component_margin_side[ k_left ] :
                                                         D == k_y ? m_component_margin_side[ k_front ] :
@@ -1561,7 +1561,7 @@ module MakeBox( box )
                                                 D == k_y ? m_component_margin_side[ k_front ] + m_component_margin_side[ k_back ] :
                                                 0;
 
-        m_component_cutout_side = __value( component, CMP_CUTOUT_SIDES_4B, default = [false, false, false, false] );
+        m_component_cutout_side = __value( component, FTR_CUTOUT_SIDES_4B, default = [false, false, false, false] );
 
         m_component_has_side_cutouts = m_component_cutout_side[ k_front ] || 
                                         m_component_cutout_side[ k_back ] ||
@@ -1569,23 +1569,23 @@ module MakeBox( box )
                                         m_component_cutout_side[ k_right ];
 
 
-        m_component_cutout_corner = __value( component, CMP_CUTOUT_CORNERS_4B, default = [false, false, false, false] );
+        m_component_cutout_corner = __value( component, FTR_CUTOUT_CORNERS_4B, default = [false, false, false, false] );
 
-        m_component_cutout_type = __value( component, CMP_CUTOUT_TYPE, default = BOTH );
-        m_cutout_depth_max = __value( component, CMP_CUTOUT_DEPTH_MAX, default = 0 );
-        m_component_cutout_bottom = __value( component, CMP_CUTOUT_BOTTOM_B, default = false );
-        m_component_cutout_bottom_percent = __value( component, CMP_CUTOUT_BOTTOM_PCT, default = 80) / 100;
+        m_component_cutout_type = __value( component, FTR_CUTOUT_TYPE, default = BOTH );
+        m_cutout_depth_max = __value( component, FTR_CUTOUT_DEPTH_MAX, default = 0 );
+        m_component_cutout_bottom = __value( component, FTR_CUTOUT_BOTTOM_B, default = false );
+        m_component_cutout_bottom_percent = __value( component, FTR_CUTOUT_BOTTOM_PCT, default = 80) / 100;
         m_actually_cutout_the_bottom = !__component_is_fillet() && m_component_cutout_bottom && !m_push_base;
 
-        m_cutout_height_pct = __value( component, CMP_CUTOUT_HEIGHT_PCT, default = 100 ) / 100;
-        m_cutout_size_frac_aligned = __value( component, CMP_CUTOUT_DEPTH_PCT, default = 25 ) / 100;
-        m_cutout_size_frac_perpindicular = __value( component, CMP_CUTOUT_WIDTH_PCT, default = 50 ) / 100;
+        m_cutout_height_pct = __value( component, FTR_CUTOUT_HEIGHT_PCT, default = 100 ) / 100;
+        m_cutout_size_frac_aligned = __value( component, FTR_CUTOUT_DEPTH_PCT, default = 25 ) / 100;
+        m_cutout_size_frac_perpindicular = __value( component, FTR_CUTOUT_WIDTH_PCT, default = 50 ) / 100;
 
-        function __component_padding( D ) = __value( component, CMP_PADDING_XY, default = [1.0, 1.0] )[ D ];
-        function __component_padding_height_adjust( D ) = __value( component, CMP_PADDING_HEIGHT_ADJUST_XY, default = [0.0, 0.0] )[ D ];
-        function __component_shape() = __value( component, CMP_SHAPE, default = SQUARE );
-        function __component_shape_rotated_90() = __value( component, CMP_SHAPE_ROTATED_B, default = false );
-        function __component_shape_vertical() = __value( component, CMP_SHAPE_VERTICAL_B, default = false );
+        function __component_padding( D ) = __value( component, FTR_PADDING_XY, default = [1.0, 1.0] )[ D ];
+        function __component_padding_height_adjust( D ) = __value( component, FTR_PADDING_HEIGHT_ADJUST_XY, default = [0.0, 0.0] )[ D ];
+        function __component_shape() = __value( component, FTR_SHAPE, default = SQUARE );
+        function __component_shape_rotated_90() = __value( component, FTR_SHAPE_ROTATED_B, default = false );
+        function __component_shape_vertical() = __value( component, FTR_SHAPE_VERTICAL_B, default = false );
         function __component_is_hex() = __component_shape() == HEX;
         function __component_is_hex2() = __component_shape() == HEX2;
         function __component_is_oct() = __component_shape() == OCT;
@@ -1593,9 +1593,9 @@ module MakeBox( box )
 
         function __component_is_square() = __component_shape() == SQUARE;
         function __component_is_fillet() = __component_shape() == FILLET;
-        function __component_fillet_radius() = __value( component, CMP_FILLET_RADIUS, default = min( __compartment_size( k_z ), 10) );
+        function __component_fillet_radius() = __value( component, FTR_FILLET_RADIUS, default = min( __compartment_size( k_z ), 10) );
 
-        function __component_shear( D ) = __value( component, CMP_SHEAR, default = [0.0, 0.0] )[ D ];
+        function __component_shear( D ) = __value( component, FTR_SHEAR, default = [0.0, 0.0] )[ D ];
         ///////////
     
 

@@ -18,7 +18,7 @@ export interface Line {
   kind: string;
   /** Bracket nesting depth (0 = top level). */
   depth: number;
-  /** For "open"/"close": structural role (data, element, params, label, lid, component_list, component, etc.) */
+  /** For "open"/"close": structural role (data, object, params, label, lid, feature_list, feature, etc.) */
   role?: string;
   /** For "open"/"close": display label */
   label?: string;

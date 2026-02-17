@@ -9,11 +9,11 @@ data = [
     [ "hex normal",
         [
             [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ CMP_SHAPE, HEX ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
+                    [ FTR_SHAPE, HEX ],
                 ]
             ]
         ]
@@ -21,12 +21,12 @@ data = [
     [ "hex rotated",
         [
             [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ CMP_SHAPE, HEX ],
-                    [ CMP_SHAPE_ROTATED_B, t ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
+                    [ FTR_SHAPE, HEX ],
+                    [ FTR_SHAPE_ROTATED_B, t ],
                 ]
             ]
         ]
@@ -34,12 +34,12 @@ data = [
     [ "hex vertical",
         [
             [ BOX_SIZE_XYZ, [58, 58, 10] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [25, 25, 8] ],
-                    [ CMP_SHAPE, HEX ],
-                    [ CMP_SHAPE_VERTICAL_B, t ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [25, 25, 8] ],
+                    [ FTR_SHAPE, HEX ],
+                    [ FTR_SHAPE_VERTICAL_B, t ],
                 ]
             ]
         ]

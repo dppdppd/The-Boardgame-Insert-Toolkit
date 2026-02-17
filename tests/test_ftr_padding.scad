@@ -1,4 +1,4 @@
-// Test: OCT compartment shape — normal, rotated, vertical
+// Test: Compartment padding — FTR_PADDING_XY and FTR_PADDING_HEIGHT_ADJUST_XY
 include <../boardgame_insert_toolkit_lib.4.scad>;
 
 g_b_print_lid = false;
@@ -6,40 +6,39 @@ g_b_print_box = true;
 g_isolated_print_box = "";
 
 data = [
-    [ "oct normal",
+    [ "large padding",
         [
-            [ BOX_SIZE_XYZ, [50, 50, 20] ],
+            [ BOX_SIZE_XYZ, [80, 80, 20] ],
             [ BOX_FEATURE,
                 [
                     [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
                     [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ FTR_SHAPE, OCT ],
+                    [ FTR_PADDING_XY, [10, 10] ],
                 ]
             ]
         ]
     ],
-    [ "oct rotated",
+    [ "asymmetric padding",
         [
-            [ BOX_SIZE_XYZ, [50, 50, 20] ],
+            [ BOX_SIZE_XYZ, [80, 80, 20] ],
             [ BOX_FEATURE,
                 [
                     [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
                     [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ FTR_SHAPE, OCT ],
-                    [ FTR_SHAPE_ROTATED_B, t ],
+                    [ FTR_PADDING_XY, [15, 5] ],
                 ]
             ]
         ]
     ],
-    [ "oct vertical",
+    [ "padding height adjust",
         [
-            [ BOX_SIZE_XYZ, [50, 50, 20] ],
+            [ BOX_SIZE_XYZ, [80, 80, 20] ],
             [ BOX_FEATURE,
                 [
                     [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
                     [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ FTR_SHAPE, OCT ],
-                    [ FTR_SHAPE_VERTICAL_B, t ],
+                    [ FTR_PADDING_XY, [10, 10] ],
+                    [ FTR_PADDING_HEIGHT_ADJUST_XY, [-5, -10] ],
                 ]
             ]
         ]

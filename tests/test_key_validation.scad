@@ -19,10 +19,10 @@ data = [
             [ "boz_size",   [ 60, 40, 20 ] ],    // typo: boz_size
             [ "compnent",   [] ],                 // typo: compnent (should be component)
 
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [ 25, 35, 18 ] ],
-                    [ CMP_NUM_COMPARTMENTS_XY, [ 2, 1 ] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [ 25, 35, 18 ] ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [ 2, 1 ] ],
 
                     // Intentional component-level typo
                     [ "cmp_shapee", "square" ],   // typo: cmp_shapee
@@ -56,13 +56,13 @@ data = [
         [
             [ BOX_SIZE_XYZ, [ 60, 40, 20 ] ],
 
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [ 56, 36, 18 ] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [ 56, 36, 18 ] ],
                     // Wrong type: string where enum expected (caught as invalid shape)
-                    [ CMP_SHAPE, "triangle" ],       // not a valid shape enum
+                    [ FTR_SHAPE, "triangle" ],       // not a valid shape enum
                     // Wrong type: string where bool expected
-                    [ CMP_PEDESTAL_BASE_B, "yes" ],  // should be bool
+                    [ FTR_PEDESTAL_BASE_B, "yes" ],  // should be bool
                 ]
             ],
 
@@ -71,14 +71,14 @@ data = [
         ]
     ],
 
-    // --- #3: Missing CMP_COMPARTMENT_SIZE_XYZ ---
+    // --- #3: Missing FTR_COMPARTMENT_SIZE_XYZ ---
     [ "missing_cmp_size",
         [
             [ BOX_SIZE_XYZ, [ 40, 40, 15 ] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    // no CMP_COMPARTMENT_SIZE_XYZ — should warn about 10x10x10 default
-                    [ CMP_NUM_COMPARTMENTS_XY, [ 2, 2 ] ],
+                    // no FTR_COMPARTMENT_SIZE_XYZ — should warn about 10x10x10 default
+                    [ FTR_NUM_COMPARTMENTS_XY, [ 2, 2 ] ],
                 ]
             ],
         ]
@@ -88,9 +88,9 @@ data = [
     [ "lid_too_tall",
         [
             [ BOX_SIZE_XYZ, [ 40, 40, 6 ] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [ 36, 36, 4 ] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [ 36, 36, 4 ] ],
                 ]
             ],
             [ BOX_LID,

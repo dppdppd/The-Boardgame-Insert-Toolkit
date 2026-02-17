@@ -1,4 +1,4 @@
-// Test: Compartment margins — CMP_MARGIN_FBLR [front, back, left, right]
+// Test: Compartment margins — FTR_MARGIN_FBLR [front, back, left, right]
 include <../boardgame_insert_toolkit_lib.4.scad>;
 
 g_b_print_lid = false;
@@ -9,10 +9,10 @@ data = [
     [ "uniform margin",
         [
             [ BOX_SIZE_XYZ, [60, 60, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [30, 30, 18] ],
-                    [ CMP_MARGIN_FBLR, [10, 10, 10, 10] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [30, 30, 18] ],
+                    [ FTR_MARGIN_FBLR, [10, 10, 10, 10] ],
                 ]
             ]
         ]
@@ -20,10 +20,10 @@ data = [
     [ "front-heavy margin",
         [
             [ BOX_SIZE_XYZ, [60, 80, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [50, 30, 18] ],
-                    [ CMP_MARGIN_FBLR, [30, 0, 0, 0] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [50, 30, 18] ],
+                    [ FTR_MARGIN_FBLR, [30, 0, 0, 0] ],
                 ]
             ]
         ]

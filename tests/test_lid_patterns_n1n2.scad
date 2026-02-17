@@ -9,9 +9,9 @@ data = [
     [ "triangles n1=3 n2=3",
         [
             [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [47, 47, 18] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [47, 47, 18] ],
                 ]
             ],
             [ BOX_LID,
@@ -30,9 +30,9 @@ data = [
     [ "octagons n1=8 n2=8",
         [
             [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [47, 47, 18] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [47, 47, 18] ],
                 ]
             ],
             [ BOX_LID,
@@ -51,9 +51,9 @@ data = [
     [ "hex-tri n1=6 n2=3",
         [
             [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [47, 47, 18] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [47, 47, 18] ],
                 ]
             ],
             [ BOX_LID,

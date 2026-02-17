@@ -9,11 +9,11 @@ data = [
     [ "compartment labels",
         [
             [ BOX_SIZE_XYZ, [60, 60, 15] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [20, 20, 5] ],
-                    [ CMP_PADDING_XY, [5, 5] ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 5] ],
+                    [ FTR_PADDING_XY, [5, 5] ],
                     [ LABEL,
                         [
                             [ LBL_TEXT, [

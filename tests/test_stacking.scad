@@ -15,9 +15,9 @@ data = [
                     [ LID_SOLID_B, t ],
                 ]
             ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [46, 46, 13] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [46, 46, 13] ],
                 ]
             ],
         ]

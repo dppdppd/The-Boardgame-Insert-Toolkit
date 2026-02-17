@@ -17,8 +17,8 @@ This OpenSCAD library was designed for quick design and iteration on board game 
 **v4** is a streamlined release focused on maintainability:
 - **40% smaller codebase** (2,857 lines, down from 4,456 in v3)
 - **Key validation**: typos and unrecognized keys in your data produce helpful `BIT:` messages in the console (set `g_b_validate_keys = false;` to suppress)
-- Removed hexagonal box type (`HEXBOX`) — hex-shaped *compartments* (`CMP_SHAPE` = `HEX`/`HEX2`) still work in regular boxes
-- Bug fixes: asymmetric cutouts with `CMP_CUTOUT_HEIGHT_PCT` (#65), label clipping with shear (#69)
+- Removed hexagonal box type (`HEXBOX`) — hex-shaped *compartments* (`FTR_SHAPE` = `HEX`/`HEX2`) still work in regular boxes
+- Bug fixes: asymmetric cutouts with `FTR_CUTOUT_HEIGHT_PCT` (#65), label clipping with shear (#69)
 - 14 magic numbers replaced with named constants
 - Code documentation: TOC, section headers, module docs
 
@@ -80,10 +80,10 @@ Everything in BIT is defined using key-value pairs, i.e. [ _key_ , _value_ ]. So
     [   "example 1: minimal",                            // our box. name is just for code organization.
         [
             [ BOX_SIZE_XYZ, [46.5, 46.5, 15.0] ],        // one kv pair specifying the x, y, and z of our box exterior.
-            [ BOX_COMPONENT,                             // our first component.
+            [ BOX_FEATURE,                             // our first component.
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [4, 4] ],               // it's a grid of 4 x 4
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [ 10, 10, 13.0] ],   // each compartment is 10mm x 10mm x 13mm
+                    [ FTR_NUM_COMPARTMENTS_XY, [4, 4] ],               // it's a grid of 4 x 4
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [ 10, 10, 13.0] ],   // each compartment is 10mm x 10mm x 13mm
                 ]
             ]
         ]
@@ -94,7 +94,7 @@ That made this:
 ![example1](images/example1.png)
 
 ### Some Explanation
-The first key-value pair is [ "example 0: minimal", _one_big_array_of_keyvalues_ ], and its value is an array of all of the details of the box. One of those key-pairs is `BOX_COMPONENT` which defines the one type of compartment we want. It's key-values all the way down. See https://www.thingiverse.com/thing:3435429 for an example of lots of compartments of lots of components in lots of boxes.
+The first key-value pair is [ "example 0: minimal", _one_big_array_of_keyvalues_ ], and its value is an array of all of the details of the box. One of those key-pairs is `BOX_FEATURE` which defines the one type of compartment we want. It's key-values all the way down. See https://www.thingiverse.com/thing:3435429 for an example of lots of compartments of lots of components in lots of boxes.
 
 
 Here is an example of some compartments designed to hold cards, with holes to get our fingers in on the side. Many of these parameters are just the default values and are not necessary, but are included for easy modification:
@@ -132,17 +132,17 @@ Here is an example of some compartments designed to hold cards, with holes to ge
                 ],        
             ],
 
-            [   BOX_COMPONENT,
+            [   BOX_FEATURE,
                 [
-                    [CMP_COMPARTMENT_SIZE_XYZ,              [ 22, 60.0, 20.0] ],
-                    [CMP_NUM_COMPARTMENTS_XY,               [2,2] ],
-                    [CMP_SHAPE,                             SQUARE],
-                    [CMP_SHAPE_ROTATED_B,                   f],
-                    [CMP_SHAPE_VERTICAL_B,                  f],
-                    [CMP_PADDING_XY,                        [10,12]],
-                    [CMP_PADDING_HEIGHT_ADJUST_XY,          [-5, 0] ],
-                    [CMP_MARGIN_FBLR,                       [0,0,0,0]],
-                    [CMP_CUTOUT_SIDES_4B,                   [f,f,f,t]],
+                    [FTR_COMPARTMENT_SIZE_XYZ,              [ 22, 60.0, 20.0] ],
+                    [FTR_NUM_COMPARTMENTS_XY,               [2,2] ],
+                    [FTR_SHAPE,                             SQUARE],
+                    [FTR_SHAPE_ROTATED_B,                   f],
+                    [FTR_SHAPE_VERTICAL_B,                  f],
+                    [FTR_PADDING_XY,                        [10,12]],
+                    [FTR_PADDING_HEIGHT_ADJUST_XY,          [-5, 0] ],
+                    [FTR_MARGIN_FBLR,                       [0,0,0,0]],
+                    [FTR_CUTOUT_SIDES_4B,                   [f,f,f,t]],
                     [ROTATION,                              5 ],
                     [POSITION_XY,                           [CENTER,CENTER]],
                     [LABEL,               
@@ -163,10 +163,10 @@ Here is an example of some compartments designed to hold cards, with holes to ge
                 ]
             ],
 
-           [ BOX_COMPONENT,
+           [ BOX_FEATURE,
                 [
-                    [CMP_NUM_COMPARTMENTS_XY,       [1,1]],
-                    [CMP_COMPARTMENT_SIZE_XYZ,      [ 60.0, 10.0, 5.0] ],
+                    [FTR_NUM_COMPARTMENTS_XY,       [1,1]],
+                    [FTR_COMPARTMENT_SIZE_XYZ,      [ 60.0, 10.0, 5.0] ],
                     [POSITION_XY,                   [CENTER,165]],
                 ]
             ],                              
@@ -180,7 +180,7 @@ And this is the result:
 ![example2](images/example2.png)
 
 ### Hexagonal Boxes (v3 only)
-> **Note:** Hexagonal *box types* (`TYPE = HEXBOX`) were removed in v4. Use v3 if you need hex boxes. Hex-shaped *compartments* (`CMP_SHAPE = HEX` or `HEX2`) still work in v4 regular boxes.
+> **Note:** Hexagonal *box types* (`TYPE = HEXBOX`) were removed in v4. Use v3 if you need hex boxes. Hex-shaped *compartments* (`FTR_SHAPE = HEX` or `HEX2`) still work in v4 regular boxes.
 
 As of v3.00, there is the ability to create hexagonal boxes as an efficient way to store hexagonal tiles (like those in Catan). Here is the code to produce a box to hold hexagonal tiles:
 
@@ -191,7 +191,7 @@ As of v3.00, there is the ability to create hexagonal boxes as an efficient way 
         [ TYPE, HEXBOX ],
         [ HEXBOX_SIZE_DZ,    [ 100, 40 ] ], 
         [ BOX_STACKABLE_B, t],
-        [ BOX_COMPONENT, cmp_parms_hex_tile( dx=100, dz=38, lbl="CATAN LAND", font="Venturis ADF Cd:style=Bold" ) ], 
+        [ BOX_COMPONENT, cmp_parms_hex_tile( dx=100, dz=38, lbl="CATAN LAND", font="Venturis ADF Cd:style=Bold" ) ],
  
         [ BOX_LID, lid_parms( radius=12, lbl="CATAN", font="Venturis ADF Cd:style=Bold", size=22 ) ], 
     ]    
@@ -211,7 +211,7 @@ This also introduces __bit_functions_lib.scad__, which is intended to simplify t
 // lbl:          Optional parameter - Text to include on the bottom - defaults to blank
 // font:         Optional parameter - OpensSCAD font specifier - defaults to g_default_font
 // size:         Optional parameter - Size of label - defaults to AUTO
-function cmp_parms_hex_tile( llx=0, lly=0, dx, dz, lbl="", font=g_default_font, size=AUTO ) = 
+function cmp_parms_hex_tile( llx=0, lly=0, dx, dz, lbl="", font=g_default_font, size=AUTO ) =
 [
     [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dx * sin(60), dz ] ],
     [POSITION_XY,  [ llx, lly ] ],
@@ -252,9 +252,9 @@ As of v2.10, one can now tweak the lid pattern parameters. The default is still 
     [   "lid pattern 1",
         [
             [ BOX_SIZE_XYZ,             [50.0, 50.0, 20.0] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 47, 47, 18.0] ],
+                    [FTR_COMPARTMENT_SIZE_XYZ,  [ 47, 47, 18.0] ],
                 ]
             ],  
 
@@ -278,9 +278,9 @@ As of v2.10, one can now tweak the lid pattern parameters. The default is still 
     [   "lid pattern 2",
         [
             [ BOX_SIZE_XYZ,             [50.0, 50.0, 20.0] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 47, 47, 18.0] ],
+                    [FTR_COMPARTMENT_SIZE_XYZ,  [ 47, 47, 18.0] ],
                 ]
             ],  
 
@@ -303,9 +303,9 @@ As of v2.10, one can now tweak the lid pattern parameters. The default is still 
     [   "lid pattern 3",
         [
             [ BOX_SIZE_XYZ,             [50.0, 50.0, 20.0] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [CMP_COMPARTMENT_SIZE_XYZ,  [ 47, 47, 18.0] ],
+                    [FTR_COMPARTMENT_SIZE_XYZ,  [ 47, 47, 18.0] ],
                 ]
             ],  
 
@@ -345,7 +345,7 @@ e.g. `[ BOX_SIZE_XYZ, [ 140, 250, 80 ] ]`
 Value is expected to be an array of 2 numbers, and determines the __interior__ dimension of the box as diameter, and the __exterior__ dimension as height. Removed in v4.  
 e.g., `[ HEXBOX_SIZE_DZ,    [ 100, 40 ] ],`
 
-#### `BOX_COMPONENT`
+#### `BOX_FEATURE`
 Value is expected to be an array of components key-value pairs. Box can have as many of these as desired.
 
 #### `BOX_LID`
@@ -432,15 +432,15 @@ e.g. `[ LID_CUTOUT_SIDES_4B, [ t, t, f, f ] ]`
 
 ## Compartment keys
 
-#### `CMP_NUM_COMPARTMENTS_XY`
+#### `FTR_NUM_COMPARTMENTS_XY`
 Value is expected to be an array of 2 numbers, and determines how many compartments this component will have in the width and depth direction.  
-e.g. `[ CMP_NUM_COMPARTMENTS_XY, [ 4, 6 ] ]`
+e.g. `[ FTR_NUM_COMPARTMENTS_XY, [ 4, 6 ] ]`
 
-#### `CMP_COMPARTMENT_SIZE_XYZ`
+#### `FTR_COMPARTMENT_SIZE_XYZ`
 Value is expected to be an array of 3 numbers, and determines the interior dimensions of each compartment within the component.  
-e.g. `[ CMP_COMPARTMENT_SIZE_XYZ, [ 10, 20, 5 ] ]`
+e.g. `[ FTR_COMPARTMENT_SIZE_XYZ, [ 10, 20, 5 ] ]`
 
-#### `CMP_SHAPE`
+#### `FTR_SHAPE`
 Value is expected to be one of the following:
 - `SQUARE`   default right angled compartment
 - `FILLET`   a square compartment with rounded bottom corners on opposite edges
@@ -450,75 +450,75 @@ Value is expected to be one of the following:
 - `OCT`      an 8-sided compartment (flat side down)
 - `OCT2`     an 8-sided compartment that is rotated 22.5 degrees (corner down)
 
-e.g. `[ CMP_SHAPE, HEX2 ]`. The following box shows all the different components. The front row has the components in the order listed above. The second row shows the same, but rotated (`[CMP_SHAPE_ROTATED_B]` below). The third row has the same order for vertical stacks of pieces (`[CMP_SHAPE_VERTICAL_B]` below).
+e.g. `[ FTR_SHAPE, HEX2 ]`. The following box shows all the different components. The front row has the components in the order listed above. The second row shows the same, but rotated (`[FTR_SHAPE_ROTATED_B]` below). The third row has the same order for vertical stacks of pieces (`[FTR_SHAPE_VERTICAL_B]` below).
 
 ![All component types](images/components.png)
 
-#### `CMP_SHAPE_ROTATED_B`
+#### `FTR_SHAPE_ROTATED_B`
 Value is expected to be a bool, and determines whether the shape is rotated along the Z axis. That is, whether it goes back and forth or side to side.
 
-#### `CMP_SHAPE_VERTICAL_B`
+#### `FTR_SHAPE_VERTICAL_B`
 Value is expected to be a bool, and determines whether the shape is rotated for vertical stacks of pieces.
 
-#### `CMP_FILLET_RADIUS`
+#### `FTR_FILLET_RADIUS`
 Value is expected to be a number, and determines the radius of the fillet, if shape is fillet.
 
-#### `CMP_PEDESTAL_BASE_B`
+#### `FTR_PEDESTAL_BASE_B`
 Value is expected to be a bool, and determines whether the base of the compartment is a pedestal. This allows for cards or tiles to be extracted by pushing down on one of the sides. Ideal for short stacks and for compartments that are interior and where finger cutouts aren't possible or ideal. 
 
-#### `CMP_PADDING_XY`
+#### `FTR_PADDING_XY`
 Value is expected to be an array of 2 numbers, and determines how far apart the compartments in a component array are, in the width and depth direction.  
-e.g. `[ CMP_PADDING_XY, [ 2.5, 1.3 ] ]`
+e.g. `[ FTR_PADDING_XY, [ 2.5, 1.3 ] ]`
 
-#### `CMP_PADDING_HEIGHT_ADJUST_XY`
+#### `FTR_PADDING_HEIGHT_ADJUST_XY`
 Value is expected to be an array of 2 numbers, and determines how much to modify the height of the x and y padding between compartments. These should typically be negative values.  
-e.g. `[ CMP_PADDING_HEIGHT_ADJUST_XY, [ -3, 0 ] ]`
+e.g. `[ FTR_PADDING_HEIGHT_ADJUST_XY, [ -3, 0 ] ]`
 
-#### `CMP_MARGIN_FBLR`
+#### `FTR_MARGIN_FBLR`
 Value is expected to be an array of 4 floats, and determines the front, back, left, and right margins, respectively.  
-e.g. `[ CMP_MARGIN_FBLR, [ 1, 10, 0, 20 ] ]`
+e.g. `[ FTR_MARGIN_FBLR, [ 1, 10, 0, 20 ] ]`
 
-#### `CMP_CUTOUT_SIDES_4B`
+#### `FTR_CUTOUT_SIDES_4B`
 Value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the compartments on the sides. The values represent [front, back, left, right ].  
-e.g. `[ CMP_CUTOUT_SIDES_4B, [ t, t, f, f ] ]`
+e.g. `[ FTR_CUTOUT_SIDES_4B, [ t, t, f, f ] ]`
 
-#### `CMP_CUTOUT_HEIGHT_PCT`
+#### `FTR_CUTOUT_HEIGHT_PCT`
 Value is expected to be an float between 0 and 100, and determines what percent of the box height is removed for finger cutouts, starting from the top.  The default is 100. 
-e.g. `[ CMP_CUTOUT_HEIGHT_PCT, 100 ]`
+e.g. `[ FTR_CUTOUT_HEIGHT_PCT, 100 ]`
 
-#### `CMP_CUTOUT_DEPTH_PCT`
+#### `FTR_CUTOUT_DEPTH_PCT`
 Value is expected to be an float between 0 and 100, and determines what percent of the box depth is removed for finger cutouts, when the cutout goes into the base of the box.  The default is 25. 
-e.g. `[ CMP_CUTOUT_DEPTH_PCT, 25 ]`
+e.g. `[ FTR_CUTOUT_DEPTH_PCT, 25 ]`
 
-#### `CMP_CUTOUT_WIDTH_PCT`
+#### `FTR_CUTOUT_WIDTH_PCT`
 Value is expected to be an float between 0 and 100, and determines what percent of the box width is removed for finger cutouts.  The default is 50. 
-e.g. `[ CMP_CUTOUT_WIDTH_PCT, 25 ]`
+e.g. `[ FTR_CUTOUT_WIDTH_PCT, 25 ]`
 
-#### `CMP_CUTOUT_TYPE`
+#### `FTR_CUTOUT_TYPE`
 Value is expected to be one of the following keywords: BOTH, INTERIOR, or EXTERIOR, and determines whether where on the component the cutouts are applied.
-e.g. `[ CMP_CUTOUT_TYPE, INTERIOR ]`
+e.g. `[ FTR_CUTOUT_TYPE, INTERIOR ]`
 
-#### `CMP_CUTOUT_BOTTOM_B`
-Value is expected to be a bool and determines whether the bottom of the compartment is cut out. Note that this is ignored if CMP_PEDESTAL_BASE_B is true or if CMP_SHAPE is set to FILLET.
-e.g. `[ CMP_CUTOUT_BOTTOM, true ]`
+#### `FTR_CUTOUT_BOTTOM_B`
+Value is expected to be a bool and determines whether the bottom of the compartment is cut out. Note that this is ignored if FTR_PEDESTAL_BASE_B is true or if FTR_SHAPE is set to FILLET.
+e.g. `[ FTR_CUTOUT_BOTTOM, true ]`
 
-#### `CMP_CUTOUT_BOTTOM_PCT` 
+#### `FTR_CUTOUT_BOTTOM_PCT` 
 Value is expected to be an float between 0 and 100, and determines what percent of the box bottom is removed for bottom cutouts.  The default is 80. 
-e.g. `[ CMP_CUTOUT_BOTTOM_PCT, 90 ]`
+e.g. `[ FTR_CUTOUT_BOTTOM_PCT, 90 ]`
 
-#### `CMP_CUTOUT_CORNERS_4B`
+#### `FTR_CUTOUT_CORNERS_4B`
 Value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the compartments on the corners. The values represent [front-left, back-right, back-left, front-right ].  
-e.g. `[ CMP_CUTOUT_CORNERS_4B, [ t, t, f, f ] ]`
+e.g. `[ FTR_CUTOUT_CORNERS_4B, [ t, t, f, f ] ]`
 
-#### `CMP_SHEAR`
+#### `FTR_SHEAR`
 Value is expected to be an array of 2 numbers, and determines the degrees to which the component should be sheared in the direction of width and depth. The shearing pivots around the center of the component. 
-e.g. `[ CMP_SHEAR, [ 45, 0 ] ]`
+e.g. `[ FTR_SHEAR, [ 45, 0 ] ]`
 
 ## Label keys
 Key-pairs that are expected in a LABEL container.
 
 #### `LABEL`
-Value is expected to be an array of key-values that define a label. Labels can be defined at the box level for box labels, inside BOX_LID arrays for labels that will appear on the lid, and inside BOX_COMPONENT arrays for labels that will appear on the compartments. Each supports as many labels as desired.
+Value is expected to be an array of key-values that define a label. Labels can be defined at the box level for box labels, inside BOX_LID arrays for labels that will appear on the lid, and inside BOX_FEATURE arrays for labels that will appear on the compartments. Each supports as many labels as desired.
 
 #### `LBL_TEXT`
 Value is expected to either be a string, or an array of strings matching the structure of the compartments. A single string will label every compartment with that string while an array will label each compartment with its respective string.  

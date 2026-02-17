@@ -9,9 +9,9 @@ data = [
     [ "hidden box",
         [
             [ BOX_SIZE_XYZ, [40, 40, 15] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [36, 36, 13] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [36, 36, 13] ],
                 ]
             ]
         ]
@@ -19,10 +19,10 @@ data = [
     [ "target box",
         [
             [ BOX_SIZE_XYZ, [60, 60, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_NUM_COMPARTMENTS_XY, [3, 3] ],
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [16, 16, 18] ],
+                    [ FTR_NUM_COMPARTMENTS_XY, [3, 3] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [16, 16, 18] ],
                 ]
             ]
         ]

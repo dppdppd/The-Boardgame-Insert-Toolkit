@@ -15,9 +15,9 @@ data = [
                     [ LID_CUTOUT_SIDES_4B, [t, t, f, f] ],
                 ]
             ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [56, 56, 18] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [56, 56, 18] ],
                 ]
             ],
         ]

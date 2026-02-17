@@ -289,15 +289,15 @@
   // Map role → schema context for virtual defaults
   const ROLE_TO_CONTEXT: Record<string, string> = {
     params: "element",
-    component: "component",
+    feature: "feature",
     label_params: "label",
     lid_params: "lid",
   };
 
   // For merged closes, map outer role → inner role
   const MERGED_INNER_ROLE: Record<string, string> = {
-    element: "params",
-    component_list: "component",
+    object: "params",
+    feature_list: "feature",
     label: "label_params",
     lid: "lid_params",
   };
@@ -417,10 +417,10 @@
   function structLabel(line: Line): { text: string; inferred: boolean } {
     if (line.role === "data") return { text: "data", inferred: false };
     if (line.role === "data_list") return { text: "data list", inferred: true };
-    if (line.role === "element") return { text: `element "${line.label}"`, inferred: false };
-    if (line.role === "params") return { text: "element params", inferred: true };
-    if (line.role === "component_list") return { text: line.label || "BOX_COMPONENT", inferred: false };
-    if (line.role === "component") return { text: "component list", inferred: true };
+    if (line.role === "object") return { text: `object "${line.label}"`, inferred: false };
+    if (line.role === "params") return { text: "object params", inferred: true };
+    if (line.role === "feature_list") return { text: line.label || "BOX_FEATURE", inferred: false };
+    if (line.role === "feature") return { text: "feature list", inferred: true };
     if (line.role === "label") return { text: line.label || "LABEL", inferred: false };
     if (line.role === "label_params") return { text: "label params", inferred: true };
     if (line.role === "lid") return { text: line.label || "BOX_LID", inferred: false };
@@ -441,17 +441,17 @@
     insertLine(afterIndex + 1, { raw: indent, kind: "raw", depth });
   }
 
-  /** Insert a full element skeleton before a close bracket at `closeIndex`. */
-  function addElement(closeIndex: number, depth: number) {
+  /** Insert a full object skeleton before a close bracket at `closeIndex`. */
+  function addObject(closeIndex: number, depth: number) {
     const d = depth + 1; // inside the data array
     const ind = (n: number) => "    ".repeat(n);
-    const count = $project.lines.filter(l => l.kind === "open" && l.role === "element").length;
+    const count = $project.lines.filter(l => l.kind === "open" && l.role === "object").length;
     const name = `box ${count + 1}`;
     const lines: Line[] = [
-      { raw: `${ind(d)}[ "${name}", [`, kind: "open", depth: d, role: "element", label: name, mergedOpen: true },
+      { raw: `${ind(d)}[ "${name}", [`, kind: "open", depth: d, role: "object", label: name, mergedOpen: true },
       { raw: `${ind(d+1)}[ TYPE, BOX ],`, kind: "kv", depth: d + 1, kvKey: "TYPE", kvValue: "BOX" },
       { raw: `${ind(d+1)}[ BOX_SIZE_XYZ, [50, 50, 20] ],`, kind: "kv", depth: d + 1, kvKey: "BOX_SIZE_XYZ", kvValue: [50, 50, 20] },
-      { raw: `${ind(d)}]],`, kind: "close", depth: d, role: "element", label: name, mergedClose: true },
+      { raw: `${ind(d)}]],`, kind: "close", depth: d, role: "object", label: name, mergedClose: true },
     ];
     // Insert all lines before the close bracket
     project.update((p) => {
@@ -460,15 +460,15 @@
     });
   }
 
-  /** Insert a component skeleton inside a component_list before `closeIndex`. */
+  /** Insert a feature skeleton inside a feature_list before `closeIndex`. */
   function addComponent(closeIndex: number, depth: number) {
     const d = depth + 1;
     const ind = (n: number) => "    ".repeat(n);
     const name = "comp";
     const lines: Line[] = [
-      { raw: `${ind(d)}[ "${name}", [`, kind: "open", depth: d, role: "element", label: name, mergedOpen: true },
-      { raw: `${ind(d+1)}[ CMP_COMPARTMENT_SIZE_XYZ, [40, 40, 15] ],`, kind: "kv", depth: d + 1, kvKey: "CMP_COMPARTMENT_SIZE_XYZ", kvValue: [40, 40, 15] },
-      { raw: `${ind(d)}]],`, kind: "close", depth: d, role: "element", label: name, mergedClose: true },
+      { raw: `${ind(d)}[ "${name}", [`, kind: "open", depth: d, role: "object", label: name, mergedOpen: true },
+      { raw: `${ind(d+1)}[ FTR_COMPARTMENT_SIZE_XYZ, [40, 40, 15] ],`, kind: "kv", depth: d + 1, kvKey: "FTR_COMPARTMENT_SIZE_XYZ", kvValue: [40, 40, 15] },
+      { raw: `${ind(d)}]],`, kind: "close", depth: d, role: "object", label: name, mergedClose: true },
     ];
     project.update((p) => {
       p.lines.splice(closeIndex, 0, ...lines);
@@ -476,16 +476,14 @@
     });
   }
 
-  /** Insert a BOX_COMPONENT block before `closeIndex` (inside a params close). */
-  function addComponentList(closeIndex: number, depth: number) {
+  /** Insert a BOX_FEATURE block before `closeIndex` (inside an element params close). */
+  function addFeatureList(closeIndex: number, depth: number) {
     const d = depth;
     const ind = (n: number) => "    ".repeat(n);
     const lines: Line[] = [
-      { raw: `${ind(d)}[ BOX_COMPONENT, [`, kind: "open", depth: d, role: "component_list", label: "BOX_COMPONENT", mergedOpen: true },
-      { raw: `${ind(d+1)}[ "comp 1", [`, kind: "open", depth: d + 1, role: "element", label: "comp 1", mergedOpen: true },
-      { raw: `${ind(d+2)}[ CMP_COMPARTMENT_SIZE_XYZ, [40, 40, 15] ],`, kind: "kv", depth: d + 2, kvKey: "CMP_COMPARTMENT_SIZE_XYZ", kvValue: [40, 40, 15] },
-      { raw: `${ind(d+1)}]],`, kind: "close", depth: d + 1, role: "element", label: "comp 1", mergedClose: true },
-      { raw: `${ind(d)}]],`, kind: "close", depth: d, role: "component_list", label: "BOX_COMPONENT", mergedClose: true },
+      { raw: `${ind(d)}[ BOX_FEATURE, [`, kind: "open", depth: d, role: "feature_list", label: "BOX_FEATURE", mergedOpen: true },
+      { raw: `${ind(d+1)}[ FTR_COMPARTMENT_SIZE_XYZ, [40, 40, 15] ],`, kind: "kv", depth: d + 1, kvKey: "FTR_COMPARTMENT_SIZE_XYZ", kvValue: [40, 40, 15] },
+      { raw: `${ind(d)}]],`, kind: "close", depth: d, role: "feature_list", label: "BOX_FEATURE", mergedClose: true },
     ];
     project.update((p) => {
       p.lines.splice(closeIndex, 0, ...lines);
@@ -534,8 +532,8 @@
         <!-- This kv line is rendered in the sorted schema block before its close bracket -->
 
       {:else if line.kind === "open"}
-        {@const collapsible = !["params", "label_params", "lid_params", "component"].includes(line.role || "")}
-        {@const deletable = !["data", "data_list", "params", "label_params", "lid_params", "component"].includes(line.role || "")}
+        {@const collapsible = !["params", "label_params", "lid_params", "feature"].includes(line.role || "")}
+        {@const deletable = !["data", "data_list", "params", "label_params", "lid_params", "feature"].includes(line.role || "")}
         <div class="line-row struct open" style={pad(line)} data-testid="line-{i}">
           {#if collapsible}
             <button class="collapse-btn" title={collapsed.has(i) ? "Expand" : "Collapse"}
@@ -616,17 +614,17 @@
         <div class="line-row struct close" style={pad(line)} data-testid="line-{i}">
           <span class="struct-bracket">{line.raw.trim()}</span>
           {#if line.role === "data"}
-            <button class="add-btn" title="Add element" onclick={() => addElement(i, line.depth ?? 0)}>+ Element</button>
+            <button class="add-btn" title="Add object" onclick={() => addObject(i, line.depth ?? 0)}>+ Object</button>
           {:else if line.role === "params"}
             <button class="add-btn" title="Add line" onclick={() => addRawLine(i - 1, (line.depth ?? 0) + 1)}>+ Line</button>
             <button class="add-btn" title="Add LABEL block" onclick={() => addLabel(i, (line.depth ?? 0) + 1)}>+ Label</button>
-            <button class="add-btn" title="Add BOX_COMPONENT block" onclick={() => addComponentList(i, (line.depth ?? 0) + 1)}>+ Component</button>
-          {:else if line.role === "element" && line.mergedClose}
+            <button class="add-btn" title="Add BOX_FEATURE block" onclick={() => addFeatureList(i, (line.depth ?? 0) + 1)}>+ Feature</button>
+          {:else if line.role === "object" && line.mergedClose}
             {@const innerDepth = (line.depth ?? 0) + 1}
             <button class="add-btn" title="Add line" onclick={() => addRawLine(i - 1, innerDepth)}>+ Line</button>
             <button class="add-btn" title="Add LABEL block" onclick={() => addLabel(i, innerDepth)}>+ Label</button>
-            <button class="add-btn" title="Add BOX_COMPONENT block" onclick={() => addComponentList(i, innerDepth)}>+ Component</button>
-          {:else if line.role === "component" || line.role === "component_list" || line.role === "label" || line.role === "lid" || line.role === "label_params" || line.role === "lid_params" || line.role === "list" || line.role === "data_list"}
+            <button class="add-btn" title="Add BOX_FEATURE block" onclick={() => addFeatureList(i, innerDepth)}>+ Feature</button>
+          {:else if line.role === "feature" || line.role === "feature_list" || line.role === "label" || line.role === "lid" || line.role === "label_params" || line.role === "lid_params" || line.role === "list" || line.role === "data_list"}
             <!-- No add buttons on these structural close brackets -->
           {:else}
             <button class="add-btn" title="Add line" onclick={() => addRawLine(i - 1, (line.depth ?? 0) + 1)}>+</button>

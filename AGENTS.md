@@ -18,7 +18,7 @@ Users define boxes via key-value data structures; the library renders them into 
 ### Data Flow
 1. User defines `data[]` — array of named box/divider specs using key-value pairs
 2. `MakeAll()` iterates `data[]`, dispatches to `MakeBox()` or `MakeDividers()` based on TYPE
-3. Each box goes through layered CSG pipeline: outer shell → component subtractions → additions → cutouts → lid
+3. Each box goes through layered CSG pipeline: outer shell → feature subtractions → additions → cutouts → lid
 4. Output is OpenSCAD geometry exportable as STL
 
 ### Key Modules (in boardgame_insert_toolkit_lib.4.scad)
@@ -32,7 +32,7 @@ Users define boxes via key-value data structures; the library renders them into 
 | Key Validation | `__ValidateTable`, `__ValidateElement`, type checks |
 | `MakeAll()` | Top-level entry, validates keys, dispatches per element |
 | `MakeDividers()` | Card dividers with tabs and frames |
-| `MakeBox()` / `MakeLayer()` | Box generation + component processing pipeline |
+| `MakeBox()` / `MakeLayer()` | Box generation + feature processing pipeline |
 | `MakeRoundedCubeAxis()` | Rounded cube utility |
 
 ### Version History
@@ -40,7 +40,7 @@ Users define boxes via key-value data structures; the library renders them into 
 - **v3**: `boardgame_insert_toolkit_lib.3.scad` — includes MakeHexBox, preserved for backward compat
 - **v4**: `boardgame_insert_toolkit_lib.4.scad` — MakeHexBox removed, 40% smaller, actively maintained
 - **All new work targets v4 only**
-- Hex-shaped compartments (HEX, HEX2 via `CMP_SHAPE`) work in v4 — only the hex BOX TYPE was removed
+- Hex-shaped compartments (HEX, HEX2 via `FTR_SHAPE`) work in v4 — only the hex BOX TYPE was removed
 
 ## Rendering & Testing
 
@@ -105,7 +105,7 @@ All use `--projection=ortho --view=edges --autocenter --viewall`:
 ./tests/render_eval.sh tests/test_cutout_sides.scad --views front      # Specific view
 ./tests/render_eval.sh --inline 'include <boardgame_insert_toolkit_lib.4.scad>;
   data=[["t",[[BOX_SIZE_XYZ,[50,50,20]],
-    [BOX_COMPONENT,[[CMP_COMPARTMENT_SIZE_XYZ,[46,46,18]]]]]]];
+    [BOX_FEATURE,[[FTR_COMPARTMENT_SIZE_XYZ,[46,46,18]]]]]]];
   MakeAll();'
 ```
 Output goes to `tests/renders/eval/`.
@@ -185,15 +185,15 @@ Screenshots go to `bit-gui/harness/out/` (monotonic counter, never cleared).
 ## Common Parameters Quick Reference
 
 ### Box-level
-`BOX_SIZE_XYZ`, `BOX_COMPONENT`, `BOX_LID`, `BOX_NO_LID_B`, `BOX_STACKABLE_B`, `ENABLED_B`, `TYPE` (BOX/DIVIDERS)
+`BOX_SIZE_XYZ`, `BOX_FEATURE`, `BOX_LID`, `BOX_NO_LID_B`, `BOX_STACKABLE_B`, `ENABLED_B`, `TYPE` (BOX/DIVIDERS)
 
-### Compartment-level (inside BOX_COMPONENT)
-`CMP_COMPARTMENT_SIZE_XYZ`, `CMP_NUM_COMPARTMENTS_XY`, `CMP_SHAPE` (SQUARE/HEX/HEX2/OCT/OCT2/ROUND/FILLET), `CMP_SHAPE_ROTATED_B`, `CMP_SHAPE_VERTICAL_B`, `CMP_PADDING_XY`, `CMP_PADDING_HEIGHT_ADJUST_XY`, `CMP_MARGIN_FBLR`, `CMP_CUTOUT_SIDES_4B`, `CMP_CUTOUT_CORNERS_4B`, `CMP_CUTOUT_HEIGHT_PCT`, `CMP_CUTOUT_DEPTH_PCT`, `CMP_CUTOUT_WIDTH_PCT`, `CMP_CUTOUT_BOTTOM_B`, `CMP_CUTOUT_BOTTOM_PCT`, `CMP_CUTOUT_TYPE` (INTERIOR/EXTERIOR/BOTH), `CMP_SHEAR`, `CMP_FILLET_RADIUS`, `CMP_PEDESTAL_BASE_B`, `POSITION_XY`, `ROTATION`
+### Feature-level (inside BOX_FEATURE)
+`FTR_COMPARTMENT_SIZE_XYZ`, `FTR_NUM_COMPARTMENTS_XY`, `FTR_SHAPE` (SQUARE/HEX/HEX2/OCT/OCT2/ROUND/FILLET), `FTR_SHAPE_ROTATED_B`, `FTR_SHAPE_VERTICAL_B`, `FTR_PADDING_XY`, `FTR_PADDING_HEIGHT_ADJUST_XY`, `FTR_MARGIN_FBLR`, `FTR_CUTOUT_SIDES_4B`, `FTR_CUTOUT_CORNERS_4B`, `FTR_CUTOUT_HEIGHT_PCT`, `FTR_CUTOUT_DEPTH_PCT`, `FTR_CUTOUT_WIDTH_PCT`, `FTR_CUTOUT_BOTTOM_B`, `FTR_CUTOUT_BOTTOM_PCT`, `FTR_CUTOUT_TYPE` (INTERIOR/EXTERIOR/BOTH), `FTR_SHEAR`, `FTR_FILLET_RADIUS`, `FTR_PEDESTAL_BASE_B`, `POSITION_XY`, `ROTATION`
 
 ### Lid-level (inside BOX_LID)
 `LID_SOLID_B`, `LID_HEIGHT`, `LID_FIT_UNDER_B`, `LID_INSET_B`, `LID_PATTERN_RADIUS`, `LID_PATTERN_N1/N2`, `LID_PATTERN_ANGLE`, `LID_PATTERN_ROW_OFFSET/COL_OFFSET`, `LID_PATTERN_THICKNESS`, `LID_CUTOUT_SIDES_4B`, `LID_LABELS_INVERT_B`, `LID_SOLID_LABELS_DEPTH`, `LID_LABELS_BG_THICKNESS`, `LID_LABELS_BORDER_THICKNESS`, `LID_STRIPE_WIDTH/SPACE`, `LID_TABS_4B`
 
-### Label-level (inside BOX_LID, BOX_COMPONENT, or box-level)
+### Label-level (inside BOX_LID, BOX_FEATURE, or box-level)
 `LBL_TEXT`, `LBL_SIZE` (number or AUTO), `LBL_PLACEMENT` (FRONT/BACK/LEFT/RIGHT/FRONT_WALL/BACK_WALL/LEFT_WALL/RIGHT_WALL/CENTER/BOTTOM), `LBL_FONT`, `LBL_DEPTH`, `LBL_SPACING`, `LBL_IMAGE`, `ROTATION`, `POSITION_XY`
 
 ### Divider-level
@@ -203,4 +203,4 @@ Screenshots go to `bit-gui/harness/out/` (monotonic counter, never cleared).
 `g_b_print_lid`, `g_b_print_box`, `g_isolated_print_box`, `g_b_visualization`, `g_b_validate_keys`, `g_wall_thickness`, `g_tolerance`, `g_tolerance_detents_pos`, `g_default_font`, `g_print_mmu_layer`
 
 ### Helper functions (bit_functions_lib.4.scad)
-`cmp_parms()`, `cmp_parms_fillet()`, `cmp_parms_round()`, `cmp_parms_hex()`, `cmp_parms_hex2()`, `cmp_parms_oct()`, `cmp_parms_oct2()`, `cmp_parms_disc()`, `cmp_parms_hex_tile()`, `lid_parms()`, `lid_parms_solid()`
+`ftr_parms()`, `ftr_parms_fillet()`, `ftr_parms_round()`, `ftr_parms_hex()`, `ftr_parms_hex2()`, `ftr_parms_oct()`, `ftr_parms_oct2()`, `ftr_parms_disc()`, `ftr_parms_hex_tile()`, `lid_parms()`, `lid_parms_solid()`

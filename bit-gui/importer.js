@@ -50,10 +50,15 @@ const CLOSE_DOUBLE_RE = /^\s*\]\s*\]\s*,?\s*(?:\/\/.*)?$/;                      
 // reliably classify entries (KV on one line, structural openers/closers
 // on their own lines, and commas fixed).
 
-const FORMAT_STRUCTURAL_KEYS = new Set(["BOX_COMPONENT", "BOX_LID", "LABEL"]);
+const FORMAT_STRUCTURAL_KEYS = new Set(["BOX_FEATURE", "BOX_LID", "LABEL"]);
 
 function formatScadOnLoad(scadText) {
-  const text = String(scadText ?? "").replace(/\r\n/g, "\n");
+  let text = String(scadText ?? "").replace(/\r\n/g, "\n");
+
+  // Legacy key name conversion for pre-rename files:
+  // CMP_ → FTR_, BOX_COMPONENT → BOX_FEATURE, cmp_parms → ftr_parms
+  text = text.replace(/\bCMP_/g, "FTR_").replace(/\bBOX_COMPONENT\b/g, "BOX_FEATURE").replace(/\bcmp_parms/g, "ftr_parms");
+
   const span = findDataAssignmentSpan(text);
   if (!span) return { text, changed: false };
 
@@ -70,7 +75,7 @@ function formatScadOnLoad(scadText) {
   }
 
   // Best-effort v2 -> v4 normalization inside data[]:
-  // - BOX_COMPONENTS => multiple BOX_COMPONENT entries
+  // - BOX_COMPONENTS => multiple BOX_FEATURE entries
   // - BOX_LID_* keys => BOX_LID block with LID_* keys
   try { transformV2ToV4(root); } catch { /* non-fatal */ }
 
@@ -110,7 +115,7 @@ function transformArrayNode(arr) {
     if (el && el.type === "array") transformArrayNode(el);
   }
 
-  // 1) BOX_COMPONENTS => flatten to BOX_COMPONENT entries
+  // 1) BOX_COMPONENTS => flatten to BOX_FEATURE entries
   const flattened = [];
   for (const el of arr.elements) {
     if (isPairArray(el, "BOX_COMPONENTS")) {
@@ -127,7 +132,7 @@ function transformArrayNode(arr) {
             flattened.push(compEl);
             continue;
           }
-          flattened.push(makeArray([makeAtom("BOX_COMPONENT"), compPair.paramsArray]));
+          flattened.push(makeArray([makeAtom("BOX_FEATURE"), compPair.paramsArray]));
         }
         continue; // drop the BOX_COMPONENTS wrapper
       }
@@ -565,7 +570,7 @@ function renderEntryLines(node, indent, needsComma, outLines) {
       return;
     }
 
-    // [ "name", [ ... ] ]  => element entry (merged brackets)
+    // [ "name", [ ... ] ]  => object entry (merged brackets)
     if (a.type === "atom" && a.text.trim().startsWith('"') && b.type === "array") {
       outLines.push(`${indent}[ ${a.text.trim()}, [` + (node.commentAfterFirst ? ` //${node.commentAfterFirst}` : ""));
       const childIndent = indent + " ".repeat(4);
@@ -753,23 +758,23 @@ function importScad(scadText) {
       continue;
     }
 
-    // [ "name", [  — merged element opener (element + child open on one line)
+    // [ "name", [  — merged object opener (element + child open on one line)
     const elemMergedMatch = raw.match(ELEMENT_OPEN_MERGED_RE);
     if (elemMergedMatch) {
       const name = elemMergedMatch[1];
-      lines.push({ raw, kind: "open", depth, role: "element", label: name, mergedOpen: true });
-      stack.push({ role: "element", label: name });
-      // Inner open: infer child role from parent (element → params)
-      stack.push({ role: "params", label: "element params" });
+      lines.push({ raw, kind: "open", depth, role: "object", label: name, mergedOpen: true });
+      stack.push({ role: "object", label: name });
+      // Inner open: infer child role from parent (object → params)
+      stack.push({ role: "params", label: "object params" });
       depth++; // visual depth increments by 1 (merged brackets share one indent level)
       continue;
     }
 
-    // [ "name",  — element opener
+    // [ "name",  — object opener
     const elemMatch = raw.match(ELEMENT_OPEN_RE);
     if (elemMatch) {
-      lines.push({ raw, kind: "open", depth, role: "element", label: elemMatch[1] });
-      stack.push({ role: "element", label: elemMatch[1] });
+      lines.push({ raw, kind: "open", depth, role: "object", label: elemMatch[1] });
+      stack.push({ role: "object", label: elemMatch[1] });
       depth++;
       continue;
     }
@@ -779,14 +784,14 @@ function importScad(scadText) {
     if (keyMergedMatch) {
       const key = keyMergedMatch[1];
       let role = null;
-      if (key === "BOX_COMPONENT") role = "component_list";
+      if (key === "BOX_FEATURE") role = "feature_list";
       else if (key === "BOX_LID") role = "lid";
       else if (key === "LABEL") role = "label";
 
       if (role) {
         // Determine child role
         let childRole = "list";
-        if (role === "component_list") { childRole = "component"; }
+        if (role === "feature_list") { childRole = "feature"; }
         else if (role === "lid") { childRole = "lid_params"; }
         else if (role === "label") { childRole = "label_params"; }
 
@@ -808,7 +813,7 @@ function importScad(scadText) {
     if (keyOpenMatch) {
       const key = keyOpenMatch[1];
       let role = null;
-      if (key === "BOX_COMPONENT") role = "component_list";
+      if (key === "BOX_FEATURE") role = "feature_list";
       else if (key === "BOX_LID") role = "lid";
       else if (key === "LABEL") role = "label";
 
@@ -830,8 +835,8 @@ function importScad(scadText) {
       const parent = stack.length > 0 ? stack[stack.length - 1] : null;
       let role = "list";
       let label = "[";
-      if (parent?.role === "element") { role = "params"; label = "element params"; }
-      else if (parent?.role === "component_list") { role = "component"; label = "component list"; }
+      if (parent?.role === "object") { role = "params"; label = "element params"; }
+      else if (parent?.role === "feature_list") { role = "feature"; label = "feature list"; }
       else if (parent?.role === "lid") { role = "lid_params"; label = "lid params"; }
       else if (parent?.role === "label") { role = "label_params"; label = "label params"; }
       else if (parent?.role === "data") { role = "data_list"; label = "data list"; }
@@ -960,13 +965,13 @@ function reimportBlock(text, baseDepth) {
       continue;
     }
 
-    // [ "name", [  — merged element opener
+    // [ "name", [  — merged object opener
     const elemMergedMatch = raw.match(ELEMENT_OPEN_MERGED_RE);
     if (elemMergedMatch) {
       const name = elemMergedMatch[1];
-      lines.push({ raw, kind: "open", depth, role: "element", label: name, mergedOpen: true });
-      stack.push({ role: "element", label: name });
-      stack.push({ role: "params", label: "element params" });
+      lines.push({ raw, kind: "open", depth, role: "object", label: name, mergedOpen: true });
+      stack.push({ role: "object", label: name });
+      stack.push({ role: "params", label: "object params" });
       depth++; // visual depth +1
       continue;
     }
@@ -974,8 +979,8 @@ function reimportBlock(text, baseDepth) {
     // [ "name",
     const elemMatch = raw.match(ELEMENT_OPEN_RE);
     if (elemMatch) {
-      lines.push({ raw, kind: "open", depth, role: "element", label: elemMatch[1] });
-      stack.push({ role: "element", label: elemMatch[1] });
+      lines.push({ raw, kind: "open", depth, role: "object", label: elemMatch[1] });
+      stack.push({ role: "object", label: elemMatch[1] });
       depth++;
       continue;
     }
@@ -985,12 +990,12 @@ function reimportBlock(text, baseDepth) {
     if (keyMergedMatch) {
       const key = keyMergedMatch[1];
       let role = null;
-      if (key === "BOX_COMPONENT") role = "component_list";
+      if (key === "BOX_FEATURE") role = "feature_list";
       else if (key === "BOX_LID") role = "lid";
       else if (key === "LABEL") role = "label";
       if (role) {
         let childRole = "list";
-        if (role === "component_list") { childRole = "component"; }
+        if (role === "feature_list") { childRole = "feature"; }
         else if (role === "lid") { childRole = "lid_params"; }
         else if (role === "label") { childRole = "label_params"; }
         lines.push({ raw, kind: "open", depth, role, label: key, mergedOpen: true });
@@ -1010,7 +1015,7 @@ function reimportBlock(text, baseDepth) {
     if (keyOpenMatch) {
       const key = keyOpenMatch[1];
       let role = null;
-      if (key === "BOX_COMPONENT") role = "component_list";
+      if (key === "BOX_FEATURE") role = "feature_list";
       else if (key === "BOX_LID") role = "lid";
       else if (key === "LABEL") role = "label";
       if (role) {
@@ -1030,8 +1035,8 @@ function reimportBlock(text, baseDepth) {
       const parent = stack.length > 0 ? stack[stack.length - 1] : null;
       let role = "list";
       let label = "[";
-      if (parent?.role === "element") { role = "params"; label = "element params"; }
-      else if (parent?.role === "component_list") { role = "component"; label = "component list"; }
+      if (parent?.role === "object") { role = "params"; label = "element params"; }
+      else if (parent?.role === "feature_list") { role = "feature"; label = "feature list"; }
       else if (parent?.role === "lid") { role = "lid_params"; label = "lid params"; }
       else if (parent?.role === "label") { role = "label_params"; label = "label params"; }
       else if (parent?.role === "data") { role = "data_list"; label = "data list"; }

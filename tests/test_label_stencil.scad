@@ -13,9 +13,9 @@ data = [
     [ "stencil label",
         [
             [ BOX_SIZE_XYZ, [40, 40, 15] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [37, 37, 13] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [37, 37, 13] ],
                 ]
             ],
             [ BOX_LID,

@@ -1,4 +1,4 @@
-// Test: Side cutouts — CMP_CUTOUT_SIDES_4B with various combinations
+// Test: Side cutouts — FTR_CUTOUT_SIDES_4B with various combinations
 include <../boardgame_insert_toolkit_lib.4.scad>;
 
 g_b_print_lid = false;
@@ -9,10 +9,10 @@ data = [
     [ "front-back cutouts",
         [
             [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [46, 46, 12] ],
-                    [ CMP_CUTOUT_SIDES_4B, [t, t, f, f] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [46, 46, 12] ],
+                    [ FTR_CUTOUT_SIDES_4B, [t, t, f, f] ],
                 ]
             ]
         ]
@@ -20,10 +20,10 @@ data = [
     [ "all sides cutout",
         [
             [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [46, 46, 12] ],
-                    [ CMP_CUTOUT_SIDES_4B, [t, t, t, t] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [46, 46, 12] ],
+                    [ FTR_CUTOUT_SIDES_4B, [t, t, t, t] ],
                 ]
             ]
         ]
@@ -31,10 +31,10 @@ data = [
     [ "left only cutout",
         [
             [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_COMPONENT,
+            [ BOX_FEATURE,
                 [
-                    [ CMP_COMPARTMENT_SIZE_XYZ, [46, 46, 12] ],
-                    [ CMP_CUTOUT_SIDES_4B, [f, f, f, t] ],
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [46, 46, 12] ],
+                    [ FTR_CUTOUT_SIDES_4B, [f, f, f, t] ],
                 ]
             ]
         ]
