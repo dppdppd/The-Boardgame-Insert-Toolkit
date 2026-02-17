@@ -35,6 +35,15 @@ Users define boxes via key-value data structures; the library renders them into 
 | `MakeBox()` / `MakeLayer()` | Box generation + feature processing pipeline |
 | `MakeRoundedCubeAxis()` | Rounded cube utility |
 
+### Key Library Sections (boardgame_insert_toolkit_lib.4.scad, ~3,343 lines)
+- Lines 46–246: Constants, enums (`SQUARE`, `HEX`, `ROUND`, `FILLET`, `OCT`), defaults
+- Lines 247–331: Key-value dictionary helpers (`__index_of_key`, `__value`)
+- Lines 646–1160: Key validation (`__ValidateTable`, `__ValidateElement`)
+- Lines 1161–1230: **`MakeAll()`** — top-level entry point
+- Lines 1231–1349: `MakeDividers()` — card divider generation
+- Lines 1350–1590: `MakeBox()` + `MakeLayer()` — box rendering pipeline
+- Lines 2269–2452: `MakeLid()` — lid assembly with patterns
+
 ### Version History
 - **v2**: Legacy, `boardgame_insert_toolkit_lib.2.scad` — no longer maintained
 - **v3**: `boardgame_insert_toolkit_lib.3.scad` — includes MakeHexBox, preserved for backward compat
@@ -150,7 +159,49 @@ data = [
 MakeAll();
 ```
 
-## BIT GUI Harness
+## BIT GUI
+
+### Architecture
+
+**Tech stack**: Electron 33 + Svelte 5 (runes) + Vite 6 + Playwright (harness)
+
+**Line-based model** — the importer (`bit-gui/importer.js`) parses `.scad` files into `Line` objects preserving every line as-is (kind, depth, role, kvKey/kvValue). This enables round-trip editing with minimal git diff noise.
+
+Key modules:
+| Module | Purpose |
+|--------|---------|
+| `importer.js` | SCAD parser → line-based model (bracket matching, v2/v3 conversion) |
+| `src/lib/stores/project.ts` | Svelte store with line mutations (updateKv, deleteLine, insertLine, etc.) |
+| `src/lib/schema.ts` | Loads `schema/bit.schema.json`; provides context-aware key lookups |
+| `src/lib/scad.ts` | Reconstructs `.scad` from project state |
+| `src/lib/autosave.ts` | Debounced file I/O |
+| `main.js` | Electron main process (IPC: open/save/OpenSCAD launch) |
+| `preload.js` | Context bridge (`window.bitgui` API) |
+| `schema/bit.schema.json` | Single source of truth for all parameter types, defaults, enums |
+
+**Schema contexts** (hierarchy): `element` → `feature`, `lid`, `label`, `divider`
+
+### Commands
+```bash
+cd bit-gui
+npm install
+npm run build          # Vite builds frontend to dist/
+npm start              # Launch Electron app
+npm run dev            # Watch + launch (concurrent)
+```
+
+### Dev Loop
+```
+1. Edit Svelte components in bit-gui/src/
+2. Build: cd bit-gui && npm run build
+3. Launch: xvfb-run -a node bit-gui/harness/run.js
+4. Drive via REPL: intent + interact (click, type, toggle, wait, shot)
+5. Inspect screenshots in bit-gui/harness/out/
+```
+
+Elements use `data-testid` attributes for harness targeting (e.g., `element-N-name`, `kv-KEY-editor`, `add-element`).
+
+### Harness
 
 The Playwright harness (`bit-gui/harness/run.js`) drives the Electron app headless for screenshots.
 
@@ -173,6 +224,44 @@ cd bit-gui && BITGUI_OPEN="../path/to.scad" \
 ```
 
 Screenshots go to `bit-gui/harness/out/` (monotonic counter, never cleared).
+
+Harness REPL commands: `shot <label>`, `click <css>`, `type <css> "<text>"`, `toggle <css>`, `wait <css>`, `intent "<text>"`, `act "<intent>" <cmd> <args>`.
+
+## CI
+
+CI runs on push/PR to master: Docker OpenSCAD builds `starter.scad` and `examples.3.scad` as STL.
+
+## Code Style
+
+- **OpenSCAD**: Constants/keys in UPPERCASE, modules in PascalCase, 2-space indent
+- **Svelte**: Runes syntax (`$state`, `$derived`, `$effect`), kebab-case filenames
+- **Git commits**: `type(scope): message` (e.g., `feat(bit-gui):`, `fix:`, `docs:`)
+
+## Key Design Decisions
+
+- **SCAD file = source of truth**: GUI preserves user code, comments, and preamble/postamble
+- **Schema-driven UI**: All controls generated from `bit.schema.json` — no hardcoded parameter UI
+- **Line-based preservation**: Importer classifies lines by kind/role instead of building AST; saves produce minimal diffs
+- **Two-phase rendering**: STL export (slow, CGAL) then PNG views (fast, import STL) — separated for efficiency
+- **Harness-driven development**: Real app tested headlessly via Playwright; intent pane makes screenshots self-describing
+
+## Library Refactor Workflow
+
+The `.opencode/` directory contains detailed methodology docs for structured library changes. These were written for the opencode tool but the workflows apply to any agent:
+
+| File | Role |
+|------|------|
+| `.opencode/skills/bit-refactor/SKILL.md` | Master workflow: ASSESS → PATCH → EVALUATE → UPDATE DOCS → COMMIT |
+| `.opencode/agents/bit-assessor.md` | Read cleanup plan + source, produce a patch specification (read-only) |
+| `.opencode/agents/bit-patcher.md` | Apply one change, render BEFORE baseline, run CSG regression |
+| `.opencode/agents/bit-evaluator.md` | Render AFTER views, compare with BEFORE, verdict: PASS/FAIL/WARN |
+
+Key principles from these docs:
+- **One logical change per cycle** — never batch multiple tasks
+- **Always render BEFORE baselines** before patching, even for "trivial" changes
+- **Refactors must produce identical geometry** — compare BEFORE/AFTER PNGs
+- **CSG regression on all tests** after every change (`run_tests.sh --csg-only`)
+- **Update docs every cycle** — stale plans are worse than no plan
 
 ## Git Workflow
 
