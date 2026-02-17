@@ -1,7 +1,7 @@
 {
   "name": "bit-gui",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Visual editor for Boardgame Insert Toolkit .scad files",
   "author": "BIT GUI Contributors",
   "main": "main.js",
@@ -40,18 +40,25 @@
       "package.json"
     ],
     "linux": {
-      "target": ["AppImage"],
+      "target": [
+        "AppImage"
+      ],
       "category": "Utility"
     },
     "win": {
-      "target": ["nsis", "portable"]
+      "target": [
+        "nsis",
+        "portable"
+      ]
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
     },
     "mac": {
-      "target": ["zip"],
+      "target": [
+        "zip"
+      ],
       "category": "public.app-category.utilities"
     }
   }
