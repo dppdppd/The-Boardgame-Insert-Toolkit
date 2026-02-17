@@ -43,13 +43,15 @@ A desktop app for visually editing BIT `.scad` files — no need to memorize par
 
 ### Download
 
-Portable binaries — no install required (except the macOS DMG):
+Portable binaries — no install required:
 
 | Platform | File | Link |
 |----------|------|------|
 | Linux | `BIT GUI-0.1.0.AppImage` | [Download](https://github.com/dppdppd/The-Boardgame-Insert-Toolkit/releases/latest/download/BIT.GUI-0.1.0.AppImage) |
 | Windows (portable) | `BIT GUI 0.1.0.exe` | [Download](https://github.com/dppdppd/The-Boardgame-Insert-Toolkit/releases/latest/download/BIT.GUI.0.1.0.exe) |
 | Windows (installer) | `BIT GUI Setup 0.1.0.exe` | [Download](https://github.com/dppdppd/The-Boardgame-Insert-Toolkit/releases/latest/download/BIT.GUI.Setup.0.1.0.exe) |
+| macOS | `BIT GUI-0.1.0-mac.zip` | [Download](https://github.com/dppdppd/The-Boardgame-Insert-Toolkit/releases/latest/download/BIT.GUI-0.1.0-mac.zip) |
+
 All downloads are on the [Releases](https://github.com/dppdppd/The-Boardgame-Insert-Toolkit/releases) page.
 
 # How (Text Editor)
