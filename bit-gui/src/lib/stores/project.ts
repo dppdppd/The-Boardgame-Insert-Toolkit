@@ -120,13 +120,39 @@ export function updateGlobal(index: number, value: any) {
     const line = p.lines[index];
     if (line?.kind !== "global" || !line.globalKey) return p;
     line.globalValue = value;
-    if (typeof value === "boolean") {
-      line.raw = `${line.globalKey} = ${value ? "true" : "false"};`;
-    } else {
-      line.raw = `${line.globalKey} = "${value}";`;
-    }
+    line.raw = formatGlobalRaw(line.globalKey, value);
     return { ...p };
   });
+}
+
+/** Update a global line's value, or delete if it matches the schema default. */
+export function updateGlobalWithDefault(index: number, value: any, schemaDefault: any) {
+  project.update((p) => {
+    const line = p.lines[index];
+    if (line?.kind !== "global" || !line.globalKey) return p;
+    if (schemaDefault !== undefined && JSON.stringify(value) === JSON.stringify(schemaDefault)) {
+      p.lines.splice(index, 1);
+      return { ...p };
+    }
+    line.globalValue = value;
+    line.raw = formatGlobalRaw(line.globalKey, value);
+    return { ...p };
+  });
+}
+
+/** Materialize a virtual global: insert a kind:"global" line before `beforeIndex`. */
+export function materializeGlobal(beforeIndex: number, key: string, value: any) {
+  project.update((p) => {
+    const raw = formatGlobalRaw(key, value);
+    p.lines.splice(beforeIndex, 0, { raw, kind: "global", depth: 0, globalKey: key, globalValue: value });
+    return { ...p };
+  });
+}
+
+function formatGlobalRaw(key: string, value: any): string {
+  if (typeof value === "boolean") return `${key} = ${value ? "true" : "false"};`;
+  if (typeof value === "number") return `${key} = ${value};`;
+  return `${key} = "${value}";`;
 }
 
 /** Update a kv line's value. If the new value equals the schema default, delete the line. */

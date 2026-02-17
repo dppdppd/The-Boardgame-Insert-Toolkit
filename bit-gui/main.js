@@ -92,6 +92,18 @@ function rebuildMenu() {
       ],
     },
     {
+      label: "View",
+      submenu: [
+        {
+          id: "hide-defaults",
+          label: "Hide Defaults",
+          type: "checkbox",
+          checked: false,
+          click: (menuItem) => mainWindow.webContents.send("menu-toggle-hide-defaults", menuItem.checked),
+        },
+      ],
+    },
+    {
       label: "Tools",
       submenu: [
         {
@@ -155,6 +167,10 @@ ipcMain.handle("get-pending-load", () => {
   const p = pendingLoad;
   pendingLoad = null;
   return p;
+});
+
+ipcMain.on("set-title", (_event, title) => {
+  if (mainWindow) mainWindow.setTitle(title);
 });
 
 // --- IPC Handlers ---

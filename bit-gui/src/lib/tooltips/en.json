@@ -7,6 +7,7 @@
   "BOX_STACKABLE_B": "If checked, box base is cut to stack on identical boxes (requires 45° overhang capability)",
   "BOX_WALL_THICKNESS": "Wall thickness in mm (overrides the global g_wall_thickness)",
   "ENABLED_B": "Uncheck to skip this item without deleting it",
+  "_DEBUG_B": "Highlight this item's geometry in transparent red (OpenSCAD # modifier) for debugging",
   "LABEL": "Label block — add text or images to surfaces",
   "ROTATION": "Rotation in degrees around the Z axis",
   "POSITION_XY": "Position offset [x, y]. Use numbers for absolute mm, or CENTER / MAX for alignment.",
@@ -81,5 +82,9 @@
 
   "g_b_print_lid": "Print lids (uncheck to render boxes only)",
   "g_b_print_box": "Print boxes (uncheck to render lids only)",
-  "g_isolated_print_box": "Render only this named box (leave empty for all boxes)"
+  "g_isolated_print_box": "Render only this named box (leave empty for all boxes)",
+  "g_wall_thickness": "Default wall thickness in mm (can be overridden per-box)",
+  "g_tolerance": "Tolerance gap between fitting pieces (lid clearance) in mm",
+  "g_b_visualization": "Show boxes in assembled arrangement (preview mode)",
+  "g_b_validate_keys": "Warn about unknown or malformed keys in data"
 }

@@ -7,6 +7,8 @@
     deleteLine,
     deleteBlock,
     updateGlobal,
+    updateGlobalWithDefault,
+    materializeGlobal,
     updateKv,
     updateComment,
     materializeKv,
@@ -22,16 +24,29 @@
   let intentText = $state("");
   let showIntent = $state(false);
   let statusMsg = $state("No file open");
+  let hideDefaults = $state(false);
 
   let scadOutput = $derived(generateScad($project));
 
   onSaveStatus((msg: string) => { statusMsg = msg; });
+
+  function updateTitle(filePath: string) {
+    const bitgui = (window as any).bitgui;
+    if (!bitgui?.setTitle) return;
+    if (!filePath) {
+      bitgui.setTitle("BIT GUI — New File");
+    } else {
+      const name = filePath.replace(/.*[/\\]/, "");
+      bitgui.setTitle(`${name} — ${filePath}`);
+    }
+  }
 
   function handleLoad(payload: any) {
     const { data, filePath } = payload;
     project.set(data);
     setFilePath(filePath);
     setNeedsBackup(!data.hasMarker);
+    updateTitle(filePath);
     const name = filePath.replace(/.*[/\\]/, "");
     statusMsg = data.hasMarker ? name : `${name} (will backup .bak on first save)`;
   }
@@ -44,6 +59,7 @@
     if (bitgui?.onMenuOpen) bitgui.onMenuOpen(handleLoad);
     if (bitgui?.onMenuSaveAs) bitgui.onMenuSaveAs(saveFileAs);
     if (bitgui?.onMenuOpenInOpenScad) bitgui.onMenuOpenInOpenScad(openInOpenScad);
+    if (bitgui?.onMenuToggleHideDefaults) bitgui.onMenuToggleHideDefaults((checked: boolean) => { hideDefaults = checked; });
 
     // Check for pending auto-load
     let loaded = false;
@@ -58,13 +74,11 @@
 
   function newFile() {
     project.set({ version: 1, lines: [
-      { raw: "g_b_print_lid = true;", kind: "global", depth: 0, globalKey: "g_b_print_lid", globalValue: true },
-      { raw: "g_b_print_box = true;", kind: "global", depth: 0, globalKey: "g_b_print_box", globalValue: true },
-      { raw: 'g_isolated_print_box = "";', kind: "global", depth: 0, globalKey: "g_isolated_print_box", globalValue: "" },
       { raw: "data = [", kind: "open", depth: 0, role: "data", label: "data" },
       { raw: "];", kind: "close", depth: 0, role: "data", label: "data" },
     ], hasMarker: false });
     setFilePath(""); setNeedsBackup(false); statusMsg = "New file";
+    updateTitle("");
   }
 
   async function openFile() {
@@ -74,6 +88,7 @@
     if (!res.ok) { if (res.error) statusMsg = `Open failed: ${res.error}`; return; }
     project.set(res.data);
     setFilePath(res.filePath); setNeedsBackup(!res.data.hasMarker);
+    updateTitle(res.filePath);
     const name = res.filePath.replace(/.*[/\\]/, "");
     statusMsg = res.data.hasMarker ? name : `${name} (will backup .bak on first save)`;
   }
@@ -84,6 +99,7 @@
     const res = await bitgui.saveFileAs(scadOutput);
     if (!res.ok) return;
     setFilePath(res.filePath);
+    updateTitle(res.filePath);
     statusMsg = `Saved ${res.filePath.replace(/.*[/\\]/, "")}`;
   }
 
@@ -150,13 +166,17 @@
     return { ok: false, value: null };
   }
 
-  const KV_RE = /^\s*\[\s*([A-Z][A-Z0-9_]*)\s*,\s*(.*?)\s*\]\s*,?\s*(?:\/\/.*)?$/;
+  const KV_RE = /^\s*\[\s*([_A-Z][A-Z0-9_]*)\s*,\s*(.*?)\s*\]\s*,?\s*(?:\/\/.*)?$/;
+
+  const GLOBAL_NAMES: Set<string> = new Set(Object.keys((schema as any).globals || {}));
 
   function classifyLocal(raw: string, depth: number = 0): Line {
-    const bm = raw.match(/^\s*(g_b_print_lid|g_b_print_box)\s*=\s*(true|false|t|f|0|1)\s*;\s*(?:\/\/.*)?$/i);
-    if (bm) { const v = bm[2].toLowerCase(); return { raw, kind: "global", depth, globalKey: bm[1], globalValue: v === "true" || v === "t" || v === "1" }; }
-    const sm = raw.match(/^\s*(g_isolated_print_box)\s*=\s*"([^"]*)"\s*;\s*(?:\/\/.*)?$/i);
-    if (sm) return { raw, kind: "global", depth, globalKey: sm[1], globalValue: sm[2] };
+    const bm = raw.match(/^\s*(g_\w+)\s*=\s*(true|false|t|f|0|1)\s*;\s*(?:\/\/.*)?$/i);
+    if (bm && GLOBAL_NAMES.has(bm[1])) { const v = bm[2].toLowerCase(); return { raw, kind: "global", depth, globalKey: bm[1], globalValue: v === "true" || v === "t" || v === "1" }; }
+    const nm = raw.match(/^\s*(g_\w+)\s*=\s*(-?\d+(?:\.\d+)?)\s*;\s*(?:\/\/.*)?$/i);
+    if (nm && GLOBAL_NAMES.has(nm[1])) return { raw, kind: "global", depth, globalKey: nm[1], globalValue: parseFloat(nm[2]) };
+    const sm = raw.match(/^\s*(g_\w+)\s*=\s*"([^"]*)"\s*;\s*(?:\/\/.*)?$/i);
+    if (sm && GLOBAL_NAMES.has(sm[1])) return { raw, kind: "global", depth, globalKey: sm[1], globalValue: sm[2] };
     if (/^\s*include\s*<\s*(?:lib\/)?(?:boardgame_insert_toolkit_lib\.|bit_functions_lib\.)\d+\.scad\s*>\s*;?\s*(?:\/\/.*)?$/i.test(raw)) return { raw, kind: "include", depth };
     if (/^\s*\/\/\s*BITGUI\b/i.test(raw)) return { raw, kind: "marker", depth };
     if (/^\s*MakeAll\s*\(\s*\)\s*;\s*(?:\/\/.*)?$/.test(raw)) return { raw, kind: "makeall", depth };
@@ -238,6 +258,28 @@
       newLines.push({ raw: "    ".repeat(depth), kind: "raw", depth });
     }
     spliceLines(startIndex, oldCount, newLines);
+  }
+
+  // --- Debug highlight toggle (on object/feature open brackets) ---
+  function getDebugState(openIdx: number): { active: boolean; kvIndex: number | null } {
+    const closeIdx = findMatchingClose(openIdx);
+    for (let j = openIdx + 1; j < closeIdx; j++) {
+      const l = $project.lines[j];
+      if (l.kind === "kv" && l.kvKey === "_DEBUG_B") {
+        return { active: l.kvValue === true, kvIndex: j };
+      }
+    }
+    return { active: false, kvIndex: null };
+  }
+
+  function toggleDebug(openIdx: number) {
+    const { active, kvIndex } = getDebugState(openIdx);
+    if (active && kvIndex !== null) {
+      deleteLine(kvIndex);
+    } else {
+      const depth = ($project.lines[openIdx].depth ?? 0) + 1;
+      materializeKv(openIdx + 1, "_DEBUG_B", true, depth);
+    }
   }
 
   const DEPTH_PX = 24;
@@ -402,6 +444,60 @@
     deleteLine(lineIndex);
   }
 
+  // --- Virtual globals ---
+
+  const GLOBAL_SCHEMA: Record<string, any> = (schema as any).globals || {};
+
+  function getGlobalRows(): { key: string; def: any; lineIndex: number | null; value: any; isReal: boolean }[] {
+    const lines = $project.lines;
+    // Collect existing global lines
+    const existingMap = new Map<string, { lineIndex: number; value: any }>();
+    for (let i = 0; i < lines.length; i++) {
+      const l = lines[i];
+      if (l.kind === "global" && l.globalKey) {
+        existingMap.set(l.globalKey, { lineIndex: i, value: l.globalValue });
+      }
+    }
+    // Merge with schema globals
+    const rows: { key: string; def: any; lineIndex: number | null; value: any; isReal: boolean }[] = [];
+    for (const [key, def] of Object.entries(GLOBAL_SCHEMA)) {
+      const existing = existingMap.get(key);
+      if (existing) {
+        rows.push({ key, def, lineIndex: existing.lineIndex, value: existing.value, isReal: true });
+      } else {
+        rows.push({ key, def, lineIndex: null, value: def.default, isReal: false });
+      }
+    }
+    rows.sort((a, b) => a.key.localeCompare(b.key));
+    return rows;
+  }
+
+  /** Set of line indices for global lines rendered in the virtual globals block. */
+  let globalRenderedInBlock = $derived.by(() => {
+    const set = new Set<number>();
+    const rows = getGlobalRows();
+    for (const r of rows) {
+      if (r.lineIndex !== null) set.add(r.lineIndex);
+    }
+    return set;
+  });
+
+  /** Find where to insert a new global line: before the first `data = [` open. */
+  function findGlobalInsertIndex(): number {
+    const lines = $project.lines;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].kind === "open" && lines[i].role === "data") return i;
+    }
+    return 0;
+  }
+
+  /** When a virtual global is changed, materialize it before data = [ */
+  function onVirtualGlobalChange(key: string, def: any, newValue: any) {
+    if (JSON.stringify(newValue) === JSON.stringify(def.default)) return;
+    const idx = findGlobalInsertIndex();
+    materializeGlobal(idx, key, newValue);
+  }
+
   function isDefault(key: string, value: any): boolean {
     const def = KEY_SCHEMA_MAP[key];
     if (!def || def.default === undefined) return false;
@@ -531,7 +627,39 @@
       {:else if kvRenderedInBlock.has(i)}
         <!-- This kv line is rendered in the sorted schema block before its close bracket -->
 
+      {:else if globalRenderedInBlock.has(i)}
+        <!-- This global line is rendered in the virtual globals block above -->
+
       {:else if line.kind === "open"}
+        <!-- Virtual globals block right before data = [ -->
+        {#if line.role === "data"}
+          {#each getGlobalRows() as row (row.key)}
+            {#if hideDefaults && !row.isReal}{:else}
+            {@const gDef = row.def}
+            {@const gVal = row.value}
+            {@const gOnChange = row.isReal
+              ? (v: any) => updateGlobalWithDefault(row.lineIndex!, v, gDef.default)
+              : (v: any) => onVirtualGlobalChange(row.key, gDef, v)}
+            <div class="line-row kv" class:virtual={!row.isReal} style={padDepth(0)} data-testid={row.isReal ? `line-${row.lineIndex}` : `virtual-${row.key}`}>
+              <span class="kv-key" class:virtual-key={!row.isReal} title={tip(row.key)}>{row.key}</span>
+              <span class="kv-control">
+                {#if gDef.type === "bool"}
+                  <input type="checkbox" checked={gVal === true} onchange={(e) => gOnChange(e.currentTarget.checked)} />
+                {:else if gDef.type === "number"}
+                  <input class="kv-num" type="number" step="any" value={gVal} onchange={(e) => gOnChange(parseNum(e.currentTarget.value))} />
+                {:else}
+                  <input class="kv-str" type="text" value={gVal ?? ""} onchange={(e) => gOnChange(e.currentTarget.value)} />
+                {/if}
+              </span>
+              <span class="spacer"></span>
+              {#if row.isReal && row.lineIndex !== null}
+                {@render commentBtn($project.lines[row.lineIndex], row.lineIndex)}
+                <button class="delete-btn" title="Reset to default" onclick={() => deleteLine(row.lineIndex!)}>✕</button>
+              {/if}
+            </div>
+            {/if}
+          {/each}
+        {/if}
         {@const collapsible = !["params", "label_params", "lid_params", "feature"].includes(line.role || "")}
         {@const deletable = !["data", "data_list", "params", "label_params", "lid_params", "feature"].includes(line.role || "")}
         <div class="line-row struct open" style={pad(line)} data-testid="line-{i}">
@@ -541,6 +669,16 @@
           {/if}
           <span class={structLabel(line).inferred ? "struct-label inferred" : "struct-label"}>{structLabel(line).text}</span>
           <span class="struct-bracket">{collapsed.has(i) ? "[ ... ]" : "["}</span>
+          {#if line.role === "object" || line.role === "feature_list" || line.role === "lid"}
+            {@const dbg = getDebugState(i)}
+            <button class="debug-toggle" class:active={dbg.active} title="Highlight in OpenSCAD (#)"
+              onclick={() => toggleDebug(i)}>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          {/if}
           <span class="spacer"></span>
           {@render commentBtn(line, i)}
           {#if deletable}
@@ -551,6 +689,7 @@
       {:else if line.kind === "close"}
         <!-- Sorted schema rows (real + virtual) before close bracket -->
         {#each getSortedSchemaRows(i) as row (row.key)}
+          {#if hideDefaults && !row.isReal}{:else}
           {@const rkt = getKeyType(row.key)}
           {@const rks = getKeySchema(row.key)}
           {@const onChange = row.isReal
@@ -609,6 +748,7 @@
               <button class="delete-btn" title="Reset to default" onclick={() => dematerializeKv(row.lineIndex)}>✕</button>
             {/if}
           </div>
+          {/if}
         {/each}
         <!-- Close bracket with context-aware add buttons -->
         <div class="line-row struct close" style={pad(line)} data-testid="line-{i}">
@@ -629,26 +769,6 @@
           {:else}
             <button class="add-btn" title="Add line" onclick={() => addRawLine(i - 1, (line.depth ?? 0) + 1)}>+</button>
           {/if}
-        </div>
-
-      {:else if line.kind === "global" && (line.globalKey === "g_b_print_lid" || line.globalKey === "g_b_print_box")}
-        <div class="line-row control" style={pad(line)} data-testid="line-{i}">
-          <span class="control-label" title={tip(line.globalKey || "")}>{line.globalKey}</span>
-          <input type="checkbox" checked={line.globalValue === true}
-            onchange={(e) => updateGlobal(i, e.currentTarget.checked)} />
-          <span class="spacer"></span>
-          {@render commentBtn(line, i)}
-          <button class="toggle-btn" title="Edit as raw text" onclick={() => toRaw(i)}>{"{}"}</button>
-        </div>
-
-      {:else if line.kind === "global"}
-        <div class="line-row control" style={pad(line)} data-testid="line-{i}">
-          <span class="control-label" title={tip(line.globalKey || "")}>{line.globalKey}</span>
-          <input class="control-text" type="text" value={line.globalValue ?? ""}
-            onchange={(e) => updateGlobal(i, e.currentTarget.value)} />
-          <span class="spacer"></span>
-          {@render commentBtn(line, i)}
-          <button class="toggle-btn" title="Edit as raw text" onclick={() => toRaw(i)}>{"{}"}</button>
         </div>
 
       {:else if line.kind === "kv" && line.kvKey}
@@ -770,16 +890,16 @@
     border-bottom: 1px solid #f0f0f0;
   }
   .line-row.muted { opacity: 0.35; font-style: italic; }
-  .line-row.control { background: #e8f4e8; }
-  .line-row.raw { background: white; }
-  .line-row.kv { background: #e8f4e8; }
-  .line-row.kv.virtual { background: #f0ecf5; font-style: italic; }
+  /* Real tier: materialized KV, globals, struct open/close */
+  .line-row.kv { background: #e8f4e8; border-left: 3px solid #66bb6a; }
+  .line-row.struct { background: #e8f4e8; border-left: 3px solid #66bb6a; }
+  .line-row.struct.close { opacity: 0.6; }
+  /* Virtual tier: defaults at schema value */
+  .line-row.kv.virtual { background: #f0ecf5; border-left: none; font-style: italic; }
   .line-row.kv.virtual:hover { background: #e8e2f0; }
   .line-row.kv.virtual .kv-key { font-weight: 500; color: #7b6b8a; }
   .virtual-key { font-style: italic; }
-  .line-row.struct { background: #f8f4ff; }
-  .line-row.struct.open { border-left: 3px solid #8e44ad; }
-  .line-row.struct.close { border-left: 3px solid #cbb4d8; opacity: 0.6; }
+  .line-row.raw { background: white; }
 
   .collapse-btn {
     background: none; border: none; cursor: pointer;
@@ -789,17 +909,18 @@
   .struct-label { font-weight: 700; color: #6c3483; }
   .struct-label.inferred { font-style: italic; font-weight: 500; color: #9b7fb8; }
   .struct-bracket { color: #999; font-weight: 700; }
+  .debug-toggle {
+    background: none; border: none; cursor: pointer;
+    margin-left: 4px; padding: 0 2px;
+    color: #999; opacity: 0.4; line-height: 1;
+    display: inline-flex; align-items: center;
+  }
+  .debug-toggle:hover { opacity: 0.8; }
+  .debug-toggle.active { opacity: 0.9; color: #e67e22; }
   .spacer { flex: 1; }
 
   .line-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .line-badge { font-size: 11px; color: #999; background: #eee; padding: 1px 5px; border-radius: 2px; font-weight: 500; }
-
-  .control-label { font-weight: 700; color: #2c3e50; min-width: 200px; font-size: 15px; }
-  .control-text {
-    flex: 1; max-width: 300px;
-    font-family: "Courier New", monospace; font-size: 15px; font-weight: 500;
-    padding: 3px 6px; border: 1px solid #ddd; border-radius: 2px;
-  }
 
   .kv-key { font-weight: 700; color: #2c3e50; min-width: 220px; flex-shrink: 0; }
   .kv-control { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
@@ -814,11 +935,13 @@
   .side-label { display: inline-flex; align-items: center; gap: 2px; font-size: 13px; }
   .side-tag { color: #999; font-size: 11px; font-weight: 600; width: 12px; text-align: center; }
 
+  /* Raw tier: unparsed text blocks */
   .raw-block {
     position: relative;
     width: 100%;
     border-bottom: 1px solid #f0f0f0;
     background: #fdf8ef;
+    border-left: 3px solid #e0c87a;
   }
   .raw-textarea {
     display: block;
@@ -827,11 +950,11 @@
     font-family: "Courier New", monospace; font-size: 15px; font-weight: 500;
     line-height: 28px;
     padding: 3px 28px 3px 8px;
-    border: none; border-left: 3px solid transparent;
+    border: none;
     background: transparent; color: #5a4a2a;
     outline: none;
   }
-  .raw-textarea:focus { border-left-color: #e0c87a; background: #fef6e0; }
+  .raw-textarea:focus { background: #fef6e0; }
   .raw-delete {
     position: absolute; top: 4px; right: 6px;
     background: none; border: none; color: #ccc;

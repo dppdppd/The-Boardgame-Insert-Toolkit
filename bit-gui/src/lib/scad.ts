@@ -12,7 +12,6 @@ export function generateScad(project: Project): string {
   // Always start with marker + v4 includes
   out.push("// BITGUI");
   out.push("include <boardgame_insert_toolkit_lib.4.scad>;");
-  out.push("include <bit_functions_lib.4.scad>;");
 
   for (const line of project.lines) {
     switch (line.kind) {
@@ -26,6 +25,8 @@ export function generateScad(project: Project): string {
       case "global":
         if (line.globalKey && typeof line.globalValue === "boolean") {
           out.push(`${line.globalKey} = ${line.globalValue ? "true" : "false"};`);
+        } else if (line.globalKey && typeof line.globalValue === "number") {
+          out.push(`${line.globalKey} = ${line.globalValue};`);
         } else if (line.globalKey) {
           out.push(`${line.globalKey} = "${line.globalValue ?? ""}";`);
         }

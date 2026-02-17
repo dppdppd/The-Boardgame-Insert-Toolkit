@@ -26,6 +26,7 @@
         "BOX_STACKABLE_B":   { "type": "bool", "default": false, "help": "If true, box has stacking features (forces inset lid)", "contexts": ["BOX"] },
         "BOX_WALL_THICKNESS":{ "type": "number", "default": 1.5, "help": "Wall thickness in mm (overrides global)", "contexts": ["BOX", "SPACER"] },
         "ENABLED_B":         { "type": "bool", "default": true, "help": "If false, element is skipped" },
+        "_DEBUG_B":           { "type": "bool", "default": false, "help": "If true, geometry is rendered with # debug modifier (transparent red)" },
         "LABEL":             { "type": "table", "child_context": "label", "help": "Box-level label", "contexts": ["BOX"] },
         "ROTATION":          { "type": "number", "default": 0, "help": "Rotation in degrees" },
         "POSITION_XY":       { "type": "position_xy", "default": [0, 0], "help": "Position offset [x, y]. Accepts numbers, CENTER, or MAX." }
@@ -55,6 +56,7 @@
         "FTR_FILLET_RADIUS":         { "type": "number", "default": 10, "help": "Fillet radius for FILLET shape (capped at compartment height)" },
         "FTR_PEDESTAL_BASE_B":       { "type": "bool", "default": false, "help": "If true, compartment has pedestal push-out base" },
         "ENABLED_B":                 { "type": "bool", "default": true, "help": "If false, component is skipped" },
+        "_DEBUG_B":                   { "type": "bool", "default": false, "help": "If true, feature geometry is rendered with # debug modifier (transparent red)" },
         "LABEL":                     { "type": "table", "child_context": "label", "help": "Component-level label" },
         "ROTATION":                  { "type": "number", "default": 0, "help": "Rotation in degrees" },
         "POSITION_XY":               { "type": "position_xy", "default": ["CENTER", "CENTER"], "help": "Position [x, y]. Accepts numbers, CENTER, or MAX." }
@@ -82,6 +84,7 @@
         "LID_PATTERN_ROW_OFFSET":       { "type": "number", "default": 50, "help": "Pattern row offset %" },
         "LID_PATTERN_COL_OFFSET":       { "type": "number", "default": 100, "help": "Pattern column offset %" },
         "LID_PATTERN_THICKNESS":        { "type": "number", "default": 0.5, "help": "Pattern wall thickness" },
+        "_DEBUG_B":                     { "type": "bool", "default": false, "help": "If true, lid geometry is rendered with # debug modifier (transparent red)" },
         "LABEL":                        { "type": "table", "child_context": "label", "help": "Lid label" }
       }
     },

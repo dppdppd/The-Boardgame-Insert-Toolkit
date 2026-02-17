@@ -1,6 +1,5 @@
 // BITGUI
 include <boardgame_insert_toolkit_lib.4.scad>;
-include <bit_functions_lib.4.scad>;
 // Toolkit that performs all the model generation operations
 // Helper library to simplify creation of single components
 // Also includes some basic lid helpers
@@ -11,7 +10,7 @@ g_b_print_box = true;
 // Only render specified box
 g_isolated_print_box = "";
 // Used to visualize how all of the boxes fit together. 
-g_b_visualization = false;          
+g_b_visualization = false;
 // Outer wall thickness
 // Default = 1.5mm
 g_wall_thickness = 1.5;
@@ -55,15 +54,14 @@ cmp_dy = box_ury - 2*wall;
 cmp_dz = box_urz - 1*wall;
 // Data structure processed by MakeAll();
 data = [
-    [ "Box1", // Box name, used for g_isolated_print_box
-        [
-            [ BOX_SIZE_XYZ, [box_urx, box_ury, box_urz] ],
-            [ BOX_FEATURE, ftr_parms(dx =cmp_dx, dy =cmp_dy, dz =cmp_dz) ],
-            // Another Key-Value pair to create the compartment
-            [ BOX_LID, lid_parms(radius =8) ],
-            // Another Key-Value pair to create the lid
-        ]
-    ],
+    [ "Box1", [
+        // Box name, used for g_isolated_print_box
+        [ BOX_SIZE_XYZ, [box_urx, box_ury, box_urz] ],
+        [ BOX_FEATURE, ftr_parms(dx =cmp_dx, dy =cmp_dy, dz =cmp_dz) ],
+        // Another Key-Value pair to create the compartment
+        [ BOX_LID, lid_parms(radius =8) ],
+        // Another Key-Value pair to create the lid
+    ]],
 ];
 // Actually create the boxes based on the data structure above
 MakeAll();

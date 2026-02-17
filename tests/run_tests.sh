@@ -64,6 +64,12 @@ usage() {
     exit 0
 }
 
+# Preflight: ensure OpenSCAD is installed
+if ! command -v openscad &>/dev/null; then
+    echo -e "${RED}FATAL${NC}: openscad not found in PATH. Install it first."
+    exit 1
+fi
+
 CSG_ONLY=false
 REQUESTED_VIEWS=""
 TESTS=()

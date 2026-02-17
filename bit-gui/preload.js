@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld("bitgui", {
   platform: process.platform,
   harness: !!process.env.BITGUI_HARNESS,
 
+  setTitle: (title) => ipcRenderer.send("set-title", title),
   openFile: () => ipcRenderer.invoke("open-file"),
   saveFile: (filePath, scadText, needsBackup) => ipcRenderer.invoke("save-file", filePath, scadText, needsBackup),
   saveFileAs: (scadText) => ipcRenderer.invoke("save-file-as", scadText),
@@ -15,4 +16,5 @@ contextBridge.exposeInMainWorld("bitgui", {
   onMenuOpen: (callback) => ipcRenderer.on("menu-open", (_event, data) => callback(data)),
   onMenuSaveAs: (callback) => ipcRenderer.on("menu-save-as", callback),
   onMenuOpenInOpenScad: (callback) => ipcRenderer.on("menu-open-in-openscad", callback),
+  onMenuToggleHideDefaults: (callback) => ipcRenderer.on("menu-toggle-hide-defaults", (_event, checked) => callback(checked)),
 });

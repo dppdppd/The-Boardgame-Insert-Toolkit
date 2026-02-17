@@ -220,6 +220,7 @@ AUTO = "auto";
 MAX = "max";
 
 ENABLED_B = "enabled";
+_DEBUG_B = "_debug";
 ROTATION = "rotation";
 POSITION_XY = "position";
 
@@ -411,6 +412,7 @@ function __type( lmnt ) = __value( lmnt, TYPE, default = BOX);
 function __is_element_isolated_for_print() = g_isolated_print_box != "" && ( __index_of_key( data, g_isolated_print_box ) != [] ) ;
 
 function __is_element_enabled( lmnt ) = __value( lmnt, ENABLED_B, default = true);
+function __is_element_debug( lmnt ) = __value( lmnt, _DEBUG_B, default = false);
 
 // --- Auto-size helpers ---
 // Compute a single component's total size from its parameter table.
@@ -554,6 +556,12 @@ module Colorize()
     }
 }
 
+module __MaybeDebug( do_debug )
+{
+    if ( do_debug ) # children();
+    else children();
+}
+
 module Shear( x, y, height )
 {
      translate( [0,0,height/2])
@@ -672,7 +680,7 @@ function __is_valid_key( key, valid_keys ) =
 __VALID_BOX_KEYS = [
     TYPE, BOX_SIZE_XYZ, BOX_FEATURE, BOX_LID, BOX_VISUALIZATION,
     BOX_NO_LID_B, BOX_STACKABLE_B, BOX_WALL_THICKNESS,
-    ENABLED_B, LABEL, ROTATION, POSITION_XY
+    ENABLED_B, _DEBUG_B, LABEL, ROTATION, POSITION_XY
 ];
 
 // Divider-level valid keys (TYPE=DIVIDERS)
@@ -697,7 +705,7 @@ __VALID_COMPONENT_KEYS = [
     FTR_CUTOUT_BOTTOM_B, FTR_CUTOUT_BOTTOM_PCT, FTR_CUTOUT_TYPE,
     FTR_CUTOUT_DEPTH_MAX,
     FTR_SHEAR, FTR_FILLET_RADIUS, FTR_PEDESTAL_BASE_B,
-    ENABLED_B, LABEL, ROTATION, POSITION_XY
+    ENABLED_B, _DEBUG_B, LABEL, ROTATION, POSITION_XY
 ];
 
 // Lid-level valid keys (inside BOX_LID)
@@ -710,7 +718,7 @@ __VALID_LID_KEYS = [
     LID_PATTERN_RADIUS, LID_PATTERN_N1, LID_PATTERN_N2,
     LID_PATTERN_ANGLE, LID_PATTERN_ROW_OFFSET, LID_PATTERN_COL_OFFSET,
     LID_PATTERN_THICKNESS,
-    LABEL
+    _DEBUG_B, LABEL
 ];
 
 // Label-level valid keys (inside LABEL)
@@ -1208,14 +1216,17 @@ module MakeAll()
     {
         element = __value( data, g_isolated_print_box );
 
-        if ( __type( element ) == DIVIDERS )
+        __MaybeDebug( __is_element_debug( element ) )
         {
-            MakeDividers( element );
+            if ( __type( element ) == DIVIDERS )
+            {
+                MakeDividers( element );
+            }
+            else
+            {
+                MakeBox( element );
+            }
         }
-        else
-        {
-            MakeBox( element );
-        }          
     }
     else
     {
@@ -1231,6 +1242,7 @@ module MakeAll()
                 {
                     if ( __is_element_enabled( element ) )
                     {
+                        __MaybeDebug( __is_element_debug( element ) )
                         Colorize()
                         {
                            if ( __type( element ) == DIVIDERS )
@@ -1499,13 +1511,14 @@ module MakeBox( box )
                             if ( box[ i ][ k_key ] == BOX_FEATURE )
                             {
                                 component = box[ i ][ k_value ];
+                                __MaybeDebug( __value( component, _DEBUG_B, default = false ) )
                                 union()
                                 {
                                     difference()
                                     {
 
                                         MakeLayer( component , layer = "component_subtractions");
-                                        MakeLayer( component, layer = "component_additions" ); 
+                                        MakeLayer( component, layer = "component_additions" );
                                     }
                                     MakeLayer( component, layer = "final_component_subtractions" );
 
@@ -1548,6 +1561,7 @@ module MakeBox( box )
 
         function __component_rotation() = __value( component, ROTATION, default = 0 );
         function __is_component_enabled() = __value( component, ENABLED_B, default = true);
+        function __is_component_debug() = __value( component, _DEBUG_B, default = false);
 
         /////////
 

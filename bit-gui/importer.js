@@ -24,25 +24,34 @@ for (const ctx of Object.values(schemaJson.contexts)) {
   for (const k of Object.keys(ctx.keys)) ALL_KEYS.add(k);
 }
 
-const GLOBAL_BOOL_RE = /^\s*(g_b_print_lid|g_b_print_box)\s*=\s*(true|false|t|f|0|1)\s*;\s*(?:\/\/.*)?$/i;
-const GLOBAL_STR_RE = /^\s*(g_isolated_print_box)\s*=\s*"([^"]*)"\s*;\s*(?:\/\/.*)?$/i;
+const GLOBAL_NAMES = new Set(Object.keys(schemaJson.globals || {}));
+const GLOBAL_DEFAULTS = {};
+for (const [k, v] of Object.entries(schemaJson.globals || {})) {
+  GLOBAL_DEFAULTS[k] = v.default;
+}
+function isGlobalDefault(key, value) {
+  return key in GLOBAL_DEFAULTS && JSON.stringify(value) === JSON.stringify(GLOBAL_DEFAULTS[key]);
+}
+const GLOBAL_BOOL_RE = /^\s*(g_\w+)\s*=\s*(true|false|t|f|0|1)\s*;\s*(?:\/\/.*)?$/i;
+const GLOBAL_NUM_RE  = /^\s*(g_\w+)\s*=\s*(-?\d+(?:\.\d+)?)\s*;\s*(?:\/\/.*)?$/i;
+const GLOBAL_STR_RE  = /^\s*(g_\w+)\s*=\s*"([^"]*)"\s*;\s*(?:\/\/.*)?$/i;
 const INCLUDE_RE = /^\s*include\s*<\s*(?:lib\/)?(?:boardgame_insert_toolkit_lib\.|bit_functions_lib\.)\d+\.scad\s*>\s*;?\s*(?:\/\/.*)?$/i;
 const MARKER_RE = /^\s*\/\/\s*BITGUI\b/i;
 const MAKEALL_RE = /^\s*MakeAll\s*\(\s*\)\s*;\s*(?:\/\/.*)?$/;
-const KV_LINE_RE = /^\s*\[\s*([A-Z][A-Z0-9_]*)\s*,\s*(.*?)\s*\]\s*,?\s*(?:\/\/.*)?$/;
+const KV_LINE_RE = /^\s*\[\s*([_A-Z][A-Z0-9_]*)\s*,\s*(.*?)\s*\]\s*,?\s*(?:\/\/.*)?$/;
 
 // Structural patterns — all allow optional trailing // comments
 const DATA_ASSIGN_RE = /^\s*data\s*=\s*\[\s*(?:\/\/.*)?$/;           // data = [
 const DATA_ASSIGN_INLINE_RE = /^\s*data\s*=\s*(?:\/\/.*)?$/;          // data =
 const ELEMENT_OPEN_RE = /^\s*\[\s*"([^"]+)"\s*,\s*(?:\/\/.*)?$/;      // [ "name",
-const KEY_OPEN_RE = /^\s*\[\s*([A-Z][A-Z0-9_]*)\s*,\s*(?:\/\/.*)?$/;  // [ KEY,
+const KEY_OPEN_RE = /^\s*\[\s*([_A-Z][A-Z0-9_]*)\s*,\s*(?:\/\/.*)?$/;  // [ KEY,
 const BARE_OPEN_RE = /^\s*\[\s*(?:\/\/.*)?$/;                          // [
 const CLOSE_RE = /^\s*\]\s*,?\s*(?:\/\/.*)?$/;                         // ] or ],
 const CLOSE_SEMI_RE = /^\s*\]\s*;\s*(?:\/\/.*)?$/;                     // ];
 
 // Merged bracket patterns — opening [ merged onto opener, or double ]] close
 const ELEMENT_OPEN_MERGED_RE = /^\s*\[\s*"([^"]+)"\s*,\s*\[\s*(?:\/\/.*)?$/;      // [ "name", [
-const KEY_OPEN_MERGED_RE = /^\s*\[\s*([A-Z][A-Z0-9_]*)\s*,\s*\[\s*(?:\/\/.*)?$/;  // [ KEY, [
+const KEY_OPEN_MERGED_RE = /^\s*\[\s*([_A-Z][A-Z0-9_]*)\s*,\s*\[\s*(?:\/\/.*)?$/;  // [ KEY, [
 const CLOSE_DOUBLE_RE = /^\s*\]\s*\]\s*,?\s*(?:\/\/.*)?$/;                         // ]] or ]],
 
 // --- Load-time formatter ---
@@ -720,13 +729,23 @@ function importScad(scadText) {
     // --- Non-structural lines ---
 
     const boolMatch = raw.match(GLOBAL_BOOL_RE);
-    if (boolMatch) {
+    if (boolMatch && GLOBAL_NAMES.has(boolMatch[1])) {
       const v = boolMatch[2].toLowerCase();
-      lines.push({ raw, kind: "global", depth, globalKey: boolMatch[1], globalValue: v === "true" || v === "t" || v === "1" });
+      const gv = v === "true" || v === "t" || v === "1";
+      if (isGlobalDefault(boolMatch[1], gv)) continue; // skip default-valued globals
+      lines.push({ raw, kind: "global", depth, globalKey: boolMatch[1], globalValue: gv });
+      continue;
+    }
+    const numMatch = raw.match(GLOBAL_NUM_RE);
+    if (numMatch && GLOBAL_NAMES.has(numMatch[1])) {
+      const gv = parseFloat(numMatch[2]);
+      if (isGlobalDefault(numMatch[1], gv)) continue; // skip default-valued globals
+      lines.push({ raw, kind: "global", depth, globalKey: numMatch[1], globalValue: gv });
       continue;
     }
     const strMatch = raw.match(GLOBAL_STR_RE);
-    if (strMatch) {
+    if (strMatch && GLOBAL_NAMES.has(strMatch[1])) {
+      if (isGlobalDefault(strMatch[1], strMatch[2])) continue; // skip default-valued globals
       lines.push({ raw, kind: "global", depth, globalKey: strMatch[1], globalValue: strMatch[2] });
       continue;
     }
@@ -933,13 +952,23 @@ function reimportBlock(text, baseDepth) {
 
     // Globals
     const boolMatch = raw.match(GLOBAL_BOOL_RE);
-    if (boolMatch) {
+    if (boolMatch && GLOBAL_NAMES.has(boolMatch[1])) {
       const v = boolMatch[2].toLowerCase();
-      lines.push({ raw, kind: "global", depth, globalKey: boolMatch[1], globalValue: v === "true" || v === "t" || v === "1" });
+      const gv = v === "true" || v === "t" || v === "1";
+      if (isGlobalDefault(boolMatch[1], gv)) continue;
+      lines.push({ raw, kind: "global", depth, globalKey: boolMatch[1], globalValue: gv });
+      continue;
+    }
+    const numMatch = raw.match(GLOBAL_NUM_RE);
+    if (numMatch && GLOBAL_NAMES.has(numMatch[1])) {
+      const gv = parseFloat(numMatch[2]);
+      if (isGlobalDefault(numMatch[1], gv)) continue;
+      lines.push({ raw, kind: "global", depth, globalKey: numMatch[1], globalValue: gv });
       continue;
     }
     const strMatch = raw.match(GLOBAL_STR_RE);
-    if (strMatch) {
+    if (strMatch && GLOBAL_NAMES.has(strMatch[1])) {
+      if (isGlobalDefault(strMatch[1], strMatch[2])) continue;
       lines.push({ raw, kind: "global", depth, globalKey: strMatch[1], globalValue: strMatch[2] });
       continue;
     }
