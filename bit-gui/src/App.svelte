@@ -42,12 +42,15 @@
     }
   }
 
+  let fileLoaded = false;
+
   function handleLoad(payload: any) {
     const { data, filePath } = payload;
     project.set(data);
     setFilePath(filePath);
     setNeedsBackup(!data.hasMarker);
     updateTitle(filePath);
+    fileLoaded = true;
     const name = filePath.replace(/.*[/\\]/, "");
     statusMsg = data.hasMarker ? name : `${name} (will backup .bak on first save)`;
   }
@@ -55,6 +58,20 @@
   onMount(async () => {
     showIntent = !!(window as any).bitgui?.harness;
     startAutosave();
+
+    // After 1 s of input inactivity, commit the focused control so autosave picks it up.
+    let idleTimer: ReturnType<typeof setTimeout> | null = null;
+    document.addEventListener("input", () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        const el = document.activeElement;
+        if (!el || el.classList.contains("comment-input")) return;
+        if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) {
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      }, 1000);
+    });
+
     const bitgui = (window as any).bitgui;
     if (bitgui?.onMenuNew) bitgui.onMenuNew(newFile);
     if (bitgui?.onMenuOpen) bitgui.onMenuOpen(handleLoad);
@@ -63,15 +80,15 @@
     if (bitgui?.onMenuToggleHideDefaults) bitgui.onMenuToggleHideDefaults((checked: boolean) => { hideDefaults = checked; });
     if (bitgui?.onMenuToggleShowScad) bitgui.onMenuToggleShowScad((checked: boolean) => { showScad = checked; });
 
-    // Check for pending auto-load
-    let loaded = false;
+    // Check for pending auto-load (CLI arg / env var)
     for (let i = 0; i < 50; i++) {
+      if (fileLoaded) break; // already loaded via menu during polling
       const pending = await (window as any).bitgui?.getPendingLoad?.();
-      if (pending) { handleLoad(pending); loaded = true; break; }
+      if (pending) { handleLoad(pending); break; }
       await new Promise(r => setTimeout(r, 200));
     }
-    // If nothing was auto-loaded, start with a new project
-    if (!loaded) newFile();
+    // If nothing was loaded by any path, start with a new project
+    if (!fileLoaded) newFile();
   });
 
   function newFile() {
@@ -90,7 +107,7 @@
     if (!res.ok) { if (res.error) statusMsg = `Open failed: ${res.error}`; return; }
     project.set(res.data);
     setFilePath(res.filePath); setNeedsBackup(!res.data.hasMarker);
-    updateTitle(res.filePath);
+    updateTitle(res.filePath); fileLoaded = true;
     const name = res.filePath.replace(/.*[/\\]/, "");
     statusMsg = res.data.hasMarker ? name : `${name} (will backup .bak on first save)`;
   }
@@ -312,6 +329,20 @@
     return -1;
   }
 
+  /** Find the parent open bracket for a line at `lineIndex`. */
+  function findParentOpen(lineIndex: number): number {
+    let bd = 0;
+    for (let j = lineIndex - 1; j >= 0; j--) {
+      const l = $project.lines[j];
+      if (l.kind === "close") bd += (l as any).mergedClose ? 2 : 1;
+      if (l.kind === "open") {
+        bd -= (l as any).mergedOpen ? 2 : 1;
+        if (bd < 0) return j;
+      }
+    }
+    return -1;
+  }
+
   /**
    * Check if line at index `i` should be hidden because a parent open bracket is collapsed.
    * We need to check all open brackets above this line.
@@ -463,9 +494,22 @@
     materializeKv(closeIndex, key, newValue, depth);
   }
 
-  /** Delete a real kv line (dematerialize back to virtual default). */
+  /** Delete a real kv line (dematerialize back to virtual default).
+   *  If this empties a parent lid block, remove the block too. */
   function dematerializeKv(lineIndex: number) {
+    const parentOpenIdx = findParentOpen(lineIndex);
+    const isLidParent = parentOpenIdx >= 0 && $project.lines[parentOpenIdx].role === "lid";
     deleteLine(lineIndex);
+    if (isLidParent) {
+      const closeIdx = findMatchingClose(parentOpenIdx);
+      if (closeIdx > parentOpenIdx) {
+        let hasContent = false;
+        for (let j = parentOpenIdx + 1; j < closeIdx; j++) {
+          if ($project.lines[j].kind !== "close") { hasContent = true; break; }
+        }
+        if (!hasContent) deleteBlock(parentOpenIdx);
+      }
+    }
   }
 
   // --- Virtual globals ---
@@ -620,9 +664,22 @@
     editingComment = idx;
   }
 
-  function addRawLine(afterIndex: number, depth: number) {
-    const indent = "    ".repeat(depth);
-    insertLine(afterIndex + 1, { raw: indent, kind: "raw", depth });
+  /** Materialize a virtual lid setting: creates the BOX_LID block and inserts the changed KV. */
+  function materializeVirtualLidSetting(objectCloseIndex: number, key: string, def: any, value: any) {
+    if (JSON.stringify(value) === JSON.stringify(def.default)) return;
+    const lidDepth = ($project.lines[objectCloseIndex]?.depth ?? 0) + 1;
+    const lidChildDepth = lidDepth + 1;
+    addLid(objectCloseIndex, lidDepth);
+    // Lid close is now at objectCloseIndex + 1
+    materializeKv(objectCloseIndex + 1, key, value, lidChildDepth);
+  }
+
+  /** Materialize a virtual lid KV at default value and open comment editor. */
+  function materializeVirtualLidKvWithComment(objectCloseIndex: number, key: string, def: any, depth: number) {
+    const lidDepth = ($project.lines[objectCloseIndex]?.depth ?? 0) + 1;
+    addLid(objectCloseIndex, lidDepth);
+    materializeKv(objectCloseIndex + 1, key, def.default, depth);
+    editingComment = objectCloseIndex + 1;
   }
 
   /** Insert a full object skeleton before a close bracket at `closeIndex`. */
@@ -674,6 +731,58 @@
       p.lines.splice(closeIndex, 0, ...lines);
       return { ...p };
     });
+  }
+
+  /** Insert a BOX_LID block before `closeIndex`. */
+  function addLid(closeIndex: number, depth: number) {
+    const d = depth;
+    const ind = (n: number) => "    ".repeat(n);
+    const lines: Line[] = [
+      { raw: `${ind(d)}[ BOX_LID, [`, kind: "open", depth: d, role: "lid", label: "BOX_LID", mergedOpen: true },
+      { raw: `${ind(d)}]],`, kind: "close", depth: d, role: "lid", label: "BOX_LID", mergedClose: true },
+    ];
+    project.update((p) => {
+      p.lines.splice(closeIndex, 0, ...lines);
+      return { ...p };
+    });
+  }
+
+  /** Check if a block (by close index) has a BOX_LID child. */
+  function hasLidChild(closeIndex: number): boolean {
+    const closeLine = $project.lines[closeIndex];
+    if (!closeLine || closeLine.kind !== "close") return false;
+    // Walk backwards to find the matching open
+    let bd = 0;
+    let openIdx = -1;
+    for (let i = closeIndex; i >= 0; i--) {
+      if ($project.lines[i].kind === "close") bd += ($project.lines[i] as any).mergedClose ? 2 : 1;
+      if ($project.lines[i].kind === "open") {
+        bd -= ($project.lines[i] as any).mergedOpen ? 2 : 1;
+        if (bd <= 0) { openIdx = i; break; }
+      }
+    }
+    if (openIdx < 0) return false;
+    for (let j = openIdx + 1; j < closeIndex; j++) {
+      if ($project.lines[j].kind === "open" && $project.lines[j].role === "lid") return true;
+    }
+    return false;
+  }
+
+  /** Check if this close bracket's parent object supports lids (OBJECT_BOX only). */
+  function supportsLid(closeIndex: number): boolean {
+    const closeLine = $project.lines[closeIndex];
+    if (!closeLine || closeLine.kind !== "close") return false;
+    const role = closeLine.role || "";
+    // For merged close (role="object"), check label directly
+    if (role === "object" && (closeLine as any).mergedClose) {
+      return closeLine.label === "OBJECT_BOX";
+    }
+    // For params close, find parent object
+    if (role === "params") {
+      const label = findObjectLabel(closeIndex);
+      return label === "OBJECT_BOX";
+    }
+    return false;
   }
 
   /** Insert a LABEL block before `closeIndex`. */
@@ -850,24 +959,59 @@
           </div>
           {/if}
         {/each}
+        <!-- Virtual BOX_LID block for OBJECT_BOX without a lid -->
+        {#if !hideDefaults && supportsLid(i) && !hasLidChild(i)}
+          {@const lidDepth = (line.depth ?? 0) + 1}
+          {@const lidChildDepth = lidDepth + 1}
+          {@const lidScalars = getScalarKeysForContext("lid")}
+          <div class="line-row struct open virtual" style={padDepth(lidDepth)} data-testid="virtual-lid">
+            <span class="struct-label inferred">BOX_LID</span>
+            <span class="struct-bracket">[</span>
+          </div>
+          {#each lidScalars as srow (srow.key)}
+            {@const rkt = srow.def.type}
+            {@const val = srow.def.default}
+            {@const onChange = (v: any) => materializeVirtualLidSetting(i, srow.key, srow.def, v)}
+            <div class="line-row kv virtual" style={padDepth(lidChildDepth)} data-testid="virtual-lid-{srow.key}">
+              <span class="kv-key virtual-key" title={tip(srow.key)}>{srow.key}</span>
+              <span class="kv-control">
+                {#if rkt === "bool"}
+                  <input type="checkbox" checked={val === true} onchange={(e) => onChange(e.currentTarget.checked)} />
+                {:else if rkt === "number"}
+                  <input class="kv-num" type="number" step="any" value={val} onchange={(e) => onChange(parseNum(e.currentTarget.value))} />
+                {:else if rkt === "string"}
+                  <input class="kv-str" type="text" value={val ?? ""} onchange={(e) => onChange(e.currentTarget.value)} />
+                {:else if rkt === "4bool" && Array.isArray(val)}
+                  {#each ["F","B","L","R"] as lb, j}
+                    <label class="side-label"><span class="side-tag">{lb}</span>
+                      <input type="checkbox" checked={val[j] ?? false}
+                        onchange={(e) => { const c = [...val]; c[j] = e.currentTarget.checked; onChange(c); }} />
+                    </label>
+                  {/each}
+                {:else}
+                  <span class="kv-fallback">{JSON.stringify(val)}</span>
+                {/if}
+              </span>
+              <button class="comment-btn" title="Add comment" onclick={() => materializeVirtualLidKvWithComment(i, srow.key, srow.def, lidChildDepth)}>//</button>
+              <span class="spacer"></span>
+            </div>
+          {/each}
+          <div class="line-row struct close virtual" style={padDepth(lidDepth)}>
+            <span class="struct-bracket">]],</span>
+          </div>
+        {/if}
         <!-- Close bracket with context-aware add buttons -->
         <div class="line-row struct close" style={pad(line)} data-testid="line-{i}">
           <span class="struct-bracket">{line.raw.trim()}</span>
           {#if line.role === "data"}
             <button class="add-btn" title="Add object" onclick={() => addObject(i, line.depth ?? 0)}>+ Object</button>
           {:else if line.role === "params"}
-            <button class="add-btn" title="Add line" onclick={() => addRawLine(i - 1, (line.depth ?? 0) + 1)}>+ Line</button>
             <button class="add-btn" title="Add LABEL block" onclick={() => addLabel(i, (line.depth ?? 0) + 1)}>+ Label</button>
             <button class="add-btn" title="Add BOX_FEATURE block" onclick={() => addFeatureList(i, (line.depth ?? 0) + 1)}>+ Feature</button>
           {:else if line.role === "object" && line.mergedClose}
             {@const innerDepth = (line.depth ?? 0) + 1}
-            <button class="add-btn" title="Add line" onclick={() => addRawLine(i - 1, innerDepth)}>+ Line</button>
             <button class="add-btn" title="Add LABEL block" onclick={() => addLabel(i, innerDepth)}>+ Label</button>
             <button class="add-btn" title="Add BOX_FEATURE block" onclick={() => addFeatureList(i, innerDepth)}>+ Feature</button>
-          {:else if line.role === "feature" || line.role === "feature_list" || line.role === "label" || line.role === "lid" || line.role === "label_params" || line.role === "lid_params" || line.role === "list" || line.role === "data_list"}
-            <!-- No add buttons on these structural close brackets -->
-          {:else}
-            <button class="add-btn" title="Add line" onclick={() => addRawLine(i - 1, (line.depth ?? 0) + 1)}>+</button>
           {/if}
         </div>
 
@@ -941,6 +1085,7 @@
             rows={rawGroupLineCount(i)}
             value={rawGroupText(i)}
             onblur={(e) => handleRawGroupEdit(i, e.currentTarget.value)}
+            onchange={(e) => handleRawGroupEdit(i, e.currentTarget.value)}
           ></textarea>
           <button class="raw-delete" title="Delete raw block"
             onclick={() => spliceLines(i, rawGroupLineCount(i), [])}>✕</button>
@@ -1004,6 +1149,7 @@
   .line-row.kv.virtual { background: #f0ecf5; border-left: none; font-style: italic; }
   .line-row.kv.virtual:hover { background: #e8e2f0; }
   .line-row.kv.virtual .kv-key { font-weight: 500; color: #7b6b8a; }
+  .line-row.struct.virtual { background: #f0ecf5; border-left: none; font-style: italic; opacity: 0.7; }
   .virtual-key { font-style: italic; }
   .line-row.raw { background: white; }
 
@@ -1090,7 +1236,9 @@
     background: none; border: none; color: #ccc; cursor: pointer;
     font-family: "Courier New", monospace; font-size: 13px; font-weight: 700;
     padding: 0 3px; flex-shrink: 0;
+    opacity: 0; transition: opacity 0.15s;
   }
+  .line-row:hover .comment-btn { opacity: 1; }
   .comment-btn:hover { color: #27ae60; }
   .comment-area {
     display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0;
