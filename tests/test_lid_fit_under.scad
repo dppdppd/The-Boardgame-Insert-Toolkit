@@ -6,22 +6,16 @@ g_b_print_box = true;
 g_isolated_print_box = "";
 
 data = [
-    [ "fit under lid",
-        [
-            [ BOX_SIZE_XYZ, [60, 60, 20] ],
-            [ BOX_LID,
-                [
-                    [ LID_FIT_UNDER_B, t ],
-                    [ LID_PATTERN_RADIUS, 8 ],
-                ]
-            ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [56, 56, 18] ],
-                ]
-            ],
-        ]
-    ],
+    [ OBJECT_BOX, [
+        [ NAME, "fit under lid" ],
+        [ BOX_SIZE_XYZ, [60, 60, 20] ],
+        [ BOX_LID, [
+            [ LID_FIT_UNDER_B, t ],
+            [ LID_PATTERN_RADIUS, 8 ],
+        ]],
+        [ BOX_FEATURE, [
+            [ FTR_COMPARTMENT_SIZE_XYZ, [56, 56, 18] ],
+        ]],
+    ]],
 ];
-
 MakeAll();

@@ -6,23 +6,17 @@ g_b_print_box = true;
 g_isolated_print_box = "";
 
 data = [
-    [ "inset lid stackable",
-        [
-            [ BOX_SIZE_XYZ, [45, 45, 15] ],
-            [ BOX_STACKABLE_B, t ],
-            [ BOX_LID,
-                [
-                    [ LID_SOLID_B, t ],
-                    [ LID_INSET_B, t ],
-                ]
-            ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [42, 42, 13] ],
-                ]
-            ],
-        ]
-    ],
+    [ OBJECT_BOX, [
+        [ NAME, "inset lid stackable" ],
+        [ BOX_SIZE_XYZ, [45, 45, 15] ],
+        [ BOX_STACKABLE_B, t ],
+        [ BOX_LID, [
+            [ LID_SOLID_B, t ],
+            [ LID_INSET_B, t ],
+        ]],
+        [ BOX_FEATURE, [
+            [ FTR_COMPARTMENT_SIZE_XYZ, [42, 42, 13] ],
+        ]],
+    ]],
 ];
-
 MakeAll();

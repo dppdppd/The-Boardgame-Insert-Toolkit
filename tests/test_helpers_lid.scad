@@ -8,20 +8,17 @@ g_b_print_box = true;
 g_isolated_print_box = "";
 
 data = [
-    [ "lid_parms helper",
-        [
-            [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_FEATURE, ftr_parms(dx=46, dy=46, dz=18) ],
-            [ BOX_LID, lid_parms( radius=8, lbl="PATTERN", font="Arial:style=Bold", size=10 ) ],
-        ]
-    ],
-    [ "lid_parms_solid helper",
-        [
-            [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_FEATURE, ftr_parms(dx=46, dy=46, dz=18) ],
-            [ BOX_LID, lid_parms_solid() ],
-        ]
-    ],
+    [ OBJECT_BOX, [
+        [ NAME, "lid_parms helper" ],
+        [ BOX_SIZE_XYZ, [50, 50, 20] ],
+        [ BOX_FEATURE, ftr_parms(dx =46, dy =46, dz =18) ],
+        [ BOX_LID, lid_parms(radius =8, lbl ="PATTERN", font ="Arial:style=Bold", size =10) ],
+    ]],
+    [ OBJECT_BOX, [
+        [ NAME, "lid_parms_solid helper" ],
+        [ BOX_SIZE_XYZ, [50, 50, 20] ],
+        [ BOX_FEATURE, ftr_parms(dx =46, dy =46, dz =18) ],
+        [ BOX_LID, lid_parms_solid() ],
+    ]],
 ];
-
 MakeAll();

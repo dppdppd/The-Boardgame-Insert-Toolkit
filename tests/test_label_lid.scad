@@ -6,50 +6,35 @@ g_b_print_box = true;
 g_isolated_print_box = "";
 
 data = [
-    [ "lid labels",
-        [
-            [ BOX_SIZE_XYZ, [60, 60, 15] ],
-            [ BOX_LID,
-                [
-                    [ LID_PATTERN_RADIUS, 8 ],
-                    [ LABEL,
-                        [
-                            [ LBL_TEXT, "GAME" ],
-                            [ LBL_SIZE, AUTO ],
-                        ]
-                    ],
-                ],
-            ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [56, 56, 13] ],
-                ]
-            ],
-        ]
-    ],
-    [ "lid label rotated",
-        [
-            [ BOX_SIZE_XYZ, [60, 60, 15] ],
-            [ BOX_LID,
-                [
-                    [ LID_PATTERN_RADIUS, 8 ],
-                    [ LABEL,
-                        [
-                            [ LBL_TEXT, "ANGLED" ],
-                            [ LBL_SIZE, AUTO ],
-                            [ ROTATION, 45 ],
-                            [ POSITION_XY, [2, -2] ],
-                        ]
-                    ],
-                ],
-            ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [56, 56, 13] ],
-                ]
-            ],
-        ]
-    ],
+    [ OBJECT_BOX, [
+        [ NAME, "lid labels" ],
+        [ BOX_SIZE_XYZ, [60, 60, 15] ],
+        [ BOX_LID, [
+            [ LID_PATTERN_RADIUS, 8 ],
+            [ LABEL, [
+                [ LBL_TEXT, "GAME" ],
+                [ LBL_SIZE, AUTO ],
+            ]],
+        ]],
+        [ BOX_FEATURE, [
+            [ FTR_COMPARTMENT_SIZE_XYZ, [56, 56, 13] ],
+        ]],
+    ]],
+    [ OBJECT_BOX, [
+        [ NAME, "lid label rotated" ],
+        [ BOX_SIZE_XYZ, [60, 60, 15] ],
+        [ BOX_LID, [
+            [ LID_PATTERN_RADIUS, 8 ],
+            [ LABEL, [
+                [ LBL_TEXT, "ANGLED" ],
+                [ LBL_SIZE, AUTO ],
+                [ ROTATION, 45 ],
+                [ POSITION_XY, [2, -2] ],
+            ]],
+        ]],
+        [ BOX_FEATURE, [
+            [ FTR_COMPARTMENT_SIZE_XYZ, [56, 56, 13] ],
+        ]],
+    ]],
 ];
-
 MakeAll();

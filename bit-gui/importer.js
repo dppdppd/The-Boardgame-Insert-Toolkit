@@ -5,6 +5,7 @@
 
 const KNOWN_CONSTANTS = {
   BOX: "BOX", DIVIDERS: "DIVIDERS", SPACER: "SPACER",
+  OBJECT_BOX: "OBJECT_BOX", OBJECT_DIVIDERS: "OBJECT_DIVIDERS", OBJECT_SPACER: "OBJECT_SPACER",
   SQUARE: "SQUARE", HEX: "HEX", HEX2: "HEX2",
   OCT: "OCT", OCT2: "OCT2", ROUND: "ROUND", FILLET: "FILLET",
   INTERIOR: "INTERIOR", EXTERIOR: "EXTERIOR", BOTH: "BOTH",
@@ -39,6 +40,11 @@ const INCLUDE_RE = /^\s*include\s*<\s*(?:lib\/)?(?:boardgame_insert_toolkit_lib\
 const MARKER_RE = /^\s*\/\/\s*BITGUI\b/i;
 const MAKEALL_RE = /^\s*MakeAll\s*\(\s*\)\s*;\s*(?:\/\/.*)?$/;
 const KV_LINE_RE = /^\s*\[\s*([_A-Z][A-Z0-9_]*)\s*,\s*(.*?)\s*\]\s*,?\s*(?:\/\/.*)?$/;
+
+// New-style OBJECT_* element type constants
+const OBJECT_TYPES = new Set(["OBJECT_BOX", "OBJECT_DIVIDERS", "OBJECT_SPACER"]);
+const OBJECT_OPEN_RE = /^\s*\[\s*(OBJECT_BOX|OBJECT_DIVIDERS|OBJECT_SPACER)\s*,\s*(?:\/\/.*)?$/;
+const OBJECT_OPEN_MERGED_RE = /^\s*\[\s*(OBJECT_BOX|OBJECT_DIVIDERS|OBJECT_SPACER)\s*,\s*\[\s*(?:\/\/.*)?$/;
 
 // Structural patterns — all allow optional trailing // comments
 const DATA_ASSIGN_RE = /^\s*data\s*=\s*\[\s*(?:\/\/.*)?$/;           // data = [
@@ -87,6 +93,10 @@ function formatScadOnLoad(scadText) {
   // - BOX_COMPONENTS => multiple BOX_FEATURE entries
   // - BOX_LID_* keys => BOX_LID block with LID_* keys
   try { transformV2ToV4(root); } catch { /* non-fatal */ }
+
+  // Convert old string-name elements to OBJECT_* format:
+  // [ "name", [ [TYPE, BOX], ... ] ] → [ OBJECT_BOX, [ [NAME, "name"], ... ] ]
+  try { transformToObjectStyle(root); } catch { /* non-fatal */ }
 
   const out = [];
   const headerLine = `${baseIndent}data = [` + (headerComment ? ` //${headerComment}` : "");
@@ -184,6 +194,53 @@ function transformArrayNode(arr) {
       kept.splice(firstIdx < 0 ? kept.length : firstIdx, 0, lidBlock);
       arr.elements = kept;
     }
+  }
+}
+
+function transformToObjectStyle(root) {
+  if (!root || root.type !== "array") return;
+  // Each element of root is a data entry: [ "name", [ params... ] ]
+  for (let i = 0; i < root.elements.length; i++) {
+    const el = root.elements[i];
+    if (!el || el.type !== "array") continue;
+    const vals = el.elements.filter(e => e.type !== "comment");
+    if (vals.length !== 2) continue;
+    const nameNode = vals[0];
+    const paramsNode = vals[1];
+    if (!nameNode || nameNode.type !== "atom") continue;
+    const nameText = String(nameNode.text || "").trim();
+    if (!nameText.startsWith('"')) continue; // only convert old-style string names
+    if (!paramsNode || paramsNode.type !== "array") continue;
+
+    // Determine element type from TYPE property, default to OBJECT_BOX
+    let objectType = "OBJECT_BOX";
+    let typeIdx = -1;
+    for (let j = 0; j < paramsNode.elements.length; j++) {
+      const param = paramsNode.elements[j];
+      if (isPairArray(param, "TYPE")) {
+        const [, v] = getPairValues(param);
+        const vt = String(v?.text || "").trim();
+        if (vt === "DIVIDERS") objectType = "OBJECT_DIVIDERS";
+        else if (vt === "SPACER") objectType = "OBJECT_SPACER";
+        typeIdx = j;
+        break;
+      }
+    }
+
+    // Replace the name atom with the OBJECT_* constant
+    nameNode.text = objectType;
+
+    // Remove TYPE entry from params and insert NAME entry
+    if (typeIdx >= 0) {
+      paramsNode.elements.splice(typeIdx, 1);
+    }
+    // Insert [ NAME, "oldname" ] as first non-comment element
+    let insertIdx = 0;
+    for (let j = 0; j < paramsNode.elements.length; j++) {
+      if (paramsNode.elements[j].type !== "comment") { insertIdx = j; break; }
+      insertIdx = j + 1;
+    }
+    paramsNode.elements.splice(insertIdx, 0, makeArray([makeAtom("NAME"), makeAtom(nameText)]));
   }
 }
 
@@ -579,8 +636,8 @@ function renderEntryLines(node, indent, needsComma, outLines) {
       return;
     }
 
-    // [ "name", [ ... ] ]  => object entry (merged brackets)
-    if (a.type === "atom" && a.text.trim().startsWith('"') && b.type === "array") {
+    // [ "name", [ ... ] ] or [ OBJECT_*, [ ... ] ]  => object entry (merged brackets)
+    if (a.type === "atom" && (a.text.trim().startsWith('"') || OBJECT_TYPES.has(a.text.trim())) && b.type === "array") {
       outLines.push(`${indent}[ ${a.text.trim()}, [` + (node.commentAfterFirst ? ` //${node.commentAfterFirst}` : ""));
       const childIndent = indent + " ".repeat(4);
       for (const child of b.elements) {
@@ -774,6 +831,26 @@ function importScad(scadText) {
     }
     if (DATA_ASSIGN_INLINE_RE.test(raw)) {
       lines.push({ raw, kind: "raw", depth });
+      continue;
+    }
+
+    // [ OBJECT_BOX, [  — merged new-style object opener
+    const objMergedMatch = raw.match(OBJECT_OPEN_MERGED_RE);
+    if (objMergedMatch) {
+      const label = objMergedMatch[1];
+      lines.push({ raw, kind: "open", depth, role: "object", label, mergedOpen: true });
+      stack.push({ role: "object", label });
+      stack.push({ role: "params", label: "object params" });
+      depth++;
+      continue;
+    }
+
+    // [ OBJECT_BOX,  — new-style object opener
+    const objMatch = raw.match(OBJECT_OPEN_RE);
+    if (objMatch) {
+      lines.push({ raw, kind: "open", depth, role: "object", label: objMatch[1] });
+      stack.push({ role: "object", label: objMatch[1] });
+      depth++;
       continue;
     }
 
@@ -990,6 +1067,26 @@ function reimportBlock(text, baseDepth) {
     if (DATA_ASSIGN_RE.test(raw)) {
       lines.push({ raw, kind: "open", depth, role: "data", label: "data" });
       stack.push({ role: "data" });
+      depth++;
+      continue;
+    }
+
+    // [ OBJECT_BOX, [  — merged new-style object opener
+    const objMergedMatch = raw.match(OBJECT_OPEN_MERGED_RE);
+    if (objMergedMatch) {
+      const label = objMergedMatch[1];
+      lines.push({ raw, kind: "open", depth, role: "object", label, mergedOpen: true });
+      stack.push({ role: "object", label });
+      stack.push({ role: "params", label: "object params" });
+      depth++;
+      continue;
+    }
+
+    // [ OBJECT_BOX,  — new-style object opener
+    const objMatch = raw.match(OBJECT_OPEN_RE);
+    if (objMatch) {
+      lines.push({ raw, kind: "open", depth, role: "object", label: objMatch[1] });
+      stack.push({ role: "object", label: objMatch[1] });
       depth++;
       continue;
     }

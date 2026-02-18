@@ -25,6 +25,7 @@
   let showIntent = $state(false);
   let statusMsg = $state("No file open");
   let hideDefaults = $state(false);
+  let showScad = $state(false);
 
   let scadOutput = $derived(generateScad($project));
 
@@ -60,6 +61,7 @@
     if (bitgui?.onMenuSaveAs) bitgui.onMenuSaveAs(saveFileAs);
     if (bitgui?.onMenuOpenInOpenScad) bitgui.onMenuOpenInOpenScad(openInOpenScad);
     if (bitgui?.onMenuToggleHideDefaults) bitgui.onMenuToggleHideDefaults((checked: boolean) => { hideDefaults = checked; });
+    if (bitgui?.onMenuToggleShowScad) bitgui.onMenuToggleShowScad((checked: boolean) => { showScad = checked; });
 
     // Check for pending auto-load
     let loaded = false;
@@ -132,7 +134,9 @@
   }
 
   const KNOWN_CONSTANTS: Record<string, any> = {
-    BOX:"BOX",DIVIDERS:"DIVIDERS",SPACER:"SPACER",SQUARE:"SQUARE",
+    BOX:"BOX",DIVIDERS:"DIVIDERS",SPACER:"SPACER",
+    OBJECT_BOX:"OBJECT_BOX",OBJECT_DIVIDERS:"OBJECT_DIVIDERS",OBJECT_SPACER:"OBJECT_SPACER",
+    SQUARE:"SQUARE",
     HEX:"HEX",HEX2:"HEX2",OCT:"OCT",OCT2:"OCT2",ROUND:"ROUND",FILLET:"FILLET",
     INTERIOR:"INTERIOR",EXTERIOR:"EXTERIOR",BOTH:"BOTH",
     FRONT:"FRONT",BACK:"BACK",LEFT:"LEFT",RIGHT:"RIGHT",
@@ -344,15 +348,35 @@
     lid: "lid_params",
   };
 
-  /** Get schema context for a close line, handling both normal and merged closes. */
-  function getCloseContext(line: Line): string | undefined {
-    const role = line.role || "";
-    if (ROLE_TO_CONTEXT[role]) return ROLE_TO_CONTEXT[role];
-    if (line.mergedClose) {
-      const innerRole = MERGED_INNER_ROLE[role];
-      if (innerRole) return ROLE_TO_CONTEXT[innerRole];
+  /** Find the object label for a close bracket (to resolve element vs divider context). */
+  function findObjectLabel(closeIndex: number): string {
+    let bd = 0;
+    for (let i = closeIndex; i >= 0; i--) {
+      if ($project.lines[i].kind === "close") bd += ($project.lines[i] as any).mergedClose ? 2 : 1;
+      if ($project.lines[i].kind === "open") {
+        bd -= ($project.lines[i] as any).mergedOpen ? 2 : 1;
+        if (bd <= 0) return $project.lines[i].label || "";
+      }
     }
-    return undefined;
+    return "";
+  }
+
+  /** Get schema context for a close line, handling both normal and merged closes. */
+  function getCloseContext(line: Line, closeIndex?: number): string | undefined {
+    const role = line.role || "";
+    let ctx: string | undefined;
+    if (ROLE_TO_CONTEXT[role]) {
+      ctx = ROLE_TO_CONTEXT[role];
+    } else if (line.mergedClose) {
+      const innerRole = MERGED_INNER_ROLE[role];
+      if (innerRole) ctx = ROLE_TO_CONTEXT[innerRole];
+    }
+    // If we resolved to "element", check if this is actually a divider
+    if (ctx === "element" && closeIndex != null) {
+      const label = findObjectLabel(closeIndex);
+      if (label === "OBJECT_DIVIDERS") return "divider";
+    }
+    return ctx;
   }
 
   // Get all scalar schema keys for a context (skip table/table_list)
@@ -374,7 +398,7 @@
   }[] {
     const closeLine = $project.lines[closeIndex];
     if (!closeLine || closeLine.kind !== "close") return [];
-    const ctx = getCloseContext(closeLine);
+    const ctx = getCloseContext(closeLine, closeIndex);
     if (!ctx) return [];
 
     // Find matching open bracket (merged brackets count as 2)
@@ -423,7 +447,7 @@
     const lines = $project.lines;
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].kind !== "close") continue;
-      if (!getCloseContext(lines[i])) continue;
+      if (!getCloseContext(lines[i], i)) continue;
       const rows = getSortedSchemaRows(i);
       for (const r of rows) {
         if (r.lineIndex !== null) set.add(r.lineIndex);
@@ -508,21 +532,46 @@
     return KEY_SCHEMA_MAP[key]?.default;
   }
 
+  /** Find the NAME kv value among immediate children of an open bracket. */
+  function findChildName(openIdx: number): string {
+    const closeIdx = findMatchingClose(openIdx);
+    if (closeIdx < 0) return "";
+    const childDepth = ($project.lines[openIdx].depth ?? 0) + 1;
+    for (let j = openIdx + 1; j < closeIdx; j++) {
+      const l = $project.lines[j];
+      if (l.kind === "kv" && l.kvKey === "NAME" && l.depth === childDepth) return String(l.kvValue ?? "");
+    }
+    return "";
+  }
+
+  /** Append (" name") suffix if a NAME child exists. */
+  function nameSuffix(lineIndex: number | undefined): string {
+    if (lineIndex == null) return "";
+    const name = findChildName(lineIndex);
+    return name ? ` ("${name}")` : "";
+  }
+
   // Structural label for open/close brackets.
   // Returns { text, inferred } where inferred=true means the label is our interpretation, not from the file.
-  function structLabel(line: Line): { text: string; inferred: boolean } {
+  function structLabel(line: Line, lineIndex?: number): { text: string; inferred: boolean } {
     if (line.role === "data") return { text: "data", inferred: false };
     if (line.role === "data_list") return { text: "data list", inferred: true };
-    if (line.role === "object") return { text: `object "${line.label}"`, inferred: false };
+    if (line.role === "object") {
+      const label = line.label || "";
+      if (label.startsWith("OBJECT_")) {
+        return { text: `${label}${nameSuffix(lineIndex)}`, inferred: false };
+      }
+      return { text: `object "${label}"`, inferred: false };
+    }
     if (line.role === "params") return { text: "object params", inferred: true };
-    if (line.role === "feature_list") return { text: line.label || "BOX_FEATURE", inferred: false };
+    if (line.role === "feature_list") return { text: (line.label || "BOX_FEATURE") + nameSuffix(lineIndex), inferred: false };
     if (line.role === "feature") return { text: "feature list", inferred: true };
-    if (line.role === "label") return { text: line.label || "LABEL", inferred: false };
+    if (line.role === "label") return { text: (line.label || "LABEL") + nameSuffix(lineIndex), inferred: false };
     if (line.role === "label_params") return { text: "label params", inferred: true };
-    if (line.role === "lid") return { text: line.label || "BOX_LID", inferred: false };
+    if (line.role === "lid") return { text: (line.label || "BOX_LID") + nameSuffix(lineIndex), inferred: false };
     if (line.role === "lid_params") return { text: "lid params", inferred: true };
     if (line.role === "list") return { text: "list", inferred: true };
-    return { text: line.label || "block", inferred: true };
+    return { text: (line.label || "block") + nameSuffix(lineIndex), inferred: true };
   }
 
   // --- Comment editing ---
@@ -530,6 +579,45 @@
 
   function toggleCommentEdit(i: number) {
     editingComment = editingComment === i ? null : i;
+  }
+
+  /** Finalize a comment edit. If the comment is empty/whitespace and the value
+   *  matches its schema default, dematerialize the line back to virtual. */
+  function finalizeComment(i: number, comment: string) {
+    const trimmed = comment.trim();
+    const line = $project.lines[i];
+    if (!line) { editingComment = null; return; }
+
+    if (!trimmed) {
+      if (line.kind === "kv" && line.kvKey) {
+        const def = KEY_SCHEMA_MAP[line.kvKey];
+        if (def?.default !== undefined && JSON.stringify(line.kvValue) === JSON.stringify(def.default)) {
+          deleteLine(i); editingComment = null; return;
+        }
+      } else if (line.kind === "global" && line.globalKey) {
+        const def = GLOBAL_SCHEMA[line.globalKey];
+        if (def?.default !== undefined && JSON.stringify(line.globalValue) === JSON.stringify(def.default)) {
+          deleteLine(i); editingComment = null; return;
+        }
+      }
+    }
+
+    updateComment(i, trimmed);
+    editingComment = null;
+  }
+
+  /** Materialize a virtual kv at its default value and open comment editor. */
+  function materializeVirtualKvWithComment(closeIndex: number, key: string, def: any, depth: number) {
+    materializeKv(closeIndex, key, def.default, depth);
+    // After insert, the new line is at closeIndex
+    editingComment = closeIndex;
+  }
+
+  /** Materialize a virtual global at its default value and open comment editor. */
+  function materializeVirtualGlobalWithComment(key: string, def: any) {
+    const idx = findGlobalInsertIndex();
+    materializeGlobal(idx, key, def.default);
+    editingComment = idx;
   }
 
   function addRawLine(afterIndex: number, depth: number) {
@@ -543,11 +631,12 @@
     const ind = (n: number) => "    ".repeat(n);
     const count = $project.lines.filter(l => l.kind === "open" && l.role === "object").length;
     const name = `box ${count + 1}`;
+    const label = "OBJECT_BOX";
     const lines: Line[] = [
-      { raw: `${ind(d)}[ "${name}", [`, kind: "open", depth: d, role: "object", label: name, mergedOpen: true },
-      { raw: `${ind(d+1)}[ TYPE, BOX ],`, kind: "kv", depth: d + 1, kvKey: "TYPE", kvValue: "BOX" },
+      { raw: `${ind(d)}[ OBJECT_BOX, [`, kind: "open", depth: d, role: "object", label, mergedOpen: true },
+      { raw: `${ind(d+1)}[ NAME, "${name}" ],`, kind: "kv", depth: d + 1, kvKey: "NAME", kvValue: name },
       { raw: `${ind(d+1)}[ BOX_SIZE_XYZ, [50, 50, 20] ],`, kind: "kv", depth: d + 1, kvKey: "BOX_SIZE_XYZ", kvValue: [50, 50, 20] },
-      { raw: `${ind(d)}]],`, kind: "close", depth: d, role: "object", label: name, mergedClose: true },
+      { raw: `${ind(d)}]],`, kind: "close", depth: d, role: "object", label, mergedClose: true },
     ];
     // Insert all lines before the close bracket
     project.update((p) => {
@@ -608,8 +697,8 @@
     <span class="comment-area">
       <span class="comment-slash">//</span>
       <input class="comment-input" type="text" value={line.comment ?? ""}
-        onblur={(e) => { updateComment(i, e.currentTarget.value); editingComment = null; }}
-        onkeydown={(e) => { if (e.key === "Enter") { e.currentTarget.blur(); } if (e.key === "Escape") { editingComment = null; } }}
+        onblur={(e) => finalizeComment(i, e.currentTarget.value)}
+        onkeydown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); if (e.key === "Escape") finalizeComment(i, line.comment ?? ""); }}
       />
     </span>
   {:else}
@@ -619,6 +708,9 @@
 
 <main data-testid="app-root">
   <section class="content" data-testid="content-area">
+    {#if showScad}
+      <pre class="scad-view">{scadOutput}</pre>
+    {:else}
     {#each $project.lines as line, i (i)}
 
       {#if hiddenLines.has(i)}
@@ -651,9 +743,13 @@
                   <input class="kv-str" type="text" value={gVal ?? ""} onchange={(e) => gOnChange(e.currentTarget.value)} />
                 {/if}
               </span>
-              <span class="spacer"></span>
               {#if row.isReal && row.lineIndex !== null}
                 {@render commentBtn($project.lines[row.lineIndex], row.lineIndex)}
+              {:else}
+                <button class="comment-btn" title="Add comment" onclick={() => materializeVirtualGlobalWithComment(row.key, row.def)}>//</button>
+              {/if}
+              <span class="spacer"></span>
+              {#if row.isReal && row.lineIndex !== null}
                 <button class="delete-btn" title="Reset to default" onclick={() => deleteLine(row.lineIndex!)}>✕</button>
               {/if}
             </div>
@@ -667,7 +763,7 @@
             <button class="collapse-btn" title={collapsed.has(i) ? "Expand" : "Collapse"}
               onclick={() => toggleCollapse(i)}>{collapsed.has(i) ? "▶" : "▼"}</button>
           {/if}
-          <span class={structLabel(line).inferred ? "struct-label inferred" : "struct-label"}>{structLabel(line).text}</span>
+          <span class={structLabel(line, i).inferred ? "struct-label inferred" : "struct-label"}>{structLabel(line, i).text}</span>
           <span class="struct-bracket">{collapsed.has(i) ? "[ ... ]" : "["}</span>
           {#if line.role === "object" || line.role === "feature_list" || line.role === "lid"}
             {@const dbg = getDebugState(i)}
@@ -679,8 +775,8 @@
               </svg>
             </button>
           {/if}
-          <span class="spacer"></span>
           {@render commentBtn(line, i)}
+          <span class="spacer"></span>
           {#if deletable}
             <button class="delete-btn" title="Delete block" onclick={() => deleteBlock(i)}>✕</button>
           {/if}
@@ -742,9 +838,13 @@
                 <span class="kv-fallback">{JSON.stringify(val)}</span>
               {/if}
             </span>
-            <span class="spacer"></span>
             {#if row.isReal && row.lineIndex !== null}
               {@render commentBtn($project.lines[row.lineIndex], row.lineIndex)}
+            {:else}
+              <button class="comment-btn" title="Add comment" onclick={() => materializeVirtualKvWithComment(i, row.key, row.def, row.depth)}>//</button>
+            {/if}
+            <span class="spacer"></span>
+            {#if row.isReal && row.lineIndex !== null}
               <button class="delete-btn" title="Reset to default" onclick={() => dematerializeKv(row.lineIndex)}>✕</button>
             {/if}
           </div>
@@ -824,8 +924,8 @@
               <span class="kv-fallback">{JSON.stringify(line.kvValue)}</span>
             {/if}
           </span>
-          <span class="spacer"></span>
           {@render commentBtn(line, i)}
+          <span class="spacer"></span>
           <button class="toggle-btn" title="Edit as raw text" onclick={() => toRaw(i)}>{"{}"}</button>
         </div>
 
@@ -860,6 +960,7 @@
       {/if}
 
     {/each}
+    {/if}
   </section>
 
   <footer class="status-bar" data-testid="status-bar">
@@ -882,6 +983,11 @@
   }
   main { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
   .content { flex: 1; overflow-y: auto; padding: 4px 0; }
+  .scad-view {
+    margin: 0; padding: 12px 16px;
+    font-family: "Courier New", monospace; font-size: 14px; line-height: 1.5;
+    color: #1a1a1a; white-space: pre; tab-size: 4;
+  }
 
   .line-row {
     display: flex; align-items: center; gap: 6px;
@@ -923,7 +1029,7 @@
   .line-badge { font-size: 11px; color: #999; background: #eee; padding: 1px 5px; border-radius: 2px; font-weight: 500; }
 
   .kv-key { font-weight: 700; color: #2c3e50; min-width: 220px; flex-shrink: 0; }
-  .kv-control { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+  .kv-control { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   .kv-num { font-family: "Courier New", monospace; font-size: 15px; font-weight: 500; padding: 3px 6px; border: 1px solid #ddd; border-radius: 2px; width: 80px; background: white; }
   .kv-num.sm { width: 60px; }
   .kv-num.xs { width: 48px; }

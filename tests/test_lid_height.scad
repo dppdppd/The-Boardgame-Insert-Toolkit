@@ -6,38 +6,27 @@ g_b_print_box = true;
 g_isolated_print_box = "";
 
 data = [
-    [ "tall lid",
-        [
-            [ BOX_SIZE_XYZ, [60, 60, 20] ],
-            [ BOX_LID,
-                [
-                    [ LID_HEIGHT, 15 ],
-                    [ LID_PATTERN_RADIUS, 8 ],
-                ]
-            ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [56, 56, 18] ],
-                ]
-            ],
-        ]
-    ],
-    [ "short lid",
-        [
-            [ BOX_SIZE_XYZ, [60, 60, 20] ],
-            [ BOX_LID,
-                [
-                    [ LID_HEIGHT, 3 ],
-                    [ LID_SOLID_B, t ],
-                ]
-            ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [56, 56, 18] ],
-                ]
-            ],
-        ]
-    ],
+    [ OBJECT_BOX, [
+        [ NAME, "tall lid" ],
+        [ BOX_SIZE_XYZ, [60, 60, 20] ],
+        [ BOX_LID, [
+            [ LID_HEIGHT, 15 ],
+            [ LID_PATTERN_RADIUS, 8 ],
+        ]],
+        [ BOX_FEATURE, [
+            [ FTR_COMPARTMENT_SIZE_XYZ, [56, 56, 18] ],
+        ]],
+    ]],
+    [ OBJECT_BOX, [
+        [ NAME, "short lid" ],
+        [ BOX_SIZE_XYZ, [60, 60, 20] ],
+        [ BOX_LID, [
+            [ LID_HEIGHT, 3 ],
+            [ LID_SOLID_B, t ],
+        ]],
+        [ BOX_FEATURE, [
+            [ FTR_COMPARTMENT_SIZE_XYZ, [56, 56, 18] ],
+        ]],
+    ]],
 ];
-
 MakeAll();

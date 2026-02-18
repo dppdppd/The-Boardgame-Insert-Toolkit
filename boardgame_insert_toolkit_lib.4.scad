@@ -99,6 +99,13 @@ TYPE = "type";
 BOX = "box";
 DIVIDERS = "dividers";
 SPACER = "spacer";
+
+// New-style element type constants
+OBJECT_BOX = "object_box";
+OBJECT_DIVIDERS = "object_dividers";
+OBJECT_SPACER = "object_spacer";
+NAME = "name";
+
 BOX_LID = "box_lid";
 
 // =============================================================================
@@ -407,9 +414,34 @@ module MirrorAboutPoint( v, pt)
 function __element( i ) = data[ i ][1];
 function __num_elements() = len( data );
 
+// Map OBJECT_* key → internal type constant
+function __type_from_key(k) =
+    k == OBJECT_BOX ? BOX :
+    k == OBJECT_SPACER ? SPACER :
+    k == OBJECT_DIVIDERS ? DIVIDERS : undef;
+
+// Get type for element at index i (checks data key first, falls back to TYPE property)
+function __type_at(i) =
+    let(k = data[i][k_key])
+    __type_from_key(k) != undef ? __type_from_key(k)
+    : __value(__element(i), TYPE, default = BOX);
+
+// Legacy: get type from element params (for internal callers that have the list)
 function __type( lmnt ) = __value( lmnt, TYPE, default = BOX);
 
-function __is_element_isolated_for_print() = g_isolated_print_box != "" && ( __index_of_key( data, g_isolated_print_box ) != [] ) ;
+// Get display name: NAME property (new-style) or string key (old-style)
+function __element_name(i) =
+    __type_from_key(data[i][k_key]) != undef
+        ? __value(__element(i), NAME, default = "")
+        : data[i][k_key];
+
+// Isolated print: search by NAME across all elements
+function __find_isolated_index() =
+    g_isolated_print_box == "" ? undef :
+    let(matches = [for (i=[0:len(data)-1]) if (__element_name(i) == g_isolated_print_box) i])
+    len(matches) > 0 ? matches[0] : undef;
+
+function __is_element_isolated_for_print() = __find_isolated_index() != undef;
 
 function __is_element_enabled( lmnt ) = __value( lmnt, ENABLED_B, default = true);
 function __is_element_debug( lmnt ) = __value( lmnt, _DEBUG_B, default = false);
@@ -465,13 +497,17 @@ function __box_auto_size( box ) =
     )
     [ cx + 2 * wt, cy + 2 * wt, cz + wt ];
 
-function __element_dimensions( lmnt ) = !is_list( lmnt )
-                                        ? [ 100, 100, 100 ]  // safety fallback for undef/invalid
-                                        : __type( lmnt ) == DIVIDERS
-                                            ? [ __div_frame_size( lmnt )[k_x],  __div_total_height( lmnt ) ]
-                                            : __value( lmnt, BOX_SIZE_XYZ, default = false ) != false
-                                                ? __value( lmnt, BOX_SIZE_XYZ )
-                                                : __box_auto_size( lmnt );
+function __element_dimensions(lmnt_or_i) =
+    is_num(lmnt_or_i)
+        ? __element_dimensions_impl(__element(lmnt_or_i), __type_at(lmnt_or_i))
+        : __element_dimensions_impl(lmnt_or_i, __type(lmnt_or_i));
+
+function __element_dimensions_impl(lmnt, etype) = !is_list(lmnt)
+    ? [100, 100, 100]
+    : etype == DIVIDERS
+        ? [__div_frame_size(lmnt)[k_x], __div_total_height(lmnt)]
+        : __value(lmnt, BOX_SIZE_XYZ, default = false) != false
+            ? __value(lmnt, BOX_SIZE_XYZ) : __box_auto_size(lmnt);
 
 function __element_position_x( i ) = __element( i - 1 ) == undef ? 0 : __is_element_enabled( __element( i - 1 ) ) ? __element_dimensions( __element( i - 1 ) )[ k_x ] + __element_position_x( i - 1 ) + DISTANCE_BETWEEN_PARTS : __element_position_x( i - 2 );
 
@@ -678,14 +714,14 @@ function __is_valid_key( key, valid_keys ) =
 
 // Box-level valid keys (TYPE=BOX or TYPE=SPACER)
 __VALID_BOX_KEYS = [
-    TYPE, BOX_SIZE_XYZ, BOX_FEATURE, BOX_LID, BOX_VISUALIZATION,
+    TYPE, NAME, BOX_SIZE_XYZ, BOX_FEATURE, BOX_LID, BOX_VISUALIZATION,
     BOX_NO_LID_B, BOX_STACKABLE_B, BOX_WALL_THICKNESS,
     ENABLED_B, _DEBUG_B, LABEL, ROTATION, POSITION_XY
 ];
 
 // Divider-level valid keys (TYPE=DIVIDERS)
 __VALID_DIVIDER_KEYS = [
-    TYPE, ENABLED_B,
+    TYPE, NAME, ENABLED_B,
     DIV_THICKNESS,
     DIV_TAB_SIZE_XY, DIV_TAB_RADIUS, DIV_TAB_CYCLE, DIV_TAB_CYCLE_START,
     DIV_TAB_TEXT, DIV_TAB_TEXT_SIZE, DIV_TAB_TEXT_FONT, DIV_TAB_TEXT_SPACING, DIV_TAB_TEXT_CHAR_THRESHOLD,
@@ -696,7 +732,7 @@ __VALID_DIVIDER_KEYS = [
 
 // Component-level valid keys (inside BOX_FEATURE)
 __VALID_COMPONENT_KEYS = [
-    FTR_COMPARTMENT_SIZE_XYZ, FTR_NUM_COMPARTMENTS_XY,
+    NAME, FTR_COMPARTMENT_SIZE_XYZ, FTR_NUM_COMPARTMENTS_XY,
     FTR_SHAPE, FTR_SHAPE_ROTATED_B, FTR_SHAPE_VERTICAL_B,
     FTR_PADDING_XY, FTR_PADDING_HEIGHT_ADJUST_XY,
     FTR_MARGIN_FBLR,
@@ -710,7 +746,7 @@ __VALID_COMPONENT_KEYS = [
 
 // Lid-level valid keys (inside BOX_LID)
 __VALID_LID_KEYS = [
-    LID_FIT_UNDER_B, LID_SOLID_B, LID_HEIGHT, LID_INSET_B,
+    NAME, LID_FIT_UNDER_B, LID_SOLID_B, LID_HEIGHT, LID_INSET_B,
     LID_CUTOUT_SIDES_4B, LID_TABS_4B,
     LID_LABELS_INVERT_B, LID_SOLID_LABELS_DEPTH,
     LID_LABELS_BG_THICKNESS, LID_LABELS_BORDER_THICKNESS,
@@ -723,7 +759,7 @@ __VALID_LID_KEYS = [
 
 // Label-level valid keys (inside LABEL)
 __VALID_LABEL_KEYS = [
-    LBL_TEXT, LBL_IMAGE, LBL_SIZE, LBL_PLACEMENT,
+    NAME, LBL_TEXT, LBL_IMAGE, LBL_SIZE, LBL_PLACEMENT,
     LBL_FONT, LBL_DEPTH, LBL_SPACING, LBL_AUTO_SCALE_FACTOR,
     ENABLED_B, ROTATION, POSITION_XY
 ];
@@ -764,9 +800,9 @@ module __ValidateBoxTypes( table, ctx )
     if ( v_size != false && !__all_num_list( v_size, 3 ) )
         __TypeMsg( BOX_SIZE_XYZ, ctx, "[x, y, z] (3 numbers)", v_size );
 
-    v_type = __value( table, TYPE, default = false );
-    if ( v_type != false && !__is_valid_key( v_type, __VALID_TYPES ) )
-        __TypeMsg( TYPE, ctx, "one of BOX, DIVIDERS, SPACER", v_type );
+    v_name = __value( table, NAME, default = false );
+    if ( v_name != false && !is_string( v_name ) )
+        __TypeMsg( NAME, ctx, "string", v_name );
 
     v_nolid = __value( table, BOX_NO_LID_B, default = false );
     if ( __is_valid_key( BOX_NO_LID_B, table ) && !is_bool( v_nolid ) )
@@ -1101,9 +1137,9 @@ module __ValidateLabels( table, context_name )
 
 // Validate a complete element (box or divider) and its sub-structures.
 // Checks both key names and value types at every level.
-module __ValidateElement( element, element_name )
+module __ValidateElement( element, element_name, element_type = undef )
 {
-    element_type = __type( element );
+    element_type = element_type != undef ? element_type : __type( element );
 
     if ( element_type == DIVIDERS )
     {
@@ -1159,7 +1195,7 @@ module __ValidateElement( element, element_name )
         }
 
         // #4: Lid-under clearance check
-        _box_size = __element_dimensions( element );
+        _box_size = __element_dimensions_impl( element, element_type );
         _has_lid = !__value( element, BOX_NO_LID_B, default = false );
         if ( _has_lid && is_list( lid ) && len( lid ) > 0 )
         {
@@ -1201,24 +1237,26 @@ module MakeAll()
     {
         if ( __is_element_isolated_for_print() )
         {
-            __ValidateElement( __value( data, g_isolated_print_box ), g_isolated_print_box );
+            _iso_idx = __find_isolated_index();
+            __ValidateElement( __element( _iso_idx ), __element_name( _iso_idx ), __type_at( _iso_idx ) );
         }
         else
         {
             for ( vi = [ 0 : __num_elements() - 1 ] )
             {
-                __ValidateElement( __element( vi ), data[ vi ][ k_key ] );
+                __ValidateElement( __element( vi ), __element_name( vi ), __type_at( vi ) );
             }
         }
     }
 
     if ( __is_element_isolated_for_print() )
     {
-        element = __value( data, g_isolated_print_box );
+        _iso_idx = __find_isolated_index();
+        element = __element( _iso_idx );
 
         __MaybeDebug( __is_element_debug( element ) )
         {
-            if ( __type( element ) == DIVIDERS )
+            if ( __type_at( _iso_idx ) == DIVIDERS )
             {
                 MakeDividers( element );
             }
@@ -1236,7 +1274,7 @@ module MakeAll()
 
             element_position = ( g_b_vis_actual && __box_vis_position( element ) != [] ) ? __box_vis_position( element ) : [ __element_position_x( i ), 0, 0 ];
             element_rotation = ( g_b_vis_actual && __box_vis_rotation( element ) != undef ) ? __box_vis_rotation( element ) : 0;
-            
+
             translate( element_position )
                 RotateAndMoveBackToOrigin( element_rotation, __element_dimensions( i ) )
                 {
@@ -1245,7 +1283,7 @@ module MakeAll()
                         __MaybeDebug( __is_element_debug( element ) )
                         Colorize()
                         {
-                           if ( __type( element ) == DIVIDERS )
+                           if ( __type_at( i ) == DIVIDERS )
                             {
                                 MakeDividers( element );
                             }

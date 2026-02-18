@@ -10,30 +10,22 @@ g_b_print_box = true;
 g_isolated_print_box = "";
 
 data = [
-    [ "stencil label",
-        [
-            [ BOX_SIZE_XYZ, [40, 40, 15] ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [37, 37, 13] ],
-                ]
-            ],
-            [ BOX_LID,
-                [
-                    [ LID_PATTERN_RADIUS, 4 ],
-                    [ LID_LABELS_INVERT_B, t ],
-                    [ LID_LABELS_BG_THICKNESS, 0 ],
-                    [ LID_LABELS_BORDER_THICKNESS, 1 ],
-                    [ LABEL,
-                        [
-                            [ LBL_TEXT, "INV" ],
-                            [ LBL_FONT, "Liberation Sans:style=Bold" ],
-                        ]
-                    ],
-                ]
-            ],
-        ]
-    ],
+    [ OBJECT_BOX, [
+        [ NAME, "stencil label" ],
+        [ BOX_SIZE_XYZ, [40, 40, 15] ],
+        [ BOX_FEATURE, [
+            [ FTR_COMPARTMENT_SIZE_XYZ, [37, 37, 13] ],
+        ]],
+        [ BOX_LID, [
+            [ LID_PATTERN_RADIUS, 4 ],
+            [ LID_LABELS_INVERT_B, t ],
+            [ LID_LABELS_BG_THICKNESS, 0 ],
+            [ LID_LABELS_BORDER_THICKNESS, 1 ],
+            [ LABEL, [
+                [ LBL_TEXT, "INV" ],
+                [ LBL_FONT, "Liberation Sans:style=Bold" ],
+            ]],
+        ]],
+    ]],
 ];
-
 MakeAll();

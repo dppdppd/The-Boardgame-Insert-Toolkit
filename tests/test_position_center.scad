@@ -6,34 +6,25 @@ g_b_print_box = true;
 g_isolated_print_box = "";
 
 data = [
-    [ "centered component",
-        [
-            [ BOX_SIZE_XYZ, [80, 80, 20] ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [30, 30, 18] ],
-                    [ POSITION_XY, [CENTER, CENTER] ],
-                ]
-            ],
-        ]
-    ],
-    [ "explicit positioned",
-        [
-            [ BOX_SIZE_XYZ, [80, 80, 20] ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ POSITION_XY, [5, 5] ],
-                ]
-            ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ POSITION_XY, [50, 50] ],
-                ]
-            ],
-        ]
-    ],
+    [ OBJECT_BOX, [
+        [ NAME, "centered component" ],
+        [ BOX_SIZE_XYZ, [80, 80, 20] ],
+        [ BOX_FEATURE, [
+            [ FTR_COMPARTMENT_SIZE_XYZ, [30, 30, 18] ],
+            [ POSITION_XY, [CENTER, CENTER] ],
+        ]],
+    ]],
+    [ OBJECT_BOX, [
+        [ NAME, "explicit positioned" ],
+        [ BOX_SIZE_XYZ, [80, 80, 20] ],
+        [ BOX_FEATURE, [
+            [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
+            [ POSITION_XY, [5, 5] ],
+        ]],
+        [ BOX_FEATURE, [
+            [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
+            [ POSITION_XY, [50, 50] ],
+        ]],
+    ]],
 ];
-
 MakeAll();

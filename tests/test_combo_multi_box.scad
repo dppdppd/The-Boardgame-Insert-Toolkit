@@ -9,14 +9,16 @@ g_b_print_lid = true;
 g_b_print_box = true;
 g_isolated_print_box = "";
 data = [
-    [ "simple solid lid", [
+    [ OBJECT_BOX, [
+        [ NAME, "simple solid lid" ],
         [ BOX_SIZE_XYZ, [45, 45, 15] ],
         [ BOX_LID, lid_parms_solid() ],
         [ BOX_FEATURE, [
             [ FTR_COMPARTMENT_SIZE_XYZ, [42, 42, 13] ],
         ]],
     ]],
-    [ "round compartments pattern lid", [
+    [ OBJECT_BOX, [
+        [ NAME, "round compartments pattern lid" ],
         [ BOX_SIZE_XYZ, [60, 60, 20] ],
         [ BOX_LID, lid_parms(radius =6, lbl ="COINS") ],
         [ BOX_FEATURE, [
@@ -25,7 +27,8 @@ data = [
             [ FTR_SHAPE, ROUND ],
         ]],
     ]],
-    [ "fillet with cutouts", [
+    [ OBJECT_BOX, [
+        [ NAME, "fillet with cutouts" ],
         [ BOX_SIZE_XYZ, [50, 80, 15] ],
         [ BOX_LID, lid_parms_solid() ],
         [ BOX_FEATURE, [

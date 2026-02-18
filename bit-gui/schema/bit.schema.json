@@ -18,7 +18,7 @@
     "element": {
       "description": "Top-level element (BOX, DIVIDERS, or SPACER)",
       "keys": {
-        "TYPE":              { "type": "enum", "values": ["BOX", "DIVIDERS", "SPACER"], "default": "BOX", "help": "Element type" },
+        "NAME":              { "type": "string", "default": "", "help": "Display name for the element" },
         "BOX_SIZE_XYZ":      { "type": "xyz", "default": [100, 100, 30], "help": "Box outer dimensions [x, y, z]. Omit to auto-calculate.", "contexts": ["BOX", "SPACER"] },
         "BOX_FEATURE":     { "type": "table_list", "child_context": "feature", "help": "List of compartment components", "contexts": ["BOX", "SPACER"] },
         "BOX_LID":           { "type": "table", "child_context": "lid", "help": "Lid parameters", "contexts": ["BOX"] },
@@ -35,6 +35,7 @@
     "feature": {
       "description": "Feature (inside BOX_FEATURE)",
       "keys": {
+        "NAME":                      { "type": "string", "default": "", "help": "Display name for the feature" },
         "FTR_COMPARTMENT_SIZE_XYZ":  { "type": "xyz", "default": [10, 10, 10], "help": "Compartment inner size [x, y, z]" },
         "FTR_NUM_COMPARTMENTS_XY":   { "type": "xy", "default": [1, 1], "help": "Grid of compartments [columns, rows]" },
         "FTR_SHAPE":                 { "type": "enum", "values": ["SQUARE", "HEX", "HEX2", "OCT", "OCT2", "ROUND", "FILLET"], "default": "SQUARE", "help": "Compartment shape" },
@@ -65,6 +66,7 @@
     "lid": {
       "description": "Lid parameters (inside BOX_LID)",
       "keys": {
+        "NAME":                         { "type": "string", "default": "", "help": "Display name for the lid" },
         "LID_FIT_UNDER_B":              { "type": "bool", "default": true, "help": "Lid fits under the box (cap style)" },
         "LID_SOLID_B":                  { "type": "bool", "default": false, "help": "Solid lid (no pattern cutouts)" },
         "LID_HEIGHT":                   { "type": "number", "default": 4.0, "help": "Lid height in mm (default: 4 cap, 2 inset)" },
@@ -91,6 +93,7 @@
     "label": {
       "description": "Label parameters (inside LABEL)",
       "keys": {
+        "NAME":                { "type": "string", "default": "", "help": "Display name for the label" },
         "LBL_TEXT":            { "type": "string", "default": "", "help": "Label text (or list of strings for multi-line)" },
         "LBL_IMAGE":           { "type": "string", "default": "", "help": "Path to SVG/image file" },
         "LBL_SIZE":            { "type": "number", "default": "AUTO", "help": "Font size (number or AUTO)" },
@@ -105,9 +108,9 @@
       }
     },
     "divider": {
-      "description": "Divider parameters (TYPE=DIVIDERS)",
+      "description": "Divider parameters (OBJECT_DIVIDERS)",
       "keys": {
-        "TYPE":                      { "type": "enum", "values": ["BOX", "DIVIDERS", "SPACER"], "default": "DIVIDERS", "help": "Element type" },
+        "NAME":                      { "type": "string", "default": "", "help": "Display name for the element" },
         "ENABLED_B":                 { "type": "bool", "default": true, "help": "If false, divider is skipped" },
         "DIV_THICKNESS":             { "type": "number", "default": 0.5, "help": "Divider card thickness in mm" },
         "DIV_TAB_SIZE_XY":           { "type": "xy", "default": [32, 14], "help": "Tab dimensions [width, height]" },

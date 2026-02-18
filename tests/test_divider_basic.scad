@@ -6,12 +6,9 @@ g_b_print_box = true;
 g_isolated_print_box = "";
 
 data = [
-    [ "basic dividers",
-        [
-            [ TYPE, DIVIDERS ],
-            [ DIV_TAB_TEXT, ["A", "B", "C", "D", "E"] ],
-        ]
-    ],
+    [ OBJECT_DIVIDERS, [
+        [ NAME, "basic dividers" ],
+        [ DIV_TAB_TEXT, ["A", "B", "C", "D", "E"] ],
+    ]],
 ];
-
 MakeAll();

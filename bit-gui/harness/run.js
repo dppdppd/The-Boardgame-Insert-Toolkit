@@ -88,6 +88,21 @@ async function handleCommand(line) {
         break;
       }
 
+      case "ipc": {
+        // Send IPC message to renderer: ipc <channel> [json-args...]
+        const m = rest.match(/^(\S+)\s*(.*)/);
+        if (!m) { console.log("  Usage: ipc <channel> [json-args...]"); break; }
+        const channel = m[1];
+        const args = m[2] ? JSON.parse(m[2]) : undefined;
+        await app.evaluate(({ BrowserWindow }, { channel, args }) => {
+          const win = BrowserWindow.getAllWindows()[0];
+          if (win) win.webContents.send(channel, args);
+        }, { channel, args });
+        await page.waitForTimeout(200); // let renderer process
+        console.log(`  IPC: ${channel} ${m[2] || ""}`);
+        break;
+      }
+
       case "wait":
         await page.waitForSelector(`[data-testid="${rest}"]`, {
           timeout: 15000,
@@ -104,6 +119,7 @@ async function handleCommand(line) {
     intent "text"             Set intent pane text + screenshot
     act "intent" cmd args     Set intent + execute + screenshot
     js <expression>           Evaluate JS in page
+    ipc <channel> [json]      Send IPC to renderer
     wait <testid>             Wait for element
     help                      Show this help
     quit                      Exit

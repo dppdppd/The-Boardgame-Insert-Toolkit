@@ -6,27 +6,20 @@ g_b_print_box = true;
 g_isolated_print_box = "target box";
 
 data = [
-    [ "hidden box",
-        [
-            [ BOX_SIZE_XYZ, [40, 40, 15] ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [36, 36, 13] ],
-                ]
-            ]
-        ]
-    ],
-    [ "target box",
-        [
-            [ BOX_SIZE_XYZ, [60, 60, 20] ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_NUM_COMPARTMENTS_XY, [3, 3] ],
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [16, 16, 18] ],
-                ]
-            ]
-        ]
-    ],
+    [ OBJECT_BOX, [
+        [ NAME, "hidden box" ],
+        [ BOX_SIZE_XYZ, [40, 40, 15] ],
+        [ BOX_FEATURE, [
+            [ FTR_COMPARTMENT_SIZE_XYZ, [36, 36, 13] ],
+        ]],
+    ]],
+    [ OBJECT_BOX, [
+        [ NAME, "target box" ],
+        [ BOX_SIZE_XYZ, [60, 60, 20] ],
+        [ BOX_FEATURE, [
+            [ FTR_NUM_COMPARTMENTS_XY, [3, 3] ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [16, 16, 18] ],
+        ]],
+    ]],
 ];
-
 MakeAll();

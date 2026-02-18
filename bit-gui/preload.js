@@ -17,4 +17,5 @@ contextBridge.exposeInMainWorld("bitgui", {
   onMenuSaveAs: (callback) => ipcRenderer.on("menu-save-as", callback),
   onMenuOpenInOpenScad: (callback) => ipcRenderer.on("menu-open-in-openscad", callback),
   onMenuToggleHideDefaults: (callback) => ipcRenderer.on("menu-toggle-hide-defaults", (_event, checked) => callback(checked)),
+  onMenuToggleShowScad: (callback) => ipcRenderer.on("menu-toggle-show-scad", (_event, checked) => callback(checked)),
 });

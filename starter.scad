@@ -54,8 +54,9 @@ cmp_dy = box_ury - 2*wall;
 cmp_dz = box_urz - 1*wall;
 // Data structure processed by MakeAll();
 data = [
-    [ "Box1", [
+    [ OBJECT_BOX, [
         // Box name, used for g_isolated_print_box
+        [ NAME, "Box1" ],
         [ BOX_SIZE_XYZ, [box_urx, box_ury, box_urz] ],
         [ BOX_FEATURE, ftr_parms(dx =cmp_dx, dy =cmp_dy, dz =cmp_dz) ],
         // Another Key-Value pair to create the compartment

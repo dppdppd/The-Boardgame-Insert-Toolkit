@@ -1,7 +1,7 @@
 {
   "name": "bit-gui",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Visual editor for Boardgame Insert Toolkit .scad files",
   "author": "BIT GUI Contributors",
   "main": "main.js",

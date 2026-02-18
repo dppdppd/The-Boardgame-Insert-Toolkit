@@ -6,44 +6,34 @@ g_b_print_box = true;
 g_isolated_print_box = "";
 
 data = [
-    [ "fillet normal",
-        [
-            [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ FTR_SHAPE, FILLET ],
-                ]
-            ]
-        ]
-    ],
-    [ "fillet rotated",
-        [
-            [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ FTR_SHAPE, FILLET ],
-                    [ FTR_SHAPE_ROTATED_B, t ],
-                ]
-            ]
-        ]
-    ],
-    [ "fillet custom radius",
-        [
-            [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ FTR_SHAPE, FILLET ],
-                    [ FTR_FILLET_RADIUS, 8 ],
-                ]
-            ]
-        ]
-    ],
+    [ OBJECT_BOX, [
+        [ NAME, "fillet normal" ],
+        [ BOX_SIZE_XYZ, [50, 50, 20] ],
+        [ BOX_FEATURE, [
+            [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
+            [ FTR_SHAPE, FILLET ],
+        ]],
+    ]],
+    [ OBJECT_BOX, [
+        [ NAME, "fillet rotated" ],
+        [ BOX_SIZE_XYZ, [50, 50, 20] ],
+        [ BOX_FEATURE, [
+            [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
+            [ FTR_SHAPE, FILLET ],
+            [ FTR_SHAPE_ROTATED_B, t ],
+        ]],
+    ]],
+    [ OBJECT_BOX, [
+        [ NAME, "fillet custom radius" ],
+        [ BOX_SIZE_XYZ, [50, 50, 20] ],
+        [ BOX_FEATURE, [
+            [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
+            [ FTR_SHAPE, FILLET ],
+            [ FTR_FILLET_RADIUS, 8 ],
+        ]],
+    ]],
 ];
-
 MakeAll();

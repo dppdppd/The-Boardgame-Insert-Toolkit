@@ -6,22 +6,16 @@ g_b_print_box = true;
 g_isolated_print_box = "";
 
 data = [
-    [ "lid cutouts front-back",
-        [
-            [ BOX_SIZE_XYZ, [60, 60, 20] ],
-            [ BOX_LID,
-                [
-                    [ LID_SOLID_B, t ],
-                    [ LID_CUTOUT_SIDES_4B, [t, t, f, f] ],
-                ]
-            ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [56, 56, 18] ],
-                ]
-            ],
-        ]
-    ],
+    [ OBJECT_BOX, [
+        [ NAME, "lid cutouts front-back" ],
+        [ BOX_SIZE_XYZ, [60, 60, 20] ],
+        [ BOX_LID, [
+            [ LID_SOLID_B, t ],
+            [ LID_CUTOUT_SIDES_4B, [t, t, f, f] ],
+        ]],
+        [ BOX_FEATURE, [
+            [ FTR_COMPARTMENT_SIZE_XYZ, [56, 56, 18] ],
+        ]],
+    ]],
 ];
-
 MakeAll();

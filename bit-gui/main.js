@@ -101,6 +101,14 @@ function rebuildMenu() {
           checked: false,
           click: (menuItem) => mainWindow.webContents.send("menu-toggle-hide-defaults", menuItem.checked),
         },
+        {
+          id: "show-scad",
+          label: "Show SCAD",
+          type: "checkbox",
+          checked: false,
+          accelerator: "CmdOrCtrl+U",
+          click: (menuItem) => mainWindow.webContents.send("menu-toggle-show-scad", menuItem.checked),
+        },
       ],
     },
     {

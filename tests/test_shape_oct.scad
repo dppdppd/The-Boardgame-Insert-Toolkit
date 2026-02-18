@@ -6,44 +6,34 @@ g_b_print_box = true;
 g_isolated_print_box = "";
 
 data = [
-    [ "oct normal",
-        [
-            [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ FTR_SHAPE, OCT ],
-                ]
-            ]
-        ]
-    ],
-    [ "oct rotated",
-        [
-            [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ FTR_SHAPE, OCT ],
-                    [ FTR_SHAPE_ROTATED_B, t ],
-                ]
-            ]
-        ]
-    ],
-    [ "oct vertical",
-        [
-            [ BOX_SIZE_XYZ, [50, 50, 20] ],
-            [ BOX_FEATURE,
-                [
-                    [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
-                    [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
-                    [ FTR_SHAPE, OCT ],
-                    [ FTR_SHAPE_VERTICAL_B, t ],
-                ]
-            ]
-        ]
-    ],
+    [ OBJECT_BOX, [
+        [ NAME, "oct normal" ],
+        [ BOX_SIZE_XYZ, [50, 50, 20] ],
+        [ BOX_FEATURE, [
+            [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
+            [ FTR_SHAPE, OCT ],
+        ]],
+    ]],
+    [ OBJECT_BOX, [
+        [ NAME, "oct rotated" ],
+        [ BOX_SIZE_XYZ, [50, 50, 20] ],
+        [ BOX_FEATURE, [
+            [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
+            [ FTR_SHAPE, OCT ],
+            [ FTR_SHAPE_ROTATED_B, t ],
+        ]],
+    ]],
+    [ OBJECT_BOX, [
+        [ NAME, "oct vertical" ],
+        [ BOX_SIZE_XYZ, [50, 50, 20] ],
+        [ BOX_FEATURE, [
+            [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
+            [ FTR_SHAPE, OCT ],
+            [ FTR_SHAPE_VERTICAL_B, t ],
+        ]],
+    ]],
 ];
-
 MakeAll();

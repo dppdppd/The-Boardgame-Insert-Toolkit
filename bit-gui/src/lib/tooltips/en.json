@@ -1,5 +1,5 @@
 {
-  "TYPE": "Element type: BOX, DIVIDERS, or SPACER",
+  "NAME": "Display name for the element (shown in UI, used by g_isolated_print_box)",
   "BOX_SIZE_XYZ": "Box outer dimensions [width, depth, height] in mm. Note: inset-lid boxes are taller by 2× wall thickness.",
   "BOX_FEATURE": "Feature — defines one set of compartments inside the box",
   "BOX_LID": "Lid parameters — controls lid style, pattern, and labels",
