@@ -1,0 +1,74 @@
+// Test: Lid pattern N1/N2 variations — triangles, octagons, hexagons
+include <boardgame_insert_toolkit_lib.3.scad>;
+
+g_b_print_lid = true;
+g_b_print_box = true;
+g_isolated_print_box = "";
+
+data = [
+    [ "triangles n1=3 n2=3",
+        [
+            [ BOX_SIZE_XYZ, [50, 50, 20] ],
+            [ BOX_COMPONENT,
+                [
+                    [ CMP_COMPARTMENT_SIZE_XYZ, [47, 47, 18] ],
+                ]
+            ],
+            [ BOX_LID,
+                [
+                    [ LID_PATTERN_RADIUS, 10 ],
+                    [ LID_PATTERN_N1, 3 ],
+                    [ LID_PATTERN_N2, 3 ],
+                    [ LID_PATTERN_ANGLE, 0 ],
+                    [ LID_PATTERN_ROW_OFFSET, 10 ],
+                    [ LID_PATTERN_COL_OFFSET, 140 ],
+                    [ LID_PATTERN_THICKNESS, 1 ],
+                ]
+            ]
+        ]
+    ],
+    [ "octagons n1=8 n2=8",
+        [
+            [ BOX_SIZE_XYZ, [50, 50, 20] ],
+            [ BOX_COMPONENT,
+                [
+                    [ CMP_COMPARTMENT_SIZE_XYZ, [47, 47, 18] ],
+                ]
+            ],
+            [ BOX_LID,
+                [
+                    [ LID_PATTERN_RADIUS, 10 ],
+                    [ LID_PATTERN_N1, 8 ],
+                    [ LID_PATTERN_N2, 8 ],
+                    [ LID_PATTERN_ANGLE, 22.5 ],
+                    [ LID_PATTERN_ROW_OFFSET, 10 ],
+                    [ LID_PATTERN_COL_OFFSET, 130 ],
+                    [ LID_PATTERN_THICKNESS, 0.6 ],
+                ]
+            ]
+        ]
+    ],
+    [ "hex-tri n1=6 n2=3",
+        [
+            [ BOX_SIZE_XYZ, [50, 50, 20] ],
+            [ BOX_COMPONENT,
+                [
+                    [ CMP_COMPARTMENT_SIZE_XYZ, [47, 47, 18] ],
+                ]
+            ],
+            [ BOX_LID,
+                [
+                    [ LID_PATTERN_RADIUS, 10 ],
+                    [ LID_PATTERN_N1, 6 ],
+                    [ LID_PATTERN_N2, 3 ],
+                    [ LID_PATTERN_ANGLE, 60 ],
+                    [ LID_PATTERN_ROW_OFFSET, 10 ],
+                    [ LID_PATTERN_COL_OFFSET, 140 ],
+                    [ LID_PATTERN_THICKNESS, 0.6 ],
+                ]
+            ]
+        ]
+    ],
+];
+
+MakeAll();

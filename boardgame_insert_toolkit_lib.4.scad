@@ -263,6 +263,29 @@ HULL_EPSILON = 0.01;                  // Small height for hull/cap operations
 
 DISTANCE_BETWEEN_PARTS = 2;
 
+// Default data array (empty, overridden by Make() parameter)
+DATA = [];
+
+// Global string constants for globals-in-data pattern (CTD-style)
+G_PRINT_LID_B = "g_print_lid_b";
+G_PRINT_BOX_B = "g_print_box_b";
+G_FIT_TEST_B = "g_fit_test_b";
+G_ISOLATED_PRINT_BOX = "g_isolated_print_box";
+G_VISUALIZATION_B = "g_visualization_b";
+G_PREVIEW_NO_LABELS_B = "g_preview_no_labels_b";
+G_VALIDATE_KEYS_B = "g_validate_keys_b";
+G_WALL_THICKNESS = "g_wall_thickness";
+G_DETENT_THICKNESS = "g_detent_thickness";
+G_DETENT_SPACING = "g_detent_spacing";
+G_DETENT_DIST_FROM_CORNER = "g_detent_dist_from_corner";
+G_DETENT_MIN_SPACING = "g_detent_min_spacing";
+G_LID_THICKNESS = "g_lid_thickness";
+G_COLORIZE_B = "g_colorize_b";
+G_TOLERANCE = "g_tolerance";
+G_TOLERANCE_DETENT_POS = "g_tolerance_detent_pos";
+G_PRINT_MMU_LAYER = "g_print_mmu_layer";
+G_DEFAULT_FONT = "g_default_font";
+
 // key-values helpers
 
 // =============================================================================
@@ -272,66 +295,71 @@ DISTANCE_BETWEEN_PARTS = 2;
 function __index_of_key( table, key ) = search( [ key ], table )[ k_key ];
 function __value( table, key, default = false ) = __index_of_key( table, key ) == [] ? default : table[ __index_of_key( table, key ) ][ k_value ];
 
+// Return the whole sub-entry for a key (for nested blocks like BOX_LID, BOX_FEATURE, LABEL)
+function __find_entry(table, key, default=[]) =
+    let(idx = __index_of_key(table, key))
+    idx == [] ? default : table[idx];
+
 // determines whether lids are output.
-g_b_print_lid = t;
+$g_print_lid_b = t;
 
 // determines whether boxes are output.
-g_b_print_box = t; 
+$g_print_box_b = t; 
 
 // determines whether to output everything as placeholders.
-g_b_fit_test = f;
+$g_fit_test_b = f;
 
 // Focus on one box
-g_isolated_print_box = ""; 
+$g_isolated_print_box = ""; 
 
 // Used to visualize how all of the boxes fit together.
-g_b_visualization = f;
-g_b_vis_actual = g_b_visualization && $preview;
+$g_visualization_b = f;
+$g_vis_actual_b = $g_visualization_b && $preview;
 
 // Turn off labels during preview. 
-g_b_preview_no_labels = f;
-g_b_no_labels_actual = g_b_preview_no_labels && $preview;
+$g_preview_no_labels_b = f;
+$g_no_labels_actual_b = $g_preview_no_labels_b && $preview;
 
 // Validate user-provided keys and echo messages for unrecognized ones.
 // Set to false to suppress validation output.
-g_b_validate_keys = t;
+$g_validate_keys_b = t;
 
 // Wall thickness in mm. Default = 1.5
 // Increasing this makes stronger but heavier components
-g_wall_thickness = 1.5; 
+$g_wall_thickness = 1.5; 
 
 // Thickness of lid and box detent mechanism in mm
 // For a looser snap fit, reduce this value
 // For a tighter snap fit, increase this value
 // Recommended 0.05 increments for adjustments
-g_detent_thickness = 0.25;
+$g_detent_thickness = 0.25;
 
 // Translates to length of detent in mm
-g_detent_spacing = 2;
+$g_detent_spacing = 2;
 
 // Distance from corner to start detent placement
-g_detent_dist_from_corner = 1.5;
+$g_detent_dist_from_corner = 1.5;
 
 // If the distance from the corner to the tab is greater than this,
 // add another detent next to the tab
-g_detent_min_spacing = 40;
+$g_detent_min_spacing = 40;
 
 // Thickness of the box lid in mm. Default = same as wall thickness
-g_lid_thickness = g_wall_thickness; 
+$g_lid_thickness = $g_wall_thickness; 
 
 // Colorization for development
 // When true, gives each compartment a different color to help
 // visualize the structure during development
-g_b_colorize = true;
+$g_colorize_b = true;
 
 // Tolerance for fittings in mm
 // This is the gap between fitting pieces such as lids and boxes
 // Increase to loosen the fit, decrease to tighten it
-g_tolerance = 0.1;
+$g_tolerance = 0.1;
 
 // Adjusts the position of lid detents downwards
 // The larger the value, the bigger the gap between lid and box
-g_tolerance_detent_pos = 0.1;
+$g_tolerance_detent_pos = 0.1;
 
 // Multi-material printing configuration
 // This determines whether the default single material version is output, or,
@@ -340,8 +368,10 @@ g_tolerance_detent_pos = 0.1;
 //   - "default": standard single material output
 //   - "mmu_box_layer": the box layer for multi-material printing
 //   - "mmu_label_layer": the label layer for multi-material printing
-g_print_mmu_layer = "default"; 
+$g_print_mmu_layer = "default";
 
+// Default font for labels
+$g_default_font = "Liberation Sans:style=Regular";
 
 
 m_corner_width = 6;
@@ -411,8 +441,8 @@ module MirrorAboutPoint( v, pt)
 // DATA ACCESSOR FUNCTIONS
 // =============================================================================
 
-function __element( i ) = data[ i ][1];
-function __num_elements() = len( data );
+function __element( i ) = $data[ i ];
+function __num_elements() = len( $data );
 
 // Map OBJECT_* key → internal type constant
 function __type_from_key(k) =
@@ -422,23 +452,26 @@ function __type_from_key(k) =
 
 // Get type for element at index i (checks data key first, falls back to TYPE property)
 function __type_at(i) =
-    let(k = data[i][k_key])
+    let(k = $data[i][k_key])
     __type_from_key(k) != undef ? __type_from_key(k)
     : __value(__element(i), TYPE, default = BOX);
 
 // Legacy: get type from element params (for internal callers that have the list)
-function __type( lmnt ) = __value( lmnt, TYPE, default = BOX);
+function __type( lmnt ) =
+    let(from_key = __type_from_key(lmnt[0]))
+    from_key != undef ? from_key
+    : __value( lmnt, TYPE, default = BOX);
 
 // Get display name: NAME property (new-style) or string key (old-style)
 function __element_name(i) =
-    __type_from_key(data[i][k_key]) != undef
+    __type_from_key($data[i][k_key]) != undef
         ? __value(__element(i), NAME, default = "")
-        : data[i][k_key];
+        : $data[i][k_key];
 
 // Isolated print: search by NAME across all elements
 function __find_isolated_index() =
-    g_isolated_print_box == "" ? undef :
-    let(matches = [for (i=[0:len(data)-1]) if (__element_name(i) == g_isolated_print_box) i])
+    $g_isolated_print_box == "" ? undef :
+    let(matches = [for (i=[0:len($data)-1]) if (__element_name(i) == $g_isolated_print_box) i])
     len(matches) > 0 ? matches[0] : undef;
 
 function __is_element_isolated_for_print() = __find_isolated_index() != undef;
@@ -471,7 +504,7 @@ function __box_max_component_extent( box, D, i = 0 ) =
     !is_list( box ) || i >= len( box ) ? 0 :
     ( is_list( box[i] ) && len( box[i] ) >= 2 && box[i][ k_key ] == BOX_FEATURE ) ?
         let(
-            comp = box[i][ k_value ],
+            comp = box[i],
             pos_raw = __value( comp, POSITION_XY, default = [ CENTER, CENTER ] ),
             comp_size = ( D == k_z ) ? __cmp_auto_size( comp, k_z ) :
                         __cmp_auto_size( comp, D ),
@@ -490,7 +523,7 @@ function __box_max_component_extent( box, D, i = 0 ) =
 // Auto-calculate box size from components + wall thickness.
 function __box_auto_size( box ) = 
     let(
-        wt = __value( box, BOX_WALL_THICKNESS, default = g_wall_thickness ),
+        wt = __value( box, BOX_WALL_THICKNESS, default = $g_wall_thickness ),
         cx = __box_max_component_extent( box, k_x ),
         cy = __box_max_component_extent( box, k_y ),
         cz = __box_max_component_extent( box, k_z )
@@ -581,7 +614,7 @@ function __label_auto_width( label, x, y) = __label_size_is_auto( label ) ?
 
 module Colorize()
 {
-    if ( g_b_vis_actual )
+    if ( $g_vis_actual_b )
     {
         color( rands(0,1,3), 0.5 )
             children();
@@ -1106,11 +1139,12 @@ module __ValidateTable( table, valid_keys, context_name )
                                ". Keys must be strings, got: ", key ) );
                 }
             }
-            else if ( !is_list( entry ) || len( entry ) < 2 )
+            else if ( is_list( entry ) && len( entry ) < 2 )
             {
                 echo( str( "BIT: malformed entry at index ", i, " in ", context_name,
                            ". Expected [key, value] pair, got: ", entry ) );
             }
+            // bare strings (type keys like BOX_FEATURE, BOX_LID, LABEL) are silently skipped
         }
     }
 }
@@ -1127,8 +1161,8 @@ module __ValidateLabels( table, context_name )
                 if ( table[i][ k_key ] == LABEL )
                 {
                     _lbl_ctx = str( context_name, " > label" );
-                    __ValidateTable( table[i][ k_value ], __VALID_LABEL_KEYS, _lbl_ctx );
-                    __ValidateLabelTypes( table[i][ k_value ], _lbl_ctx );
+                    __ValidateTable( table[i], __VALID_LABEL_KEYS, _lbl_ctx );
+                    __ValidateLabelTypes( table[i], _lbl_ctx );
                 }
             }
         }
@@ -1163,7 +1197,7 @@ module __ValidateElement( element, element_name, element_type = undef )
         }
 
         // Validate lid sub-table (keys + types)
-        lid = __value( element, BOX_LID, default = false );
+        lid = __find_entry( element, BOX_LID );
         if ( is_list( lid ) && len( lid ) > 0 )
         {
             _lid_ctx = str( _ctx, " > lid" );
@@ -1179,7 +1213,7 @@ module __ValidateElement( element, element_name, element_type = undef )
             {
                 if ( element[i][ k_key ] == BOX_FEATURE )
                 {
-                    comp = element[i][ k_value ];
+                    comp = element[i];
                     _comp_ctx = str( _ctx, " > component[", i, "]" );
                     __ValidateTable( comp, __VALID_COMPONENT_KEYS, _comp_ctx );
                     __ValidateComponentTypes( comp, _comp_ctx );
@@ -1199,7 +1233,7 @@ module __ValidateElement( element, element_name, element_type = undef )
         _has_lid = !__value( element, BOX_NO_LID_B, default = false );
         if ( _has_lid && is_list( lid ) && len( lid ) > 0 )
         {
-            _wt = __value( element, BOX_WALL_THICKNESS, default = g_wall_thickness );
+            _wt = __value( element, BOX_WALL_THICKNESS, default = $g_wall_thickness );
             _lid_fit_under = __value( lid, LID_FIT_UNDER_B, default = true );
             _lid_inset = __value( element, BOX_STACKABLE_B, default = false ) ||
                          __value( lid, LID_INSET_B, default = false );
@@ -1226,14 +1260,39 @@ module __ValidateElement( element, element_name, element_type = undef )
 // ENTRY POINT
 // =============================================================================
 
-// Top-level entry point. Iterates data[] and dispatches each element to
-// If g_isolated_print_box is set, renders only that single element.
-module MakeAll()
+// Top-level entry point. Accepts a DATA array containing globals and elements.
+// Extracts globals, filters to element entries, then dispatches each element.
+module Make(DATA = DATA)
 {
+    // Extract all globals from DATA array (dynamic scoping shadows file-level defaults)
+    $g_print_lid_b = __value(DATA, G_PRINT_LID_B, default = $g_print_lid_b);
+    $g_print_box_b = __value(DATA, G_PRINT_BOX_B, default = $g_print_box_b);
+    $g_fit_test_b = __value(DATA, G_FIT_TEST_B, default = $g_fit_test_b);
+    $g_isolated_print_box = __value(DATA, G_ISOLATED_PRINT_BOX, default = $g_isolated_print_box);
+    $g_visualization_b = __value(DATA, G_VISUALIZATION_B, default = $g_visualization_b);
+    $g_vis_actual_b = $g_visualization_b && $preview;
+    $g_preview_no_labels_b = __value(DATA, G_PREVIEW_NO_LABELS_B, default = $g_preview_no_labels_b);
+    $g_no_labels_actual_b = $g_preview_no_labels_b && $preview;
+    $g_validate_keys_b = __value(DATA, G_VALIDATE_KEYS_B, default = $g_validate_keys_b);
+    $g_wall_thickness = __value(DATA, G_WALL_THICKNESS, default = $g_wall_thickness);
+    $g_detent_thickness = __value(DATA, G_DETENT_THICKNESS, default = $g_detent_thickness);
+    $g_detent_spacing = __value(DATA, G_DETENT_SPACING, default = $g_detent_spacing);
+    $g_detent_dist_from_corner = __value(DATA, G_DETENT_DIST_FROM_CORNER, default = $g_detent_dist_from_corner);
+    $g_detent_min_spacing = __value(DATA, G_DETENT_MIN_SPACING, default = $g_detent_min_spacing);
+    $g_lid_thickness = __value(DATA, G_LID_THICKNESS, default = $g_lid_thickness);
+    $g_colorize_b = __value(DATA, G_COLORIZE_B, default = $g_colorize_b);
+    $g_tolerance = __value(DATA, G_TOLERANCE, default = $g_tolerance);
+    $g_tolerance_detent_pos = __value(DATA, G_TOLERANCE_DETENT_POS, default = $g_tolerance_detent_pos);
+    $g_print_mmu_layer = __value(DATA, G_PRINT_MMU_LAYER, default = $g_print_mmu_layer);
+    $g_default_font = __value(DATA, G_DEFAULT_FONT, default = $g_default_font);
+
+    // Filter DATA to element entries only (skip globals) — uses $data for dynamic scoping
+    $data = [for (entry = DATA) if (is_list(entry) && __type_from_key(entry[0]) != undef) entry];
+
     echo( str( "\n\n\n", COPYRIGHT_INFO, "\n\n\tVersion ", VERSION, "\n\n" ));
 
     // Validate all element keys if enabled
-    if ( g_b_validate_keys )
+    if ( $g_validate_keys_b )
     {
         if ( __is_element_isolated_for_print() )
         {
@@ -1272,8 +1331,8 @@ module MakeAll()
         {
             element = __element( i );
 
-            element_position = ( g_b_vis_actual && __box_vis_position( element ) != [] ) ? __box_vis_position( element ) : [ __element_position_x( i ), 0, 0 ];
-            element_rotation = ( g_b_vis_actual && __box_vis_rotation( element ) != undef ) ? __box_vis_rotation( element ) : 0;
+            element_position = ( $g_vis_actual_b && __box_vis_position( element ) != [] ) ? __box_vis_position( element ) : [ __element_position_x( i ), 0, 0 ];
+            element_rotation = ( $g_vis_actual_b && __box_vis_rotation( element ) != undef ) ? __box_vis_rotation( element ) : 0;
 
             translate( element_position )
                 RotateAndMoveBackToOrigin( element_rotation, __element_dimensions( i ) )
@@ -1448,13 +1507,13 @@ module MakeBox( box )
 
 
 
-    m_box_is_spacer = ( __type( box )  == SPACER ) || g_b_fit_test;
+    m_box_is_spacer = ( __type( box )  == SPACER ) || $g_fit_test_b;
 
     m_box_is_stackable = __value( box, BOX_STACKABLE_B, default = false );
 
-    m_wall_thickness = g_b_fit_test ? 0.5 : __value( box, BOX_WALL_THICKNESS, default = g_wall_thickness );
+    m_wall_thickness = $g_fit_test_b ? 0.5 : __value( box, BOX_WALL_THICKNESS, default = $g_wall_thickness );
 
-    m_lid = __value( box, BOX_LID, default = [] );
+    m_lid = __find_entry( box, BOX_LID );
 
     m_lid_fit_under = __value( m_lid, LID_FIT_UNDER_B, default = true );
     m_lid_solid = __value( m_lid, LID_SOLID_B, default = false );
@@ -1468,7 +1527,7 @@ module MakeBox( box )
 
     m_box_has_lid = !__value( box, BOX_NO_LID_B, default = false );
 
-    m_box_size = ( g_b_fit_test && m_box_has_lid ) ?
+    m_box_size = ( $g_fit_test_b && m_box_has_lid ) ?
             [   __element_dimensions( box )[ k_x ], 
                 __element_dimensions( box )[ k_y ], 
                 __element_dimensions( box )[ k_z ] + __lid_external_size( k_z )
@@ -1487,7 +1546,7 @@ module MakeBox( box )
 
     function __lid_external_size( D ) = m_lid_size_ext[ D ];
 
-    m_has_solid_lid = m_lid_solid || g_b_vis_actual;
+    m_has_solid_lid = m_lid_solid || $g_vis_actual_b;
     m_lid_has_labels = !!__value( m_lid, LABEL, default = false );
     m_lid_solid_label_depth = __value( m_lid, LID_SOLID_LABELS_DEPTH, default = 0.5 );
 
@@ -1515,7 +1574,7 @@ module MakeBox( box )
 
 
 
-    m_lid_tab = [ max( m_box_size[ k_x ]/4, g_detent_spacing * 2 ), m_wall_thickness,  __lid_external_size( k_z ) + 1];    
+    m_lid_tab = [ max( m_box_size[ k_x ]/4, $g_detent_spacing * 2 ), m_wall_thickness,  __lid_external_size( k_z ) + 1];    
 
     m_box_inner_position_min = [ m_wall_thickness, m_wall_thickness, m_wall_thickness ];
     m_box_inner_position_max = m_box_size - m_box_inner_position_min;
@@ -1526,12 +1585,12 @@ module MakeBox( box )
     }  
     else
     {
-        if( g_b_print_lid  && m_box_has_lid )    
+        if( $g_print_lid_b  && m_box_has_lid )    
         {
             MakeLayer( layer = "layer_lid");
         }
 
-        if ( g_b_print_box )
+        if ( $g_print_box_b )
         {
             difference()
             {
@@ -1548,7 +1607,7 @@ module MakeBox( box )
                         {
                             if ( box[ i ][ k_key ] == BOX_FEATURE )
                             {
-                                component = box[ i ][ k_value ];
+                                component = box[ i ];
                                 __MaybeDebug( __value( component, _DEBUG_B, default = false ) )
                                 union()
                                 {
@@ -1725,7 +1784,7 @@ module MakeBox( box )
         if ( __is_component_enabled() )
         {
             // we only want the labels for an mmu pass
-            if ( g_print_mmu_layer == "mmu_label_layer" )
+            if ( $g_print_mmu_layer == "mmu_label_layer" )
             {
                 if ( m_is_lid )
                 {
@@ -1738,7 +1797,7 @@ module MakeBox( box )
                 else if ( layer == "component_additions" )
                 {
                     PositionInnerLayer()
-                        if ( !g_b_no_labels_actual)
+                        if ( !$g_no_labels_actual_b)
                         {
                             color([0,0,1])
                                 LabelEachCompartment();
@@ -1795,7 +1854,7 @@ module MakeBox( box )
                         cube( [ m_box_size[ k_x ], m_box_size[ k_y ], __lid_external_size(k_z) ]);
 
                         MirrorAboutPoint( v=[0,0,1], pt=[0,0,__lid_external_size(k_z)/2])
-                            MakeLidBase_Inset( tolerance = g_tolerance, tolerance_detent_pos = g_tolerance_detent_pos, omit_detents = !m_lid_inset );
+                            MakeLidBase_Inset( tolerance = $g_tolerance, tolerance_detent_pos = $g_tolerance_detent_pos, omit_detents = !m_lid_inset );
 
                     }            
                 }
@@ -2109,7 +2168,7 @@ module MakeBox( box )
                                 MakeCompartmentShape();
                 }
 
-                if ( !g_b_no_labels_actual)
+                if ( !$g_no_labels_actual_b)
                 {
                     // Clip label subtraction geometry to the component bounds
                     // to prevent sheared/offset labels from cutting outside the box walls
@@ -2179,7 +2238,7 @@ module MakeBox( box )
             {
                 if ( m_lid[ i ][ k_key ] == LABEL )
                 {
-                    label = m_lid[ i ][ k_value ];
+                    label = m_lid[ i ];
 
                     if ( __value( label, ENABLED_B, default = true ) )
                         MakeLidLabel( label, offset = offset, thickness = thickness );
@@ -2196,7 +2255,7 @@ module MakeBox( box )
             {
                 if ( box[ i ][ k_key ] == LABEL )
                 {
-                    label = box[ i ][ k_value ];
+                    label = box[ i ];
 
                     if ( __value( label, ENABLED_B, default = true ) )
                         MakeBoxLabel( label, x, y )
@@ -2322,7 +2381,7 @@ module MakeBox( box )
             {
                 if ( m_lid[ i ][ k_key ] == LABEL )
                 {
-                    label = m_lid[ i ][ k_value ];
+                    label = m_lid[ i ];
 
                     if ( __value( label, ENABLED_B, default = true ) )
                         MakeLidLabelFrame( label, offset = offset, thickness = thickness );
@@ -2369,9 +2428,9 @@ module MakeBox( box )
         {
             lid_print_position = [0, m_box_size[ k_y ] + DISTANCE_BETWEEN_PARTS, 0 ];
 
-            MoveToLidInterior( tolerance = -g_tolerance )
-                translate( g_b_vis_actual ? lid_vis_position : lid_print_position ) 
-                    RotateAboutPoint( g_b_vis_actual ? 180 : 0, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )            
+            MoveToLidInterior( tolerance = -$g_tolerance )
+                translate( $g_vis_actual_b ? lid_vis_position : lid_print_position ) 
+                    RotateAboutPoint( $g_vis_actual_b ? 180 : 0, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )            
                         MakeAllLidLabels();
         }
     
@@ -2397,7 +2456,7 @@ module MakeBox( box )
 
             module MakeLidSurface()
             {
-                thickness = m_lid_inset ? m_lid_thickness + m_lid_wall_height - 2* g_tolerance : m_lid_thickness;
+                thickness = m_lid_inset ? m_lid_thickness + m_lid_wall_height - 2* $g_tolerance : m_lid_thickness;
 
                 // pattern
                 difference()
@@ -2457,12 +2516,12 @@ module MakeBox( box )
                                     }
 
                                     // in the case of mmu, we want to cut out the labels
-                                    if ( g_print_mmu_layer == "mmu_box_layer" )
+                                    if ( $g_print_mmu_layer == "mmu_box_layer" )
                                         MakeAllLidLabels( ); 
                                 }
 
                             // positive text
-                            if ( g_print_mmu_layer != "mmu_box_layer" )
+                            if ( $g_print_mmu_layer != "mmu_box_layer" )
                                 MakeAllLidLabels( ); 
                         }
                         else if ( m_lid_label_bg_thickness > 0 )
@@ -2495,7 +2554,7 @@ module MakeBox( box )
             {
                 if ( !m_lid_inset )
                 {
-                    MakeLidBase_Cap( tolerance = g_tolerance, tolerance_detent_pos = g_tolerance_detent_pos );
+                    MakeLidBase_Cap( tolerance = $g_tolerance, tolerance_detent_pos = $g_tolerance_detent_pos );
                 }
                 else // new lid
                 {             
@@ -2504,7 +2563,7 @@ module MakeBox( box )
                         // main structure of lid minus center
                         difference()
                         {
-                            MakeLidBase_Inset( tolerance = g_tolerance, tolerance_detent_pos = g_tolerance_detent_pos );
+                            MakeLidBase_Inset( tolerance = $g_tolerance, tolerance_detent_pos = $g_tolerance_detent_pos );
 
                             // hollow the center
                             MoveToLidInterior()
@@ -2524,7 +2583,7 @@ module MakeBox( box )
                         // }
 
                         // add tabs
-                        MakeLidTabs( mod = -g_tolerance );
+                        MakeLidTabs( mod = -$g_tolerance );
                     }
                 }
 
@@ -2532,8 +2591,8 @@ module MakeBox( box )
                     intersection() // clip to lid extents
                     {
                         if ( m_lid_inset )
-                            MoveToLidInterior( tolerance = -g_tolerance )
-                                cube([  __lid_internal_size( k_x ) + 2*g_tolerance, __lid_internal_size( k_y ) + 2*g_tolerance,  __lid_external_size( k_z)]);
+                            MoveToLidInterior( tolerance = -$g_tolerance )
+                                cube([  __lid_internal_size( k_x ) + 2*$g_tolerance, __lid_internal_size( k_y ) + 2*$g_tolerance,  __lid_external_size( k_z)]);
                         else
                             cube([  __lid_external_size( k_x ), __lid_external_size( k_y ),  __lid_external_size( k_z)]);
 
@@ -2545,8 +2604,8 @@ module MakeBox( box )
             lid_print_position = [0, m_box_size[ k_y ] + DISTANCE_BETWEEN_PARTS, 0 ];
             lid_vis_position = [ 0, 0, m_box_size[ k_z ] + m_lid_thickness ];
           
-            translate( g_b_vis_actual ? lid_vis_position : lid_print_position ) 
-                RotateAboutPoint( g_b_vis_actual ? 180 : 0, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )
+            translate( $g_vis_actual_b ? lid_vis_position : lid_print_position ) 
+                RotateAboutPoint( $g_vis_actual_b ? 180 : 0, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )
                     difference()
                     {
                         Helper__BuildLid();
@@ -2635,7 +2694,7 @@ module MakeBox( box )
                         {
                             if ( component[ i ][ k_key ] == LABEL )
                             {
-                                label = component[ i ][ k_value ];
+                                label = component[ i ];
 
                                 if ( __value( label, ENABLED_B, default = true ) )
                                     MakeLabel( label, x, y )
@@ -2669,7 +2728,7 @@ module MakeBox( box )
 
             // main and perpendicular size of hole
             //  main dimension intrudes into the compartment by some fraction ( e.g. 1/5 )
-            main_size_raw = margin ? m_component_margin_side[ side ] + g_wall_thickness + radius : 
+            main_size_raw = margin ? m_component_margin_side[ side ] + $g_wall_thickness + radius : 
                         __padding( main_d )/2  + __size( main_d ) * m_cutout_size_frac_aligned;
             main_size = ( m_cutout_depth_max > 0 && !margin ) ? min( main_size_raw, m_cutout_depth_max ) : main_size_raw;
 
@@ -2707,7 +2766,7 @@ module MakeBox( box )
                 // front
                 [  
                     __size( k_x )/2  - perp_size/2,       
-                    -__padding( main_d )/2 - g_wall_thickness,               
+                    -__padding( main_d )/2 - $g_wall_thickness,               
                     __finger_cutouts_bottom() 
                 ], 
                 // back
@@ -2718,7 +2777,7 @@ module MakeBox( box )
                 ],
                 // left
                 [   
-                    -__padding( main_d )/2 - g_wall_thickness,  
+                    -__padding( main_d )/2 - $g_wall_thickness,  
                     __size( k_y )/2  - perp_size/2, 
                     __finger_cutouts_bottom() 
                 ],
@@ -3253,7 +3312,7 @@ module MakeBox( box )
             module MakeDetent( mod )
             {
                 // Create one squished sphere
-                resize( [g_detent_thickness*2 + mod, 1, 1.0])
+                resize( [$g_detent_thickness*2 + mod, 1, 1.0])
                     sphere( r = DEFAULT_DETENT_SPHERE_RADIUS, $fn = 12 ); 
             }
 
@@ -3261,41 +3320,41 @@ module MakeBox( box )
             {
                 num_detents = 2;
 
-                // Create two squished spheres g_detent_spacing apart and wrap them in a hull
+                // Create two squished spheres $g_detent_spacing apart and wrap them in a hull
                 // Place on the front wall g_detent_distance right of corner
                 translate( [0, offset ,0 ])
                 hull()
                     for ( i = [ 0 : num_detents - 1 ] )
-                        translate( [ m_wall_thickness/2 + g_detent_spacing * i + g_detent_dist_from_corner, m_wall_thickness/2, 0] )
+                        translate( [ m_wall_thickness/2 + $g_detent_spacing * i + $g_detent_dist_from_corner, m_wall_thickness/2, 0] )
                             rotate( 90 )
                                 MakeDetent( mod );
 
-                // Create two squished spheres g_detent_spacing apart and wrap them in a hull
+                // Create two squished spheres $g_detent_spacing apart and wrap them in a hull
                 // Place on the front wall g_detent_distance left of tab
-                if ( (m_box_size[ k_x] - m_lid_tab[ k_x]) / 2.0 > g_detent_min_spacing ) {
+                if ( (m_box_size[ k_x] - m_lid_tab[ k_x]) / 2.0 > $g_detent_min_spacing ) {
                 translate( [0, offset ,0 ])
                 hull()
                     for ( i = [ 0 : num_detents - 1 ] )
-                        translate( [((m_box_size[ k_x] - m_lid_tab[ k_x]) / 2.0)  - (g_detent_spacing * i + g_detent_dist_from_corner), m_wall_thickness/2, 0] )
+                        translate( [((m_box_size[ k_x] - m_lid_tab[ k_x]) / 2.0)  - ($g_detent_spacing * i + $g_detent_dist_from_corner), m_wall_thickness/2, 0] )
                             rotate( 90 )
                                 MakeDetent( mod );
                 }
 
-                // Create two squished spheres g_detent_spacing apart and wrap them in a hull
+                // Create two squished spheres $g_detent_spacing apart and wrap them in a hull
                 // Place on the left wall g_detent_distance up from corner
                 translate( [offset, 0 ,0 ])
                 hull()
                     for ( i = [ 0 : num_detents - 1 ] )
-                        translate( [m_wall_thickness/2, m_wall_thickness/2 + g_detent_spacing * i + g_detent_dist_from_corner, 0] )
+                        translate( [m_wall_thickness/2, m_wall_thickness/2 + $g_detent_spacing * i + $g_detent_dist_from_corner, 0] )
                             MakeDetent( mod );
 
-                // Create two squished spheres g_detent_spacing apart and wrap them in a hull
+                // Create two squished spheres $g_detent_spacing apart and wrap them in a hull
                 // Place on the front wall g_detent_distance down from tab
-                if ( (m_box_size[ k_y] - m_lid_tab[ k_x]) / 2.0 > g_detent_min_spacing ) {
+                if ( (m_box_size[ k_y] - m_lid_tab[ k_x]) / 2.0 > $g_detent_min_spacing ) {
                 translate( [offset, 0 ,0 ])
                 hull()
                     for ( i = [ 0 : num_detents - 1 ] )
-                        translate( [m_wall_thickness/2, ((m_box_size[ k_y] - m_lid_tab[ k_x]) / 2.0) - (g_detent_spacing * i + g_detent_dist_from_corner), 0] )
+                        translate( [m_wall_thickness/2, ((m_box_size[ k_y] - m_lid_tab[ k_x]) / 2.0) - ($g_detent_spacing * i + $g_detent_dist_from_corner), 0] )
                             MakeDetent( mod );
                 }
             }

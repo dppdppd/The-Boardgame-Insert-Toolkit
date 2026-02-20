@@ -16,7 +16,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-RENDER_DIR="$SCRIPT_DIR/renders"
+TEST_DIR="$SCRIPT_DIR/v4/scad"
+RENDER_DIR="$SCRIPT_DIR/v4/renders"
+STL_DIR="$SCRIPT_DIR/v4/stl"
 IMGSIZE="800,600"
 STL_TIMEOUT=900
 VIEW_TIMEOUT=30
@@ -104,17 +106,17 @@ else
     done
 fi
 
-mkdir -p "$RENDER_DIR"
+mkdir -p "$RENDER_DIR" "$STL_DIR"
 
 # Build file list
 FILES=()
 if [[ ${#TESTS[@]} -eq 0 ]]; then
-    for f in "$SCRIPT_DIR"/test_*.scad; do
+    for f in "$TEST_DIR"/test_*.scad; do
         [[ -f "$f" ]] && FILES+=("$f")
     done
 else
     for t in "${TESTS[@]}"; do
-        f="$SCRIPT_DIR/${t}.scad"
+        f="$TEST_DIR/${t}.scad"
         if [[ -f "$f" ]]; then
             FILES+=("$f")
         else
@@ -179,7 +181,7 @@ WARNING: CSG output nearly empty ($csg_lines lines)"
 
     # Phase 2: STL export + multi-view PNG render
     if ! $CSG_ONLY; then
-        stl_out=$(mktemp /tmp/bit_stl_XXXXXX.stl)
+        stl_out="$STL_DIR/${name}.stl"
         stl_exit=0
         stl_err=$(timeout "$STL_TIMEOUT" openscad -o "$stl_out" "$f" 2>&1) || stl_exit=$?
 
@@ -217,8 +219,6 @@ WARNING: CSG output nearly empty ($csg_lines lines)"
                 break
             fi
         done
-
-        rm -f "$stl_out"
 
         if $view_fail; then
             FAIL=$((FAIL + 1))

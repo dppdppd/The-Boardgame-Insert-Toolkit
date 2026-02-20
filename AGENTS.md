@@ -9,15 +9,15 @@ Users define boxes via key-value data structures; the library renders them into 
 - **Active version**: v4 — `boardgame_insert_toolkit_lib.4.scad`
 - **Legacy version**: v3 — `boardgame_insert_toolkit_lib.3.scad` (~4,456 lines, preserved for hex box users)
 - **Helper functions**: `bit_functions_lib.4.scad` (convenience wrappers)
-- **Entry point**: User `.scad` files call `MakeAll()` which processes a `data[]` array
+- **Entry point**: User `.scad` files call `Make(data)` which processes a flat data array
 - **License**: CC BY-NC-SA 4.0
 - **Repo**: https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
 
 ## Architecture
 
 ### Data Flow
-1. User defines `data[]` — array of named box/divider specs using key-value pairs
-2. `MakeAll()` iterates `data[]`, dispatches to `MakeBox()` or `MakeDividers()` based on TYPE
+1. User defines a flat data array — globals as `[G_*, value]` pairs, then element entries (OBJECT_BOX, OBJECT_DIVIDERS, OBJECT_SPACER)
+2. `Make(data)` extracts globals, filters elements, dispatches to `MakeBox()` or `MakeDividers()` based on type key
 3. Each box goes through layered CSG pipeline: outer shell → feature subtractions → additions → cutouts → lid
 4. Output is OpenSCAD geometry exportable as STL
 
@@ -30,7 +30,7 @@ Users define boxes via key-value data structures; the library renders them into 
 | Data Accessors | Extract parameters, auto-size, data with defaults |
 | Geometry Helpers | `Make2dShape`, `Make2DPattern`, `MakeStripedGrid` |
 | Key Validation | `__ValidateTable`, `__ValidateElement`, type checks |
-| `MakeAll()` | Top-level entry, validates keys, dispatches per element |
+| `Make()` | Top-level entry, extracts globals, validates keys, dispatches per element |
 | `MakeDividers()` | Card dividers with tabs and frames |
 | `MakeBox()` / `MakeLayer()` | Box generation + feature processing pipeline |
 | `MakeRoundedCubeAxis()` | Rounded cube utility |
@@ -39,7 +39,7 @@ Users define boxes via key-value data structures; the library renders them into 
 - Lines 46–246: Constants, enums (`SQUARE`, `HEX`, `ROUND`, `FILLET`, `OCT`), defaults
 - Lines 247–331: Key-value dictionary helpers (`__index_of_key`, `__value`)
 - Lines 646–1160: Key validation (`__ValidateTable`, `__ValidateElement`)
-- Lines 1161–1230: **`MakeAll()`** — top-level entry point
+- Lines 1161–1230: **`Make()`** — top-level entry point (extracts globals from data, filters elements)
 - Lines 1231–1349: `MakeDividers()` — card divider generation
 - Lines 1350–1590: `MakeBox()` + `MakeLayer()` — box rendering pipeline
 - Lines 2269–2452: `MakeLid()` — lid assembly with patterns
@@ -86,18 +86,19 @@ All use `--projection=ortho --view=edges --autocenter --viewall`:
 | right  | 90,0,270          | Right side features |
 | iso    | 55,0,25           | Isometric overview (most informative) |
 
-### Test Infrastructure: `tests/`
-- 52 test files covering all box features, combinations, and edge cases
-- `tests/run_tests.sh` — runs all tests, generates 7 PNG views per test
-- Output: `tests/renders/{test_name}_{view}.png`
-- Each test includes the lib via relative path: `include <../boardgame_insert_toolkit_lib.4.scad>;`
+### Test Infrastructure: `tests/v4/`
+- `tests/v4/scad/` — 52 test files + symlinks to root `*.4.scad` libs
+- `tests/v4/renders/` — PNG renders from test runner and eval tool (gitignored)
+- `tests/v4/stl/` — STL exports (gitignored)
+- `tests/run_tests.sh` — runs all tests from `tests/v4/scad/`, generates 7 PNG views per test
+- Each test includes the lib via symlink: `include <boardgame_insert_toolkit_lib.4.scad>;`
 
-### Regression Baseline: `tests/baseline/`
-- Contains the **pre-refactor v3** library snapshot (commit `0e2e3bb`) for STL comparison
-- Files: `boardgame_insert_toolkit_lib.3.scad` (4,771 lines), `bit_functions_lib.3.scad`
-- To run a regression: rewrite test includes to point at baseline v3, render both, compare STL sizes
+### Regression Baseline: `tests/v3-baseline/`
+- `tests/v3-baseline/scad/` — 53 v3-format test files + v3 lib files (self-contained, renderable)
+- `tests/v3-baseline/renders/` — historical render output (378 PNGs)
+- Library snapshot at commit `0e2e3bb`: `boardgame_insert_toolkit_lib.3.scad`, `bit_functions_lib.3.scad`
+- v3 tests use `BOX_COMPONENT`/`CMP_*` keys and `MakeAll()` entry point
 - 1-byte STL diffs (0.00%) are acceptable — CGAL floating-point serialization noise
-- Label-clipped tests may show small size reductions (<5%) — this is correct (invisible geometry removed)
 
 ### Test Runner Usage
 ```bash
@@ -106,18 +107,24 @@ All use `--projection=ortho --view=edges --autocenter --viewall`:
 ./tests/run_tests.sh --views iso,top test_lid_*    # Only iso+top views
 ./tests/run_tests.sh --csg-only                    # Fast compile check (~7s total)
 ```
+Test files live in `tests/v4/scad/`; the runner discovers them there automatically.
 
 ### Evaluation Tool: `tests/render_eval.sh`
 ```bash
-./tests/render_eval.sh tests/test_box_minimal.scad                    # Quick iso + top
-./tests/render_eval.sh tests/test_box_minimal.scad --cross-section z,7 # Cross-section
-./tests/render_eval.sh tests/test_cutout_sides.scad --views front      # Specific view
+./tests/render_eval.sh tests/v4/scad/test_box_minimal.scad                    # Quick iso + top
+./tests/render_eval.sh tests/v4/scad/test_box_minimal.scad --cross-section z,7 # Cross-section
+./tests/render_eval.sh tests/v4/scad/test_cutout_sides.scad --views front      # Specific view
 ./tests/render_eval.sh --inline 'include <boardgame_insert_toolkit_lib.4.scad>;
-  data=[["t",[[BOX_SIZE_XYZ,[50,50,20]],
-    [BOX_FEATURE,[[FTR_COMPARTMENT_SIZE_XYZ,[46,46,18]]]]]]];
-  MakeAll();'
+  data=[
+    [G_PRINT_LID_B, false], [G_PRINT_BOX_B, true],
+    [OBJECT_BOX, [NAME,"t"],
+      [BOX_SIZE_XYZ,[50,50,20]],
+      [BOX_FEATURE, [FTR_COMPARTMENT_SIZE_XYZ,[46,46,18]]],
+    ],
+  ];
+  Make(data);'
 ```
-Output goes to `tests/renders/eval/`.
+Output goes to `tests/v4/renders/`.
 
 ## File Conventions
 
@@ -129,10 +136,11 @@ Output goes to `tests/renders/eval/`.
 | `examples.4.scad` | v4 feature showcase |
 | `examples.3.scad` | v3 feature showcase (includes hex box example) |
 | `BIT_*.scad` | User game-specific designs (gitignored) |
-| `tests/test_*.scad` | Test files (52 total, all reference v4) |
-| `tests/baseline/` | Pre-refactor v3 lib snapshot for STL regression |
-| `tests/renders/*.png` | Full test suite renders |
-| `tests/renders/eval/*.png` | Ad-hoc evaluation renders |
+| `tests/v4/scad/test_*.scad` | v4 test files (52 total, lib via symlinks) |
+| `tests/v4/renders/` | Test suite PNG renders (gitignored) |
+| `tests/v4/stl/` | STL exports (gitignored) |
+| `tests/v3-baseline/scad/` | v3 test files (53) + v3 libs (self-contained) |
+| `tests/v3-baseline/renders/` | Historical render output |
 | `tests/render_eval.sh` | Evaluation render tool |
 | `tests/run_tests.sh` | Test runner script |
 | `BIT_GUI_PLAN.md` | GUI app design & implementation plan |
@@ -140,23 +148,22 @@ Output goes to `tests/renders/eval/`.
 ### Test file template
 ```openscad
 // Test: <what this tests>
-include <../boardgame_insert_toolkit_lib.4.scad>;
-include <../bit_functions_lib.4.scad>;
-g_default_font = "Liberation Sans:style=Regular";
-
-g_b_print_lid = true;
-g_b_print_box = true;
-g_isolated_print_box = "";
+include <boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
-    [ "test name",
-        [
+    [ G_PRINT_LID_B, true ],
+    [ G_PRINT_BOX_B, true ],
+    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ OBJECT_BOX,
+        [ NAME, "test name" ],
+        [ BOX_SIZE_XYZ, [50, 50, 20] ],
+        [ BOX_FEATURE,
             // minimal config exercising the feature under test
-        ]
+            [ FTR_COMPARTMENT_SIZE_XYZ, [46, 46, 18] ],
+        ],
     ],
 ];
-
-MakeAll();
+Make(data);
 ```
 
 ## BIT GUI
@@ -273,8 +280,8 @@ Key principles from these docs:
 
 ## Common Parameters Quick Reference
 
-### Box-level
-`BOX_SIZE_XYZ`, `BOX_FEATURE`, `BOX_LID`, `BOX_NO_LID_B`, `BOX_STACKABLE_B`, `ENABLED_B`, `TYPE` (BOX/DIVIDERS)
+### Element-level (inside OBJECT_BOX)
+`NAME`, `BOX_SIZE_XYZ`, `BOX_FEATURE`, `BOX_LID`, `BOX_NO_LID_B`, `BOX_STACKABLE_B`, `ENABLED_B`
 
 ### Feature-level (inside BOX_FEATURE)
 `FTR_COMPARTMENT_SIZE_XYZ`, `FTR_NUM_COMPARTMENTS_XY`, `FTR_SHAPE` (SQUARE/HEX/HEX2/OCT/OCT2/ROUND/FILLET), `FTR_SHAPE_ROTATED_B`, `FTR_SHAPE_VERTICAL_B`, `FTR_PADDING_XY`, `FTR_PADDING_HEIGHT_ADJUST_XY`, `FTR_MARGIN_FBLR`, `FTR_CUTOUT_SIDES_4B`, `FTR_CUTOUT_CORNERS_4B`, `FTR_CUTOUT_HEIGHT_PCT`, `FTR_CUTOUT_DEPTH_PCT`, `FTR_CUTOUT_WIDTH_PCT`, `FTR_CUTOUT_BOTTOM_B`, `FTR_CUTOUT_BOTTOM_PCT`, `FTR_CUTOUT_TYPE` (INTERIOR/EXTERIOR/BOTH), `FTR_SHEAR`, `FTR_FILLET_RADIUS`, `FTR_PEDESTAL_BASE_B`, `POSITION_XY`, `ROTATION`
@@ -288,8 +295,10 @@ Key principles from these docs:
 ### Divider-level
 `DIV_TAB_TEXT`, `DIV_TAB_SIZE_XY`, `DIV_TAB_RADIUS`, `DIV_TAB_CYCLE`, `DIV_TAB_CYCLE_START`, `DIV_TAB_TEXT_SIZE/FONT/SPACING`, `DIV_TAB_TEXT_EMBOSSED_B`, `DIV_FRAME_SIZE_XY`, `DIV_FRAME_NUM_COLUMNS`, `DIV_FRAME_COLUMN`, `DIV_FRAME_TOP/BOTTOM/RADIUS`, `DIV_THICKNESS`
 
-### Globals (set before data[])
-`g_b_print_lid`, `g_b_print_box`, `g_isolated_print_box`, `g_b_visualization`, `g_b_validate_keys`, `g_wall_thickness`, `g_tolerance`, `g_tolerance_detents_pos`, `g_default_font`, `g_print_mmu_layer`
+### Globals (as `[G_*, value]` pairs in data array)
+`G_PRINT_LID_B`, `G_PRINT_BOX_B`, `G_ISOLATED_PRINT_BOX`, `G_VISUALIZATION_B`, `G_VALIDATE_KEYS_B`, `G_WALL_THICKNESS`, `G_TOLERANCE`, `G_TOLERANCE_DETENT_POS`, `G_DEFAULT_FONT`, `G_PRINT_MMU_LAYER`
+
+File-scope `$g_*` variables provide defaults; data array entries override them via `Make()`.
 
 ### Helper functions (bit_functions_lib.4.scad)
 `ftr_parms()`, `ftr_parms_fillet()`, `ftr_parms_round()`, `ftr_parms_hex()`, `ftr_parms_hex2()`, `ftr_parms_oct()`, `ftr_parms_oct2()`, `ftr_parms_disc()`, `ftr_parms_hex_tile()`, `lid_parms()`, `lid_parms_solid()`

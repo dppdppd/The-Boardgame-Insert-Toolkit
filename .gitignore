@@ -11,10 +11,12 @@ BIT_*.scad
 launch.json
 gh-md-toc
 *_Conflict*
-tests/renders/
+tests/*/renders/
+tests/*/stl/
 
 # v2 legacy files
 boardgame_insert_toolkit_lib.2.scad
 examples.2.scad
 changenotes.2.0.txt
 example_mmu.scad
+archive/
