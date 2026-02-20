@@ -80,11 +80,11 @@
   "DIV_FRAME_RADIUS": "Frame corner radius in mm",
   "DIV_FRAME_NUM_COLUMNS": "Number of vertical columns in frame (-1 = solid, 0 = no columns)",
 
-  "g_b_print_lid": "Print lids (uncheck to render boxes only)",
-  "g_b_print_box": "Print boxes (uncheck to render lids only)",
+  "g_print_lid_b": "Print lids (uncheck to render boxes only)",
+  "g_print_box_b": "Print boxes (uncheck to render lids only)",
   "g_isolated_print_box": "Render only this named box (leave empty for all boxes)",
   "g_wall_thickness": "Default wall thickness in mm (can be overridden per-box)",
   "g_tolerance": "Tolerance gap between fitting pieces (lid clearance) in mm",
-  "g_b_visualization": "Show boxes in assembled arrangement (preview mode)",
-  "g_b_validate_keys": "Warn about unknown or malformed keys in data"
+  "g_visualization_b": "Show boxes in assembled arrangement (preview mode)",
+  "g_validate_keys_b": "Warn about unknown or malformed keys in data"
 }

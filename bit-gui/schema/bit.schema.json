@@ -64,7 +64,6 @@
     "lid": {
       "description": "Lid parameters (inside BOX_LID)",
       "keys": {
-        "NAME":                         { "type": "string", "default": "", "help": "Display name for the lid" },
         "LID_FIT_UNDER_B":              { "type": "bool", "default": true, "help": "Lid fits under the box (cap style)" },
         "LID_SOLID_B":                  { "type": "bool", "default": false, "help": "Solid lid (no pattern cutouts)" },
         "LID_HEIGHT":                   { "type": "number", "default": 4.0, "help": "Lid height in mm (default: 4 cap, 2 inset)" },
@@ -131,12 +130,23 @@
     }
   },
   "globals": {
-    "g_b_print_lid":       { "type": "bool", "default": true, "help": "Print lid" },
-    "g_b_print_box":       { "type": "bool", "default": true, "help": "Print box" },
-    "g_isolated_print_box": { "type": "string", "default": "", "help": "Print only this named box" },
-    "g_wall_thickness":    { "type": "number", "default": 1.5, "help": "Default wall thickness in mm" },
-    "g_tolerance":         { "type": "number", "default": 0.1, "help": "Tolerance gap between fitting pieces" },
-    "g_b_visualization":   { "type": "bool", "default": false, "help": "Show boxes assembled (visualization mode)" },
-    "g_b_validate_keys":   { "type": "bool", "default": true, "help": "Warn about unknown/malformed keys" }
+    "G_PRINT_LID_B":           { "type": "bool",   "default": true,  "help": "Print lid" },
+    "G_PRINT_BOX_B":           { "type": "bool",   "default": true,  "help": "Print box" },
+    "G_FIT_TEST_B":            { "type": "bool",   "default": false, "help": "Output everything as placeholders for fit testing" },
+    "G_ISOLATED_PRINT_BOX":    { "type": "string", "default": "",    "help": "Print only this named box" },
+    "G_VISUALIZATION_B":       { "type": "bool",   "default": false, "help": "Show boxes assembled (visualization mode)" },
+    "G_PREVIEW_NO_LABELS_B":   { "type": "bool",   "default": false, "help": "Turn off labels during preview" },
+    "G_VALIDATE_KEYS_B":       { "type": "bool",   "default": true,  "help": "Warn about unknown/malformed keys" },
+    "G_WALL_THICKNESS":        { "type": "number", "default": 1.5,   "help": "Default wall thickness in mm" },
+    "G_DETENT_THICKNESS":      { "type": "number", "default": 0.25,  "help": "Thickness of lid/box detent in mm" },
+    "G_DETENT_SPACING":        { "type": "number", "default": 2,     "help": "Length of detent in mm" },
+    "G_DETENT_DIST_FROM_CORNER": { "type": "number", "default": 1.5, "help": "Distance from corner to start detent" },
+    "G_DETENT_MIN_SPACING":    { "type": "number", "default": 40,    "help": "Min spacing for extra detents" },
+    "G_LID_THICKNESS":         { "type": "number", "default": 1.5,   "help": "Thickness of box lid in mm" },
+    "G_COLORIZE_B":            { "type": "bool",   "default": true,  "help": "Colorize parts for development" },
+    "G_TOLERANCE":             { "type": "number", "default": 0.1,   "help": "Tolerance gap between fitting pieces" },
+    "G_TOLERANCE_DETENT_POS":  { "type": "number", "default": 0.1,   "help": "Adjusts position of lid detents" },
+    "G_PRINT_MMU_LAYER":       { "type": "string", "default": "default", "help": "Multi-material printing config" },
+    "G_DEFAULT_FONT":          { "type": "string", "default": "Liberation Sans:style=Regular", "help": "Default font for labels" }
   }
 }

@@ -1,15 +1,15 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-contextBridge.exposeInMainWorld("bitgui", {
+contextBridge.exposeInMainWorld("bgsd", {
   getPendingLoad: () => ipcRenderer.invoke("get-pending-load"),
   platform: process.platform,
-  harness: !!process.env.BITGUI_HARNESS,
+  harness: !!process.env.BGSD_HARNESS,
 
   setTitle: (title) => ipcRenderer.send("set-title", title),
   openFile: () => ipcRenderer.invoke("open-file"),
-  saveFile: (filePath, scadText, needsBackup) => ipcRenderer.invoke("save-file", filePath, scadText, needsBackup),
-  saveFileAs: (scadText) => ipcRenderer.invoke("save-file-as", scadText),
-  openInOpenScad: (filePath) => ipcRenderer.invoke("open-in-openscad", filePath),
+  saveFile: (filePath, scadText, needsBackup, profileId) => ipcRenderer.invoke("save-file", filePath, scadText, needsBackup, profileId),
+  saveFileAs: (scadText, profileId) => ipcRenderer.invoke("save-file-as", scadText, profileId),
+  openInOpenScad: (filePath, profileId) => ipcRenderer.invoke("open-in-openscad", filePath, profileId),
 
   // Menu event listeners
   onMenuNew: (callback) => ipcRenderer.on("menu-new", callback),

@@ -166,8 +166,8 @@ MyInsert/
 include <lib/boardgame_insert_toolkit_lib.4.scad>;
 include <lib/bit_functions_lib.4.scad>;
 
-g_b_print_lid = true;
-g_b_print_box = true;
+g_print_lid_b = true;
+g_print_box_b = true;
 g_isolated_print_box = "";
 
 data = [
@@ -206,8 +206,8 @@ Key formatting rules:
     "bit_functions_lib.4.scad": "sha256:ef01..."
   },
   "globals": {
-    "g_b_print_lid": true,
-    "g_b_print_box": true,
+    "g_print_lid_b": true,
+    "g_print_box_b": true,
     "g_isolated_print_box": ""
   },
   "data": [
@@ -277,8 +277,8 @@ No custom keys allowed — if it's not in the schema, you can't add it.
     "divider": { "description": "Divider parameters (TYPE=DIVIDERS)", "keys": {} }
   },
   "globals": {
-    "g_b_print_lid": { "type": "bool", "default": true },
-    "g_b_print_box": { "type": "bool", "default": true },
+    "g_print_lid_b": { "type": "bool", "default": true },
+    "g_print_box_b": { "type": "bool", "default": true },
     "g_isolated_print_box": { "type": "string", "default": "" }
   },
   "types": {
@@ -437,7 +437,7 @@ Settings stored in Electron app data dir (OS-appropriate).
 ### Globals
 
 - Only emit globals that differ from their defaults (keep output clean).
-- Always emit `g_b_print_lid`, `g_b_print_box`, `g_isolated_print_box` (essential).
+- Always emit `g_print_lid_b`, `g_print_box_b`, `g_isolated_print_box` (essential).
 
 ### Data Array
 

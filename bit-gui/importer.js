@@ -20,6 +20,7 @@ const KNOWN_CONSTANTS = {
 // Derive ALL_KEYS from the actual schema — only keys that exist in a schema
 // context get native controls. Everything else stays raw.
 const schemaJson = require("./schema/bit.schema.json");
+const profiles = require("./lib/profiles.json");
 const ALL_KEYS = new Set();
 for (const ctx of Object.values(schemaJson.contexts)) {
   for (const k of Object.keys(ctx.keys)) ALL_KEYS.add(k);
@@ -36,9 +37,10 @@ function isGlobalDefault(key, value) {
 const GLOBAL_BOOL_RE = /^\s*(g_\w+)\s*=\s*(true|false|t|f|0|1)\s*;\s*(?:\/\/.*)?$/i;
 const GLOBAL_NUM_RE  = /^\s*(g_\w+)\s*=\s*(-?\d+(?:\.\d+)?)\s*;\s*(?:\/\/.*)?$/i;
 const GLOBAL_STR_RE  = /^\s*(g_\w+)\s*=\s*"([^"]*)"\s*;\s*(?:\/\/.*)?$/i;
-const INCLUDE_RE = /^\s*include\s*<\s*(?:lib\/)?(?:boardgame_insert_toolkit_lib\.|bit_functions_lib\.)\d+\.scad\s*>\s*;?\s*(?:\/\/.*)?$/i;
-const MARKER_RE = /^\s*\/\/\s*BITGUI\b/i;
+const INCLUDE_RE = /^\s*include\s*<\s*(.+?)\s*>\s*;?\s*(?:\/\/.*)?$/i;
+const MARKER_RE = /^\s*\/\/\s*(?:BGSD|BITGUI)\b/i;
 const MAKEALL_RE = /^\s*MakeAll\s*\(\s*\)\s*;\s*(?:\/\/.*)?$/;
+const MAKE_RE = /^\s*Make\s*\(\s*(\w+)\s*\)\s*;\s*(?:\/\/.*)?$/;
 const KV_LINE_RE = /^\s*\[\s*([_A-Z][A-Z0-9_]*)\s*,\s*(.*?)\s*\]\s*,?\s*(?:\/\/.*)?$/;
 
 // New-style OBJECT_* element type constants
@@ -47,8 +49,8 @@ const OBJECT_OPEN_RE = /^\s*\[\s*(OBJECT_BOX|OBJECT_DIVIDERS|OBJECT_SPACER)\s*,\
 const OBJECT_OPEN_MERGED_RE = /^\s*\[\s*(OBJECT_BOX|OBJECT_DIVIDERS|OBJECT_SPACER)\s*,\s*\[\s*(?:\/\/.*)?$/;
 
 // Structural patterns — all allow optional trailing // comments
-const DATA_ASSIGN_RE = /^\s*data\s*=\s*\[\s*(?:\/\/.*)?$/;           // data = [
-const DATA_ASSIGN_INLINE_RE = /^\s*data\s*=\s*(?:\/\/.*)?$/;          // data =
+const DATA_ASSIGN_RE = /^\s*([A-Za-z_]\w*)\s*=\s*\[\s*(?:\/\/.*)?$/;           // identifier = [
+const DATA_ASSIGN_INLINE_RE = /^\s*([A-Za-z_]\w*)\s*=\s*(?:\/\/.*)?$/;          // identifier =
 const ELEMENT_OPEN_RE = /^\s*\[\s*"([^"]+)"\s*,\s*(?:\/\/.*)?$/;      // [ "name",
 const KEY_OPEN_RE = /^\s*\[\s*([_A-Z][A-Z0-9_]*)\s*,\s*(?:\/\/.*)?$/;  // [ KEY,
 const BARE_OPEN_RE = /^\s*\[\s*(?:\/\/.*)?$/;                          // [
@@ -73,11 +75,12 @@ function formatScadOnLoad(scadText) {
   // Legacy key name conversion for pre-rename files:
   // CMP_ → FTR_, BOX_COMPONENT → BOX_FEATURE, cmp_parms → ftr_parms
   text = text.replace(/\bCMP_/g, "FTR_").replace(/\bBOX_COMPONENT\b/g, "BOX_FEATURE").replace(/\bcmp_parms/g, "ftr_parms");
+  text = text.replace(/\bmain\s*\(\s*(\w+)\s*\)/g, "Make($1)");
 
   const span = findDataAssignmentSpan(text);
   if (!span) return { text, changed: false };
 
-  const { stmtStart, stmtEnd, baseIndent, headerComment, footerComment, arrayText } = span;
+  const { stmtStart, stmtEnd, baseIndent, headerComment, footerComment, arrayText, varName } = span;
 
   let root;
   try {
@@ -99,7 +102,7 @@ function formatScadOnLoad(scadText) {
   try { transformToObjectStyle(root); } catch { /* non-fatal */ }
 
   const out = [];
-  const headerLine = `${baseIndent}data = [` + (headerComment ? ` //${headerComment}` : "");
+  const headerLine = `${baseIndent}${varName || "data"} = [` + (headerComment ? ` //${headerComment}` : "");
   out.push(headerLine);
 
   // Root array elements (boxes/dividers)
@@ -304,7 +307,8 @@ function nonCommentElements(arrNode) {
 }
 
 function findDataAssignmentSpan(fullText) {
-  // Find: data = [ ... ];  (outside strings/comments)
+  // Find: identifier = [ ... ];  (outside strings/comments)
+  // Match any identifier at top level followed by = [
   let inStr = false;
   let inLine = false;
   const isIdentChar = (c) => /[A-Za-z0-9_]/.test(c);
@@ -320,22 +324,29 @@ function findDataAssignmentSpan(fullText) {
     if (ch === '"') { inStr = !inStr; continue; }
     if (inStr) continue;
 
-    // identifier "data"
-    if (ch === "d" && fullText.slice(i, i + 4) === "data") {
+    // Look for start of an identifier at column 0 (or after whitespace/newline)
+    if (/[A-Za-z_]/.test(ch)) {
       const before = i > 0 ? fullText[i - 1] : "";
-      const after = fullText[i + 4] || "";
-      if ((before && isIdentChar(before)) || (after && isIdentChar(after))) continue;
+      if (before && isIdentChar(before)) continue; // mid-identifier
 
-      let j = i + 4;
+      // Collect the full identifier
+      let identEnd = i + 1;
+      while (identEnd < fullText.length && isIdentChar(fullText[identEnd])) identEnd++;
+      const ident = fullText.slice(i, identEnd);
+
+      // Skip known non-data identifiers (include, module, function, etc.)
+      if (/^(include|use|module|function|if|else|for|let)$/.test(ident)) { i = identEnd - 1; continue; }
+
+      let j = identEnd;
       while (j < fullText.length && /\s/.test(fullText[j])) j++;
-      if (fullText[j] !== "=") continue;
+      if (fullText[j] !== "=") { i = identEnd - 1; continue; }
       j++;
       while (j < fullText.length && /\s/.test(fullText[j])) j++;
-      if (fullText[j] !== "[") continue;
+      if (fullText[j] !== "[") { i = identEnd - 1; continue; }
 
       const arrayStart = j;
       const arrayEnd = findMatchingBracket(fullText, arrayStart);
-      if (arrayEnd < 0) return null;
+      if (arrayEnd < 0) { i = identEnd - 1; continue; }
 
       // Expand replacement to cover the whole statement lines.
       const stmtLineStart = fullText.lastIndexOf("\n", i) + 1;
@@ -353,11 +364,9 @@ function findDataAssignmentSpan(fullText) {
       const baseIndent = (fullText.slice(stmtLineStart, i).match(/^\s*/) || [""])[0];
 
       const headerComment = (() => {
-        // data = [ // comment
         const line = fullText.slice(stmtLineStart, fullText.indexOf("\n", stmtLineStart) >= 0 ? fullText.indexOf("\n", stmtLineStart) : stmtLineEnd);
         const idx = line.indexOf("//");
         if (idx < 0) return "";
-        // keep everything after // exactly (including leading space)
         return line.slice(idx + 2);
       })();
 
@@ -377,6 +386,7 @@ function findDataAssignmentSpan(fullText) {
         headerComment,
         footerComment,
         arrayText,
+        varName: ident,
       };
     }
   }
@@ -679,6 +689,21 @@ function renderEntryLines(node, indent, needsComma, outLines) {
     }
   }
 
+  // v4-style flat structural blocks: [ OBJECT_*, kv1, kv2, ... ]
+  // or [ BOX_FEATURE/BOX_LID/LABEL, kv1, kv2, ... ] (children as siblings, not wrapped)
+  if (vals.length > 2 && vals[0].type === "atom") {
+    const key = vals[0].text.trim();
+    if (OBJECT_TYPES.has(key) || FORMAT_STRUCTURAL_KEYS.has(key)) {
+      outLines.push(`${indent}[ ${key},` + (node.commentAfterFirst ? ` //${node.commentAfterFirst}` : ""));
+      const childIndent = indent + " ".repeat(4);
+      for (let i = 1; i < vals.length; i++) {
+        renderEntryLines(vals[i], childIndent, true, outLines);
+      }
+      outLines.push(`${indent}]` + (needsComma ? "," : "") + (node.trailingComment ? ` //${node.trailingComment}` : ""));
+      return;
+    }
+  }
+
   // Fallback: keep as a multi-line array block
   renderArrayBlock(node, indent, outLines, needsComma);
 }
@@ -785,33 +810,54 @@ function importScad(scadText) {
 
     // --- Non-structural lines ---
 
+    // v3 file-scope globals: g_tolerance = 0.1; → convert key to G_TOLERANCE
     const boolMatch = raw.match(GLOBAL_BOOL_RE);
-    if (boolMatch && GLOBAL_NAMES.has(boolMatch[1])) {
-      const v = boolMatch[2].toLowerCase();
-      const gv = v === "true" || v === "t" || v === "1";
-      if (isGlobalDefault(boolMatch[1], gv)) continue; // skip default-valued globals
-      lines.push({ raw, kind: "global", depth, globalKey: boolMatch[1], globalValue: gv });
-      continue;
+    if (boolMatch) {
+      const gKey = boolMatch[1].toUpperCase();
+      if (GLOBAL_NAMES.has(gKey)) {
+        const v = boolMatch[2].toLowerCase();
+        const gv = v === "true" || v === "t" || v === "1";
+        if (isGlobalDefault(gKey, gv)) continue;
+        lines.push({ raw, kind: "global", depth, globalKey: gKey, globalValue: gv });
+        continue;
+      }
     }
     const numMatch = raw.match(GLOBAL_NUM_RE);
-    if (numMatch && GLOBAL_NAMES.has(numMatch[1])) {
-      const gv = parseFloat(numMatch[2]);
-      if (isGlobalDefault(numMatch[1], gv)) continue; // skip default-valued globals
-      lines.push({ raw, kind: "global", depth, globalKey: numMatch[1], globalValue: gv });
-      continue;
+    if (numMatch) {
+      const gKey = numMatch[1].toUpperCase();
+      if (GLOBAL_NAMES.has(gKey)) {
+        const gv = parseFloat(numMatch[2]);
+        if (isGlobalDefault(gKey, gv)) continue;
+        lines.push({ raw, kind: "global", depth, globalKey: gKey, globalValue: gv });
+        continue;
+      }
     }
     const strMatch = raw.match(GLOBAL_STR_RE);
-    if (strMatch && GLOBAL_NAMES.has(strMatch[1])) {
-      if (isGlobalDefault(strMatch[1], strMatch[2])) continue; // skip default-valued globals
-      lines.push({ raw, kind: "global", depth, globalKey: strMatch[1], globalValue: strMatch[2] });
-      continue;
+    if (strMatch) {
+      const gKey = strMatch[1].toUpperCase();
+      if (GLOBAL_NAMES.has(gKey)) {
+        if (isGlobalDefault(gKey, strMatch[2])) continue;
+        lines.push({ raw, kind: "global", depth, globalKey: gKey, globalValue: strMatch[2] });
+        continue;
+      }
     }
-    if (INCLUDE_RE.test(raw)) { lines.push({ raw, kind: "include", depth }); continue; }
+    const inclMatch = raw.match(INCLUDE_RE);
+    if (inclMatch) { lines.push({ raw, kind: "include", depth, includeFile: inclMatch[1].trim() }); continue; }
     if (MARKER_RE.test(raw)) { lines.push({ raw, kind: "marker", depth }); continue; }
-    if (MAKEALL_RE.test(raw)) { lines.push({ raw, kind: "makeall", depth }); continue; }
+    const makeMatch = raw.match(MAKE_RE);
+    if (MAKEALL_RE.test(raw) || makeMatch) { lines.push({ raw, kind: "makeall", depth, varName: makeMatch?.[1] || "data" }); continue; }
 
     // KV line (self-contained: [ KEY, value ])
     const kvMatch = raw.match(KV_LINE_RE);
+    // v4 inline globals: [ G_TOLERANCE, 0.1 ] → kind: "global"
+    if (kvMatch && GLOBAL_NAMES.has(kvMatch[1])) {
+      const parsed = parseSimpleValue(kvMatch[2]);
+      if (parsed.ok) {
+        if (isGlobalDefault(kvMatch[1], parsed.value)) continue;
+        lines.push({ raw, kind: "global", depth, globalKey: kvMatch[1], globalValue: parsed.value, inlineGlobal: true });
+        continue;
+      }
+    }
     if (kvMatch && ALL_KEYS.has(kvMatch[1])) {
       const parsed = parseSimpleValue(kvMatch[2]);
       if (parsed.ok) {
@@ -822,14 +868,16 @@ function importScad(scadText) {
 
     // --- Structural: opening brackets ---
 
-    // data = [
-    if (DATA_ASSIGN_RE.test(raw)) {
-      lines.push({ raw, kind: "open", depth, role: "data", label: "data" });
-      stack.push({ role: "data" });
+    // identifier = [
+    const dataMatch = raw.match(DATA_ASSIGN_RE);
+    if (dataMatch && depth === 0) {
+      const varName = dataMatch[1];
+      lines.push({ raw, kind: "open", depth, role: "data", label: varName, varName });
+      stack.push({ role: "data", varName });
       depth++;
       continue;
     }
-    if (DATA_ASSIGN_INLINE_RE.test(raw)) {
+    if (DATA_ASSIGN_INLINE_RE.test(raw) && depth === 0) {
       lines.push({ raw, kind: "raw", depth });
       continue;
     }
@@ -948,7 +996,9 @@ function importScad(scadText) {
     if (CLOSE_SEMI_RE.test(raw)) {
       depth = Math.max(0, depth - 1);
       const popped = stack.pop();
-      lines.push({ raw, kind: "close", depth, role: popped?.role || "unknown", label: popped?.label || "" });
+      const closeLine = { raw, kind: "close", depth, role: popped?.role || "unknown", label: popped?.label || "" };
+      if (popped?.varName) closeLine.varName = popped.varName;
+      lines.push(closeLine);
       continue;
     }
 
@@ -957,14 +1007,18 @@ function importScad(scadText) {
       depth = Math.max(0, depth - 1); // visual depth decrements by 1
       const poppedInner = stack.pop();
       const poppedOuter = stack.pop();
-      lines.push({ raw, kind: "close", depth, role: poppedOuter?.role || "unknown", label: poppedOuter?.label || "", mergedClose: true });
+      const closeLine = { raw, kind: "close", depth, role: poppedOuter?.role || "unknown", label: poppedOuter?.label || "", mergedClose: true };
+      if (poppedOuter?.varName) closeLine.varName = poppedOuter.varName;
+      lines.push(closeLine);
       continue;
     }
 
     if (CLOSE_RE.test(raw)) {
       depth = Math.max(0, depth - 1);
       const popped = stack.pop();
-      lines.push({ raw, kind: "close", depth, role: popped?.role || "unknown", label: popped?.label || "" });
+      const closeLine = { raw, kind: "close", depth, role: popped?.role || "unknown", label: popped?.label || "" };
+      if (popped?.varName) closeLine.varName = popped.varName;
+      lines.push(closeLine);
       continue;
     }
 
@@ -982,7 +1036,24 @@ function importScad(scadText) {
     }
   }
 
-  return { version: 4, lines, hasMarker };
+  // Detect library profile from include lines
+  let libraryProfile = "bit"; // default
+  let libraryInclude = "boardgame_insert_toolkit_lib.4.scad"; // default
+  for (const line of lines) {
+    if (line.kind === "include" && line.includeFile) {
+      for (const [id, profile] of Object.entries(profiles)) {
+        const re = new RegExp(profile.includePattern, "i");
+        if (re.test(line.includeFile)) {
+          libraryProfile = id;
+          // Use the primary include file from the profile
+          libraryInclude = profile.include;
+          break;
+        }
+      }
+    }
+  }
+
+  return { version: 4, lines, hasMarker, libraryProfile, libraryInclude };
 }
 
 /**
@@ -1027,34 +1098,54 @@ function reimportBlock(text, baseDepth) {
       continue;
     }
 
-    // Globals
+    // v3 file-scope globals: g_tolerance = 0.1; → convert key to G_TOLERANCE
     const boolMatch = raw.match(GLOBAL_BOOL_RE);
-    if (boolMatch && GLOBAL_NAMES.has(boolMatch[1])) {
-      const v = boolMatch[2].toLowerCase();
-      const gv = v === "true" || v === "t" || v === "1";
-      if (isGlobalDefault(boolMatch[1], gv)) continue;
-      lines.push({ raw, kind: "global", depth, globalKey: boolMatch[1], globalValue: gv });
-      continue;
+    if (boolMatch) {
+      const gKey = boolMatch[1].toUpperCase();
+      if (GLOBAL_NAMES.has(gKey)) {
+        const v = boolMatch[2].toLowerCase();
+        const gv = v === "true" || v === "t" || v === "1";
+        if (isGlobalDefault(gKey, gv)) continue;
+        lines.push({ raw, kind: "global", depth, globalKey: gKey, globalValue: gv });
+        continue;
+      }
     }
     const numMatch = raw.match(GLOBAL_NUM_RE);
-    if (numMatch && GLOBAL_NAMES.has(numMatch[1])) {
-      const gv = parseFloat(numMatch[2]);
-      if (isGlobalDefault(numMatch[1], gv)) continue;
-      lines.push({ raw, kind: "global", depth, globalKey: numMatch[1], globalValue: gv });
-      continue;
+    if (numMatch) {
+      const gKey = numMatch[1].toUpperCase();
+      if (GLOBAL_NAMES.has(gKey)) {
+        const gv = parseFloat(numMatch[2]);
+        if (isGlobalDefault(gKey, gv)) continue;
+        lines.push({ raw, kind: "global", depth, globalKey: gKey, globalValue: gv });
+        continue;
+      }
     }
     const strMatch = raw.match(GLOBAL_STR_RE);
-    if (strMatch && GLOBAL_NAMES.has(strMatch[1])) {
-      if (isGlobalDefault(strMatch[1], strMatch[2])) continue;
-      lines.push({ raw, kind: "global", depth, globalKey: strMatch[1], globalValue: strMatch[2] });
-      continue;
+    if (strMatch) {
+      const gKey = strMatch[1].toUpperCase();
+      if (GLOBAL_NAMES.has(gKey)) {
+        if (isGlobalDefault(gKey, strMatch[2])) continue;
+        lines.push({ raw, kind: "global", depth, globalKey: gKey, globalValue: strMatch[2] });
+        continue;
+      }
     }
-    if (INCLUDE_RE.test(raw)) { lines.push({ raw, kind: "include", depth }); continue; }
+    const inclMatchR = raw.match(INCLUDE_RE);
+    if (inclMatchR) { lines.push({ raw, kind: "include", depth, includeFile: inclMatchR[1].trim() }); continue; }
     if (MARKER_RE.test(raw)) { lines.push({ raw, kind: "marker", depth }); continue; }
-    if (MAKEALL_RE.test(raw)) { lines.push({ raw, kind: "makeall", depth }); continue; }
+    const makeMatchR = raw.match(MAKE_RE);
+    if (MAKEALL_RE.test(raw) || makeMatchR) { lines.push({ raw, kind: "makeall", depth, varName: makeMatchR?.[1] || "data" }); continue; }
 
     // KV
     const kvMatch = raw.match(KV_LINE_RE);
+    // v4 inline globals: [ G_TOLERANCE, 0.1 ] → kind: "global"
+    if (kvMatch && GLOBAL_NAMES.has(kvMatch[1])) {
+      const parsed = parseSimpleValue(kvMatch[2]);
+      if (parsed.ok) {
+        if (isGlobalDefault(kvMatch[1], parsed.value)) continue;
+        lines.push({ raw, kind: "global", depth, globalKey: kvMatch[1], globalValue: parsed.value, inlineGlobal: true });
+        continue;
+      }
+    }
     if (kvMatch && ALL_KEYS.has(kvMatch[1])) {
       const parsed = parseSimpleValue(kvMatch[2]);
       if (parsed.ok) {
@@ -1063,10 +1154,12 @@ function reimportBlock(text, baseDepth) {
       }
     }
 
-    // data = [
-    if (DATA_ASSIGN_RE.test(raw)) {
-      lines.push({ raw, kind: "open", depth, role: "data", label: "data" });
-      stack.push({ role: "data" });
+    // identifier = [
+    const dataMatchR = raw.match(DATA_ASSIGN_RE);
+    if (dataMatchR) {
+      const varName = dataMatchR[1];
+      lines.push({ raw, kind: "open", depth, role: "data", label: varName, varName });
+      stack.push({ role: "data", varName });
       depth++;
       continue;
     }
@@ -1176,7 +1269,9 @@ function reimportBlock(text, baseDepth) {
     if (CLOSE_SEMI_RE.test(raw)) {
       depth = Math.max(baseDepth, depth - 1);
       const popped = stack.pop();
-      lines.push({ raw, kind: "close", depth, role: popped?.role || "unknown", label: popped?.label || "" });
+      const closeLine = { raw, kind: "close", depth, role: popped?.role || "unknown", label: popped?.label || "" };
+      if (popped?.varName) closeLine.varName = popped.varName;
+      lines.push(closeLine);
       continue;
     }
 
@@ -1185,7 +1280,9 @@ function reimportBlock(text, baseDepth) {
       depth = Math.max(baseDepth, depth - 1); // visual depth -1
       const poppedInner = stack.pop();
       const poppedOuter = stack.pop();
-      lines.push({ raw, kind: "close", depth, role: poppedOuter?.role || "unknown", label: poppedOuter?.label || "", mergedClose: true });
+      const closeLine = { raw, kind: "close", depth, role: poppedOuter?.role || "unknown", label: poppedOuter?.label || "", mergedClose: true };
+      if (poppedOuter?.varName) closeLine.varName = poppedOuter.varName;
+      lines.push(closeLine);
       continue;
     }
 
@@ -1193,7 +1290,9 @@ function reimportBlock(text, baseDepth) {
     if (CLOSE_RE.test(raw)) {
       depth = Math.max(baseDepth, depth - 1);
       const popped = stack.pop();
-      lines.push({ raw, kind: "close", depth, role: popped?.role || "unknown", label: popped?.label || "" });
+      const closeLine = { raw, kind: "close", depth, role: popped?.role || "unknown", label: popped?.label || "" };
+      if (popped?.varName) closeLine.varName = popped.varName;
+      lines.push(closeLine);
       continue;
     }
 

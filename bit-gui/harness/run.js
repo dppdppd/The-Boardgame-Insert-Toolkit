@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// BIT GUI Harness — Playwright-driven Electron REPL
+// BGSD Harness — Playwright-driven Electron REPL
 // Usage: node harness/run.js
 
 const { _electron: electron } = require("playwright");
@@ -7,7 +7,7 @@ const path = require("path");
 const fs = require("fs");
 const readline = require("readline");
 
-const BIT_GUI = path.resolve(__dirname, "..");
+const BGSD = path.resolve(__dirname, "..");
 const OUT_DIR = path.join(__dirname, "out");
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
@@ -143,16 +143,16 @@ async function handleCommand(line) {
 async function main() {
   console.log("Launching Electron...");
 
-  const width = parseInt(process.env.BITGUI_WINDOW_WIDTH || "1000", 10);
-  const height = parseInt(process.env.BITGUI_WINDOW_HEIGHT || "1200", 10);
+  const width = parseInt(process.env.BGSD_WINDOW_WIDTH || "800", 10);
+  const height = parseInt(process.env.BGSD_WINDOW_HEIGHT || "1600", 10);
 
   app = await electron.launch({
-    args: [path.join(BIT_GUI, "main.js"), "--disable-gpu", "--no-sandbox"],
+    args: [path.join(BGSD, "main.js"), "--disable-gpu", "--no-sandbox"],
     env: {
       ...process.env,
-      BITGUI_WINDOW_WIDTH: String(width),
-      BITGUI_WINDOW_HEIGHT: String(height),
-      BITGUI_HARNESS: "1",
+      BGSD_WINDOW_WIDTH: String(width),
+      BGSD_WINDOW_HEIGHT: String(height),
+      BGSD_HARNESS: "1",
     },
   });
 
@@ -166,10 +166,10 @@ async function main() {
 
   // Optional non-interactive script mode (useful in CI / tool-driven runs)
   // Provide either:
-  // - BITGUI_HARNESS_SCRIPT=/path/to/commands.txt
-  // - BITGUI_HARNESS_COMMANDS='cmd1\ncmd2\n...'
-  const scriptPath = process.env.BITGUI_HARNESS_SCRIPT;
-  const scriptInline = process.env.BITGUI_HARNESS_COMMANDS;
+  // - BGSD_HARNESS_SCRIPT=/path/to/commands.txt
+  // - BGSD_HARNESS_COMMANDS='cmd1\ncmd2\n...'
+  const scriptPath = process.env.BGSD_HARNESS_SCRIPT;
+  const scriptInline = process.env.BGSD_HARNESS_COMMANDS;
   if (scriptPath || scriptInline) {
     try {
       const script = scriptPath
@@ -189,7 +189,7 @@ async function main() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: "bit> ",
+    prompt: "bgsd> ",
   });
 
   rl.prompt();

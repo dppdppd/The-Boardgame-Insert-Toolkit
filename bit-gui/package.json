@@ -1,9 +1,9 @@
 {
-  "name": "bit-gui",
+  "name": "bgsd",
   "private": true,
   "version": "0.2.1",
-  "description": "Visual editor for Boardgame Insert Toolkit .scad files",
-  "author": "BIT GUI Contributors",
+  "description": "Board Game Storage Designer — visual editor for parametric OpenSCAD libraries",
+  "author": "BGSD Contributors",
   "main": "main.js",
   "scripts": {
     "dev": "concurrently \"vite build --watch\" \"electron . --disable-gpu --no-sandbox\"",
@@ -26,8 +26,8 @@
     "vite": "^6"
   },
   "build": {
-    "appId": "com.bitgui.app",
-    "productName": "BIT GUI",
+    "appId": "com.bgsd.app",
+    "productName": "BGSD",
     "directories": {
       "output": "release"
     },
@@ -35,6 +35,7 @@
       "main.js",
       "preload.js",
       "importer.js",
+      "lib/**/*",
       "schema/**/*",
       "dist/**/*",
       "package.json"

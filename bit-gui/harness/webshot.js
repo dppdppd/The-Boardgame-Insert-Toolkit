@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Headless screenshot generator for BIT GUI (no X server required).
+// Headless screenshot generator for BGSD (no X server required).
 //
 // Usage:
-//   node bit-gui/harness/webshot.js <scad-file> <out-png> [scrollY]
+//   node harness/webshot.js <scad-file> <out-png> [scrollY]
 
 const fs = require("fs");
 const path = require("path");
@@ -13,7 +13,7 @@ const { importScad } = require("../importer");
 async function main() {
   const [, , scadPathArg, outPathArg, scrollYArg] = process.argv;
   if (!scadPathArg || !outPathArg) {
-    console.error("Usage: node bit-gui/harness/webshot.js <scad-file> <out-png> [scrollY]");
+    console.error("Usage: node harness/webshot.js <scad-file> <out-png> [scrollY]");
     process.exit(2);
   }
 
@@ -27,12 +27,12 @@ async function main() {
   const pending = { data: project, filePath: scadPath };
 
   const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+  const page = await browser.newPage({ viewport: { width: 800, height: 1600 } });
 
-  // Provide a minimal window.bitgui shim so the app can auto-load.
+  // Provide a minimal window.bgsd shim so the app can auto-load.
   await page.addInitScript((pendingLoad) => {
     let pending = pendingLoad;
-    window.bitgui = {
+    window.bgsd = {
       harness: false,
       platform: "webshot",
       getPendingLoad: async () => {

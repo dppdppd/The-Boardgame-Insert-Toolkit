@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { importScad } = require("./importer");
+const { ensureLibrary, copyLibToDir } = require("./lib/library-manager");
 
 // Prevent GPU-related crashes on Windows (packaged exe doesn't get --disable-gpu)
 app.disableHardwareAcceleration();
@@ -127,8 +128,8 @@ function rebuildMenu() {
 }
 
 function createWindow() {
-  const width = parseInt(process.env.BITGUI_WINDOW_WIDTH || "1000", 10);
-  const height = parseInt(process.env.BITGUI_WINDOW_HEIGHT || "1200", 10);
+  const width = parseInt(process.env.BGSD_WINDOW_WIDTH || "1000", 10);
+  const height = parseInt(process.env.BGSD_WINDOW_HEIGHT || "1200", 10);
 
   mainWindow = new BrowserWindow({
     width,
@@ -145,7 +146,7 @@ function createWindow() {
   rebuildMenu();
 
   // Auto-load file from env or CLI arg
-  const autoLoad = process.env.BITGUI_OPEN || process.argv.find(a => a.endsWith(".scad"));
+  const autoLoad = process.env.BGSD_OPEN || process.argv.find(a => a.endsWith(".scad"));
   if (autoLoad) {
     try {
       console.log("Auto-loading:", autoLoad);
@@ -201,7 +202,7 @@ ipcMain.handle("open-file", async () => {
   }
 });
 
-ipcMain.handle("save-file", async (_event, filePath, scadText, needsBackup) => {
+ipcMain.handle("save-file", async (_event, filePath, scadText, needsBackup, profileId) => {
   try {
     if (needsBackup && fs.existsSync(filePath)) {
       const bakPath = filePath + ".bak";
@@ -210,13 +211,19 @@ ipcMain.handle("save-file", async (_event, filePath, scadText, needsBackup) => {
       }
     }
     atomicWrite(filePath, scadText);
+    // Copy library files next to saved .scad so OpenSCAD includes resolve
+    if (profileId) {
+      try { await copyLibToDir(profileId, path.dirname(filePath)); } catch (e) {
+        console.warn("Library copy failed (non-fatal):", e.message);
+      }
+    }
     return { ok: true, filePath };
   } catch (err) {
     return { ok: false, error: err.message };
   }
 });
 
-ipcMain.handle("save-file-as", async (_event, scadText) => {
+ipcMain.handle("save-file-as", async (_event, scadText, profileId) => {
   const result = await dialog.showSaveDialog(mainWindow, {
     title: "Save SCAD File",
     filters: [{ name: "OpenSCAD", extensions: ["scad"] }],
@@ -225,16 +232,28 @@ ipcMain.handle("save-file-as", async (_event, scadText) => {
   if (result.canceled) return { ok: false };
   try {
     atomicWrite(result.filePath, scadText);
+    if (profileId) {
+      try { await copyLibToDir(profileId, path.dirname(result.filePath)); } catch (e) {
+        console.warn("Library copy failed (non-fatal):", e.message);
+      }
+    }
     return { ok: true, filePath: result.filePath };
   } catch (err) {
     return { ok: false, error: err.message };
   }
 });
 
-ipcMain.handle("open-in-openscad", async (_event, filePath) => {
+ipcMain.handle("open-in-openscad", async (_event, filePath, profileId) => {
   const { spawn } = require("child_process");
   if (!filePath || !fs.existsSync(filePath)) {
     return { ok: false, error: `File not found: ${filePath || "(no path)"}` };
+  }
+
+  // Ensure library files are next to the .scad before launching OpenSCAD
+  if (profileId) {
+    try { await copyLibToDir(profileId, path.dirname(filePath)); } catch (e) {
+      console.warn("Library copy failed (non-fatal):", e.message);
+    }
   }
 
   if (process.platform === "win32") {
@@ -281,6 +300,6 @@ app.on("window-all-closed", () => app.quit());
 // Surface errors as a dialog instead of a silent crash
 process.on("uncaughtException", (err) => {
   console.error("Uncaught exception:", err);
-  try { dialog.showErrorBox("BIT GUI Error", err.stack || err.message); } catch (_) {}
+  try { dialog.showErrorBox("BGSD Error", err.stack || err.message); } catch (_) {}
   app.exit(1);
 });

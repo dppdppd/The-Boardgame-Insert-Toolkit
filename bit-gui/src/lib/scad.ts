@@ -9,9 +9,9 @@ import type { Project, Line } from "./stores/project";
 export function generateScad(project: Project): string {
   const out: string[] = [];
 
-  // Always start with marker + v4 includes
-  out.push("// BITGUI");
-  out.push("include <boardgame_insert_toolkit_lib.4.scad>;");
+  // Always start with marker + library include
+  out.push("// BGSD");
+  out.push(`include <${project.libraryInclude || "boardgame_insert_toolkit_lib.4.scad"}>;`);
 
   for (const line of project.lines) {
     switch (line.kind) {
@@ -20,17 +20,21 @@ export function generateScad(project: Project): string {
         // Skip — regenerated above.
         break;
       case "makeall":
-        // Skip — regenerated at end.
+        out.push(`Make(${line.varName || "data"});`);
         break;
-      case "global":
-        if (line.globalKey && typeof line.globalValue === "boolean") {
-          out.push(`${line.globalKey} = ${line.globalValue ? "true" : "false"};`);
-        } else if (line.globalKey && typeof line.globalValue === "number") {
-          out.push(`${line.globalKey} = ${line.globalValue};`);
-        } else if (line.globalKey) {
-          out.push(`${line.globalKey} = "${line.globalValue ?? ""}";`);
+      case "global": {
+        // v4 format: emit as [ G_KEY, value ] inside data array
+        const gk = line.globalKey ?? "";
+        const indent = (line.raw ?? "").match(/^(\s*)/)?.[1] ?? "    ";
+        if (typeof line.globalValue === "boolean") {
+          out.push(`${indent}[ ${gk}, ${line.globalValue} ],`);
+        } else if (typeof line.globalValue === "number") {
+          out.push(`${indent}[ ${gk}, ${line.globalValue} ],`);
+        } else if (gk) {
+          out.push(`${indent}[ ${gk}, "${line.globalValue ?? ""}" ],`);
         }
         break;
+      }
       case "kv":
       case "open":
       case "close":
@@ -42,6 +46,5 @@ export function generateScad(project: Project): string {
     }
   }
 
-  out.push("MakeAll();");
   return out.join("\n");
 }

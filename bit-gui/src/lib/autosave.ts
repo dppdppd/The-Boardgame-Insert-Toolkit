@@ -31,12 +31,13 @@ export function onSaveStatus(cb: (msg: string) => void) {
 
 async function doSave() {
   if (!filePath) return;
-  const bitgui = (window as any).bitgui;
-  if (!bitgui?.saveFile) return;
+  const bgsd = (window as any).bgsd;
+  if (!bgsd?.saveFile) return;
 
-  const scadText = generateScad(get(project));
+  const proj = get(project);
+  const scadText = generateScad(proj);
   saveStatus("Saving...");
-  const result = await bitgui.saveFile(filePath, scadText, needsBackup);
+  const result = await bgsd.saveFile(filePath, scadText, needsBackup, proj.libraryProfile);
   if (result.ok) {
     if (result.filePath && typeof result.filePath === "string") {
       filePath = result.filePath;

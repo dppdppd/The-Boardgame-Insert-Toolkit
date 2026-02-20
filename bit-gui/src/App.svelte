@@ -14,6 +14,8 @@
     materializeKv,
     insertLine,
     spliceLines,
+    updateSceneName,
+    addScene,
     type Line,
   } from "./lib/stores/project";
   import { generateScad } from "./lib/scad";
@@ -32,13 +34,13 @@
   onSaveStatus((msg: string) => { statusMsg = msg; });
 
   function updateTitle(filePath: string) {
-    const bitgui = (window as any).bitgui;
-    if (!bitgui?.setTitle) return;
+    const bgsd = (window as any).bgsd;
+    if (!bgsd?.setTitle) return;
     if (!filePath) {
-      bitgui.setTitle("BIT GUI — New File");
+      bgsd.setTitle("BGSD — New File");
     } else {
       const name = filePath.replace(/.*[/\\]/, "");
-      bitgui.setTitle(`${name} — ${filePath}`);
+      bgsd.setTitle(`${name} — ${filePath}`);
     }
   }
 
@@ -56,7 +58,7 @@
   }
 
   onMount(async () => {
-    showIntent = !!(window as any).bitgui?.harness;
+    showIntent = !!(window as any).bgsd?.harness;
     startAutosave();
 
     // After 1 s of input inactivity, commit the focused control so autosave picks it up.
@@ -72,18 +74,18 @@
       }, 1000);
     });
 
-    const bitgui = (window as any).bitgui;
-    if (bitgui?.onMenuNew) bitgui.onMenuNew(newFile);
-    if (bitgui?.onMenuOpen) bitgui.onMenuOpen(handleLoad);
-    if (bitgui?.onMenuSaveAs) bitgui.onMenuSaveAs(saveFileAs);
-    if (bitgui?.onMenuOpenInOpenScad) bitgui.onMenuOpenInOpenScad(openInOpenScad);
-    if (bitgui?.onMenuToggleHideDefaults) bitgui.onMenuToggleHideDefaults((checked: boolean) => { hideDefaults = checked; });
-    if (bitgui?.onMenuToggleShowScad) bitgui.onMenuToggleShowScad((checked: boolean) => { showScad = checked; });
+    const bgsd = (window as any).bgsd;
+    if (bgsd?.onMenuNew) bgsd.onMenuNew(newFile);
+    if (bgsd?.onMenuOpen) bgsd.onMenuOpen(handleLoad);
+    if (bgsd?.onMenuSaveAs) bgsd.onMenuSaveAs(saveFileAs);
+    if (bgsd?.onMenuOpenInOpenScad) bgsd.onMenuOpenInOpenScad(openInOpenScad);
+    if (bgsd?.onMenuToggleHideDefaults) bgsd.onMenuToggleHideDefaults((checked: boolean) => { hideDefaults = checked; });
+    if (bgsd?.onMenuToggleShowScad) bgsd.onMenuToggleShowScad((checked: boolean) => { showScad = checked; });
 
     // Check for pending auto-load (CLI arg / env var)
     for (let i = 0; i < 50; i++) {
       if (fileLoaded) break; // already loaded via menu during polling
-      const pending = await (window as any).bitgui?.getPendingLoad?.();
+      const pending = await (window as any).bgsd?.getPendingLoad?.();
       if (pending) { handleLoad(pending); break; }
       await new Promise(r => setTimeout(r, 200));
     }
@@ -93,17 +95,18 @@
 
   function newFile() {
     project.set({ version: 1, lines: [
-      { raw: "data = [", kind: "open", depth: 0, role: "data", label: "data" },
-      { raw: "];", kind: "close", depth: 0, role: "data", label: "data" },
-    ], hasMarker: false });
+      { raw: "scene_1 = [", kind: "open", depth: 0, role: "data", label: "scene_1", varName: "scene_1" },
+      { raw: "];", kind: "close", depth: 0, role: "data", label: "scene_1", varName: "scene_1" },
+      { raw: "Make(scene_1);", kind: "makeall", depth: 0, varName: "scene_1" },
+    ], hasMarker: false, libraryProfile: "bit", libraryInclude: "boardgame_insert_toolkit_lib.4.scad" });
     setFilePath(""); setNeedsBackup(false); statusMsg = "New file";
     updateTitle("");
   }
 
   async function openFile() {
-    const bitgui = (window as any).bitgui;
-    if (!bitgui?.openFile) return;
-    const res = await bitgui.openFile();
+    const bgsd = (window as any).bgsd;
+    if (!bgsd?.openFile) return;
+    const res = await bgsd.openFile();
     if (!res.ok) { if (res.error) statusMsg = `Open failed: ${res.error}`; return; }
     project.set(res.data);
     setFilePath(res.filePath); setNeedsBackup(!res.data.hasMarker);
@@ -113,9 +116,9 @@
   }
 
   async function saveFileAs() {
-    const bitgui = (window as any).bitgui;
-    if (!bitgui?.saveFileAs) return;
-    const res = await bitgui.saveFileAs(scadOutput);
+    const bgsd = (window as any).bgsd;
+    if (!bgsd?.saveFileAs) return;
+    const res = await bgsd.saveFileAs(scadOutput, $project.libraryProfile);
     if (!res.ok) return;
     setFilePath(res.filePath);
     updateTitle(res.filePath);
@@ -123,8 +126,8 @@
   }
 
   async function openInOpenScad() {
-    const bitgui = (window as any).bitgui;
-    if (!bitgui?.openInOpenScad) return;
+    const bgsd = (window as any).bgsd;
+    if (!bgsd?.openInOpenScad) return;
 
     let fp = getFilePath();
     if (!fp) {
@@ -136,7 +139,7 @@
 
     const savedPath = await saveNow();
     const openPath = savedPath || fp;
-    const res = await bitgui.openInOpenScad(openPath);
+    const res = await bgsd.openInOpenScad(openPath, $project.libraryProfile);
     if (!res.ok) statusMsg = `OpenSCAD: ${res.error}`;
   }
 
@@ -192,17 +195,21 @@
   const GLOBAL_NAMES: Set<string> = new Set(Object.keys((schema as any).globals || {}));
 
   function classifyLocal(raw: string, depth: number = 0): Line {
+    // v3 file-scope globals: g_tolerance = 0.1; → convert key to G_TOLERANCE
     const bm = raw.match(/^\s*(g_\w+)\s*=\s*(true|false|t|f|0|1)\s*;\s*(?:\/\/.*)?$/i);
-    if (bm && GLOBAL_NAMES.has(bm[1])) { const v = bm[2].toLowerCase(); return { raw, kind: "global", depth, globalKey: bm[1], globalValue: v === "true" || v === "t" || v === "1" }; }
+    if (bm) { const gk = bm[1].toUpperCase(); if (GLOBAL_NAMES.has(gk)) { const v = bm[2].toLowerCase(); return { raw, kind: "global", depth, globalKey: gk, globalValue: v === "true" || v === "t" || v === "1" }; } }
     const nm = raw.match(/^\s*(g_\w+)\s*=\s*(-?\d+(?:\.\d+)?)\s*;\s*(?:\/\/.*)?$/i);
-    if (nm && GLOBAL_NAMES.has(nm[1])) return { raw, kind: "global", depth, globalKey: nm[1], globalValue: parseFloat(nm[2]) };
+    if (nm) { const gk = nm[1].toUpperCase(); if (GLOBAL_NAMES.has(gk)) return { raw, kind: "global", depth, globalKey: gk, globalValue: parseFloat(nm[2]) }; }
     const sm = raw.match(/^\s*(g_\w+)\s*=\s*"([^"]*)"\s*;\s*(?:\/\/.*)?$/i);
-    if (sm && GLOBAL_NAMES.has(sm[1])) return { raw, kind: "global", depth, globalKey: sm[1], globalValue: sm[2] };
+    if (sm) { const gk = sm[1].toUpperCase(); if (GLOBAL_NAMES.has(gk)) return { raw, kind: "global", depth, globalKey: gk, globalValue: sm[2] }; }
     if (/^\s*include\s*<\s*(?:lib\/)?(?:boardgame_insert_toolkit_lib\.|bit_functions_lib\.)\d+\.scad\s*>\s*;?\s*(?:\/\/.*)?$/i.test(raw)) return { raw, kind: "include", depth };
-    if (/^\s*\/\/\s*BITGUI\b/i.test(raw)) return { raw, kind: "marker", depth };
-    if (/^\s*MakeAll\s*\(\s*\)\s*;\s*(?:\/\/.*)?$/.test(raw)) return { raw, kind: "makeall", depth };
+    if (/^\s*\/\/\s*(?:BGSD|BITGUI)\b/i.test(raw)) return { raw, kind: "marker", depth };
+    const makeM = raw.match(/^\s*Make\s*\(\s*(\w+)\s*\)\s*;\s*(?:\/\/.*)?$/);
+    if (/^\s*MakeAll\s*\(\s*\)\s*;\s*(?:\/\/.*)?$/.test(raw) || makeM) return { raw, kind: "makeall", depth, varName: makeM?.[1] || "data" };
     // KV line
     const kv = raw.match(KV_RE);
+    // v4 inline globals: [ G_TOLERANCE, 0.1 ] → kind: "global"
+    if (kv && GLOBAL_NAMES.has(kv[1])) { const p = parseSimpleValue(kv[2]); if (p.ok) return { raw, kind: "global", depth, globalKey: kv[1], globalValue: p.value, inlineGlobal: true }; }
     if (kv && ALL_KEYS.has(kv[1])) { const p = parseSimpleValue(kv[2]); if (p.ok) return { raw, kind: "kv", depth, kvKey: kv[1], kvValue: p.value }; }
     // Brackets are never produced by classifyLocal — they only come from the importer's stack-based parsing.
     return { raw, kind: "raw", depth };
@@ -401,6 +408,9 @@
     } else if (line.mergedClose) {
       const innerRole = MERGED_INNER_ROLE[role];
       if (innerRole) ctx = ROLE_TO_CONTEXT[innerRole];
+    } else if (role === "object" && !line.mergedClose) {
+      // Non-merged object close: children are direct (like params)
+      ctx = "element";
     }
     // If we resolved to "element", check if this is actually a divider
     if (ctx === "element" && closeIndex != null) {
@@ -550,11 +560,11 @@
     return set;
   });
 
-  /** Find where to insert a new global line: before the first `data = [` open. */
+  /** Find where to insert a new global line: after the `data = [` open bracket. */
   function findGlobalInsertIndex(): number {
     const lines = $project.lines;
     for (let i = 0; i < lines.length; i++) {
-      if (lines[i].kind === "open" && lines[i].role === "data") return i;
+      if (lines[i].kind === "open" && lines[i].role === "data") return i + 1;
     }
     return 0;
   }
@@ -598,7 +608,7 @@
   // Structural label for open/close brackets.
   // Returns { text, inferred } where inferred=true means the label is our interpretation, not from the file.
   function structLabel(line: Line, lineIndex?: number): { text: string; inferred: boolean } {
-    if (line.role === "data") return { text: "data", inferred: false };
+    if (line.role === "data") return { text: line.varName || "data", inferred: false };
     if (line.role === "data_list") return { text: "data list", inferred: true };
     if (line.role === "object") {
       const label = line.label || "";
@@ -616,6 +626,51 @@
     if (line.role === "lid_params") return { text: "lid params", inferred: true };
     if (line.role === "list") return { text: "list", inferred: true };
     return { text: (line.label || "block") + nameSuffix(lineIndex), inferred: true };
+  }
+
+  // --- Scene names ---
+
+  let sceneNames = $derived($project.lines
+    .filter(l => l.kind === "open" && l.role === "data")
+    .map(l => l.varName || "data"));
+
+  function nextSceneName(): string {
+    const existing = new Set($project.lines
+      .filter(l => l.kind === "open" && l.role === "data")
+      .map(l => l.varName));
+    for (let n = 1; ; n++) {
+      const name = `scene_${n}`;
+      if (!existing.has(name)) return name;
+    }
+  }
+
+  function handleSceneNameBlur(openIdx: number, newName: string) {
+    const trimmed = newName.trim();
+    if (!trimmed || !/^[A-Za-z_]\w*$/.test(trimmed)) {
+      // Invalid or empty — auto-name
+      updateSceneName(openIdx, nextSceneName());
+    } else {
+      updateSceneName(openIdx, trimmed);
+    }
+  }
+
+  function handleMakeVarChange(lineIdx: number, newVarName: string) {
+    project.update((p) => {
+      const line = p.lines[lineIdx];
+      if (!line || line.kind !== "makeall") return p;
+      line.varName = newVarName;
+      line.raw = `Make(${newVarName});`;
+      return { ...p };
+    });
+  }
+
+  function handleAddScene(afterIdx: number) {
+    // Skip past any makeall line(s) that follow the close bracket
+    let insertAfter = afterIdx;
+    while (insertAfter + 1 < $project.lines.length && $project.lines[insertAfter + 1].kind === "makeall") {
+      insertAfter++;
+    }
+    addScene(insertAfter, nextSceneName());
   }
 
   // --- Comment editing ---
@@ -733,13 +788,13 @@
     });
   }
 
-  /** Insert a BOX_LID block before `closeIndex`. */
+  /** Insert a BOX_LID block before `closeIndex` (flat format). */
   function addLid(closeIndex: number, depth: number) {
     const d = depth;
     const ind = (n: number) => "    ".repeat(n);
     const lines: Line[] = [
-      { raw: `${ind(d)}[ BOX_LID, [`, kind: "open", depth: d, role: "lid", label: "BOX_LID", mergedOpen: true },
-      { raw: `${ind(d)}]],`, kind: "close", depth: d, role: "lid", label: "BOX_LID", mergedClose: true },
+      { raw: `${ind(d)}[ BOX_LID,`, kind: "open", depth: d, role: "lid", label: "BOX_LID" },
+      { raw: `${ind(d)}],`, kind: "close", depth: d, role: "lid", label: "BOX_LID" },
     ];
     project.update((p) => {
       p.lines.splice(closeIndex, 0, ...lines);
@@ -773,8 +828,8 @@
     const closeLine = $project.lines[closeIndex];
     if (!closeLine || closeLine.kind !== "close") return false;
     const role = closeLine.role || "";
-    // For merged close (role="object"), check label directly
-    if (role === "object" && (closeLine as any).mergedClose) {
+    // For object close (merged or not), check label directly
+    if (role === "object") {
       return closeLine.label === "OBJECT_BOX";
     }
     // For params close, find parent object
@@ -785,14 +840,14 @@
     return false;
   }
 
-  /** Insert a LABEL block before `closeIndex`. */
+  /** Insert a LABEL block before `closeIndex` (flat format, no inner bracket). */
   function addLabel(closeIndex: number, depth: number) {
     const d = depth;
     const ind = (n: number) => "    ".repeat(n);
     const lines: Line[] = [
-      { raw: `${ind(d)}[ LABEL, [`, kind: "open", depth: d, role: "label", label: "LABEL", mergedOpen: true },
+      { raw: `${ind(d)}[ LABEL,`, kind: "open", depth: d, role: "label", label: "LABEL" },
       { raw: `${ind(d+1)}[ LBL_TEXT, "" ],`, kind: "kv", depth: d + 1, kvKey: "LBL_TEXT", kvValue: "" },
-      { raw: `${ind(d)}]],`, kind: "close", depth: d, role: "label", label: "LABEL", mergedClose: true },
+      { raw: `${ind(d)}],`, kind: "close", depth: d, role: "label", label: "LABEL" },
     ];
     project.update((p) => {
       p.lines.splice(closeIndex, 0, ...lines);
@@ -832,7 +887,40 @@
         <!-- This global line is rendered in the virtual globals block above -->
 
       {:else if line.kind === "open"}
-        <!-- Virtual globals block right before data = [ -->
+        {@const collapsible = !["params", "label_params", "lid_params", "feature"].includes(line.role || "")}
+        {@const deletable = line.role === "data" ? sceneNames.length > 1 : !["data_list", "params", "label_params", "lid_params", "feature"].includes(line.role || "")}
+        <div class="line-row struct open" style={pad(line)} data-testid="line-{i}">
+          {#if collapsible}
+            <button class="collapse-btn" title={collapsed.has(i) ? "Expand" : "Collapse"}
+              onclick={() => toggleCollapse(i)}>{collapsed.has(i) ? "▶" : "▼"}</button>
+          {/if}
+          {#if line.role === "data"}
+            <input class="scene-name-input" type="text" value={line.varName || "data"}
+              onblur={(e) => handleSceneNameBlur(i, e.currentTarget.value)}
+              onkeydown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+            />
+            <span class="struct-bracket">=</span>
+          {:else}
+            <span class={structLabel(line, i).inferred ? "struct-label inferred" : "struct-label"}>{structLabel(line, i).text}</span>
+          {/if}
+          <span class="struct-bracket">{collapsed.has(i) ? "[ ... ]" : "["}</span>
+          {#if line.role === "object" || line.role === "feature_list" || line.role === "lid"}
+            {@const dbg = getDebugState(i)}
+            <button class="debug-toggle" class:active={dbg.active} title="Highlight in OpenSCAD (#)"
+              onclick={() => toggleDebug(i)}>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          {/if}
+          {@render commentBtn(line, i)}
+          <span class="spacer"></span>
+          {#if deletable}
+            <button class="delete-btn" title="Delete block" onclick={() => deleteBlock(i)}>✕</button>
+          {/if}
+        </div>
+        <!-- Virtual globals block inside data = [ -->
         {#if line.role === "data"}
           {#each getGlobalRows() as row (row.key)}
             {#if hideDefaults && !row.isReal}{:else}
@@ -841,7 +929,7 @@
             {@const gOnChange = row.isReal
               ? (v: any) => updateGlobalWithDefault(row.lineIndex!, v, gDef.default)
               : (v: any) => onVirtualGlobalChange(row.key, gDef, v)}
-            <div class="line-row kv" class:virtual={!row.isReal} style={padDepth(0)} data-testid={row.isReal ? `line-${row.lineIndex}` : `virtual-${row.key}`}>
+            <div class="line-row kv" class:virtual={!row.isReal} style={padDepth(1)} data-testid={row.isReal ? `line-${row.lineIndex}` : `virtual-${row.key}`}>
               <span class="kv-key" class:virtual-key={!row.isReal} title={tip(row.key)}>{row.key}</span>
               <span class="kv-control">
                 {#if gDef.type === "bool"}
@@ -865,31 +953,6 @@
             {/if}
           {/each}
         {/if}
-        {@const collapsible = !["params", "label_params", "lid_params", "feature"].includes(line.role || "")}
-        {@const deletable = !["data", "data_list", "params", "label_params", "lid_params", "feature"].includes(line.role || "")}
-        <div class="line-row struct open" style={pad(line)} data-testid="line-{i}">
-          {#if collapsible}
-            <button class="collapse-btn" title={collapsed.has(i) ? "Expand" : "Collapse"}
-              onclick={() => toggleCollapse(i)}>{collapsed.has(i) ? "▶" : "▼"}</button>
-          {/if}
-          <span class={structLabel(line, i).inferred ? "struct-label inferred" : "struct-label"}>{structLabel(line, i).text}</span>
-          <span class="struct-bracket">{collapsed.has(i) ? "[ ... ]" : "["}</span>
-          {#if line.role === "object" || line.role === "feature_list" || line.role === "lid"}
-            {@const dbg = getDebugState(i)}
-            <button class="debug-toggle" class:active={dbg.active} title="Highlight in OpenSCAD (#)"
-              onclick={() => toggleDebug(i)}>
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-            </button>
-          {/if}
-          {@render commentBtn(line, i)}
-          <span class="spacer"></span>
-          {#if deletable}
-            <button class="delete-btn" title="Delete block" onclick={() => deleteBlock(i)}>✕</button>
-          {/if}
-        </div>
 
       {:else if line.kind === "close"}
         <!-- Sorted schema rows (real + virtual) before close bracket -->
@@ -966,7 +1029,6 @@
           {@const lidScalars = getScalarKeysForContext("lid")}
           <div class="line-row struct open virtual" style={padDepth(lidDepth)} data-testid="virtual-lid">
             <span class="struct-label inferred">BOX_LID</span>
-            <span class="struct-bracket">[</span>
           </div>
           {#each lidScalars as srow (srow.key)}
             {@const rkt = srow.def.type}
@@ -997,12 +1059,12 @@
             </div>
           {/each}
           <div class="line-row struct close virtual" style={padDepth(lidDepth)}>
-            <span class="struct-bracket">]],</span>
+            <button class="add-btn" title="Add LABEL block inside lid" onclick={() => { addLid(i, lidDepth); addLabel(i + 2, lidChildDepth); }}>+ Label</button>
+            <span class="struct-bracket">],</span>
           </div>
         {/if}
-        <!-- Close bracket with context-aware add buttons -->
+        <!-- Close bracket with add buttons inside (before bracket) -->
         <div class="line-row struct close" style={pad(line)} data-testid="line-{i}">
-          <span class="struct-bracket">{line.raw.trim()}</span>
           {#if line.role === "data"}
             <button class="add-btn" title="Add object" onclick={() => addObject(i, line.depth ?? 0)}>+ Object</button>
           {:else if line.role === "params"}
@@ -1012,8 +1074,22 @@
             {@const innerDepth = (line.depth ?? 0) + 1}
             <button class="add-btn" title="Add LABEL block" onclick={() => addLabel(i, innerDepth)}>+ Label</button>
             <button class="add-btn" title="Add BOX_FEATURE block" onclick={() => addFeatureList(i, innerDepth)}>+ Feature</button>
+          {:else if line.role === "object" && !line.mergedClose}
+            {@const childDepth = (line.depth ?? 0) + 1}
+            <button class="add-btn" title="Add LABEL block" onclick={() => addLabel(i, childDepth)}>+ Label</button>
+            <button class="add-btn" title="Add BOX_FEATURE block" onclick={() => addFeatureList(i, childDepth)}>+ Feature</button>
+          {:else if line.role === "lid" || line.role === "lid_params"}
+            {@const lidChildDepth = (line.depth ?? 0) + 1}
+            <button class="add-btn" title="Add LABEL block inside lid" onclick={() => addLabel(i, lidChildDepth)}>+ Label</button>
           {/if}
+          <span class="struct-bracket">{line.raw.trim()}</span>
         </div>
+        <!-- Buttons that appear AFTER a close bracket (outside the block) -->
+        {#if line.role === "data"}
+          <div class="line-row add-scene-row" style={pad(line)} data-testid="add-scene-{i}">
+            <button class="add-btn" title="Add another scene" onclick={() => handleAddScene(i)}>+ Scene</button>
+          </div>
+        {/if}
 
       {:else if line.kind === "kv" && line.kvKey}
         {@const kt = getKeyType(line.kvKey)}
@@ -1073,7 +1149,19 @@
           <button class="toggle-btn" title="Edit as raw text" onclick={() => toRaw(i)}>{"{}"}</button>
         </div>
 
-      {:else if line.kind === "include" || line.kind === "marker" || line.kind === "makeall"}
+      {:else if line.kind === "makeall"}
+        <div class="line-row make-row" style={pad(line)} data-testid="line-{i}">
+          <span class="make-text">Make(</span>
+          <select class="make-select" value={line.varName || "data"}
+            onchange={(e) => handleMakeVarChange(i, e.currentTarget.value)}>
+            {#each sceneNames as name}
+              <option value={name}>{name}</option>
+            {/each}
+          </select>
+          <span class="make-text">);</span>
+        </div>
+
+      {:else if line.kind === "include" || line.kind === "marker"}
         <div class="line-row muted" style={pad(line)} data-testid="line-{i}">
           <span class="line-text">{line.raw}</span>
           <span class="line-badge">{line.kind}</span>
@@ -1141,6 +1229,7 @@
     border-bottom: 1px solid #f0f0f0;
   }
   .line-row.muted { opacity: 0.35; font-style: italic; }
+  .line-row.make-row { background: #e8eaf6; border-left: 3px solid #7986cb; }
   /* Real tier: materialized KV, globals, struct open/close */
   .line-row.kv { background: #e8f4e8; border-left: 3px solid #66bb6a; }
   .line-row.struct { background: #e8f4e8; border-left: 3px solid #66bb6a; }
@@ -1232,6 +1321,7 @@
     font-size: 14px; font-weight: 700; line-height: 1.4;
   }
   .add-btn:hover { border-color: #3498db; color: #3498db; }
+  .add-scene-row { min-height: 24px; border-bottom: none; }
   .comment-btn {
     background: none; border: none; color: #ccc; cursor: pointer;
     font-family: "Courier New", monospace; font-size: 13px; font-weight: 700;
@@ -1255,6 +1345,20 @@
   .comment-input:focus { border-bottom-color: #27ae60; }
   .delete-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 16px; padding: 0 4px; }
   .delete-btn:hover { color: #e74c3c; }
+  .scene-name-input {
+    font-family: "Courier New", monospace; font-size: 15px; font-weight: 700;
+    color: #6c3483; background: transparent; border: none;
+    border-bottom: 1px dashed #b39ddb; padding: 0 4px; width: 120px; outline: none;
+  }
+  .scene-name-input:focus { border-bottom: 1px solid #6c3483; background: #f3e5f5; }
+  .make-text {
+    font-family: "Courier New", monospace; font-size: 15px; font-weight: 700; color: #5c6bc0;
+  }
+  .make-select {
+    font-family: "Courier New", monospace; font-size: 15px; font-weight: 700;
+    color: #5c6bc0; background: white; border: 1px solid #c5cae9;
+    border-radius: 2px; padding: 1px 4px;
+  }
 
   .status-bar { display: flex; justify-content: space-between; padding: 3px 12px; background: #ecf0f1; border-top: 1px solid #ddd; font-size: 13px; color: #666; }
   .intent-pane { background: #1a1a2e; padding: 6px 12px; border-top: 2px solid #e74c3c; }
