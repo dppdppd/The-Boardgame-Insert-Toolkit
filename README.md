@@ -22,28 +22,11 @@ This OpenSCAD library was designed for quick design and iteration on board game 
 - 14 magic numbers replaced with named constants
 - Code documentation: TOC, section headers, module docs
 
-**Migrating from v3**: Change your includes from `boardgame_insert_toolkit_lib.3.scad` to `boardgame_insert_toolkit_lib.4.scad` (and similarly for `bit_functions_lib`). If you use `HEXBOX` type boxes, keep using v3 — the v3 files are preserved in the repo.
+**Migrating from v3**: Change your includes from `boardgame_insert_toolkit_lib.3.scad` to `boardgame_insert_toolkit_lib.4.scad` (and similarly for `bit_functions_lib`). If you use `HEXBOX` type boxes, keep using v3 — the v3 files are archived in `tests/v3-baseline/`.
 
-# BIT GUI
+# Visual Editor
 
-A desktop app for visually editing BIT `.scad` files — no need to memorize parameter names, types, or defaults. The `.scad` file remains the single source of truth.
-
-![BIT GUI overview](images/bitgui_overview.png)
-
-![BIT GUI scrolled](images/bitgui_scrolled.png)
-
-![BIT GUI imported file](images/bitgui_imported.png)
-
-- Schema-driven controls for all v4 keys (checkboxes, dropdowns, XYZ inputs, etc.)
-- Collapsible hierarchy: elements, components, lids, labels
-- Shows all available parameters with defaults — change a value to add it to the file
-- Opens legacy v2/v3 files and automatically converts them to v4
-- Backs up the original `.scad` on first save
-- Launch OpenSCAD directly from the Tools menu
-
-### Download
-
-Portable binaries for Linux, Windows, and macOS are available on the [Releases](https://github.com/dppdppd/The-Boardgame-Insert-Toolkit/releases) page.
+> A visual desktop editor is available at **[BGSD — Board Game Storage Designer](https://github.com/dppdppd/BGSD)**. No OpenSCAD coding required.
 
 # How (Text Editor)
 - Download [Openscad](https://www.openscad.org).
@@ -626,40 +609,6 @@ Value is expected to be a number, and determines the letter spacing of the tab t
 
 #### `DIV_TAB_TEXT_CHAR_THRESHOLD`
 Value is expected to be a number, and determines the number of characters above which the size of the font should be determined automatically.
-
-# Developer
-
-### BIT GUI — Build from Source
-
-Requires [Node.js](https://nodejs.org) (v18+).
-
-```bash
-cd bit-gui
-npm install
-npm run build
-npm start
-```
-
-To open a file on launch:
-```bash
-npm start -- path/to/file.scad
-```
-
-### Packaging
-
-Build portable executables with [electron-builder](https://www.electron.build/):
-
-```bash
-npm run pack              # Unpacked app (for testing)
-npm run dist              # Current platform
-npm run dist:linux        # Linux AppImage
-npm run dist:win          # Windows portable + NSIS installer
-npm run dist:mac          # macOS DMG
-```
-
-Output goes to `bit-gui/release/`.
-
-Cross-compiling Windows from Linux requires [Wine](https://www.winehq.org/).
 
 # Published inserts:
 

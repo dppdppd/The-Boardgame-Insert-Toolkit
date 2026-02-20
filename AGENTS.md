@@ -7,7 +7,7 @@ Users define boxes via key-value data structures; the library renders them into 
 
 - **Language**: OpenSCAD (declarative CSG modeling)
 - **Active version**: v4 — `boardgame_insert_toolkit_lib.4.scad`
-- **Legacy version**: v3 — `boardgame_insert_toolkit_lib.3.scad` (~4,456 lines, preserved for hex box users)
+- **Legacy version**: v3 — archived in `tests/v3-baseline/` (preserved for reference)
 - **Helper functions**: `bit_functions_lib.4.scad` (convenience wrappers)
 - **Entry point**: User `.scad` files call `Make(data)` which processes a flat data array
 - **License**: CC BY-NC-SA 4.0
@@ -131,10 +131,8 @@ Output goes to `tests/v4/renders/`.
 | Path | Purpose |
 |------|---------|
 | `*.4.scad` | v4 library files (active) |
-| `*.3.scad` | v3 library files (legacy, preserved for hex box users) |
 | `starter.scad` | Template for new user projects (points at v4) |
 | `examples.4.scad` | v4 feature showcase |
-| `examples.3.scad` | v3 feature showcase (includes hex box example) |
 | `BIT_*.scad` | User game-specific designs (gitignored) |
 | `tests/v4/scad/test_*.scad` | v4 test files (52 total, lib via symlinks) |
 | `tests/v4/renders/` | Test suite PNG renders (gitignored) |
@@ -143,7 +141,6 @@ Output goes to `tests/v4/renders/`.
 | `tests/v3-baseline/renders/` | Historical render output |
 | `tests/render_eval.sh` | Evaluation render tool |
 | `tests/run_tests.sh` | Test runner script |
-| `BIT_GUI_PLAN.md` | GUI app design & implementation plan |
 
 ### Test file template
 ```openscad
@@ -166,83 +163,20 @@ data = [
 Make(data);
 ```
 
-## BIT GUI
+## Visual Editor
 
-### Architecture
-
-**Tech stack**: Electron 33 + Svelte 5 (runes) + Vite 6 + Playwright (harness)
-
-**Line-based model** — the importer (`bit-gui/importer.js`) parses `.scad` files into `Line` objects preserving every line as-is (kind, depth, role, kvKey/kvValue). This enables round-trip editing with minimal git diff noise.
-
-Key modules:
-| Module | Purpose |
-|--------|---------|
-| `importer.js` | SCAD parser → line-based model (bracket matching, v2/v3 conversion) |
-| `src/lib/stores/project.ts` | Svelte store with line mutations (updateKv, deleteLine, insertLine, etc.) |
-| `src/lib/schema.ts` | Loads `schema/bit.schema.json`; provides context-aware key lookups |
-| `src/lib/scad.ts` | Reconstructs `.scad` from project state |
-| `src/lib/autosave.ts` | Debounced file I/O |
-| `main.js` | Electron main process (IPC: open/save/OpenSCAD launch) |
-| `preload.js` | Context bridge (`window.bitgui` API) |
-| `schema/bit.schema.json` | Single source of truth for all parameter types, defaults, enums |
-
-**Schema contexts** (hierarchy): `element` → `feature`, `lid`, `label`, `divider`
-
-### Commands
-```bash
-cd bit-gui
-npm install
-npm run build          # Vite builds frontend to dist/
-npm start              # Launch Electron app
-npm run dev            # Watch + launch (concurrent)
-```
-
-### Dev Loop
-```
-1. Edit Svelte components in bit-gui/src/
-2. Build: cd bit-gui && npm run build
-3. Launch: xvfb-run -a node bit-gui/harness/run.js
-4. Drive via REPL: intent + interact (click, type, toggle, wait, shot)
-5. Inspect screenshots in bit-gui/harness/out/
-```
-
-Elements use `data-testid` attributes for harness targeting (e.g., `element-N-name`, `kv-KEY-editor`, `add-element`).
-
-### Harness
-
-The Playwright harness (`bit-gui/harness/run.js`) drives the Electron app headless for screenshots.
-
-**Prerequisite**: `xvfb` is NOT in the Docker image; install before first use:
-```bash
-sudo apt-get update && sudo apt-get install -y xvfb
-```
-
-**Launch** (interactive REPL):
-```bash
-cd bit-gui && xvfb-run -a node harness/run.js
-```
-
-**Launch** (scripted, non-interactive):
-```bash
-cd bit-gui && BITGUI_OPEN="../path/to.scad" \
-  BITGUI_WINDOW_WIDTH=1920 BITGUI_WINDOW_HEIGHT=1080 \
-  BITGUI_HARNESS_COMMANDS=$'wait app-root\nshot label' \
-  xvfb-run -a node harness/run.js
-```
-
-Screenshots go to `bit-gui/harness/out/` (monotonic counter, never cleared).
-
-Harness REPL commands: `shot <label>`, `click <css>`, `type <css> "<text>"`, `toggle <css>`, `wait <css>`, `intent "<text>"`, `act "<intent>" <cmd> <args>`.
+The visual editor (BGSD — Board Game Storage Designer) has been split into its own repo:
+**[github.com/dppdppd/BGSD](https://github.com/dppdppd/BGSD)**
 
 ## CI
 
-CI runs on push/PR to master: Docker OpenSCAD builds `starter.scad` and `examples.3.scad` as STL.
+CI runs on push/PR to master: Docker OpenSCAD builds `starter.scad` and `examples.4.scad` as STL.
 
 ## Code Style
 
 - **OpenSCAD**: Constants/keys in UPPERCASE, modules in PascalCase, 2-space indent
 - **Svelte**: Runes syntax (`$state`, `$derived`, `$effect`), kebab-case filenames
-- **Git commits**: `type(scope): message` (e.g., `feat(bit-gui):`, `fix:`, `docs:`)
+- **Git commits**: `type(scope): message` (e.g., `feat:`, `fix:`, `docs:`)
 
 ## Key Design Decisions
 

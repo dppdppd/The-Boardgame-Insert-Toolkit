@@ -19,4 +19,4 @@ jobs:
       # https://hub.docker.com/r/openscad/openscad/tags
       run: |
         docker run --rm -v $(pwd):/openscad openscad/openscad:dev.2025-02-03 openscad -o starter.stl starter.scad
-        docker run --rm -v $(pwd):/openscad openscad/openscad:dev.2025-02-03 openscad -o examples.3.stl examples.3.scad
+        docker run --rm -v $(pwd):/openscad openscad/openscad:dev.2025-02-03 openscad -o examples.4.stl examples.4.scad
