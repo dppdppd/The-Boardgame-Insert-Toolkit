@@ -175,16 +175,11 @@ CI runs on push/PR to master: Docker OpenSCAD builds `starter.scad` and `example
 ## Code Style
 
 - **OpenSCAD**: Constants/keys in UPPERCASE, modules in PascalCase, 2-space indent
-- **Svelte**: Runes syntax (`$state`, `$derived`, `$effect`), kebab-case filenames
 - **Git commits**: `type(scope): message` (e.g., `feat:`, `fix:`, `docs:`)
 
 ## Key Design Decisions
 
-- **SCAD file = source of truth**: GUI preserves user code, comments, and preamble/postamble
-- **Schema-driven UI**: All controls generated from `bit.schema.json` — no hardcoded parameter UI
-- **Line-based preservation**: Importer classifies lines by kind/role instead of building AST; saves produce minimal diffs
 - **Two-phase rendering**: STL export (slow, CGAL) then PNG views (fast, import STL) — separated for efficiency
-- **Harness-driven development**: Real app tested headlessly via Playwright; intent pane makes screenshots self-describing
 
 ## Library Refactor Workflow
 

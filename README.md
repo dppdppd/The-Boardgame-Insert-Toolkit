@@ -26,7 +26,17 @@ This OpenSCAD library was designed for quick design and iteration on board game 
 
 # Visual Editor
 
-> A visual desktop editor is available at **[BGSD — Board Game Storage Designer](https://github.com/dppdppd/BGSD)**. No OpenSCAD coding required.
+**[BGSD — Board Game Storage Designer](https://github.com/dppdppd/BGSD)** is a desktop app for visually editing BIT `.scad` files — no OpenSCAD coding required.
+
+![BGSD](images/bgsd_overview.png)
+
+- Schema-driven controls for all v4 keys (checkboxes, dropdowns, XYZ inputs, enums)
+- Round-trip editing — opens existing `.scad` files, preserves comments and formatting
+- Live SCAD preview pane — see the generated code as you edit
+- Automatically downloads BIT library files from GitHub on save
+- Opens legacy v2/v3 files and converts them to v4
+
+Download portable binaries from the [BGSD Releases](https://github.com/dppdppd/BGSD/releases) page.
 
 # How (Text Editor)
 - Download [Openscad](https://www.openscad.org).
