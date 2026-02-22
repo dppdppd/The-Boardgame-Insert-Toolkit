@@ -441,7 +441,7 @@ module MirrorAboutPoint( v, pt)
 // DATA ACCESSOR FUNCTIONS
 // =============================================================================
 
-function __element( i ) = $data[ i ];
+function __element( i ) = $data[ i ][ k_value ];
 function __num_elements() = len( $data );
 
 // Map OBJECT_* key → internal type constant
