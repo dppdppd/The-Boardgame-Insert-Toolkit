@@ -1,5 +1,5 @@
 // BITGUI
-include <boardgame_insert_toolkit_lib.4.scad>;
+include <../lib/boardgame_insert_toolkit_lib.4.scad>;
 // Toolkit that performs all the model generation operations
 // Helper library to simplify creation of single components
 // Also includes some basic lid helpers
