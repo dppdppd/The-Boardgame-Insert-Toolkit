@@ -2,7 +2,6 @@
 // NOTE: Simplified from original (2x2 instead of 2x4, smaller lid pattern)
 //       to keep render time under 2 minutes.
 include <boardgame_insert_toolkit_lib.4.scad>;
-include <bit_functions_lib.4.scad>;
 
 data = [
     [ G_DEFAULT_FONT, "Liberation Sans:style=Regular" ],

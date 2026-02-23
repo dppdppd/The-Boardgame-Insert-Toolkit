@@ -1,6 +1,5 @@
-// Test: Helper functions — lid_parms() and lid_parms_solid()
+// Test: Lid variants — pattern lid and solid lid
 include <boardgame_insert_toolkit_lib.4.scad>;
-include <bit_functions_lib.4.scad>;
 
 data = [
     [ G_DEFAULT_FONT, "Liberation Sans:style=Regular" ],
@@ -8,16 +7,33 @@ data = [
     [ G_PRINT_BOX_B, true ],
     [ G_ISOLATED_PRINT_BOX, "" ],
     [ OBJECT_BOX,
-        [ NAME, "lid_parms helper" ],
+        [ NAME, "pattern lid" ],
         [ BOX_SIZE_XYZ, [50, 50, 20] ],
-        ftr_parms(dx =46, dy =46, dz =18),
-        lid_parms(radius =8, lbl ="PATTERN", font ="Arial:style=Bold", size =10),
+        [ BOX_FEATURE,
+            [ FTR_COMPARTMENT_SIZE_XYZ, [46, 46, 18] ],
+        ],
+        [ BOX_LID,
+            [ LID_INSET_B, t ],
+            [ LID_PATTERN_RADIUS, 8 ],
+            [ LABEL,
+                [ LBL_TEXT, "PATTERN" ],
+                [ LBL_FONT, "Arial:style=Bold" ],
+                [ LBL_SIZE, 10 ],
+                [ LBL_PLACEMENT, CENTER ],
+            ],
+        ],
     ],
     [ OBJECT_BOX,
-        [ NAME, "lid_parms_solid helper" ],
+        [ NAME, "solid lid" ],
         [ BOX_SIZE_XYZ, [50, 50, 20] ],
-        ftr_parms(dx =46, dy =46, dz =18),
-        lid_parms_solid(),
+        [ BOX_FEATURE,
+            [ FTR_COMPARTMENT_SIZE_XYZ, [46, 46, 18] ],
+        ],
+        [ BOX_LID,
+            [ LID_SOLID_B, t ],
+            [ LID_INSET_B, t ],
+            [ LID_HEIGHT, 1.5 ],
+        ],
     ],
 ];
 Make(data);

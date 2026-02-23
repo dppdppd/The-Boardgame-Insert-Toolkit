@@ -22,8 +22,13 @@ data = [
     [ OBJECT_BOX,
         [ NAME, "Box1" ],
         [ BOX_SIZE_XYZ, [box_urx, box_ury, box_urz] ],
-        ftr_parms(dx =cmp_dx, dy =cmp_dy, dz =cmp_dz),
-        lid_parms(radius =8),
+        [ BOX_FEATURE,
+            [ FTR_COMPARTMENT_SIZE_XYZ, [cmp_dx, cmp_dy, cmp_dz] ],
+        ],
+        [ BOX_LID,
+            [ LID_INSET_B, t ],
+            [ LID_PATTERN_RADIUS, 8 ],
+        ],
     ],
 ];
 // Actually create the boxes based on the data structure above
