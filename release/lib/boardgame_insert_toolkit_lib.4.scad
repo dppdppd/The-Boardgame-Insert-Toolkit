@@ -603,7 +603,7 @@ function __label_placement_is_wall( label ) =
     __label_placement_raw( label ) == RIGHT_WALL ;
 
 function __label_offset( label ) = __value( label, POSITION_XY, default = [0,0] );
-function __label_font( label ) = __value( label, LBL_FONT, default = "Stencil Std:style=Bold" );
+function __label_font( label ) = __value( label, LBL_FONT, default = $g_default_font );
 function __label_spacing( label ) = __value( label, LBL_SPACING, default = 1 );
 function __label_scale_factor( label ) = __value( label, LBL_AUTO_SCALE_FACTOR, default = 1.2 );
 function __label_scale_magic_factor( label ) = __label_scale_factor( label ) + (1 * abs(tan( __label_rotation( label ) % 90 )) );
