@@ -227,7 +227,7 @@ AUTO = "auto";
 MAX = "max";
 
 ENABLED_B = "enabled";
-_DEBUG_B = "_debug";
+DEBUG_B = "_debug";
 ROTATION = "rotation";
 POSITION_XY = "position";
 
@@ -477,7 +477,7 @@ function __find_isolated_index() =
 function __is_element_isolated_for_print() = __find_isolated_index() != undef;
 
 function __is_element_enabled( lmnt ) = __value( lmnt, ENABLED_B, default = true);
-function __is_element_debug( lmnt ) = __value( lmnt, _DEBUG_B, default = false);
+function __is_element_debug( lmnt ) = __value( lmnt, DEBUG_B, default = false);
 
 // --- Auto-size helpers ---
 // Compute a single component's total size from its parameter table.
@@ -749,7 +749,7 @@ function __is_valid_key( key, valid_keys ) =
 __VALID_BOX_KEYS = [
     TYPE, NAME, BOX_SIZE_XYZ, BOX_FEATURE, BOX_LID, BOX_VISUALIZATION,
     BOX_NO_LID_B, BOX_STACKABLE_B, BOX_WALL_THICKNESS,
-    ENABLED_B, _DEBUG_B, LABEL, ROTATION, POSITION_XY
+    ENABLED_B, DEBUG_B, LABEL, ROTATION, POSITION_XY
 ];
 
 // Divider-level valid keys (TYPE=DIVIDERS)
@@ -774,7 +774,7 @@ __VALID_COMPONENT_KEYS = [
     FTR_CUTOUT_BOTTOM_B, FTR_CUTOUT_BOTTOM_PCT, FTR_CUTOUT_TYPE,
     FTR_CUTOUT_DEPTH_MAX,
     FTR_SHEAR, FTR_FILLET_RADIUS, FTR_PEDESTAL_BASE_B,
-    ENABLED_B, _DEBUG_B, LABEL, ROTATION, POSITION_XY
+    ENABLED_B, DEBUG_B, LABEL, ROTATION, POSITION_XY
 ];
 
 // Lid-level valid keys (inside BOX_LID)
@@ -787,7 +787,7 @@ __VALID_LID_KEYS = [
     LID_PATTERN_RADIUS, LID_PATTERN_N1, LID_PATTERN_N2,
     LID_PATTERN_ANGLE, LID_PATTERN_ROW_OFFSET, LID_PATTERN_COL_OFFSET,
     LID_PATTERN_THICKNESS,
-    _DEBUG_B, LABEL
+    DEBUG_B, LABEL
 ];
 
 // Label-level valid keys (inside LABEL)
@@ -1608,7 +1608,7 @@ module MakeBox( box )
                             if ( box[ i ][ k_key ] == BOX_FEATURE )
                             {
                                 component = box[ i ];
-                                __MaybeDebug( __value( component, _DEBUG_B, default = false ) )
+                                __MaybeDebug( __value( component, DEBUG_B, default = false ) )
                                 union()
                                 {
                                     difference()
@@ -1658,7 +1658,7 @@ module MakeBox( box )
 
         function __component_rotation() = __value( component, ROTATION, default = 0 );
         function __is_component_enabled() = __value( component, ENABLED_B, default = true);
-        function __is_component_debug() = __value( component, _DEBUG_B, default = false);
+        function __is_component_debug() = __value( component, DEBUG_B, default = false);
 
         /////////
 
