@@ -626,13 +626,14 @@ Value is expected to be a number, and determines the number of characters above 
 
 - Default branch: `master`
 - Library file: `release/lib/boardgame_insert_toolkit_lib.4.scad`
-- Design files go in: `release/my_designs/` (one `.scad` file per game)
+- Design files are organized by publisher: `release/<publisher>/<game>.scad`
 - Each design file should start with `include <../lib/boardgame_insert_toolkit_lib.4.scad>;`
+- Use `release/my_designs/starter.scad` as a template for new designs
 - Tests live in `tests/`
 
 ## Submitting a design
 
-To contribute a design, fork this repo, add your `.scad` file to `release/my_designs/`, and open a pull request against the `master` branch. Use `release/my_designs/starter.scad` as a template.
+To contribute a design, fork this repo, add your `.scad` file to the appropriate publisher folder under `release/` (e.g. `release/my_designs/MyGame.scad`), and open a pull request against the `master` branch. If your publisher doesn't have a folder yet, create one.
 
 ## Reporting bugs
 
