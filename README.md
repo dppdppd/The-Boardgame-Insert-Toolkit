@@ -620,7 +620,25 @@ Value is expected to be a number, and determines the letter spacing of the tab t
 #### `DIV_TAB_TEXT_CHAR_THRESHOLD`
 Value is expected to be a number, and determines the number of characters above which the size of the font should be determined automatically.
 
-# Need Help?
+# Contributing
+
+## Repository structure
+
+- Default branch: `master`
+- Library file: `release/lib/boardgame_insert_toolkit_lib.4.scad`
+- Design files go in: `release/my_designs/` (one `.scad` file per game)
+- Each design file should start with `include <../lib/boardgame_insert_toolkit_lib.4.scad>;`
+- Tests live in `tests/`
+
+## Submitting a design
+
+To contribute a design, fork this repo, add your `.scad` file to `release/my_designs/`, and open a pull request against the `master` branch. Use `release/my_designs/starter.scad` as a template.
+
+## Reporting bugs
+
+Open an issue at https://github.com/dppdppd/The-Boardgame-Insert-Toolkit/issues with a description of the problem and, if possible, the `.scad` file that reproduces it.
+
+## Need help?
 
 Start a guided conversation with an AI assistant:
 
