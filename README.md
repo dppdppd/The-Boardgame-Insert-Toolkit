@@ -620,6 +620,14 @@ Value is expected to be a number, and determines the letter spacing of the tab t
 #### `DIV_TAB_TEXT_CHAR_THRESHOLD`
 Value is expected to be a number, and determines the number of characters above which the size of the font should be determined automatically.
 
+# Need Help?
+
+Start a guided conversation with an AI assistant:
+
+- [Help me get started with the Board Game Insert Toolkit](https://chatgpt.com/?q=I%20want%20to%20get%20started%20with%20the%20Board%20Game%20Insert%20Toolkit%20(BIT)%2C%20an%20OpenSCAD%20library%20for%20designing%203D-printable%20board%20game%20inserts%20(https%3A%2F%2Fgithub.com%2Fdppdppd%2FThe-Boardgame-Insert-Toolkit).%20There%20is%20also%20a%20visual%20editor%20called%20BGSD%20(https%3A%2F%2Fgithub.com%2Fdppdppd%2FBGSD).%20Walk%20me%20through%20the%20setup%20and%20creating%20my%20first%20insert.)
+- [I want to report a bug](https://chatgpt.com/?q=I%20want%20to%20report%20a%20bug%20in%20the%20Board%20Game%20Insert%20Toolkit%20(BIT)%2C%20an%20OpenSCAD%20library%20for%20designing%203D-printable%20board%20game%20inserts%20(https%3A%2F%2Fgithub.com%2Fdppdppd%2FThe-Boardgame-Insert-Toolkit).%20I%20have%20no%20GitHub%20experience.%20Walk%20me%20through%20how%20to%20file%20a%20bug%20report%20as%20a%20GitHub%20issue.)
+- [I want to submit a design file](https://chatgpt.com/?q=I%20want%20to%20submit%20a%20new%20design%20as%20a%20pull%20request%20to%20the%20Board%20Game%20Insert%20Toolkit%20(BIT)%20github%20project%20(https%3A%2F%2Fgithub.com%2Fdppdppd%2FThe-Boardgame-Insert-Toolkit).%20This%20is%20one%20of%20two%20OpenSCAD%20libraries%20used%20by%20the%20BGSD%20editor%20%E2%80%94%20the%20other%20is%20Counter%20Tray%20Designer%20(CTD)%20at%20https%3A%2F%2Fgithub.com%2Fdppdppd%2Fcounter-tray-designer.%20I%20have%20no%20github%20experience.%20Walk%20me%20through%20the%20process%20step%20by%20step.)
+
 # Published inserts:
 
 
