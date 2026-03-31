@@ -10,13 +10,14 @@ OpenSCAD parametric library for designing 3D-printable board game box inserts wi
 | Location | Files | Role |
 |----------|-------|------|
 | `CLAUDE.md` | 1 line | Pointer to AGENTS.md |
-| `AGENTS.md` | 234 lines | All agent instructions — architecture, rendering, testing, code style, workflow |
+| `AGENTS.md` | 100 lines | Core agent instructions — architecture, key paths, code style, workflow |
 | `README.md` | 696 lines | User-facing: setup, examples, migration guide, contributing |
-| `docs/archive/` | 6 files | Archived pre-edit versions of AGENTS.md, README.md, and .opencode/ docs |
+| `docs/guidance/RENDERING.md` | 116 lines | CLI reference, camera views, test infra, file conventions, test template |
+| `docs/guidance/BIT-PARAMETERS.md` | 30 lines | Parameter name reference for all data array levels |
+| `docs/archive/` | 8 files | Archived pre-edit versions of AGENTS.md (v01, v02), README.md, .opencode/ docs |
 | `.claude/settings.json` | 1 file | Denies edits to `tests/v3-baseline/` |
 
 ## Current Priorities
-- **LOW**: Evaluate splitting AGENTS.md (~228 lines) — parameter reference and line index are staleness-prone sections that could move to Tier 2
 - **LOW**: Expand `.claude/settings.json` hooks — currently only denies v3-baseline edits; could add commit message format, CSG regression pre-commit
 - **LOW**: Update lib file's internal TOC (line numbers in comment header are stale) — this is a code change, not a doc change
 
@@ -33,6 +34,11 @@ OpenSCAD parametric library for designing 3D-printable board game box inserts wi
 ### 2026-03-31 — implement
 - Fixes applied: 17 | Remaining: 0
 - Key changes: Updated all stale paths/counts in AGENTS.md and README.md for `release/` reorg. Rewrote all README examples from v3 to v4 format. Archived `.opencode/` (4 files). Restored `bit_functions_lib.4.scad` to `release/lib/`. Created `.claude/settings.json`. Removed false CI claim. Fixed `.gitignore` to exclude `.claude/` instead of `.opencode/`.
+
+### 2026-03-31 — consolidate
+- Extracted: 2 docs | Removed: 2 sections | Deleted: 1 stale skill
+- AGENTS.md: 222 lines (before) → 100 lines (after)
+- Key changes: Extracted rendering/testing detail → `docs/guidance/RENDERING.md` (116 lines). Extracted parameter reference → `docs/guidance/BIT-PARAMETERS.md` (30 lines). Removed staleness-prone line index and duplicative version history. Deleted stale `.claude/commands/screenshot.md` (references `bit-gui/` which was split to BGSD repo).
 
 ## PM Notes
 - 2026-03-31: The `release/` directory reorganization (commits `b7b2528`, `2431bc0`) moved lib and design files but docs were not updated. This is the root cause of most staleness.
