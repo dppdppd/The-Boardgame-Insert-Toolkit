@@ -6,9 +6,9 @@ OpenSCAD parametric library for designing 3D-printable board game box inserts wi
 Users define boxes via key-value data structures; the library renders them into 3D geometry.
 
 - **Language**: OpenSCAD (declarative CSG modeling)
-- **Active version**: v4 — `release/lib/boardgame_insert_toolkit_lib.4.scad`
+- **Active version**: v4 — `boardgame_insert_toolkit_lib.4.scad`
 - **Legacy version**: v3 — archived in `tests/v3-baseline/` (preserved for reference)
-- **Helper functions**: `release/lib/bit_functions_lib.4.scad` (convenience wrappers)
+- **Helper functions**: `bit_functions_lib.4.scad` (convenience wrappers)
 - **Entry point**: User `.scad` files call `Make(data)` which processes a flat data array
 - **License**: CC BY-NC-SA 4.0
 - **Repo**: https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
@@ -35,14 +35,14 @@ Users define boxes via key-value data structures; the library renders them into 
 | `MakeBox()` / `MakeLayer()` | Box generation + feature processing pipeline |
 | `MakeRoundedCubeAxis()` | Rounded cube utility |
 
-### Key Library Sections (release/lib/boardgame_insert_toolkit_lib.4.scad, ~3,454 lines)
+### Key Library Sections (boardgame_insert_toolkit_lib.4.scad, ~3,343 lines)
 - Lines 46–246: Constants, enums (`SQUARE`, `HEX`, `ROUND`, `FILLET`, `OCT`), defaults
 - Lines 247–331: Key-value dictionary helpers (`__index_of_key`, `__value`)
-- Lines 646–1264: Key validation (`__ValidateTable`, `__ValidateElement`)
-- Lines 1265–1365: **`Make()`** — top-level entry point (extracts globals from data, filters elements)
-- Lines 1366–1503: `MakeDividers()` — card divider generation
-- Lines 1504–3398: `MakeBox()` + `MakeLayer()` — box rendering pipeline
-- Lines 2439–2540: `MakeLid()` — lid assembly with patterns (nested within `MakeBox`)
+- Lines 646–1160: Key validation (`__ValidateTable`, `__ValidateElement`)
+- Lines 1161–1230: **`Make()`** — top-level entry point (extracts globals from data, filters elements)
+- Lines 1231–1349: `MakeDividers()` — card divider generation
+- Lines 1350–1590: `MakeBox()` + `MakeLayer()` — box rendering pipeline
+- Lines 2269–2452: `MakeLid()` — lid assembly with patterns
 
 ### Version History
 - **v2**: Legacy, `boardgame_insert_toolkit_lib.2.scad` — no longer maintained
@@ -87,7 +87,7 @@ All use `--projection=ortho --view=edges --autocenter --viewall`:
 | iso    | 55,0,25           | Isometric overview (most informative) |
 
 ### Test Infrastructure: `tests/v4/`
-- `tests/v4/scad/` — 53 test files + symlink to `release/lib/boardgame_insert_toolkit_lib.4.scad`
+- `tests/v4/scad/` — 52 test files + symlinks to root `*.4.scad` libs
 - `tests/v4/renders/` — PNG renders from test runner and eval tool (gitignored)
 - `tests/v4/stl/` — STL exports (gitignored)
 - `tests/run_tests.sh` — runs all tests from `tests/v4/scad/`, generates 7 PNG views per test
@@ -95,7 +95,7 @@ All use `--projection=ortho --view=edges --autocenter --viewall`:
 
 ### Regression Baseline: `tests/v3-baseline/`
 - `tests/v3-baseline/scad/` — 53 v3-format test files + v3 lib files (self-contained, renderable)
-- `tests/v3-baseline/renders/` — historical render output (231 PNGs)
+- `tests/v3-baseline/renders/` — historical render output (378 PNGs)
 - Library snapshot at commit `0e2e3bb`: `boardgame_insert_toolkit_lib.3.scad`, `bit_functions_lib.3.scad`
 - v3 tests use `BOX_COMPONENT`/`CMP_*` keys and `MakeAll()` entry point
 - 1-byte STL diffs (0.00%) are acceptable — CGAL floating-point serialization noise
@@ -130,11 +130,11 @@ Output goes to `tests/v4/renders/`.
 
 | Path | Purpose |
 |------|---------|
-| `release/lib/*.4.scad` | v4 library files (active) |
-| `release/my_designs/starter.scad` | Template for new user projects (points at v4) |
-| `release/my_designs/examples.4.scad` | v4 feature showcase |
-| `release/my_designs/BIT_*.scad` | User game-specific designs (gitignored) |
-| `tests/v4/scad/test_*.scad` | v4 test files (53 total, lib via symlink) |
+| `*.4.scad` | v4 library files (active) |
+| `starter.scad` | Template for new user projects (points at v4) |
+| `examples.4.scad` | v4 feature showcase |
+| `BIT_*.scad` | User game-specific designs (gitignored) |
+| `tests/v4/scad/test_*.scad` | v4 test files (52 total, lib via symlinks) |
 | `tests/v4/renders/` | Test suite PNG renders (gitignored) |
 | `tests/v4/stl/` | STL exports (gitignored) |
 | `tests/v3-baseline/scad/` | v3 test files (53) + v3 libs (self-contained) |
@@ -168,6 +168,10 @@ Make(data);
 The visual editor (BGSD — Board Game Storage Designer) has been split into its own repo:
 **[github.com/dppdppd/BGSD](https://github.com/dppdppd/BGSD)**
 
+## CI
+
+CI runs on push/PR to master: Docker OpenSCAD builds `starter.scad` and `examples.4.scad` as STL.
+
 ## Code Style
 
 - **OpenSCAD**: Constants/keys in UPPERCASE, modules in PascalCase, 2-space indent
@@ -179,21 +183,28 @@ The visual editor (BGSD — Board Game Storage Designer) has been split into its
 
 ## Library Refactor Workflow
 
-Key principles for structured library changes:
+The `.opencode/` directory contains detailed methodology docs for structured library changes. These were written for the opencode tool but the workflows apply to any agent:
+
+| File | Role |
+|------|------|
+| `.opencode/skills/bit-refactor/SKILL.md` | Master workflow: ASSESS → PATCH → EVALUATE → UPDATE DOCS → COMMIT |
+| `.opencode/agents/bit-assessor.md` | Read cleanup plan + source, produce a patch specification (read-only) |
+| `.opencode/agents/bit-patcher.md` | Apply one change, render BEFORE baseline, run CSG regression |
+| `.opencode/agents/bit-evaluator.md` | Render AFTER views, compare with BEFORE, verdict: PASS/FAIL/WARN |
+
+Key principles from these docs:
 - **One logical change per cycle** — never batch multiple tasks
 - **Always render BEFORE baselines** before patching, even for "trivial" changes
 - **Refactors must produce identical geometry** — compare BEFORE/AFTER PNGs
 - **CSG regression on all tests** after every change (`run_tests.sh --csg-only`)
 - **Update docs every cycle** — stale plans are worse than no plan
 
-> Historical workflow docs (ASSESS → PATCH → EVALUATE cycle) archived in `docs/archive/opencode/`.
-
 ## Git Workflow
 
 - Branch: `master`
 - Remote: `https://github.com/dppdppd/The-Boardgame-Insert-Toolkit.git`
 - Push: `GIT_ASKPASS=/home/pa/tmp/git-askpass.sh git push`
-- `.gitignore` ignores: `.stl`, `BIT_*.scad`, `*.test.scad`, `old/`, dotfiles (except `.github/`, `.claude/`), v2 legacy files
+- `.gitignore` ignores: `.stl`, `BIT_*.scad`, `*.test.scad`, `old/`, dotfiles (except `.github/`, `.opencode/`), v2 legacy files
 - **Tests directory (`tests/`) is NOT gitignored**
 
 ## Common Parameters Quick Reference

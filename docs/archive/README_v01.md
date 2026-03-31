@@ -23,7 +23,7 @@ This OpenSCAD library was designed for quick design and iteration on board game 
 # Version 4.00
 
 **v4** is a streamlined release focused on maintainability:
-- **Smaller codebase** (3,454 lines, down from 4,456 in v3)
+- **40% smaller codebase** (2,857 lines, down from 4,456 in v3)
 - **Key validation**: typos and unrecognized keys in your data produce helpful `BIT:` messages in the console (set `g_validate_keys_b = false;` to suppress)
 - Removed hexagonal box type (`HEXBOX`) — hex-shaped *compartments* (`FTR_SHAPE` = `HEX`/`HEX2`) still work in regular boxes
 - Bug fixes: asymmetric cutouts with `FTR_CUTOUT_HEIGHT_PCT` (#65), label clipping with shear (#69)
@@ -49,9 +49,9 @@ Download portable binaries from the [BGSD Releases](https://github.com/dppdppd/B
 # How (Text Editor)
 - Download [Openscad](https://www.openscad.org).
 - Create a new directory for the board game you're working on. It's best to keep the BIT file with the board game file because future BIT versions may not be backwards compatible and this way you will always be able to recreate the STLs.
-- Copy `release/lib/boardgame_insert_toolkit_lib.4.scad`, `release/lib/bit_functions_lib.4.scad`, and `release/my_designs/starter.scad` into the directory. Feel free to rename _starter.scad_ to something more descriptive.
-- You'll be working entirely in your copy of the starter file.
-- The first line should be __include <boardgame_insert_toolkit_lib.4.scad>;__ and the last should be __Make(data);__ All of your 'code' goes in-between.
+- Put _boardgame_insert_toolkit_lib.4.scad_, _bit_functions_lib.4.scad_, and a copy of _starter.scad_ in the directory. Feel free to rename _starter.scad_ to something more descriptive.
+- You'll be working entirely in your copy of the example.
+- The first line should be __include <boardgame_insert_toolkit_lib.4.scad>;__ and the last should be __MakeAll();__ All of your 'code' goes in-between.
 - Open your new scad file in your favorite text editor and also in Openscad.
 - In Openscad, set "Automatic Reload and Preview" _on_ in the Design menu. Now openscad will update the display whenever you save the scad file in the text editor.
 - Measure, build, measure again.
@@ -69,76 +69,101 @@ Download portable binaries from the [BGSD Releases](https://github.com/dppdppd/B
 ## Key Values
 Everything in BIT is defined using key-value pairs, i.e. [ _key_ , _value_ ]. Sometimes the _value_ is an array of other key-value pairs, so it's important to use indentation to keep track of the pairing. That's where a good text editor comes in handy. See the following example.
 
-    [ OBJECT_BOX,
-        [ NAME, "example 1: minimal" ],                    // box name, for code organization
-        [ BOX_SIZE_XYZ, [46.5, 46.5, 15.0] ],              // exterior dimensions
-        [ BOX_FEATURE,
-            [ FTR_NUM_COMPARTMENTS_XY, [4, 4] ],           // a grid of 4 x 4
-            [ FTR_COMPARTMENT_SIZE_XYZ, [10, 10, 13.0] ],  // each compartment 10mm x 10mm x 13mm
-        ],
-    ],
+    [   "example 1: minimal",                            // our box. name is just for code organization.
+        [
+            [ BOX_SIZE_XYZ, [46.5, 46.5, 15.0] ],        // one kv pair specifying the x, y, and z of our box exterior.
+            [ BOX_FEATURE,                             // our first component.
+                [
+                    [ FTR_NUM_COMPARTMENTS_XY, [4, 4] ],               // it's a grid of 4 x 4
+                    [ FTR_COMPARTMENT_SIZE_XYZ, [ 10, 10, 13.0] ],   // each compartment is 10mm x 10mm x 13mm
+                ]
+            ]
+        ]
+    ]
 
 That made this:
 
 ![example1](images/example1.png)
 
 ### Some Explanation
-Each box is defined as `[ OBJECT_BOX, [NAME, "..."], ... ]` with key-value pairs for its properties. `BOX_FEATURE` defines a compartment type within the box. It's key-values all the way down. See https://www.thingiverse.com/thing:3435429 for an example of lots of compartments of lots of components in lots of boxes.
+The first key-value pair is [ "example 0: minimal", _one_big_array_of_keyvalues_ ], and its value is an array of all of the details of the box. One of those key-pairs is `BOX_FEATURE` which defines the one type of compartment we want. It's key-values all the way down. See https://www.thingiverse.com/thing:3435429 for an example of lots of compartments of lots of components in lots of boxes.
 
 
 Here is an example of some compartments designed to hold cards, with holes to get our fingers in on the side. Many of these parameters are just the default values and are not necessary, but are included for easy modification:
 
-    [ OBJECT_BOX,
-        [ NAME, "example 2" ],
-        [ BOX_SIZE_XYZ, [110.0, 180.0, 22.0] ],
-        [ ENABLED_B, t ],
-        [ BOX_LID,
-            [ LID_SOLID_B, f ],
-            [ LID_FIT_UNDER_B, f ],
-            [ LID_PATTERN_RADIUS, 8 ],
-            [ LID_HEIGHT, 10 ],
-            [ LABEL,
-                [ LBL_TEXT, "Skull     and" ],
-                [ LBL_SIZE, AUTO ],
-                [ ROTATION, 45 ],
-                [ POSITION_XY, [2, -2] ],
+    [   "example 2",
+        [
+            [ BOX_SIZE_XYZ,             [110.0, 180.0, 22.0] ],
+            [ ENABLED_B,                t],
+
+             [ BOX_LID,
+                [
+                    [ LID_SOLID_B,         f],
+                    [ LID_FIT_UNDER_B,     f],
+                    [ LID_PATTERN_RADIUS,  8],
+                    [ LID_HEIGHT,          10 ],
+
+                    [ LABEL,
+                        [
+                            [ LBL_TEXT,     "Skull     and"],
+                            [ LBL_SIZE,     AUTO ],
+                            [ ROTATION,     45 ],
+                            [ POSITION_XY, [ 2,-2]],
+                        ]
+                    ],
+
+                    [ LABEL,
+                        [
+                            [ LBL_TEXT,     "Crossbones"],
+                            [ LBL_SIZE,     AUTO ],
+                            [ ROTATION,     315 ],
+                            [ POSITION_XY, [ -4,-0]],
+                        ]
+                    ],
+
+                ],        
             ],
-            [ LABEL,
-                [ LBL_TEXT, "Crossbones" ],
-                [ LBL_SIZE, AUTO ],
-                [ ROTATION, 315 ],
-                [ POSITION_XY, [-4, -0] ],
+
+            [   BOX_FEATURE,
+                [
+                    [FTR_COMPARTMENT_SIZE_XYZ,              [ 22, 60.0, 20.0] ],
+                    [FTR_NUM_COMPARTMENTS_XY,               [2,2] ],
+                    [FTR_SHAPE,                             SQUARE],
+                    [FTR_SHAPE_ROTATED_B,                   f],
+                    [FTR_SHAPE_VERTICAL_B,                  f],
+                    [FTR_PADDING_XY,                        [10,12]],
+                    [FTR_PADDING_HEIGHT_ADJUST_XY,          [-5, 0] ],
+                    [FTR_MARGIN_FBLR,                       [0,0,0,0]],
+                    [FTR_CUTOUT_SIDES_4B,                   [f,f,f,t]],
+                    [ROTATION,                              5 ],
+                    [POSITION_XY,                           [CENTER,CENTER]],
+                    [LABEL,               
+                        [
+                            [LBL_TEXT,        [   
+                                                ["backleft", "backright"],
+                                                ["frontleft", "frontright"],
+                                            ]
+                            ],
+                            [LBL_PLACEMENT,     FRONT],
+                            [ ROTATION,         5],
+                            [ LBL_SIZE,         AUTO],
+                            [ POSITION_XY,      [ -4,-2]],
+                            [ LBL_FONT,         "Times New Roman:style=bold italic"],
+
+                        ]
+                    ],  
+                ]
             ],
-        ],
-        [ BOX_FEATURE,
-            [ FTR_COMPARTMENT_SIZE_XYZ, [22, 60.0, 20.0] ],
-            [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
-            [ FTR_SHAPE, SQUARE ],
-            [ FTR_SHAPE_ROTATED_B, f ],
-            [ FTR_SHAPE_VERTICAL_B, f ],
-            [ FTR_PADDING_XY, [10, 12] ],
-            [ FTR_PADDING_HEIGHT_ADJUST_XY, [-5, 0] ],
-            [ FTR_MARGIN_FBLR, [0, 0, 0, 0] ],
-            [ FTR_CUTOUT_SIDES_4B, [f, f, f, t] ],
-            [ ROTATION, 5 ],
-            [ POSITION_XY, [CENTER, CENTER] ],
-            [ LABEL,
-                [ LBL_TEXT, [
-                    ["backleft", "backright"],
-                    ["frontleft", "frontright"],
-                ] ],
-                [ LBL_PLACEMENT, FRONT ],
-                [ ROTATION, 5 ],
-                [ LBL_SIZE, AUTO ],
-                [ POSITION_XY, [-4, -2] ],
-                [ LBL_FONT, "Times New Roman:style=bold italic" ],
-            ],
-        ],
-        [ BOX_FEATURE,
-            [ FTR_NUM_COMPARTMENTS_XY, [1, 1] ],
-            [ FTR_COMPARTMENT_SIZE_XYZ, [60.0, 10.0, 5.0] ],
-            [ POSITION_XY, [CENTER, 165] ],
-        ],
+
+           [ BOX_FEATURE,
+                [
+                    [FTR_NUM_COMPARTMENTS_XY,       [1,1]],
+                    [FTR_COMPARTMENT_SIZE_XYZ,      [ 60.0, 10.0, 5.0] ],
+                    [POSITION_XY,                   [CENTER,165]],
+                ]
+            ],                              
+
+        ]
     ],
 
 
@@ -151,7 +176,7 @@ And this is the result:
 
 As of v3.00, there is the ability to create hexagonal boxes as an efficient way to store hexagonal tiles (like those in Catan). Here is the code to produce a box to hold hexagonal tiles:
 
-    include <bit_functions_lib.4.scad>;
+    include <bit_functions_lib.scad>;
     
     [   "hexbox example 1",
     [    
@@ -168,7 +193,7 @@ And the result:
 
 ![example2](images/hexbox_example1.png)
 
-This also introduces __bit_functions_lib.4.scad__, which is intended to simplify the creation of components. By including it, you are able to create many parts with a single line. Here is the definition of _cmp_parms_hex_tile_:
+This also introduces __bit_functions_lib.scad__, which is intended to simplify the creation of components. By including it, you are able to create many parts with a single line. Here is the definition of _cmp_parms_hex_tile_:
 
 ```
 // This function simplifies creating a hexagonal component
@@ -195,16 +220,18 @@ function cmp_parms_hex_tile( llx=0, lly=0, dx, dz, lbl="", font=g_default_font, 
     ],
 ];
 ```
-You can see that the optional parameters llx, lly, and size, are not specified in the creation of the box above. Each function provided in __bit_functions_lib.4.scad__ is similarly documented.
+You can see that the optional parameters llx, lly, and size, are not specified in the creation of the box above. Each function provided in __bit_functions_lib.scad__ is similarly documented.
 
 ### Dividers
 As of v2.04, there is also the ability to create card dividers in addition to boxes. A dividers definition looks like this:
 
-    [ OBJECT_DIVIDERS,
-        [ NAME, "divider example 1" ],
-        [ DIV_TAB_TEXT, ["001","002","003"] ],
-        [ DIV_FRAME_NUM_COLUMNS, 2 ],
-    ],
+    [ "divider example 1",
+        [
+            [ TYPE,                     DIVIDERS ],
+            [ DIV_TAB_TEXT,             ["001","002","003"]],
+            [ DIV_FRAME_NUM_COLUMNS,    2 ]
+        ]
+    ]
 
 And produces something like this:
 
@@ -214,60 +241,79 @@ And produces something like this:
 As of v2.10, one can now tweak the lid pattern parameters. The default is still a honeycomb, but here are some alternatives:
 
 
-    [ OBJECT_BOX,
-        [ NAME, "lid pattern 1" ],
-        [ BOX_SIZE_XYZ, [50.0, 50.0, 20.0] ],
-        [ BOX_FEATURE,
-            [ FTR_COMPARTMENT_SIZE_XYZ, [47, 47, 18.0] ],
-        ],
-        [ BOX_LID,
-            [ LID_PATTERN_RADIUS, 10 ],
-            [ LID_PATTERN_N1, 3 ],
-            [ LID_PATTERN_N2, 3 ],
-            [ LID_PATTERN_ANGLE, 0 ],
-            [ LID_PATTERN_ROW_OFFSET, 10 ],
-            [ LID_PATTERN_COL_OFFSET, 140 ],
-            [ LID_PATTERN_THICKNESS, 1 ],
-        ],
-    ]
+    [   "lid pattern 1",
+        [
+            [ BOX_SIZE_XYZ,             [50.0, 50.0, 20.0] ],
+            [ BOX_FEATURE,
+                [
+                    [FTR_COMPARTMENT_SIZE_XYZ,  [ 47, 47, 18.0] ],
+                ]
+            ],  
+
+             [ BOX_LID,
+                [
+                    [ LID_PATTERN_RADIUS,         10],        
+
+                    [ LID_PATTERN_N1,               3 ],
+                    [ LID_PATTERN_N2,               3 ],
+                    [ LID_PATTERN_ANGLE,            0 ],
+                    [ LID_PATTERN_ROW_OFFSET,       10 ],
+                    [ LID_PATTERN_COL_OFFSET,       140 ],
+                    [ LID_PATTERN_THICKNESS,        1 ]
+                ]
+            ]
+        ]
     ],   
 
 ![lid pattern 1](images/pattern1.png)
 
-    [ OBJECT_BOX,
-        [ NAME, "lid pattern 2" ],
-        [ BOX_SIZE_XYZ, [50.0, 50.0, 20.0] ],
-        [ BOX_FEATURE,
-            [ FTR_COMPARTMENT_SIZE_XYZ, [47, 47, 18.0] ],
-        ],
-        [ BOX_LID,
-            [ LID_PATTERN_RADIUS, 10 ],
-            [ LID_PATTERN_N1, 8 ],
-            [ LID_PATTERN_N2, 8 ],
-            [ LID_PATTERN_ANGLE, 22.5 ],
-            [ LID_PATTERN_ROW_OFFSET, 10 ],
-            [ LID_PATTERN_COL_OFFSET, 130 ],
-            [ LID_PATTERN_THICKNESS, 0.6 ],
-        ],
+    [   "lid pattern 2",
+        [
+            [ BOX_SIZE_XYZ,             [50.0, 50.0, 20.0] ],
+            [ BOX_FEATURE,
+                [
+                    [FTR_COMPARTMENT_SIZE_XYZ,  [ 47, 47, 18.0] ],
+                ]
+            ],  
+
+             [ BOX_LID,
+                [
+                    [ LID_PATTERN_RADIUS,         10],        
+                    [ LID_PATTERN_N1,               8 ],
+                    [ LID_PATTERN_N2,               8 ],
+                    [ LID_PATTERN_ANGLE,            22.5 ],
+                    [ LID_PATTERN_ROW_OFFSET,       10 ],
+                    [ LID_PATTERN_COL_OFFSET,       130 ],
+                    [ LID_PATTERN_THICKNESS,        0.6 ]
+                ]
+            ]
+        ]
     ],
 
 ![lid pattern 2](images/pattern2.png)
 
-    [ OBJECT_BOX,
-        [ NAME, "lid pattern 3" ],
-        [ BOX_SIZE_XYZ, [50.0, 50.0, 20.0] ],
-        [ BOX_FEATURE,
-            [ FTR_COMPARTMENT_SIZE_XYZ, [47, 47, 18.0] ],
-        ],
-        [ BOX_LID,
-            [ LID_PATTERN_RADIUS, 10 ],
-            [ LID_PATTERN_N1, 6 ],
-            [ LID_PATTERN_N2, 3 ],
-            [ LID_PATTERN_ANGLE, 60 ],
-            [ LID_PATTERN_ROW_OFFSET, 10 ],
-            [ LID_PATTERN_COL_OFFSET, 140 ],
-            [ LID_PATTERN_THICKNESS, 0.6 ],
-        ],
+    [   "lid pattern 3",
+        [
+            [ BOX_SIZE_XYZ,             [50.0, 50.0, 20.0] ],
+            [ BOX_FEATURE,
+                [
+                    [FTR_COMPARTMENT_SIZE_XYZ,  [ 47, 47, 18.0] ],
+                ]
+            ],  
+
+             [ BOX_LID,
+                [
+                    [ LID_PATTERN_RADIUS,         10],        
+
+                    [ LID_PATTERN_N1,               6 ],
+                    [ LID_PATTERN_N2,               3 ],
+                    [ LID_PATTERN_ANGLE,            60 ],
+                    [ LID_PATTERN_ROW_OFFSET,       10 ],
+                    [ LID_PATTERN_COL_OFFSET,       140 ],
+                    [ LID_PATTERN_THICKNESS,        0.6 ]
+                ]
+            ]
+        ]
     ],    
 
 ![lid pattern 3](images/pattern3.png)
@@ -315,6 +361,10 @@ Considerations:
 - Inset lids are required if the boxes are intended to snap fit as a stack ( BOX_STACKABLE_B true ).
 - Cap lid is preferred for printers that are sloppier, since the cap lid is more forgiving.
 - Cap lid is preferred if the cap will be used to hold pieces during play, since the inset lid does not have walls.
+
+#### `LID_NOTCHES_B`
+Value is expected to be a bool, "true", "false", "t", or "f", and determines whether the box will have notches that make pulling the lid off easier.  Only applies to cap lids ( LID_INSET_B false )
+e.g. `[ LID_NOTCHES_B, f ]`
 
 #### `LID_TABS_4B`
 Value is expected to be an array of 4 bools, and determines on what sides the lid will have tabs when the lid is inset. The default is [ t,t,t,t ].

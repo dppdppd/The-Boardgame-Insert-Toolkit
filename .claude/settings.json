@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(tests/v3-baseline/**)",
+      "Write(tests/v3-baseline/**)"
+    ]
+  }
+}

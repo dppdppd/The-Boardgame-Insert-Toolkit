@@ -1,11 +1,12 @@
 .*
 !.github/
-!.opencode/
+!.claude/
 *.stl
 *.rsls
 *.bak
 old
 BIT_*.scad
+!bit_functions_lib.*.scad
 *.test.scad
 *.code-workspace
 launch.json
@@ -19,4 +20,4 @@ boardgame_insert_toolkit_lib.2.scad
 examples.2.scad
 changenotes.2.0.txt
 example_mmu.scad
-archive/
+/archive/
