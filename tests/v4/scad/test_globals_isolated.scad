@@ -1,5 +1,5 @@
 // Test: g_isolated_print_box — only render the named box
-include <boardgame_insert_toolkit_lib.4.scad>;
+include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
     [ G_PRINT_LID_B, false ],

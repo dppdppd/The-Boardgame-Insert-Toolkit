@@ -1,5 +1,5 @@
 // Test: All compartment shape variants in a grid
-include <boardgame_insert_toolkit_lib.4.scad>;
+include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 wall = $g_wall_thickness;
 sz = 20;

@@ -1,6 +1,6 @@
 // Test: Auto-calculate BOX_SIZE_XYZ from components when omitted
 // Expected: renders correctly sized boxes without explicit BOX_SIZE_XYZ
-include <boardgame_insert_toolkit_lib.4.scad>;
+include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
     [ G_PRINT_LID_B, true ],

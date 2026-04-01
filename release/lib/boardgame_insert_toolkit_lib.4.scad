@@ -145,6 +145,7 @@ BOX_VISUALIZATION = "visualization";    // Visualization settings
 BOX_WALL_THICKNESS = "wall_thickness";  // Per-box wall thickness override
 BOX_NO_LID_B = "no_lid";                // Boolean: box has no lid
 BOX_STACKABLE_B = "stackable";          // Boolean: box can be stacked
+CHAMFER_N = "chamfer_n";                // Number: exterior edge chamfer size (mm)
 
 // =============================================================================
 // LID PARAMETERS
@@ -748,7 +749,7 @@ function __is_valid_key( key, valid_keys ) =
 // Box-level valid keys (TYPE=BOX or TYPE=SPACER)
 __VALID_BOX_KEYS = [
     TYPE, NAME, BOX_SIZE_XYZ, BOX_FEATURE, BOX_LID, BOX_VISUALIZATION,
-    BOX_NO_LID_B, BOX_STACKABLE_B, BOX_WALL_THICKNESS,
+    BOX_NO_LID_B, BOX_STACKABLE_B, BOX_WALL_THICKNESS, CHAMFER_N,
     ENABLED_B, DEBUG_B, LABEL, ROTATION, POSITION_XY
 ];
 
@@ -773,7 +774,7 @@ __VALID_COMPONENT_KEYS = [
     FTR_CUTOUT_HEIGHT_PCT, FTR_CUTOUT_DEPTH_PCT, FTR_CUTOUT_WIDTH_PCT,
     FTR_CUTOUT_BOTTOM_B, FTR_CUTOUT_BOTTOM_PCT, FTR_CUTOUT_TYPE,
     FTR_CUTOUT_DEPTH_MAX,
-    FTR_SHEAR, FTR_FILLET_RADIUS, FTR_PEDESTAL_BASE_B,
+    FTR_SHEAR, FTR_FILLET_RADIUS, FTR_PEDESTAL_BASE_B, CHAMFER_N,
     ENABLED_B, DEBUG_B, LABEL, ROTATION, POSITION_XY
 ];
 
@@ -848,6 +849,10 @@ module __ValidateBoxTypes( table, ctx )
     v_wt = __value( table, BOX_WALL_THICKNESS, default = false );
     if ( v_wt != false && !is_num( v_wt ) )
         __TypeMsg( BOX_WALL_THICKNESS, ctx, "number", v_wt );
+
+    v_ch = __value( table, CHAMFER_N, default = false );
+    if ( v_ch != false && !is_num( v_ch ) )
+        __TypeMsg( CHAMFER_N, ctx, "number", v_ch );
 
     v_en = __value( table, ENABLED_B, default = false );
     if ( __is_valid_key( ENABLED_B, table ) && !is_bool( v_en ) )
@@ -936,6 +941,10 @@ module __ValidateComponentTypes( table, ctx )
     v_fr = __value( table, FTR_FILLET_RADIUS, default = false );
     if ( v_fr != false && !is_num( v_fr ) )
         __TypeMsg( FTR_FILLET_RADIUS, ctx, "number", v_fr );
+
+    v_fch = __value( table, CHAMFER_N, default = false );
+    if ( v_fch != false && !is_num( v_fch ) )
+        __TypeMsg( CHAMFER_N, ctx, "number", v_fch );
 
     v_pb = __value( table, FTR_PEDESTAL_BASE_B, default = false );
     if ( __is_valid_key( FTR_PEDESTAL_BASE_B, table ) && !is_bool( v_pb ) )
@@ -1331,8 +1340,8 @@ module Make(DATA = DATA)
         {
             element = __element( i );
 
-            element_position = ( $g_vis_actual_b && __box_vis_position( element ) != [] ) ? __box_vis_position( element ) : [ __element_position_x( i ), 0, 0 ];
-            element_rotation = ( $g_vis_actual_b && __box_vis_rotation( element ) != undef ) ? __box_vis_rotation( element ) : 0;
+            element_position = ( $g_vis_actual_b && is_list( __box_vis_position( element ) ) ) ? __box_vis_position( element ) : [ __element_position_x( i ), 0, 0 ];
+            element_rotation = ( $g_vis_actual_b && is_num( __box_vis_rotation( element ) ) ) ? __box_vis_rotation( element ) : 0;
 
             translate( element_position )
                 RotateAndMoveBackToOrigin( element_rotation, __element_dimensions( i ) )
@@ -1512,6 +1521,8 @@ module MakeBox( box )
     m_box_is_stackable = __value( box, BOX_STACKABLE_B, default = false );
 
     m_wall_thickness = $g_fit_test_b ? 0.5 : __value( box, BOX_WALL_THICKNESS, default = $g_wall_thickness );
+
+    m_box_chamfer = $g_fit_test_b ? 0 : __value( box, CHAMFER_N, default = 0.4 );
 
     m_lid = __find_entry( box, BOX_LID );
 
@@ -1705,6 +1716,9 @@ module MakeBox( box )
         function __component_is_square() = __component_shape() == SQUARE;
         function __component_is_fillet() = __component_shape() == FILLET;
         function __component_fillet_radius() = __value( component, FTR_FILLET_RADIUS, default = min( __compartment_size( k_z ), 10) );
+
+        // Feature-level CHAMFER_N, falls back to box-level m_box_chamfer
+        function __component_chamfer() = __value( component, CHAMFER_N, default = m_box_chamfer );
 
         function __component_shear( D ) = __value( component, FTR_SHEAR, default = [0.0, 0.0] )[ D ];
         ///////////
@@ -1935,9 +1949,11 @@ module MakeBox( box )
         {
             difference()
             {
-                    // main __element
-                cube([__lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z )]);
-                    
+                    // main __element (chamfer sides + bottom — bottom is the visible lid top when placed on box)
+                __MakeChamferedBoxShell(
+                    [__lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z )],
+                    m_box_chamfer, chamfer_top = false, chamfer_bottom = true );
+
                 // #TODO: modulize this!
                 translate( [ 0, 0, __lid_external_size( k_z ) - __lid_notch_depth() ] )
                     hull()
@@ -1946,12 +1962,16 @@ module MakeBox( box )
                             cube([__lid_internal_size( k_x ), __lid_internal_size( k_y ), 1]);
 
                         translate( [ 0, 0, __lid_notch_depth() ] )
-                            cube([__lid_external_size( k_x ), __lid_external_size( k_y ), HULL_EPSILON]);
+                            __MakeChamferedBoxShell(
+                                [__lid_external_size( k_x ), __lid_external_size( k_y ), HULL_EPSILON],
+                                m_box_chamfer, chamfer_top = false, chamfer_bottom = false );
                     }
 
-                // big hollow
+                // big hollow (match exterior chamfer so hollow follows the chamfer slope)
                 translate( [ __lid_notch_depth() - tolerance, __lid_notch_depth() - tolerance, 0 ])
-                    cube([  __lid_internal_size( k_x ) + 2*tolerance, __lid_internal_size( k_y ) + 2*tolerance,  __lid_external_size( k_z)]);
+                    __MakeChamferedBoxShell(
+                        [__lid_internal_size( k_x ) + 2*tolerance, __lid_internal_size( k_y ) + 2*tolerance, __lid_external_size( k_z )],
+                        m_box_chamfer, chamfer_top = false, chamfer_bottom = true );
             }
 
             //detents
@@ -1993,12 +2013,46 @@ module MakeBox( box )
 
         // ----- BOX SHELL & SPACER -----
 
+        // Creates a box shape with chamfered edges.
+        // chamfer_top/chamfer_bottom: control which horizontal edges get chamfered.
+        // Vertical corner chamfers are always applied.
+        module __MakeChamferedBoxShell( size, c, chamfer_top = false, chamfer_bottom = true )
+        {
+            x = size[0]; y = size[1]; z = size[2];
+            eps = 0.001;
+
+            if ( c <= 0 || c >= min( x, y ) / 2 )
+            {
+                cube( size );
+            }
+            else
+            {
+                z_lo = chamfer_bottom ? c : 0;
+                z_hi = chamfer_top ? z - c : z;
+
+                hull()
+                {
+                    if ( chamfer_bottom )
+                        translate([ c, c, 0 ])         cube([ x - 2*c, y - 2*c, eps ]);
+
+                    if ( chamfer_top )
+                        translate([ c, c, z - eps ])   cube([ x - 2*c, y - 2*c, eps ]);
+
+                    // Side faces spanning z_lo to z_hi (vertical chamfers)
+                    translate([ c, 0, z_lo ])          cube([ x - 2*c, eps, z_hi - z_lo ]);
+                    translate([ c, y - eps, z_lo ])    cube([ x - 2*c, eps, z_hi - z_lo ]);
+                    translate([ 0, c, z_lo ])          cube([ eps, y - 2*c, z_hi - z_lo ]);
+                    translate([ x - eps, c, z_lo ])    cube([ eps, y - 2*c, z_hi - z_lo ]);
+                }
+            }
+        }
+
         module MakeBoxShell()
         {
-            cube([  m_box_size[ k_x ], 
-                    m_box_size[ k_y ], 
-                    m_box_size[ k_z ]]);
-                    
+            __MakeChamferedBoxShell(
+                [ m_box_size[ k_x ], m_box_size[ k_y ], m_box_size[ k_z ] ],
+                m_box_chamfer
+            );
         }
 
         module MakeBoxShellWithNewLidBits()
@@ -2015,7 +2069,9 @@ module MakeBox( box )
                         translate([ 0, 0, m_box_size[ k_z ] ])
                             difference()
                             {
-                                cube( [ m_box_size[ k_x ], m_box_size[ k_y ], __lid_external_size( k_z )]);
+                                __MakeChamferedBoxShell(
+                                    [ m_box_size[ k_x ], m_box_size[ k_y ], __lid_external_size( k_z ) ],
+                                    m_box_chamfer, chamfer_top = false, chamfer_bottom = false );
 
                                 MirrorAboutPoint( v=[0,0,1], pt=[0,0,__lid_external_size(k_z)/2])
                                     MakeLidBase_Inset();
@@ -2035,7 +2091,10 @@ module MakeBox( box )
             {
                 difference()
                 {
-                    cube( [ m_box_size[ k_x ], m_box_size[ k_y ], m_box_size[ k_z ] ] );
+                    __MakeChamferedBoxShell(
+                        [ m_box_size[ k_x ], m_box_size[ k_y ], m_box_size[ k_z ] ],
+                        m_box_chamfer
+                    );
 
                     translate( [ m_wall_thickness, m_wall_thickness, 0 ])
                         cube( [ m_box_size[ k_x ] - ( 2 * m_wall_thickness ), m_box_size[ k_y ] - ( 2 * m_wall_thickness ), m_box_size[ k_z ] ] );
@@ -2079,6 +2138,12 @@ module MakeBox( box )
                     {
                         translate( [0, 0, m_component_base_height])
                             AddFillets();
+                    }
+
+                    if ( __component_chamfer() > 0 )
+                    {
+                        translate( [0, 0, m_component_base_height])
+                            AddCompartmentChamfers();
                     }
                 }
 
@@ -2594,7 +2659,9 @@ module MakeBox( box )
                             MoveToLidInterior( tolerance = -$g_tolerance )
                                 cube([  __lid_internal_size( k_x ) + 2*$g_tolerance, __lid_internal_size( k_y ) + 2*$g_tolerance,  __lid_external_size( k_z)]);
                         else
-                            cube([  __lid_external_size( k_x ), __lid_external_size( k_y ),  __lid_external_size( k_z)]);
+                            __MakeChamferedBoxShell(
+                                [__lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z )],
+                                m_box_chamfer, chamfer_top = false, chamfer_bottom = true );
 
                         MakeLidSurface();
                     }
@@ -2948,6 +3015,49 @@ module MakeBox( box )
                 MakeRoundedCubeAxis( size, 3, shape[ corner], k_z);
 
 
+        }
+
+        // Adds 45-degree chamfer prisms along all bottom and vertical edges of a compartment.
+        module AddCompartmentChamfers()
+        {
+            c = __component_chamfer();
+            cx = __compartment_size( k_x );
+            cy = __compartment_size( k_y );
+            cz = __compartment_size( k_z );
+            eps = 0.001;
+
+            // --- Bottom edges (floor-to-wall) ---
+
+            // Front edge (along X at y=0)
+            hull() { cube([ cx, c, eps ]); cube([ cx, eps, c ]); }
+
+            // Back edge (along X at y=cy)
+            translate([ 0, cy, 0 ]) mirror([ 0, 1, 0 ])
+                hull() { cube([ cx, c, eps ]); cube([ cx, eps, c ]); }
+
+            // Left edge (along Y at x=0)
+            hull() { cube([ c, cy, eps ]); cube([ eps, cy, c ]); }
+
+            // Right edge (along Y at x=cx)
+            translate([ cx, 0, 0 ]) mirror([ 1, 0, 0 ])
+                hull() { cube([ c, cy, eps ]); cube([ eps, cy, c ]); }
+
+            // --- Vertical edges (wall-to-wall corners) ---
+
+            // Front-left corner
+            hull() { cube([ c, eps, cz ]); cube([ eps, c, cz ]); }
+
+            // Front-right corner
+            translate([ cx, 0, 0 ]) mirror([ 1, 0, 0 ])
+                hull() { cube([ c, eps, cz ]); cube([ eps, c, cz ]); }
+
+            // Back-left corner
+            translate([ 0, cy, 0 ]) mirror([ 0, 1, 0 ])
+                hull() { cube([ c, eps, cz ]); cube([ eps, c, cz ]); }
+
+            // Back-right corner
+            translate([ cx, cy, 0 ]) mirror([ 1, 0, 0 ]) mirror([ 0, 1, 0 ])
+                hull() { cube([ c, eps, cz ]); cube([ eps, c, cz ]); }
         }
 
         // this rounds out the bottoms regardless of the size of the compartment

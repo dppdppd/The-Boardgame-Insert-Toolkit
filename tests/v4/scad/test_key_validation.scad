@@ -2,7 +2,7 @@
 // Expected: renders successfully with BIT: messages in console
 // NOTE: type errors here use values that still render (no OpenSCAD WARNINGs)
 //       but are caught by our validation as semantically wrong.
-include <boardgame_insert_toolkit_lib.4.scad>;
+include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
     [ G_DEFAULT_FONT, "Liberation Sans:style=Regular" ],

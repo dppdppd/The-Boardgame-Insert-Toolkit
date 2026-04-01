@@ -1,5 +1,5 @@
 // Test: Compartment shear — FTR_SHEAR [x_angle, y_angle]
-include <boardgame_insert_toolkit_lib.4.scad>;
+include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
     [ G_PRINT_LID_B, false ],

@@ -1,5 +1,5 @@
 // Test: Pedestal base — FTR_PEDESTAL_BASE_B (push-down feature for cards)
-include <boardgame_insert_toolkit_lib.4.scad>;
+include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
     [ G_PRINT_LID_B, false ],

@@ -1,5 +1,5 @@
 // Test: Compartment padding — FTR_PADDING_XY and FTR_PADDING_HEIGHT_ADJUST_XY
-include <boardgame_insert_toolkit_lib.4.scad>;
+include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
     [ G_PRINT_LID_B, false ],

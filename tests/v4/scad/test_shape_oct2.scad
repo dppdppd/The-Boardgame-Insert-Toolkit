@@ -1,5 +1,5 @@
 // Test: OCT2 compartment shape (rotated octagon) — normal, rotated, vertical
-include <boardgame_insert_toolkit_lib.4.scad>;
+include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
     [ G_PRINT_LID_B, false ],

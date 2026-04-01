@@ -1,5 +1,5 @@
 // Test: minimal box with no features and a lid
-include <boardgame_insert_toolkit_lib.4.scad>;
+include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
     [ OBJECT_BOX,

@@ -25,7 +25,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 RENDER_SCAD="/tmp/bit_eval_render.scad"
 
-IMGSIZE="800,600"
+IMGSIZE="1600,1200"
 STL_TIMEOUT=900
 VIEW_TIMEOUT=30
 VIEWS="iso,top"

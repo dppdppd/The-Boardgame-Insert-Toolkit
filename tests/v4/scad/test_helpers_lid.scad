@@ -1,5 +1,5 @@
 // Test: Lid variants — pattern lid and solid lid
-include <boardgame_insert_toolkit_lib.4.scad>;
+include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
     [ G_DEFAULT_FONT, "Liberation Sans:style=Regular" ],

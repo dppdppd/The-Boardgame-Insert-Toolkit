@@ -303,6 +303,10 @@ Value is expected to be a bool, and determines whether a lid is ommitted. If omm
 #### `BOX_STACKABLE_B`
 Value is expected to be a bool and determines whether the base of the box is cut to fit on top of an identically sized box. Note that this requires a printer that can print a 45 degree overhang without supports.
 
+#### `CHAMFER_N`
+Value is expected to be a number (in mm), and determines the size of the 45-degree chamfer applied to the exterior edges of the box and lid. Can be specified at the box level or overridden per-component inside `BOX_FEATURE`. Default is 0.4.  
+e.g. `[ CHAMFER_N, 2 ]`
+
 #### `BOX_VISUALIZATION`
 To be documented later
 
@@ -455,6 +459,9 @@ e.g. `[ FTR_CUTOUT_CORNERS_4B, [ t, t, f, f ] ]`
 #### `FTR_SHEAR`
 Value is expected to be an array of 2 numbers, and determines the degrees to which the component should be sheared in the direction of width and depth. The shearing pivots around the center of the component. 
 e.g. `[ FTR_SHEAR, [ 45, 0 ] ]`
+
+#### `CHAMFER_N`
+When used inside a `BOX_FEATURE`, overrides the box-level chamfer for that component's compartment edges. See the box-level `CHAMFER_N` entry above for details.
 
 ## Label keys
 Key-pairs that are expected in a LABEL container.

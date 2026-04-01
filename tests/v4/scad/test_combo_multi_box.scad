@@ -1,5 +1,5 @@
 // Test: Integration — multiple boxes rendered together with different features
-include <boardgame_insert_toolkit_lib.4.scad>;
+include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 data = [
     [ G_DEFAULT_FONT, "Liberation Sans:style=Regular" ],
     [ G_PRINT_LID_B, true ],

@@ -1,5 +1,5 @@
 // BITGUI
-include <boardgame_insert_toolkit_lib.4.scad>;
+include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 // Test: Integration — full-featured box with lid labels, component labels, pattern, cutouts
 data = [
     [ OBJECT_BOX,

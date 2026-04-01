@@ -1,5 +1,5 @@
 // Test: g_print_lid_b=true, g_print_box_b=false — should only render the lid
-include <boardgame_insert_toolkit_lib.4.scad>;
+include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
     [ G_PRINT_LID_B, true ],
