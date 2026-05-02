@@ -76,6 +76,7 @@ The visual editor (BGSD — Board Game Storage Designer) has been split into its
 ## Key Design Decisions
 
 - **Two-phase rendering**: STL export (slow, CGAL) then PNG views (fast, import STL) — separated for efficiency
+- **Pre-commit version stamping**: the `scripts/hooks/pre-commit` hook mutates the lib and `git add`s it from inside the hook so the bump rides along in the commit being made. Pre-push wouldn't work for new commits — git determines the push spec before the hook runs, so a hook-created commit wouldn't be included in the current push.
 
 ## Library Refactor Workflow
 
