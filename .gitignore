@@ -15,6 +15,9 @@ gh-md-toc
 tests/*/renders/
 tests/*/stl/
 
+# rpm transient/handoff markers
+docs/rpm/~*
+
 # v2 legacy files
 boardgame_insert_toolkit_lib.2.scad
 examples.2.scad
