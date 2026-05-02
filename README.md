@@ -552,6 +552,10 @@ Value is expected to be a number, and determines the number of characters above 
 
 To contribute a design, fork this repo, add your `.scad` file to the appropriate publisher folder under `release/` (e.g. `release/my_designs/MyGame.scad`), and open a pull request against the `master` branch. If your publisher doesn't have a folder yet, create one.
 
+## Working on the library itself
+
+After cloning, run `./scripts/install-hooks.sh` once to enable the version-stamping pre-commit hook. The hook updates `VERSION` in `release/lib/boardgame_insert_toolkit_lib.4.scad` to `4.0.<N>` on every commit, where `<N>` is the number of commits since the `v4.0.0` baseline tag (so each commit auto-bumps the patch number — no manual version bumps).
+
 ## Reporting bugs
 
 Open an issue at https://github.com/dppdppd/The-Boardgame-Insert-Toolkit/issues with a description of the problem and, if possible, the `.scad` file that reproduces it.

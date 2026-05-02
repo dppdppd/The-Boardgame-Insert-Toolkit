@@ -58,6 +58,8 @@ Tests live in `tests/v4/scad/`; v3 baseline in `tests/v3-baseline/`.
 | `release/my_designs/` | User projects, starter, examples |
 | `tests/v4/scad/test_*.scad` | 53 v4 test files |
 | `tests/v3-baseline/` | v3 regression baseline (read-only) |
+| `scripts/hooks/pre-commit` | Auto-stamps `VERSION = "4.0.<N>"` (N = commits since `v4.0.0` tag) |
+| `scripts/install-hooks.sh` | One-time per clone: `git config core.hooksPath scripts/hooks` |
 
 > Full file conventions table and test template: [docs/guidance/RENDERING.md](docs/guidance/RENDERING.md)
 
