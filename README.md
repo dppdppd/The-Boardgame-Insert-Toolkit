@@ -30,7 +30,7 @@ This OpenSCAD library was designed for quick design and iteration on board game 
 - 14 magic numbers replaced with named constants
 - Code documentation: TOC, section headers, module docs
 
-**Migrating from v3**: Change your includes from `boardgame_insert_toolkit_lib.3.scad` to `boardgame_insert_toolkit_lib.4.scad` (and similarly for `bit_functions_lib`). If you use `HEXBOX` type boxes, keep using v3 — the v3 files are archived in `tests/v3-baseline/`.
+**Migrating from v3**: Change your includes from `boardgame_insert_toolkit_lib.3.scad` to `boardgame_insert_toolkit_lib.4.scad`. If you use `HEXBOX` type boxes, keep using v3 — the v3 files are archived in `tests/v3-baseline/`.
 
 # Visual Editor
 
@@ -49,7 +49,7 @@ Download portable binaries from the [BGSD Releases](https://github.com/dppdppd/B
 # How (Text Editor)
 - Download [Openscad](https://www.openscad.org).
 - Create a new directory for the board game you're working on. It's best to keep the BIT file with the board game file because future BIT versions may not be backwards compatible and this way you will always be able to recreate the STLs.
-- Copy `release/lib/boardgame_insert_toolkit_lib.4.scad`, `release/lib/bit_functions_lib.4.scad`, and `release/my_designs/starter.scad` into the directory. Feel free to rename _starter.scad_ to something more descriptive.
+- Copy `release/lib/boardgame_insert_toolkit_lib.4.scad` and `release/my_designs/starter.scad` into the directory. Feel free to rename _starter.scad_ to something more descriptive.
 - You'll be working entirely in your copy of the starter file.
 - The first line should be __include <boardgame_insert_toolkit_lib.4.scad>;__ and the last should be __Make(data);__ All of your 'code' goes in-between.
 - Open your new scad file in your favorite text editor and also in Openscad.
@@ -146,56 +146,8 @@ And this is the result:
 
 ![example2](images/example2.png)
 
-### Hexagonal Boxes (v3 only)
-> **Note:** Hexagonal *box types* (`TYPE = HEXBOX`) were removed in v4. Use v3 if you need hex boxes. Hex-shaped *compartments* (`FTR_SHAPE = HEX` or `HEX2`) still work in v4 regular boxes.
-
-As of v3.00, there is the ability to create hexagonal boxes as an efficient way to store hexagonal tiles (like those in Catan). Here is the code to produce a box to hold hexagonal tiles:
-
-    include <bit_functions_lib.4.scad>;
-    
-    [   "hexbox example 1",
-    [    
-        [ TYPE, HEXBOX ],
-        [ HEXBOX_SIZE_DZ,    [ 100, 40 ] ], 
-        [ BOX_STACKABLE_B, t],
-        [ BOX_COMPONENT, cmp_parms_hex_tile( dx=100, dz=38, lbl="CATAN LAND", font="Venturis ADF Cd:style=Bold" ) ],
- 
-        [ BOX_LID, lid_parms( radius=12, lbl="CATAN", font="Venturis ADF Cd:style=Bold", size=22 ) ], 
-    ]    
-    ],
-
-And the result:
-
-![example2](images/hexbox_example1.png)
-
-This also introduces __bit_functions_lib.4.scad__, which is intended to simplify the creation of components. By including it, you are able to create many parts with a single line. Here is the definition of _cmp_parms_hex_tile_:
-
-```
-// This function simplifies creating a hexagonal component
-// Inputs:
-// (dx, dz):     Size of the component - dx is the "diameter" of the tile, and dz is the depth of the stack
-// (llx, lly):   Optional parameter - Location of lower left corner - defaults to (0, 0)
-// lbl:          Optional parameter - Text to include on the bottom - defaults to blank
-// font:         Optional parameter - OpensSCAD font specifier - defaults to g_default_font
-// size:         Optional parameter - Size of label - defaults to AUTO
-function cmp_parms_hex_tile( llx=0, lly=0, dx, dz, lbl="", font=g_default_font, size=AUTO ) =
-[
-    [CMP_COMPARTMENT_SIZE_XYZ,  [ dx, dx * sin(60), dz ] ],
-    [POSITION_XY,  [ llx, lly ] ],
-    [CMP_SHAPE, HEX2],
-    [CMP_SHAPE_VERTICAL_B, t],
-    [LABEL, 
-    [ 
-        [LBL_TEXT, lbl],
-        [LBL_FONT, font ],
-        [LBL_SIZE, size],
-        [LBL_PLACEMENT, CENTER],
-        [LBL_DEPTH, 1],
-    ],
-    ],
-];
-```
-You can see that the optional parameters llx, lly, and size, are not specified in the creation of the box above. Each function provided in __bit_functions_lib.4.scad__ is similarly documented.
+### Hexagonal Compartments
+For hex-shaped compartments inside a regular box, use `FTR_SHAPE = HEX` (or `HEX2`) together with `FTR_SHAPE_VERTICAL_B = true` on a `BOX_FEATURE`. The full hexagonal *box type* (`TYPE = HEXBOX`) was removed in v4 — keep using v3 (archived in `tests/v3-baseline/`) if you specifically need that.
 
 ### Dividers
 As of v2.04, there is also the ability to create card dividers in addition to boxes. A dividers definition looks like this:

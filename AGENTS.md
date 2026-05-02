@@ -8,7 +8,6 @@ Users define boxes via key-value data structures; the library renders them into 
 - **Language**: OpenSCAD (declarative CSG modeling)
 - **Active version**: v4 — `release/lib/boardgame_insert_toolkit_lib.4.scad`
 - **Legacy version**: v3 — archived in `tests/v3-baseline/` (preserved for reference)
-- **Helper functions**: `release/lib/bit_functions_lib.4.scad` (convenience wrappers)
 - **Entry point**: User `.scad` files call `Make(data)` which processes a flat data array
 - **License**: CC BY-NC-SA 4.0
 - **Repo**: https://github.com/dppdppd/The-Boardgame-Insert-Toolkit

@@ -28,6 +28,3 @@ All parameters for the v4 data array format. See `release/lib/boardgame_insert_t
 
 File-scope `$g_*` variables provide defaults; data array entries override them via `Make()`.
 
-## Helper functions (bit_functions_lib.4.scad)
-
-`ftr_parms()`, `ftr_parms_fillet()`, `ftr_parms_round()`, `ftr_parms_hex()`, `ftr_parms_hex2()`, `ftr_parms_oct()`, `ftr_parms_oct2()`, `ftr_parms_disc()`, `ftr_parms_hex_tile()`, `lid_parms()`, `lid_parms_solid()`
