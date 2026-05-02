@@ -1,4 +1,4 @@
-// Test: CHAMFER_N parameter — exterior edge chamfering
+// Test: CHAMFER_N parameter — exterior edge chamfering + cavity floor/opening chamfers
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
@@ -11,7 +11,7 @@ data = [
         [ NAME, "chamfer no lid" ],
         [ BOX_SIZE_XYZ, [70, 50, 25] ],
         [ BOX_NO_LID_B, true ],
-        [ CHAMFER_N, 0.2 ],
+        [ CHAMFER_N, 0.5 ],
         [ BOX_FEATURE,
             [ FTR_NUM_COMPARTMENTS_XY, [3, 2] ],
             [ FTR_COMPARTMENT_SIZE_XYZ, [20, 22, 23] ],
@@ -26,7 +26,7 @@ data = [
             [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
             [ FTR_COMPARTMENT_SIZE_XYZ, [30, 22, 23] ],
             [ FTR_CUTOUT_SIDES_4B, [true, false, false, false] ],
-                   [ CHAMFER_N, 0.2 ],
+                   [ CHAMFER_N, 0.5 ],
         ],
     ],
 
@@ -35,7 +35,7 @@ data = [
         [ NAME, "chamfer inset stackable" ],
         [ BOX_SIZE_XYZ, [70, 50, 25] ],
         [ BOX_STACKABLE_B, true ],
-        [ CHAMFER_N, 0.2 ],
+        [ CHAMFER_N, 0.5 ],
         [ BOX_FEATURE,
             [ FTR_NUM_COMPARTMENTS_XY, [2, 1] ],
             [ FTR_COMPARTMENT_SIZE_XYZ, [30, 46, 23] ],
@@ -47,9 +47,9 @@ data = [
         ],
     ],
 
-    // Box with no chamfer (default) — reference
+    // Box with no explicit CHAMFER_N — exercises the default (0.5 surface mm)
     [ OBJECT_BOX,
-        [ NAME, "no chamfer" ],
+        [ NAME, "default chamfer" ],
         [ BOX_SIZE_XYZ, [70, 50, 25] ],
         [ BOX_NO_LID_B, true ],
         [ BOX_FEATURE,
@@ -62,12 +62,12 @@ data = [
     // shape-aware code paths in AddCompartmentChamfers (bottom: tapered ring
     // matching the cavity wall, sloped 45° perpendicular to each face) and
     // AddCompartmentTopChamfers (opening flares outward by c).
-    // Use a generous chamfer (1.5 mm) so the slope is unambiguous in renders.
+    // Use a generous chamfer (2.0 mm surface) so the slope is unambiguous.
     [ OBJECT_BOX,
         [ NAME, "chamfer non-square vertical" ],
         [ BOX_SIZE_XYZ, [80, 30, 25] ],
         [ BOX_NO_LID_B, true ],
-        [ CHAMFER_N, 1.5 ],
+        [ CHAMFER_N, 2.0 ],
         [ BOX_FEATURE,
             [ FTR_NUM_COMPARTMENTS_XY, [1, 1] ],
             [ FTR_COMPARTMENT_SIZE_XYZ, [22, 22, 23] ],
@@ -88,6 +88,31 @@ data = [
             [ FTR_SHAPE, ROUND ],
             [ FTR_SHAPE_VERTICAL_B, true ],
             [ POSITION_XY, [52, 2] ],
+        ],
+    ],
+
+    // CHAMFER_N = 0 — explicit zero, exercises the gate that skips both
+    // bottom and top chamfer modules. Compartment edges should be sharp.
+    [ OBJECT_BOX,
+        [ NAME, "chamfer 0" ],
+        [ BOX_SIZE_XYZ, [70, 50, 25] ],
+        [ BOX_NO_LID_B, true ],
+        [ CHAMFER_N, 0 ],
+        [ BOX_FEATURE,
+            [ FTR_NUM_COMPARTMENTS_XY, [3, 2] ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [20, 22, 23] ],
+        ],
+    ],
+
+    // CHAMFER_N = 1.0 — visible chamfer, 2× the default (0.5).
+    [ OBJECT_BOX,
+        [ NAME, "chamfer 1.0" ],
+        [ BOX_SIZE_XYZ, [70, 50, 25] ],
+        [ BOX_NO_LID_B, true ],
+        [ CHAMFER_N, 1.0 ],
+        [ BOX_FEATURE,
+            [ FTR_NUM_COMPARTMENTS_XY, [3, 2] ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [20, 22, 23] ],
         ],
     ],
 ];

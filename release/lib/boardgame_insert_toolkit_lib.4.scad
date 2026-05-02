@@ -145,7 +145,7 @@ BOX_VISUALIZATION = "visualization";    // Visualization settings
 BOX_WALL_THICKNESS = "wall_thickness";  // Per-box wall thickness override
 BOX_NO_LID_B = "no_lid";                // Boolean: box has no lid
 BOX_STACKABLE_B = "stackable";          // Boolean: box can be stacked
-CHAMFER_N = "chamfer_n";                // Number: exterior edge chamfer size (mm)
+CHAMFER_N = "chamfer_n";                // Number: chamfer surface width in mm (diagonal of the 45° face)
 
 // =============================================================================
 // LID PARAMETERS
@@ -1522,7 +1522,10 @@ module MakeBox( box )
 
     m_wall_thickness = $g_fit_test_b ? 0.5 : __value( box, BOX_WALL_THICKNESS, default = $g_wall_thickness );
 
-    m_box_chamfer = $g_fit_test_b ? 0 : __value( box, CHAMFER_N, default = 0.4 );
+    // CHAMFER_N is the surface (diagonal) width of the 45° chamfer face;
+    // m_box_chamfer is the perpendicular leg used by every consumer (exterior
+    // shell, cavity bottom/top chamfers). leg = surface_width / sqrt(2).
+    m_box_chamfer = $g_fit_test_b ? 0 : __value( box, CHAMFER_N, default = 0.5 ) / sqrt(2);
 
     m_lid = __find_entry( box, BOX_LID );
 
@@ -1717,8 +1720,11 @@ module MakeBox( box )
         function __component_is_fillet() = __component_shape() == FILLET;
         function __component_fillet_radius() = __value( component, FTR_FILLET_RADIUS, default = min( __compartment_size( k_z ), 10) );
 
-        // Feature-level CHAMFER_N, falls back to box-level m_box_chamfer
-        function __component_chamfer() = __value( component, CHAMFER_N, default = m_box_chamfer );
+        // Feature-level CHAMFER_N (surface width, mm), converted to perpendicular
+        // leg. Falls back to box-level m_box_chamfer (already a leg) when unset.
+        function __component_chamfer() = let(
+            v = __value( component, CHAMFER_N, default = false )
+        ) v == false ? m_box_chamfer : v / sqrt(2);
 
         function __component_shear( D ) = __value( component, FTR_SHEAR, default = [0.0, 0.0] )[ D ];
         ///////////
