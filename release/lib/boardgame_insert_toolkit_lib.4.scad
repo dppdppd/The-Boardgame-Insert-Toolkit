@@ -1,6 +1,6 @@
 /*
  * The Boardgame Insert Toolkit - Library File
- * Version: 4.0.4
+ * Version: 4.0.5
  * 
  * A parametric system for creating custom board game inserts and organizers
  * https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
@@ -49,7 +49,7 @@
 
 
 // Version information
-VERSION = "4.0.4";
+VERSION = "4.0.5";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 // Resolution settings
@@ -2805,7 +2805,11 @@ module MakeBox( box )
 
             // main and perpendicular size of hole
             //  main dimension intrudes into the compartment by some fraction ( e.g. 1/5 )
-            main_size_raw = margin ? m_component_margin_side[ side ] + $g_wall_thickness + radius : 
+            // Wall-breach guarantee: the margin slot must punch through the actual
+            // outer wall (m_wall_thickness, set per-box) plus the radius worth of
+            // corner curvature on each end, otherwise thicker walls leave a sliver
+            // at the outer surface and the cutout doesn't reach daylight.
+            main_size_raw = margin ? m_component_margin_side[ side ] + m_wall_thickness + 2 * radius :
                         __padding( main_d )/2  + __size( main_d ) * m_cutout_size_frac_aligned;
             main_size = ( m_cutout_depth_max > 0 && !margin ) ? min( main_size_raw, m_cutout_depth_max ) : main_size_raw;
 
@@ -2841,29 +2845,29 @@ module MakeBox( box )
 
             pos_margin = [
                 // front
-                [  
-                    __size( k_x )/2  - perp_size/2,       
-                    -__padding( main_d )/2 - $g_wall_thickness,               
-                    __finger_cutouts_bottom() 
-                ], 
+                [
+                    __size( k_x )/2  - perp_size/2,
+                    -__padding( main_d )/2 - m_wall_thickness - radius,
+                    __finger_cutouts_bottom()
+                ],
                 // back
-                [  
-                    __size( k_x )/2  - perp_size/2,                     
-                    __component_size( k_y) - m_component_margin_side[ k_back] + __padding( main_d )/2 - radius, 
-                    __finger_cutouts_bottom() 
+                [
+                    __size( k_x )/2  - perp_size/2,
+                    __component_size( k_y) - m_component_margin_side[ k_back] + __padding( main_d )/2 - radius,
+                    __finger_cutouts_bottom()
                 ],
                 // left
-                [   
-                    -__padding( main_d )/2 - $g_wall_thickness,  
-                    __size( k_y )/2  - perp_size/2, 
-                    __finger_cutouts_bottom() 
+                [
+                    -__padding( main_d )/2 - m_wall_thickness - radius,
+                    __size( k_y )/2  - perp_size/2,
+                    __finger_cutouts_bottom()
                 ],
                 // right
-                [   
-                    __component_size( k_x ) - m_component_margin_side[ k_right ] + __padding( main_d )/2 - radius,  
-                    __size( k_y )/2  - perp_size/2, 
+                [
+                    __component_size( k_x ) - m_component_margin_side[ k_right ] + __padding( main_d )/2 - radius,
+                    __size( k_y )/2  - perp_size/2,
                     __finger_cutouts_bottom()
-                ], 
+                ],
 
 
             ];
