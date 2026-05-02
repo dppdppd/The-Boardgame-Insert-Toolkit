@@ -57,5 +57,38 @@ data = [
             [ FTR_COMPARTMENT_SIZE_XYZ, [20, 22, 23] ],
         ],
     ],
+
+    // Box with non-square (vertical) cavities + chamfer — exercises the
+    // shape-aware code paths in AddCompartmentChamfers (bottom: tapered ring
+    // matching the cavity wall, sloped 45° perpendicular to each face) and
+    // AddCompartmentTopChamfers (opening flares outward by c).
+    // Use a generous chamfer (1.5 mm) so the slope is unambiguous in renders.
+    [ OBJECT_BOX,
+        [ NAME, "chamfer non-square vertical" ],
+        [ BOX_SIZE_XYZ, [80, 30, 25] ],
+        [ BOX_NO_LID_B, true ],
+        [ CHAMFER_N, 1.5 ],
+        [ BOX_FEATURE,
+            [ FTR_NUM_COMPARTMENTS_XY, [1, 1] ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [22, 22, 23] ],
+            [ FTR_SHAPE, HEX ],
+            [ FTR_SHAPE_VERTICAL_B, true ],
+            [ POSITION_XY, [2, 2] ],
+        ],
+        [ BOX_FEATURE,
+            [ FTR_NUM_COMPARTMENTS_XY, [1, 1] ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [22, 22, 23] ],
+            [ FTR_SHAPE, OCT ],
+            [ FTR_SHAPE_VERTICAL_B, true ],
+            [ POSITION_XY, [27, 2] ],
+        ],
+        [ BOX_FEATURE,
+            [ FTR_NUM_COMPARTMENTS_XY, [1, 1] ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [22, 22, 23] ],
+            [ FTR_SHAPE, ROUND ],
+            [ FTR_SHAPE_VERTICAL_B, true ],
+            [ POSITION_XY, [52, 2] ],
+        ],
+    ],
 ];
 Make(data);

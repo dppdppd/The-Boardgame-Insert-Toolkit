@@ -2231,6 +2231,10 @@ module MakeBox( box )
                         translate( [ (__compartment_size( k_x) * (1-frac))/2, (__compartment_size( k_y) * (1-frac))/2, -m_wall_thickness ])
                             scale( v = [ frac, frac, 1 ]) // bring in the sides
                                 MakeCompartmentShape();
+
+                    // chamfer the cavity opening (top edge): flares outward by c
+                    if ( __component_chamfer() > 0 )
+                        AddCompartmentTopChamfers();
                 }
 
                 if ( !$g_no_labels_actual_b)
@@ -3017,7 +3021,12 @@ module MakeBox( box )
 
         }
 
-        // Adds 45-degree chamfer prisms along all bottom and vertical edges of a compartment.
+        // Adds 45-degree chamfer wedges at the floor-to-wall corner of a compartment.
+        // Square: prisms along the four bottom edges + the four vertical corners.
+        // Vertical hex/oct/round: a tapered ring whose outer wall matches the cavity
+        // wall and whose inner wall slopes inward at 45° (zero width at z=c).
+        // Laid-down hex/oct: cavity floor is curved (a tangent line where the
+        // cylinder meets the floor), so chamfer is not applicable — no-op.
         module AddCompartmentChamfers()
         {
             c = __component_chamfer();
@@ -3026,38 +3035,139 @@ module MakeBox( box )
             cz = __compartment_size( k_z );
             eps = 0.001;
 
-            // --- Bottom edges (floor-to-wall) ---
+            if ( __component_is_square() )
+            {
+                // --- Bottom edges (floor-to-wall) ---
 
-            // Front edge (along X at y=0)
-            hull() { cube([ cx, c, eps ]); cube([ cx, eps, c ]); }
-
-            // Back edge (along X at y=cy)
-            translate([ 0, cy, 0 ]) mirror([ 0, 1, 0 ])
+                // Front edge (along X at y=0)
                 hull() { cube([ cx, c, eps ]); cube([ cx, eps, c ]); }
 
-            // Left edge (along Y at x=0)
-            hull() { cube([ c, cy, eps ]); cube([ eps, cy, c ]); }
+                // Back edge (along X at y=cy)
+                translate([ 0, cy, 0 ]) mirror([ 0, 1, 0 ])
+                    hull() { cube([ cx, c, eps ]); cube([ cx, eps, c ]); }
 
-            // Right edge (along Y at x=cx)
-            translate([ cx, 0, 0 ]) mirror([ 1, 0, 0 ])
+                // Left edge (along Y at x=0)
                 hull() { cube([ c, cy, eps ]); cube([ eps, cy, c ]); }
 
-            // --- Vertical edges (wall-to-wall corners) ---
+                // Right edge (along Y at x=cx)
+                translate([ cx, 0, 0 ]) mirror([ 1, 0, 0 ])
+                    hull() { cube([ c, cy, eps ]); cube([ eps, cy, c ]); }
 
-            // Front-left corner
-            hull() { cube([ c, eps, cz ]); cube([ eps, c, cz ]); }
+                // --- Vertical edges (wall-to-wall corners) ---
 
-            // Front-right corner
-            translate([ cx, 0, 0 ]) mirror([ 1, 0, 0 ])
+                // Front-left corner
                 hull() { cube([ c, eps, cz ]); cube([ eps, c, cz ]); }
 
-            // Back-left corner
-            translate([ 0, cy, 0 ]) mirror([ 0, 1, 0 ])
-                hull() { cube([ c, eps, cz ]); cube([ eps, c, cz ]); }
+                // Front-right corner
+                translate([ cx, 0, 0 ]) mirror([ 1, 0, 0 ])
+                    hull() { cube([ c, eps, cz ]); cube([ eps, c, cz ]); }
 
-            // Back-right corner
-            translate([ cx, cy, 0 ]) mirror([ 1, 0, 0 ]) mirror([ 0, 1, 0 ])
-                hull() { cube([ c, eps, cz ]); cube([ eps, c, cz ]); }
+                // Back-left corner
+                translate([ 0, cy, 0 ]) mirror([ 0, 1, 0 ])
+                    hull() { cube([ c, eps, cz ]); cube([ eps, c, cz ]); }
+
+                // Back-right corner
+                translate([ cx, cy, 0 ]) mirror([ 1, 0, 0 ]) mirror([ 0, 1, 0 ])
+                    hull() { cube([ c, eps, cz ]); cube([ eps, c, cz ]); }
+            }
+            else if ( __component_shape_vertical() )
+            {
+                // Match MakeVerticalShape: same fn/angle/radius/center as the cavity.
+                fn  = __component_is_hex() || __component_is_hex2() ? 6
+                    : __component_is_oct() || __component_is_oct2() ? 8 : 100;
+                ang = __component_is_hex() ? 30
+                    : __component_is_oct() ? 22.5 : 0;
+                r   = __compartment_largest_dimension() / 2;
+                // 45° chamfer means the perpendicular inset of each wall equals
+                // the height. For an n-gon, perpendicular wall-to-wall distance
+                // between concentric polygons equals the radius difference times
+                // cos(180/n), so the inner cone's circumradius must be reduced
+                // by c/cos(180/n) to inset the apothem (and thus each flat) by c.
+                r_inner = r - c / cos( 180 / fn );
+
+                if ( r_inner > 0 )
+                {
+                    // Fatten outer by oeps to overlap (rather than coincide with) the
+                    // cavity wall, and overshoot the inner cone past outer at the top
+                    // so the ring closes cleanly with finite thickness — both tricks
+                    // avoid the coincident/degenerate faces that trip CGAL's manifold
+                    // check when several non-square chamfers exist in one box.
+                    oeps = 0.01;
+                    r_outer = r + oeps;
+
+                    intersection()
+                    {
+                        cube([ cx, cy, c ]);  // clip to compartment box (polygon may exceed it)
+                        translate([ cx/2, cy/2, 0 ])
+                            rotate( a = ang, v = [ 0, 0, 1 ] )
+                                difference()
+                                {
+                                    cylinder( h = c, r = r_outer, $fn = fn );
+                                    translate([ 0, 0, -eps ])
+                                        cylinder( h = c + 2*eps, r1 = r_inner, r2 = r_outer + oeps, $fn = fn );
+                                }
+                    }
+                }
+            }
+        }
+
+        // 45° chamfer at the cavity opening (where the wall meets the box top).
+        // This is a SUBTRACTION (called from final_component_subtractions): the
+        // inverted-cone shape removes wall material so the opening flares outward
+        // by c at z=top, matching the cavity wall at z=top-c.
+        // Square: 4 inverted prisms (eats into surrounding wall/partition material).
+        // Vertical hex/oct/round: tapered ring whose inner wall matches the cavity
+        // and outer wall is offset c perpendicular outward.
+        // Laid-down hex/oct: opening is the full bounding cube — no-op.
+        module AddCompartmentTopChamfers()
+        {
+            c = __component_chamfer();
+            cx = __compartment_size( k_x );
+            cy = __compartment_size( k_y );
+            cz = __compartment_size( k_z );
+            eps = 0.001;
+            top_z = m_component_base_height + cz;
+
+            if ( __component_is_square() )
+            {
+                // Each edge: flares out by c at z=top, matches cavity wall at z=top-c.
+                // Wall slabs are nudged inward by eps to prevent coincident faces.
+                // Front edge (flares out into -y)
+                hull() {
+                    translate([ 0, -c,    top_z         ]) cube([ cx, c,   eps ]);
+                    translate([ 0,  eps,  top_z - c - eps ]) cube([ cx, eps, c   ]);
+                }
+                // Back edge (flares out into +y)
+                hull() {
+                    translate([ 0, cy,        top_z         ]) cube([ cx, c,   eps ]);
+                    translate([ 0, cy - 2*eps, top_z - c - eps ]) cube([ cx, eps, c   ]);
+                }
+                // Left edge (flares out into -x)
+                hull() {
+                    translate([ -c,    0, top_z         ]) cube([ c,   cy, eps ]);
+                    translate([  eps,  0, top_z - c - eps ]) cube([ eps, cy, c   ]);
+                }
+                // Right edge (flares out into +x)
+                hull() {
+                    translate([ cx,        0, top_z         ]) cube([ c,   cy, eps ]);
+                    translate([ cx - 2*eps, 0, top_z - c - eps ]) cube([ eps, cy, c   ]);
+                }
+            }
+            else if ( __component_shape_vertical() )
+            {
+                fn  = __component_is_hex() || __component_is_hex2() ? 6
+                    : __component_is_oct() || __component_is_oct2() ? 8 : 100;
+                ang = __component_is_hex() ? 30
+                    : __component_is_oct() ? 22.5 : 0;
+                r   = __compartment_largest_dimension() / 2;
+                r_outer = r + c / cos( 180 / fn );
+
+                // shift down by eps with a tiny inset so the cone's outer face
+                // doesn't coincide with the cavity wall (avoids non-manifold)
+                translate([ cx/2, cy/2, top_z - c - eps ])
+                    rotate( a = ang, v = [ 0, 0, 1 ] )
+                        cylinder( h = c + 2*eps, r1 = r - eps, r2 = r_outer + eps, $fn = fn );
+            }
         }
 
         // this rounds out the bottoms regardless of the size of the compartment
