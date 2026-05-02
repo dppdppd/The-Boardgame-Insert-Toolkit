@@ -28,3 +28,6 @@ All parameters for the v4 data array format. See `release/lib/boardgame_insert_t
 
 File-scope `$g_*` variables provide defaults; data array entries override them via `Make()`.
 
+## Gotchas
+
+- **`FTR_SHAPE_VERTICAL_B = true` does nothing without an explicit `FTR_SHAPE`.** The default `FTR_SHAPE` is `SQUARE`, and the vertical flag is ignored for square cavities. To get a round vertical cavity (e.g. for a cylindrical token stack), set `FTR_SHAPE = ROUND` and `FTR_SHAPE_VERTICAL_B = true` together. Same applies for vertical hex / oct — pair with `FTR_SHAPE = HEX` (or `HEX2`/`OCT`/`OCT2`).

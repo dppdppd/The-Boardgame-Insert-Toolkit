@@ -80,6 +80,8 @@ Test files live in `tests/v4/scad/`; the runner discovers them there automatical
 
 Output goes to `tests/v4/renders/`.
 
+**`--cross-section` requires a manifold STL.** The flag works in two passes: first `openscad -o model.stl source.scad`, then `openscad -o slice.stl <import-and-difference>` to slice the exported STL with a half-space cube. CGAL needs a closed mesh for that boolean, so a non-manifold export silently produces a 0-byte slice STL with no error in the script's output (the underlying error `The given mesh is not closed!` is suppressed). If your test triggers this, slice inside the source instead — wrap the model in `intersection() { Make(data); cube([...]); }` so the cut happens before STL export.
+
 ## File Conventions
 
 | Path | Purpose |
