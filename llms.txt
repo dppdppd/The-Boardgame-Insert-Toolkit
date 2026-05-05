@@ -1,0 +1,34 @@
+# The Boardgame Insert Toolkit
+
+> OpenSCAD parametric library for 3D-printable board game box inserts with lids.
+
+When a user asks to create a BIT `.scad` for a board game, start with the LLM design generation guide. Use the parameter guide for exact v4 key names. Use the starter and examples for SCAD structure.
+
+## Core
+
+- [README](README.md): human setup, versioned library include rules, and BIT overview.
+- [LLM Design Generation Guide](docs/llm/BIT-DESIGN-GENERATION.md): workflow for creating user `.scad` files.
+- [BIT Design Plan Schema](docs/llm/BIT-DESIGN-SCHEMA.md): structured planning contract before SCAD.
+- [BIT Parameters](docs/guidance/BIT-PARAMETERS.md): v4 key names, enums, and gotchas.
+- [Starter SCAD](release/my_designs/starter.scad): minimal user design template.
+- [Examples SCAD](release/my_designs/examples.4.scad): feature examples.
+
+## Design Help
+
+- [Examples Catalog](docs/llm/BIT-EXAMPLES-CATALOG.md): map common design intents to examples and tests.
+- [Measurement Checklist](docs/llm/BIT-MEASUREMENT-CHECKLIST.md): physical measurements needed before final tray geometry.
+- [Generated Design Validation](docs/llm/BIT-GENERATED-DESIGN-VALIDATION.md): commands for checking generated user designs.
+- [Two Decks Plus Button Assumptions](docs/llm/examples/two-decks-button-sliding.assumptions.md): assumptions for the sample sliding-lid card box.
+- [Two Decks Plus Button SCAD](docs/llm/examples/two-decks-button-sliding.scad): assumption-labeled generated design example.
+
+## Validation
+
+- [Rendering Guide](docs/guidance/RENDERING.md): compile/render workflow and camera views.
+- [V4 Tests](tests/v4/scad/): focused examples for features and regression cases.
+- [Validate Design Script](scripts/validate-design.sh): compile and optional render check for arbitrary generated designs.
+
+## Notes
+
+- User designs should include the newest full-version release library in `release/lib/`.
+- Repo tests and library development use `release/lib/boardgame_insert_toolkit_lib.4.scad`.
+- v4 removed the old `HEXBOX` type; use `FTR_SHAPE` with `HEX` or `HEX2` for hex-shaped compartments.

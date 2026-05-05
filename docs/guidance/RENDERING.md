@@ -36,7 +36,7 @@ All use `--projection=ortho --view=edges --autocenter --viewall`:
 
 ## Test Infrastructure: `tests/v4/`
 
-- `tests/v4/scad/` — 53 test files + symlink to `release/lib/boardgame_insert_toolkit_lib.4.scad`
+- `tests/v4/scad/` — 60 test files + symlink to `release/lib/boardgame_insert_toolkit_lib.4.scad`
 - `tests/v4/renders/` — PNG renders from test runner and eval tool (gitignored)
 - `tests/v4/stl/` — STL exports (gitignored)
 - `tests/run_tests.sh` — runs all tests from `tests/v4/scad/`, generates 7 PNG views per test
@@ -86,6 +86,17 @@ Output goes to `tests/v4/renders/`.
 
 **`--cross-section` requires a manifold STL.** The flag works in two passes: first `openscad -o model.stl source.scad`, then `openscad -o slice.stl <import-and-difference>` to slice the exported STL with a half-space cube. CGAL needs a closed mesh for that boolean, so a non-manifold export silently produces a 0-byte slice STL with no error in the script's output (the underlying error `The given mesh is not closed!` is suppressed). If your test triggers this, slice inside the source instead — wrap the model in `intersection() { Make(data); cube([...]); }` so the cut happens before STL export.
 
+## Generated User Designs
+
+Use `scripts/validate-design.sh` for arbitrary generated or hand-written user `.scad` files. This keeps user design validation separate from the library regression runner.
+
+```bash
+scripts/validate-design.sh path/to/design.scad
+scripts/validate-design.sh --render --views iso,top path/to/design.scad
+```
+
+Output goes to `tests/v4/renders/generated/` by default. The script fails on OpenSCAD errors, reports `BIT:` validation messages, and can export STL plus PNG views when `--render` is set.
+
 ## File Conventions
 
 | Path | Purpose |
@@ -94,13 +105,14 @@ Output goes to `tests/v4/renders/`.
 | `release/my_designs/starter.scad` | Template for new user projects (points at v4) |
 | `release/my_designs/examples.4.scad` | v4 feature showcase |
 | `release/my_designs/BIT_*.scad` | User game-specific designs (gitignored) |
-| `tests/v4/scad/test_*.scad` | v4 test files (53 total, lib via symlink) |
+| `tests/v4/scad/test_*.scad` | v4 test files (60 total, lib via symlink) |
 | `tests/v4/renders/` | Test suite PNG renders (gitignored) |
 | `tests/v4/stl/` | STL exports (gitignored) |
 | `tests/v3-baseline/scad/` | v3 test files (53) + v3 libs (self-contained) |
 | `tests/v3-baseline/renders/` | Historical render output |
 | `tests/render_eval.sh` | Evaluation render tool |
 | `tests/run_tests.sh` | Test runner script |
+| `scripts/validate-design.sh` | Generated user design validator |
 
 ## Test File Template
 

@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dppdppd/The-Boardgame-Insert-Toolkit/docs/llm/BIT-DESIGN-SCHEMA.json",
+  "title": "BIT Design Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "game",
+    "sources",
+    "measurements",
+    "component_groups",
+    "assumptions",
+    "bit_design",
+    "validation"
+  ],
+  "properties": {
+    "game": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "edition", "language", "expansions", "storage_goals"],
+      "properties": {
+        "title": { "type": "string" },
+        "edition": { "type": "string" },
+        "language": { "type": "string" },
+        "expansions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "storage_goals": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "url", "used_for"],
+        "properties": {
+          "label": { "type": "string" },
+          "url": { "type": "string" },
+          "used_for": { "type": "string" }
+        }
+      }
+    },
+    "measurements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "value_mm", "provided_by"],
+        "properties": {
+          "name": { "type": "string" },
+          "value_mm": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "number" }
+          },
+          "provided_by": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "component_groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "count",
+          "component_dimensions_mm",
+          "storage_dimensions_mm",
+          "clearance_mm",
+          "measurement_status"
+        ],
+        "properties": {
+          "name": { "type": "string" },
+          "count": { "type": "integer", "minimum": 0 },
+          "component_dimensions_mm": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "number" }
+          },
+          "storage_dimensions_mm": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": { "type": "number" }
+          },
+          "clearance_mm": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "number" }
+          },
+          "measurement_status": {
+            "type": "string",
+            "enum": ["measured", "sourced", "assumed", "unknown"]
+          },
+          "assigned_box": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "value", "risk", "verify_by"],
+        "properties": {
+          "name": { "type": "string" },
+          "value": { "type": "string" },
+          "risk": { "type": "string" },
+          "verify_by": { "type": "string" }
+        }
+      }
+    },
+    "bit_design": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["library_include", "boxes"],
+      "properties": {
+        "library_include": { "type": "string" },
+        "boxes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "box_size_xyz_mm", "features", "lid"],
+            "properties": {
+              "name": { "type": "string" },
+              "box_size_xyz_mm": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": { "type": "number" }
+              },
+              "features": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["kind", "compartment_size_xyz_mm"],
+                  "properties": {
+                    "kind": { "type": "string" },
+                    "num_compartments_xy": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": { "type": "integer", "minimum": 1 }
+                    },
+                    "compartment_size_xyz_mm": {
+                      "type": "array",
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "items": { "type": "number" }
+                    },
+                    "shape": { "type": "string" },
+                    "position_xy": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {
+                        "anyOf": [
+                          { "type": "number" },
+                          { "type": "string", "enum": ["CENTER", "MAX"] }
+                        ]
+                      }
+                    },
+                    "notes": { "type": "string" }
+                  }
+                }
+              },
+              "lid": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["type", "solid"],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["none", "LID_CAP", "LID_INSET", "LID_SLIDING"]
+                  },
+                  "solid": { "type": "boolean" },
+                  "label": { "type": "string" },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "status", "notes"],
+      "properties": {
+        "command": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["not_run", "passed", "warnings", "failed"]
+        },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

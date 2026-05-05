@@ -44,6 +44,7 @@ Two-phase pipeline: STL export (slow, CGAL) → multi-view PNG (fast, import STL
 ./tests/run_tests.sh --csg-only                    # Fast compile check (~7s total)
 ./tests/run_tests.sh test_box_minimal              # Single test, all 7 views
 ./tests/render_eval.sh tests/v4/scad/test_box_minimal.scad  # Eval render (iso + top)
+./scripts/validate-design.sh path/to/design.scad   # Validate an arbitrary user design
 ```
 
 Tests live in `tests/v4/scad/`; v3 baseline in `tests/v3-baseline/`.
@@ -56,8 +57,10 @@ Tests live in `tests/v4/scad/`; v3 baseline in `tests/v3-baseline/`.
 |------|---------|
 | `release/lib/*.4.scad` | v4 library files (active) |
 | `release/my_designs/` | User projects, starter, examples |
-| `tests/v4/scad/test_*.scad` | 53 v4 test files |
+| `docs/llm/` | LLM-facing user design generation guides, schema, examples |
+| `tests/v4/scad/test_*.scad` | 60 v4 test files |
 | `tests/v3-baseline/` | v3 regression baseline (read-only) |
+| `scripts/validate-design.sh` | Compile/render check for generated user `.scad` files |
 | `scripts/hooks/pre-commit` | Stamps `VERSION`; patch by default, `BIT_VERSION_BUMP=minor` for feature releases |
 | `scripts/install-hooks.sh` | One-time per clone: `git config core.hooksPath scripts/hooks` |
 
