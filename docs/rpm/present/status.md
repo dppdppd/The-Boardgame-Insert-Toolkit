@@ -20,6 +20,7 @@
 - Sliding lid sizing now accounts for rail shelf clearance, `2 * G_TOLERANCE` on each rail side, `G_TOLERANCE` at the stop side, and vertical tolerance above/below the panel.
 - Patterned non-solid lids support `LID_FRAME_WIDTH` across cap, inset, and sliding lid types; default is wall thickness, and `0` omits the frame.
 - Physical validation first slice added under `G_VALIDATE_KEYS_B`: thin walls/details, component bounds/height, component footprint overlap, and thin divider warnings.
+- LLM-friendly design workflow added via `llms.txt`, `.github/copilot-instructions.md`, `docs/llm/`, a generated-design validation script, and a short README prompt for AI chats.
 
 ## Active Specs
 _None tracked yet._
@@ -27,3 +28,4 @@ _None tracked yet._
 ## Known Issues
 - `CHAMFER_N` top chamfer for square cavities eats into partition walls in multi-compartment grids (no per-side cap yet)
 - `CHAMFER_N` for laid-down hex/oct cavities is a no-op (the floor is curved; no clean chamfer geometry)
+- LLM instructions validate through OpenSCAD but should explicitly tell assistants to check or install OpenSCAD before running validation.

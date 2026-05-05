@@ -30,6 +30,10 @@
    :PROPERTIES:
    :ID: better-divider-integration
    :END:
+** TODO Add explicit OpenSCAD prerequisite to LLM instructions [[file:2026-05-05-llm-openscad-prerequisite.md]]
+   :PROPERTIES:
+   :ID: llm-openscad-prerequisite
+   :END:
 ** TODO Resolve known chamfer gaps [[file:2026-05-05-known-chamfer-gaps.md]]
    :PROPERTIES:
    :ID: known-chamfer-gaps
