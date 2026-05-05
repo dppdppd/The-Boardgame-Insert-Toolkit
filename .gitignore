@@ -4,6 +4,7 @@
 *.stl
 *.rsls
 *.bak
+*.lock
 old
 BIT_*.scad
 !bit_functions_lib.*.scad
