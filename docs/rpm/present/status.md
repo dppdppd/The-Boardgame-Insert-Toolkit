@@ -15,6 +15,7 @@
 - AGENTS.md consolidated to ~100 lines
 - Version-stamping: `scripts/package-release.sh --patch` for bug fixes/internal changes, `--minor` for user-facing features. The pre-commit hook increments patch by default only when the dev lib has changed since the current full-version file; set `BIT_VERSION_BUMP=minor` for feature-release commits.
 - Release packaging: `scripts/package-release.sh` writes full-version library files beside the moving dev file in `release/lib/`, updates shipped starter/example includes to the immutable filename, and smoke-compiles shipped entry files.
+- `v4.0.8` published on GitHub with `release/lib/boardgame_insert_toolkit_lib.4.0.8.scad` as the first version-locked release asset.
 - Sliding lids added via `LID_TYPE = LID_SLIDING`, including configurable slide side, printable 45-degree rail/lid wedge, half-wall bearing shelf, top-open slide entry, and opening-side detent.
 - Sliding lid sizing now accounts for rail shelf clearance, `2 * G_TOLERANCE` on each rail side, `G_TOLERANCE` at the stop side, and vertical tolerance above/below the panel.
 - Patterned non-solid lids support `LID_FRAME_WIDTH` across cap, inset, and sliding lid types; default is wall thickness, and `0` omits the frame.
