@@ -1,7 +1,7 @@
 <!--ts-->
 <!--te-->
 
-Paste this prompt into Claude Code, Codex, or another AI chat:
+Get started by pasting this prompt into Claude Code, Codex, or your favorite AI chat:
 
 ```text
 Use dppdppd BIT to create and test the following insert: a sliding-lid box that holds two decks of poker cards and one dealer button.
