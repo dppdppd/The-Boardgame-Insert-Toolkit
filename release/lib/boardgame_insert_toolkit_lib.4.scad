@@ -1,6 +1,6 @@
 /*
  * The Boardgame Insert Toolkit - Library File
- * Version: 4.0.6
+ * Version: 4.0.7
  * 
  * A parametric system for creating custom board game inserts and organizers
  * https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
@@ -49,7 +49,7 @@
 
 
 // Version information
-VERSION = "4.0.6";
+VERSION = "4.0.7";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 // Resolution settings

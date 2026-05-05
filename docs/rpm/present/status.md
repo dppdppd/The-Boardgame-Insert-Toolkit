@@ -2,8 +2,8 @@
 
 ## Project Status
 - **Current phase**: v4 stable — incremental feature work and docs maintenance
-- **Library version**: `4.0.1` (auto-stamped from commit count since `v4.0.0` tag)
-- **Last updated**: 2026-05-02
+- **Library version**: `4.0.7` (auto-stamped from commit count since `v4.0.0` tag)
+- **Last updated**: 2026-05-05
 
 ## Completed Work
 - v4 library shipped as the active version
@@ -14,6 +14,7 @@
 - `release/lib/bit_functions_lib.4.scad` retired (was unused by the engine)
 - AGENTS.md consolidated to ~100 lines
 - Auto-version-stamping: `v4.0.0` baseline tag + `scripts/hooks/pre-commit` + `scripts/install-hooks.sh`. Each commit auto-bumps the patch number; no manual version bumps.
+- Sliding lids added via `LID_TYPE = LID_SLIDING`, including configurable slide side, configurable patterned-lid frame width, printable 45-degree rail/lid wedge, half-wall bearing shelf, top-open slide entry, and opening-side detent.
 
 ## Active Specs
 _None tracked yet._
