@@ -265,8 +265,22 @@ To be documented later
 ## Lid keys
 As of v2.09, all lid parameters are specified in a BOX_LID container. This makes it easy to reuse box lid parameters across multiple boxes.
 
+#### `LID_TYPE`
+Value is expected to be one of `LID_CAP`, `LID_INSET`, or `LID_SLIDING`. If omitted, BIT preserves the legacy behavior: cap lids by default, or inset lids when `LID_INSET_B` or `BOX_STACKABLE_B` is true.
+
+`LID_SLIDING` creates a sliding panel and adds side rails plus a stop to the box. The rails use a printable groove with a horizontal bottom and 45-degree top, and the lid edge has the matching bevel. The groove extends halfway into the wall so the lid rests on a wall shelf under the wedge. The slide opening has a top-open lead-in rather than a covered slot. Patterned sliding lids include a perimeter frame for rigidity, clipped to the same wedge edges and chamfered corners as solid sliding lids. Sliding lids also include a 45-degree friction detent on the top of the opening-side wall with a matching groove in the underside of the lid, sized from the global detent settings. The sliding lid can still use the normal solid, pattern, and label parameters.
+e.g. `[ LID_TYPE, LID_SLIDING ]`
+
+#### `LID_SLIDE_SIDE`
+Value is expected to be one of `FRONT`, `BACK`, `LEFT`, or `RIGHT`, and determines which side the sliding lid opens from. Defaults to `FRONT`.
+e.g. `[ LID_SLIDE_SIDE, LEFT ]`
+
+#### `LID_FRAME_WIDTH`
+Value is expected to be a number, and determines the perimeter frame width on patterned sliding lids. Defaults to the box wall thickness. Use 0 to omit the extra frame.
+e.g. `[ LID_FRAME_WIDTH, 4 ]`
+
 #### `LID_INSET_B`
-Value is expected to be a bool and determines whether the box will have an inset lid or a cap lid.
+Legacy value expected to be a bool and determines whether the box will have an inset lid or a cap lid when `LID_TYPE` is omitted.
 Considerations:
 - Inset lids are required if the boxes are intended to snap fit as a stack ( BOX_STACKABLE_B true ).
 - Cap lid is preferred for printers that are sloppier, since the cap lid is more forgiving.
@@ -298,7 +312,7 @@ Value is expected to be a number, and determines the percent of width that each 
 Value is expected to be a number, and determines the thickness of the shape, i.e. the difference between the inner and outer shapes` radius. 
 
 #### `LID_FIT_UNDER_B`
-Value is expected to be a bool, and determines whether the box bottom is formed to allow the box to sit in the lid when open. Note that this requires a printer that can print a 45 degree overhang without supports.
+Value is expected to be a bool, and determines whether the box bottom is formed to allow the box to sit in the lid when open. Note that this requires a printer that can print a 45 degree overhang without supports. Ignored for sliding lids.
 
 #### `LID_SOLID_B`
 Value is expected to be a bool, and determines whether the lid is a hex mesh or solid.
@@ -322,7 +336,7 @@ Value is expected to be a number, and determines the thickness of the lines in t
 Value is expected to be a number, and determines the spacing of the lines in the striped grid behind the label.  Default is 1.0 mm
 
 #### `LID_HEIGHT`
-Value is expected to be a number, and determines whether how deep the lid is. Default is 1mm for inset lids, and 2mm for cap lids.
+Value is expected to be a number, and determines how deep cap and inset lid walls are. Defaults are 2mm for inset lids and 4mm for cap lids. Ignored for sliding lids; sliding groove height is the lid thickness, with the top of the 45-degree wall forming the top of the groove.
 
 #### `LID_CUTOUT_SIDES_4B`
 Value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the lid. This allows the lid to be used as a card tray during play. The values represent [front, back, left, right ].  

@@ -12,7 +12,9 @@ All parameters for the v4 data array format. See `release/lib/boardgame_insert_t
 
 ## Lid-level (inside BOX_LID)
 
-`LID_SOLID_B`, `LID_HEIGHT`, `LID_FIT_UNDER_B`, `LID_INSET_B`, `LID_PATTERN_RADIUS`, `LID_PATTERN_N1/N2`, `LID_PATTERN_ANGLE`, `LID_PATTERN_ROW_OFFSET/COL_OFFSET`, `LID_PATTERN_THICKNESS`, `LID_CUTOUT_SIDES_4B`, `LID_LABELS_INVERT_B`, `LID_SOLID_LABELS_DEPTH`, `LID_LABELS_BG_THICKNESS`, `LID_LABELS_BORDER_THICKNESS`, `LID_STRIPE_WIDTH/SPACE`, `LID_TABS_4B`
+`LID_TYPE` (`LID_CAP`/`LID_INSET`/`LID_SLIDING`), `LID_SLIDE_SIDE` (`FRONT`/`BACK`/`LEFT`/`RIGHT`, default `FRONT`), `LID_FRAME_WIDTH` (default wall thickness; 0 omits the extra patterned sliding-lid frame), `LID_SOLID_B`, `LID_HEIGHT`, `LID_FIT_UNDER_B`, `LID_INSET_B` (legacy boolean used when `LID_TYPE` is omitted), `LID_PATTERN_RADIUS`, `LID_PATTERN_N1/N2`, `LID_PATTERN_ANGLE`, `LID_PATTERN_ROW_OFFSET/COL_OFFSET`, `LID_PATTERN_THICKNESS`, `LID_CUTOUT_SIDES_4B`, `LID_LABELS_INVERT_B`, `LID_SOLID_LABELS_DEPTH`, `LID_LABELS_BG_THICKNESS`, `LID_LABELS_BORDER_THICKNESS`, `LID_STRIPE_WIDTH/SPACE`, `LID_TABS_4B`
+
+`LID_SLIDING` creates a sliding panel with matching box rails and a stop on the opposite side from `LID_SLIDE_SIDE`. The rail groove has a horizontal bottom and printable 45-degree top, and the top of that 45-degree wall is the top of the groove. The groove extends halfway into the wall so the lid rests on a wall shelf under the wedge. The lid edge has the matching bevel, and the slide opening has a top-open lead-in rather than a covered slot. Patterned sliding lids include a perimeter frame for rigidity, clipped to the same wedge edges and chamfered corners as solid sliding lids. Sliding lids include a 45-degree friction detent on the top of the opening-side wall with a matching groove in the underside of the lid, use the global detent settings for size, ignore `LID_HEIGHT` and `LID_FIT_UNDER_B`, and can use the normal solid, pattern, and label parameters.
 
 ## Label-level (inside BOX_LID, BOX_FEATURE, or box-level)
 

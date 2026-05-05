@@ -85,6 +85,7 @@ Key principles for structured library changes:
 - **Always render BEFORE baselines** before patching, even for "trivial" changes
 - **Refactors must produce identical geometry** — compare BEFORE/AFTER PNGs
 - **CSG regression on all tests** after every change (`run_tests.sh --csg-only`)
+- **Every new or changed test must generate renders** — run the affected test(s) without `--csg-only` so STL and all seven PNG views are written to `tests/v4/renders/`
 - **Update docs every cycle** — stale plans are worse than no plan
 
 > Historical workflow docs (ASSESS → PATCH → EVALUATE cycle) archived in `docs/archive/opencode/`.

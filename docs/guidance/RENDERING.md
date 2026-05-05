@@ -61,6 +61,8 @@ All use `--projection=ortho --view=edges --autocenter --viewall`:
 
 Test files live in `tests/v4/scad/`; the runner discovers them there automatically.
 
+When adding or changing a test, run that affected test without `--csg-only` before finishing. `--csg-only` is useful as a fast preliminary regression check, but it does not generate STL or PNG files and is not a substitute for render output. Each committed test should have a current render-producing run that writes all requested views to `tests/v4/renders/`.
+
 ## Evaluation Tool: `tests/render_eval.sh`
 
 ```bash

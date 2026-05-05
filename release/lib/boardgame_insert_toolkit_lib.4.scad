@@ -1,6 +1,6 @@
 /*
  * The Boardgame Insert Toolkit - Library File
- * Version: 4.0.5
+ * Version: 4.0.6
  * 
  * A parametric system for creating custom board game inserts and organizers
  * https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
@@ -49,7 +49,7 @@
 
 
 // Version information
-VERSION = "4.0.5";
+VERSION = "4.0.6";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 // Resolution settings
@@ -160,8 +160,15 @@ LID_LABELS_BG_THICKNESS = "lid_label_bg_thickness"; // Thickness of label backgr
 LID_LABELS_BORDER_THICKNESS = "lid_label_border_thickness"; // Thickness of label border
 LID_STRIPE_WIDTH = "lid_stripe_width";  // Width of decorative stripes on lid
 LID_STRIPE_SPACE = "lid_stripe_space";  // Space between stripes
+LID_TYPE = "lid_type";                  // Lid style: LID_CAP, LID_INSET, or LID_SLIDING
+LID_SLIDE_SIDE = "lid_slide_side";      // Side a sliding lid opens from: FRONT, BACK, LEFT, or RIGHT
+LID_FRAME_WIDTH = "lid_frame_width";    // Width of sliding lid perimeter frame
 LID_INSET_B = "lid_inset";              // Boolean: lid is inset into box
 LID_TABS_4B = "lid_tabs";               // Boolean array: which sides have tabs [front,back,left,right]
+
+LID_CAP = "cap";
+LID_INSET = "inset";
+LID_SLIDING = "sliding";
 
 // Lid pattern parameters
 LID_PATTERN_RADIUS = "lid_hex_radius";  // Radius of hex pattern elements
@@ -780,7 +787,7 @@ __VALID_COMPONENT_KEYS = [
 
 // Lid-level valid keys (inside BOX_LID)
 __VALID_LID_KEYS = [
-    NAME, LID_FIT_UNDER_B, LID_SOLID_B, LID_HEIGHT, LID_INSET_B,
+    NAME, LID_FIT_UNDER_B, LID_SOLID_B, LID_HEIGHT, LID_TYPE, LID_SLIDE_SIDE, LID_FRAME_WIDTH, LID_INSET_B,
     LID_CUTOUT_SIDES_4B, LID_TABS_4B,
     LID_LABELS_INVERT_B, LID_SOLID_LABELS_DEPTH,
     LID_LABELS_BG_THICKNESS, LID_LABELS_BORDER_THICKNESS,
@@ -809,6 +816,12 @@ __VALID_PLACEMENTS = [ FRONT, BACK, LEFT, RIGHT, FRONT_WALL, BACK_WALL, LEFT_WAL
 
 // Valid element type enum values
 __VALID_TYPES = [ BOX, DIVIDERS, SPACER ];
+
+// Valid lid type enum values
+__VALID_LID_TYPES = [ LID_CAP, LID_INSET, LID_SLIDING ];
+
+// Valid sliding lid open-side enum values
+__VALID_LID_SLIDE_SIDES = [ FRONT, BACK, LEFT, RIGHT ];
 
 // Type-check helper functions
 function __is_list_of_len( v, n ) = is_list( v ) && len( v ) == n;
@@ -982,6 +995,18 @@ module __ValidateLidTypes( table, ctx )
     v_h = __value( table, LID_HEIGHT, default = false );
     if ( v_h != false && !is_num( v_h ) )
         __TypeMsg( LID_HEIGHT, ctx, "number", v_h );
+
+    v_type = __value( table, LID_TYPE, default = false );
+    if ( v_type != false && !__is_valid_key( v_type, __VALID_LID_TYPES ) )
+        __TypeMsg( LID_TYPE, ctx, "one of LID_CAP, LID_INSET, LID_SLIDING", v_type );
+
+    v_slide_side = __value( table, LID_SLIDE_SIDE, default = false );
+    if ( v_slide_side != false && !__is_valid_key( v_slide_side, __VALID_LID_SLIDE_SIDES ) )
+        __TypeMsg( LID_SLIDE_SIDE, ctx, "one of FRONT, BACK, LEFT, RIGHT", v_slide_side );
+
+    v_frame_width = __value( table, LID_FRAME_WIDTH, default = false );
+    if ( v_frame_width != false && !is_num( v_frame_width ) )
+        __TypeMsg( LID_FRAME_WIDTH, ctx, "number", v_frame_width );
 
     v_in = __value( table, LID_INSET_B, default = false );
     if ( __is_valid_key( LID_INSET_B, table ) && !is_bool( v_in ) )
@@ -1244,13 +1269,19 @@ module __ValidateElement( element, element_name, element_type = undef )
         {
             _wt = __value( element, BOX_WALL_THICKNESS, default = $g_wall_thickness );
             _lid_fit_under = __value( lid, LID_FIT_UNDER_B, default = true );
-            _lid_inset = __value( element, BOX_STACKABLE_B, default = false ) ||
-                         __value( lid, LID_INSET_B, default = false );
+            _lid_type_raw = __value( lid, LID_TYPE, default = false );
+            _legacy_lid_inset = __value( element, BOX_STACKABLE_B, default = false ) ||
+                                __value( lid, LID_INSET_B, default = false );
+            _lid_type = ( _lid_type_raw == LID_CAP || _lid_type_raw == LID_INSET || _lid_type_raw == LID_SLIDING ) ?
+                _lid_type_raw :
+                ( _legacy_lid_inset ? LID_INSET : LID_CAP );
+            _lid_inset = _lid_type == LID_INSET;
+            _lid_sliding = _lid_type == LID_SLIDING;
             _lid_height_val = __value( lid, LID_HEIGHT, default =
-                _lid_inset ? DEFAULT_INSET_LID_HEIGHT : DEFAULT_CAP_LID_HEIGHT );
-            _lid_ext_z = _wt + _lid_height_val;
+                _lid_sliding ? 2*_wt : ( _lid_inset ? DEFAULT_INSET_LID_HEIGHT : DEFAULT_CAP_LID_HEIGHT ) );
+            _lid_ext_z = _lid_sliding ? _wt : _wt + _lid_height_val;
 
-            if ( _lid_fit_under && is_list( _box_size ) && len( _box_size ) >= 3 )
+            if ( !_lid_sliding && _lid_fit_under && is_list( _box_size ) && len( _box_size ) >= 3 )
             {
                 _box_interior_z = _box_size[ k_z ] - _wt;
                 if ( _lid_ext_z > _box_interior_z )
@@ -1529,15 +1560,33 @@ module MakeBox( box )
 
     m_lid = __find_entry( box, BOX_LID );
 
-    m_lid_fit_under = __value( m_lid, LID_FIT_UNDER_B, default = true );
     m_lid_solid = __value( m_lid, LID_SOLID_B, default = false );
-    m_lid_inset = m_box_is_stackable || __value( m_lid, LID_INSET_B, default = false ); 
-
-    // the part of the lid that overlaps the box
-    m_lid_wall_height = __value( m_lid, LID_HEIGHT, default = m_lid_inset ? DEFAULT_INSET_LID_HEIGHT : DEFAULT_CAP_LID_HEIGHT );
-    m_lid_wall_thickness = m_lid_inset ? 2*m_wall_thickness : m_wall_thickness/2;    
+    m_lid_type_raw = __value( m_lid, LID_TYPE, default = false );
+    m_legacy_lid_inset = m_box_is_stackable || __value( m_lid, LID_INSET_B, default = false );
+    m_lid_type = ( m_lid_type_raw == LID_CAP || m_lid_type_raw == LID_INSET || m_lid_type_raw == LID_SLIDING ) ?
+        m_lid_type_raw :
+        ( m_legacy_lid_inset ? LID_INSET : LID_CAP );
+    m_lid_sliding = m_lid_type == LID_SLIDING;
+    m_lid_inset = m_lid_type == LID_INSET;
+    m_lid_cap = m_lid_type == LID_CAP;
+    m_lid_slide_side_raw = __value( m_lid, LID_SLIDE_SIDE, default = FRONT );
+    m_lid_slide_side = ( m_lid_slide_side_raw == FRONT || m_lid_slide_side_raw == BACK || m_lid_slide_side_raw == LEFT || m_lid_slide_side_raw == RIGHT ) ?
+        m_lid_slide_side_raw :
+        FRONT;
+    m_lid_slides_x = m_lid_slide_side == LEFT || m_lid_slide_side == RIGHT;
+    m_lid_fit_under = !m_lid_sliding && __value( m_lid, LID_FIT_UNDER_B, default = true );
 
     m_lid_thickness = m_wall_thickness;
+
+    // the part of the lid that overlaps the box
+    m_lid_wall_height = m_lid_sliding ?
+        m_lid_thickness :
+        __value( m_lid, LID_HEIGHT, default = m_lid_inset ? DEFAULT_INSET_LID_HEIGHT : DEFAULT_CAP_LID_HEIGHT );
+    m_lid_wall_thickness = m_lid_inset ? 2*m_wall_thickness : ( m_lid_sliding ? m_wall_thickness : m_wall_thickness/2 );
+
+    m_sliding_lid_bevel = max( HULL_EPSILON, min( m_lid_thickness / 2, m_wall_thickness / 2 ) );
+    // Sliding lids bear on a half-wall-depth shelf below the 45-degree rail wedge.
+    m_sliding_lid_groove_depth = m_sliding_lid_bevel;
 
     m_box_has_lid = !__value( box, BOX_NO_LID_B, default = false );
 
@@ -1550,8 +1599,22 @@ module MakeBox( box )
 
 
     // Precomputed dimension arrays for lid sizing (box type specific)
-    m_lid_size_ext = [ m_box_size[ k_x ], m_box_size[ k_y ], m_lid_thickness + m_lid_wall_height ];
-    m_lid_size_int = [ m_box_size[ k_x ] - 2*m_lid_wall_thickness, m_box_size[ k_y ] - 2*m_lid_wall_thickness, m_lid_wall_height ];
+    m_lid_size_ext = m_lid_sliding ?
+        ( m_lid_slides_x ?
+            [
+                max( 0.01, m_box_size[ k_x ] - m_sliding_lid_groove_depth - $g_tolerance ),
+                max( 0.01, m_box_size[ k_y ] - 2*m_sliding_lid_groove_depth - 2*$g_tolerance ),
+                m_lid_thickness
+            ] :
+            [
+                max( 0.01, m_box_size[ k_x ] - 2*m_sliding_lid_groove_depth - 2*$g_tolerance ),
+                max( 0.01, m_box_size[ k_y ] - m_sliding_lid_groove_depth - $g_tolerance ),
+                m_lid_thickness
+            ] ) :
+        [ m_box_size[ k_x ], m_box_size[ k_y ], m_lid_thickness + m_lid_wall_height ];
+    m_lid_size_int = m_lid_sliding ?
+        m_lid_size_ext :
+        [ m_box_size[ k_x ] - 2*m_lid_wall_thickness, m_box_size[ k_y ] - 2*m_lid_wall_thickness, m_lid_wall_height ];
     m_notch_length_base = [ m_box_size[ k_x ] / 5.0, m_box_size[ k_y ] / 5.0 ];
 
     function __notch_length( D ) = m_notch_length_base[ D ];
@@ -1576,6 +1639,7 @@ module MakeBox( box )
     m_lid_label_border_thickness = __value( m_lid, LID_LABELS_BORDER_THICKNESS, default = 0.3 );
     m_lid_stripe_width = __value( m_lid, LID_STRIPE_WIDTH, default = 0.5 );
     m_lid_stripe_space = __value( m_lid, LID_STRIPE_SPACE, default = 1 );
+    m_lid_frame_width = __value( m_lid, LID_FRAME_WIDTH, default = m_wall_thickness );
 
     m_lid_pattern_n1 = __value( m_lid, LID_PATTERN_N1, default = 6 );
     m_lid_pattern_n2 = __value( m_lid, LID_PATTERN_N2, default = 6 );
@@ -1839,7 +1903,11 @@ module MakeBox( box )
                 //
                 difference()
                 {
-                    if ( !m_lid_inset )
+                    if ( m_lid_sliding )
+                    {
+                        MakeBoxShellWithSlidingLidBits();
+                    }
+                    else if ( !m_lid_inset )
                     {
                         MakeBoxShell();
                     }
@@ -1853,7 +1921,7 @@ module MakeBox( box )
             else if ( m_is_lid_subtractions )
             {
                // box top lid accommodation
-                if ( !m_lid_inset && m_box_has_lid )
+                if ( m_lid_cap && m_box_has_lid )
                 {
                     translate( [ 0,0, m_box_size[ k_z ] - __lid_internal_size( k_z ) ] )
                         MirrorAboutPoint( v=[0,0,1], pt=[0,0,__lid_external_size(k_z)/2])
@@ -1909,7 +1977,7 @@ module MakeBox( box )
                 {
                     // main __element
                     cube([__lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z )]);
-                    
+
                     // lid exterior lip
             
                     translate( [ 0, 0, __lid_external_size( k_z )/2 ])
@@ -2084,12 +2152,240 @@ module MakeBox( box )
                             }     
                     }
                 }
-                    
+
                 // subtract tabs
 
                     translate( [ 0, 0, m_box_size[ k_z ] - m_lid_tab[ k_z ] + 1 ])
                         MakeLidTabs( mod = 0, square = true ); // this needs to be wide 
             }  
+        }
+
+        module MakeSlidingLidRails()
+        {
+            vertical_height = max( HULL_EPSILON, m_lid_thickness - m_sliding_lid_bevel );
+            opening_lip_clearance = 0;
+            rail_width = max( HULL_EPSILON, m_wall_thickness - m_sliding_lid_groove_depth );
+            rail_lip_width = rail_width + m_sliding_lid_groove_depth;
+
+            module MakeRailVertical( pos, size )
+            {
+                translate( [ pos[ k_x ], pos[ k_y ], 0 ] )
+                    cube( [ size[ k_x ], size[ k_y ], vertical_height ] );
+            }
+
+            module MakeRailLip( base_pos, base_size, top_pos, top_size )
+            {
+                hull()
+                {
+                    translate( [ base_pos[ k_x ], base_pos[ k_y ], vertical_height - HULL_EPSILON ] )
+                        cube( [ base_size[ k_x ], base_size[ k_y ], HULL_EPSILON ] );
+
+                    translate( [ top_pos[ k_x ], top_pos[ k_y ], m_lid_thickness - HULL_EPSILON ] )
+                        cube( [ top_size[ k_x ], top_size[ k_y ], HULL_EPSILON ] );
+                }
+            }
+
+            union()
+            {
+                if ( !m_lid_slides_x )
+                {
+                    lip_y = m_lid_slide_side == FRONT ? opening_lip_clearance : 0;
+                    lip_len_y = m_box_size[ k_y ] - opening_lip_clearance;
+
+                    // Side guides; front/back controls which end is top-open.
+                    MakeRailVertical( [ 0, 0 ], [ rail_width, m_box_size[ k_y ] ] );
+                    MakeRailVertical(
+                        [ m_box_size[ k_x ] - rail_width, 0 ],
+                        [ rail_width, m_box_size[ k_y ] ] );
+
+                    if ( lip_len_y > HULL_EPSILON )
+                    {
+                        MakeRailLip(
+                            [ 0, lip_y ],
+                            [ rail_width, lip_len_y ],
+                            [ 0, lip_y ],
+                            [ rail_lip_width, lip_len_y ] );
+
+                        MakeRailLip(
+                            [ m_box_size[ k_x ] - rail_width, lip_y ],
+                            [ rail_width, lip_len_y ],
+                            [ m_box_size[ k_x ] - rail_lip_width, lip_y ],
+                            [ rail_lip_width, lip_len_y ] );
+                    }
+
+                    if ( m_lid_slide_side == FRONT )
+                    {
+                        MakeRailVertical(
+                            [ 0, m_box_size[ k_y ] - rail_width ],
+                            [ m_box_size[ k_x ], rail_width ] );
+
+                        MakeRailLip(
+                            [ 0, m_box_size[ k_y ] - rail_width ],
+                            [ m_box_size[ k_x ], rail_width ],
+                            [ 0, m_box_size[ k_y ] - rail_lip_width ],
+                            [ m_box_size[ k_x ], rail_lip_width ] );
+                    }
+                    else
+                    {
+                        MakeRailVertical( [ 0, 0 ], [ m_box_size[ k_x ], rail_width ] );
+
+                        MakeRailLip(
+                            [ 0, 0 ],
+                            [ m_box_size[ k_x ], rail_width ],
+                            [ 0, 0 ],
+                            [ m_box_size[ k_x ], rail_lip_width ] );
+                    }
+                }
+                else
+                {
+                    lip_x = m_lid_slide_side == LEFT ? opening_lip_clearance : 0;
+                    lip_len_x = m_box_size[ k_x ] - opening_lip_clearance;
+
+                    // Front/back guides; left/right controls which end is top-open.
+                    MakeRailVertical( [ 0, 0 ], [ m_box_size[ k_x ], rail_width ] );
+                    MakeRailVertical(
+                        [ 0, m_box_size[ k_y ] - rail_width ],
+                        [ m_box_size[ k_x ], rail_width ] );
+
+                    if ( lip_len_x > HULL_EPSILON )
+                    {
+                        MakeRailLip(
+                            [ lip_x, 0 ],
+                            [ lip_len_x, rail_width ],
+                            [ lip_x, 0 ],
+                            [ lip_len_x, rail_lip_width ] );
+
+                        MakeRailLip(
+                            [ lip_x, m_box_size[ k_y ] - rail_width ],
+                            [ lip_len_x, rail_width ],
+                            [ lip_x, m_box_size[ k_y ] - rail_lip_width ],
+                            [ lip_len_x, rail_lip_width ] );
+                    }
+
+                    if ( m_lid_slide_side == LEFT )
+                    {
+                        MakeRailVertical(
+                            [ m_box_size[ k_x ] - rail_width, 0 ],
+                            [ rail_width, m_box_size[ k_y ] ] );
+
+                        MakeRailLip(
+                            [ m_box_size[ k_x ] - rail_width, 0 ],
+                            [ rail_width, m_box_size[ k_y ] ],
+                            [ m_box_size[ k_x ] - rail_lip_width, 0 ],
+                            [ rail_lip_width, m_box_size[ k_y ] ] );
+                    }
+                    else
+                    {
+                        MakeRailVertical( [ 0, 0 ], [ rail_width, m_box_size[ k_y ] ] );
+
+                        MakeRailLip(
+                            [ 0, 0 ],
+                            [ rail_width, m_box_size[ k_y ] ],
+                            [ 0, 0 ],
+                            [ rail_lip_width, m_box_size[ k_y ] ] );
+                    }
+                }
+            }
+        }
+
+        function __sliding_detent_height() =
+            min( max( HULL_EPSILON, $g_detent_thickness ), m_wall_thickness / 2, m_lid_thickness / 2 );
+        function __sliding_detent_width() = 2 * __sliding_detent_height();
+        function __sliding_detent_length() =
+            let( cross_extent = m_lid_slides_x ? __lid_external_size( k_y ) : __lid_external_size( k_x ) )
+            min(
+                max( $g_detent_spacing * 2, m_wall_thickness * 2 ),
+                max( HULL_EPSILON, cross_extent - 2*$g_detent_dist_from_corner )
+            );
+        function __sliding_detent_start( extent, length ) = max( 0, ( extent - length ) / 2 );
+
+        module MakeSlidingLidDetentPrismX( length, width, height )
+        {
+            hull()
+            {
+                cube( [ length, HULL_EPSILON, HULL_EPSILON ] );
+
+                translate( [ 0, width - HULL_EPSILON, 0 ] )
+                    cube( [ length, HULL_EPSILON, HULL_EPSILON ] );
+
+                translate( [ 0, width / 2, height ] )
+                    cube( [ length, HULL_EPSILON, HULL_EPSILON ] );
+            }
+        }
+
+        module MakeSlidingLidDetentPrismY( length, width, height )
+        {
+            hull()
+            {
+                cube( [ HULL_EPSILON, length, HULL_EPSILON ] );
+
+                translate( [ width - HULL_EPSILON, 0, 0 ] )
+                    cube( [ HULL_EPSILON, length, HULL_EPSILON ] );
+
+                translate( [ width / 2, 0, height ] )
+                    cube( [ HULL_EPSILON, length, HULL_EPSILON ] );
+            }
+        }
+
+        module MakeSlidingLidOpeningDetent()
+        {
+            if ( $g_detent_thickness > 0 )
+            {
+                detent_h = __sliding_detent_height();
+                detent_w = __sliding_detent_width();
+                detent_len = __sliding_detent_length();
+
+                if ( !m_lid_slides_x )
+                {
+                    x = m_sliding_lid_groove_depth + $g_tolerance + __sliding_detent_start( __lid_external_size( k_x ), detent_len );
+                    y = m_lid_slide_side == FRONT ?
+                        m_wall_thickness / 2 - detent_w / 2 :
+                        m_box_size[ k_y ] - m_wall_thickness / 2 - detent_w / 2;
+
+                    translate( [ x, y, 0 ] )
+                        MakeSlidingLidDetentPrismX( detent_len, detent_w, detent_h );
+                }
+                else
+                {
+                    x = m_lid_slide_side == LEFT ?
+                        m_wall_thickness / 2 - detent_w / 2 :
+                        m_box_size[ k_x ] - m_wall_thickness / 2 - detent_w / 2;
+                    y = m_sliding_lid_groove_depth + $g_tolerance + __sliding_detent_start( __lid_external_size( k_y ), detent_len );
+
+                    translate( [ x, y, 0 ] )
+                        MakeSlidingLidDetentPrismY( detent_len, detent_w, detent_h );
+                }
+            }
+        }
+
+        module MakeSlidingLidRailsWithExteriorChamfer()
+        {
+            intersection()
+            {
+                union()
+                {
+                    MakeSlidingLidRails();
+                    MakeSlidingLidOpeningDetent();
+                }
+
+                translate( [ 0, 0, -m_box_size[ k_z ] ] )
+                    __MakeChamferedBoxShell(
+                        [ m_box_size[ k_x ], m_box_size[ k_y ], m_box_size[ k_z ] + m_lid_thickness ],
+                        m_box_chamfer
+                    );
+            }
+        }
+
+        module MakeBoxShellWithSlidingLidBits()
+        {
+            union()
+            {
+                MakeBoxShell();
+
+                if ( m_box_has_lid )
+                    translate( [ 0, 0, m_box_size[ k_z ] ] )
+                        MakeSlidingLidRailsWithExteriorChamfer();
+            }
         }
 
         module MakeSpacer()
@@ -2121,9 +2417,13 @@ module MakeBox( box )
                 // by adding partitions.
 
                 // we carve all the way to the bottom and then fill it back up
+                cut_height = m_lid_sliding ?
+                    m_box_size[ k_z ] - m_wall_thickness + HULL_EPSILON :
+                    m_box_size[ k_z ] + __lid_external_size(k_z);
+
                 cube([  __component_size( k_x ), 
                     __component_size( k_y ), 
-                    m_box_size[ k_z ] + __lid_external_size(k_z)]);
+                    cut_height ]);
             }
             else if ( m_is_component_additions )
             {
@@ -2622,73 +2922,170 @@ module MakeBox( box )
                         }
                     }
                 }
-                
+
+            }
+
+            module MakeSlidingLidFrame( thickness = m_lid_thickness )
+            {
+                frame_width = min(
+                    max( 0, m_lid_frame_width ),
+                    __lid_external_size( k_x )/3,
+                    __lid_external_size( k_y )/3
+                );
+
+                if ( frame_width > 0 )
+                    difference()
+                    {
+                        cube([ __lid_external_size( k_x ), __lid_external_size( k_y ), thickness ]);
+
+                        translate( [ frame_width, frame_width, -epsilon ] )
+                            cube([
+                                max( 0.01, __lid_external_size( k_x ) - 2*frame_width ),
+                                max( 0.01, __lid_external_size( k_y ) - 2*frame_width ),
+                                thickness + 2*epsilon
+                            ]);
+                    }
+            }
+
+            module MakeSlidingLidEnvelope()
+            {
+                __MakeChamferedBoxShell(
+                    [ __lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z ) ],
+                    m_sliding_lid_bevel,
+                    chamfer_top = true,
+                    chamfer_bottom = false );
+            }
+
+            module MakeSlidingLidDetentGroove()
+            {
+                if ( $g_detent_thickness > 0 )
+                {
+                    detent_h = __sliding_detent_height();
+                    detent_w = __sliding_detent_width();
+                    detent_len = __sliding_detent_length();
+
+                    if ( !m_lid_slides_x )
+                    {
+                        x = __sliding_detent_start( __lid_external_size( k_x ), detent_len );
+                        y = m_lid_slide_side == FRONT ?
+                            m_wall_thickness / 2 - detent_w / 2 :
+                            __lid_external_size( k_y ) - m_wall_thickness / 2 - detent_w / 2;
+
+                        translate( [ x, y, -HULL_EPSILON ] )
+                            MakeSlidingLidDetentPrismX( detent_len, detent_w, detent_h + HULL_EPSILON );
+                    }
+                    else
+                    {
+                        x = m_lid_slide_side == LEFT ?
+                            m_wall_thickness / 2 - detent_w / 2 :
+                            __lid_external_size( k_x ) - m_wall_thickness / 2 - detent_w / 2;
+                        y = __sliding_detent_start( __lid_external_size( k_y ), detent_len );
+
+                        translate( [ x, y, -HULL_EPSILON ] )
+                            MakeSlidingLidDetentPrismY( detent_len, detent_w, detent_h + HULL_EPSILON );
+                    }
+                }
             }
 
             module Helper__BuildLid()
             {
-                if ( !m_lid_inset )
+                if ( m_lid_sliding )
+                {
+                    difference()
+                    {
+                        intersection()
+                        {
+                            MakeSlidingLidEnvelope();
+
+                            union()
+                            {
+                                if ( !m_has_solid_lid )
+                                    MakeSlidingLidFrame();
+
+                                MakeLidSurface();
+                            }
+                        }
+
+                        MakeSlidingLidDetentGroove();
+                    }
+                }
+                else if ( m_lid_cap )
                 {
                     MakeLidBase_Cap( tolerance = $g_tolerance, tolerance_detent_pos = $g_tolerance_detent_pos );
                 }
-                else // new lid
-                {             
-                    if ( m_lid_inset )
+                else if ( m_lid_inset )
+                {
+                    // main structure of lid minus center
+                    difference()
                     {
-                        // main structure of lid minus center
-                        difference()
-                        {
-                            MakeLidBase_Inset( tolerance = $g_tolerance, tolerance_detent_pos = $g_tolerance_detent_pos );
+                        MakeLidBase_Inset( tolerance = $g_tolerance, tolerance_detent_pos = $g_tolerance_detent_pos );
 
-                            // hollow the center
-                            MoveToLidInterior()
-                                cube([  __lid_internal_size( k_x ), __lid_internal_size( k_y ),  __lid_external_size( k_z )]);
-                        }
-                        
-                        // add the flat notch tabs to the sides
-                        // difference()
-                        // {
-                        //     cube( [ __lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z )/2 ]   );
-
-                        //     // hollow the center
-                        //     MoveToLidInterior()
-                        //         cube([  __lid_internal_size( k_x ), __lid_internal_size( k_y ),  __lid_external_size( k_z )]);                            
-
-                        //     MakeCorners( mod = 1 );
-                        // }
-
-                        // add tabs
-                        MakeLidTabs( mod = -$g_tolerance );
+                        // hollow the center
+                        MoveToLidInterior()
+                            cube([  __lid_internal_size( k_x ), __lid_internal_size( k_y ),  __lid_external_size( k_z )]);
                     }
-                }
 
-                // lid surface ( pattern and labels )
+                    // add the flat notch tabs to the sides
+                    // difference()
+                    // {
+                    //     cube( [ __lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z )/2 ]   );
+
+                    //     // hollow the center
+                    //     MoveToLidInterior()
+                    //         cube([  __lid_internal_size( k_x ), __lid_internal_size( k_y ),  __lid_external_size( k_z )]);
+
+                    //     MakeCorners( mod = 1 );
+                    // }
+
+                    // add tabs
+                    MakeLidTabs( mod = -$g_tolerance );
+
+                    // lid surface ( pattern and labels )
                     intersection() // clip to lid extents
                     {
-                        if ( m_lid_inset )
-                            MoveToLidInterior( tolerance = -$g_tolerance )
-                                cube([  __lid_internal_size( k_x ) + 2*$g_tolerance, __lid_internal_size( k_y ) + 2*$g_tolerance,  __lid_external_size( k_z)]);
-                        else
-                            __MakeChamferedBoxShell(
-                                [__lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z )],
-                                m_box_chamfer, chamfer_top = false, chamfer_bottom = true );
+                        MoveToLidInterior( tolerance = -$g_tolerance )
+                            cube([  __lid_internal_size( k_x ) + 2*$g_tolerance, __lid_internal_size( k_y ) + 2*$g_tolerance,  __lid_external_size( k_z)]);
 
                         MakeLidSurface();
                     }
+                }
+                else
+                {
+                    // lid surface ( pattern and labels )
+                    intersection() // clip to lid extents
+                    {
+                        __MakeChamferedBoxShell(
+                            [__lid_external_size( k_x ), __lid_external_size( k_y ), __lid_external_size( k_z )],
+                            m_box_chamfer, chamfer_top = false, chamfer_bottom = true );
+
+                        MakeLidSurface();
+                    }
+                }
             }
 
 
             lid_print_position = [0, m_box_size[ k_y ] + DISTANCE_BETWEEN_PARTS, 0 ];
             lid_vis_position = [ 0, 0, m_box_size[ k_z ] + m_lid_thickness ];
-          
-            translate( $g_vis_actual_b ? lid_vis_position : lid_print_position ) 
-                RotateAboutPoint( $g_vis_actual_b ? 180 : 0, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )
+            lid_sliding_closed_position = !m_lid_slides_x ?
+                ( m_lid_slide_side == FRONT ?
+                    [ m_sliding_lid_groove_depth + $g_tolerance, 0, m_box_size[ k_z ] ] :
+                    [ m_sliding_lid_groove_depth + $g_tolerance, m_sliding_lid_groove_depth + $g_tolerance, m_box_size[ k_z ] ] ) :
+                ( m_lid_slide_side == LEFT ?
+                    [ 0, m_sliding_lid_groove_depth + $g_tolerance, m_box_size[ k_z ] ] :
+                    [ m_sliding_lid_groove_depth + $g_tolerance, m_sliding_lid_groove_depth + $g_tolerance, m_box_size[ k_z ] ] );
+            lid_position = ( m_lid_sliding && $g_vis_actual_b ) ?
+                lid_sliding_closed_position :
+                ( $g_vis_actual_b ? lid_vis_position : lid_print_position );
+            lid_rotation = ( $g_vis_actual_b && !m_lid_sliding ) ? 180 : 0;
+
+            translate( lid_position )
+                RotateAboutPoint( lid_rotation, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )
                     difference()
                     {
                         Helper__BuildLid();
 
                         // if lid is going to be used to hold cards (e.g. discard pile)
-                        if ( !m_lid_inset )
+                        if ( m_lid_cap )
                             for ( side = [ k_front:k_right ])
                                 if ( m_lid_cutout_sides[ side ])
                                     MakeSideCutouts( side );
@@ -3138,6 +3535,22 @@ module MakeBox( box )
             eps = 0.001;
             top_z = m_component_base_height + cz;
 
+            module MakeTopCornerChamfer()
+            {
+                hull()
+                {
+                    translate([ 0, 0, top_z - eps ])
+                        linear_extrude( 2*eps )
+                            polygon([ [0, 0], [c + eps, 0], [0, c + eps] ]);
+
+                    translate([ c, 0, top_z - c - eps ])
+                        cube([ eps, eps, eps ]);
+
+                    translate([ 0, c, top_z - c - eps ])
+                        cube([ eps, eps, eps ]);
+                }
+            }
+
             if ( __component_is_square() )
             {
                 // Each edge: flares out by c at z=top, matches cavity wall at z=top-c.
@@ -3162,6 +3575,19 @@ module MakeBox( box )
                     translate([ cx,        0, top_z         ]) cube([ c,   cy, eps ]);
                     translate([ cx - 2*eps, 0, top_z - c - eps ]) cube([ eps, cy, c   ]);
                 }
+
+                // Trim the vertical wall-to-wall corner filler after it has been
+                // added, so the top opening chamfer stays continuous at corners.
+                MakeTopCornerChamfer();
+
+                translate([ cx, 0, 0 ]) mirror([ 1, 0, 0 ])
+                    MakeTopCornerChamfer();
+
+                translate([ 0, cy, 0 ]) mirror([ 0, 1, 0 ])
+                    MakeTopCornerChamfer();
+
+                translate([ cx, cy, 0 ]) mirror([ 1, 0, 0 ]) mirror([ 0, 1, 0 ])
+                    MakeTopCornerChamfer();
             }
             else if ( __component_shape_vertical() )
             {
@@ -3679,6 +4105,3 @@ module MakeRoundedCubeAxis( vec3, radius, vecRounded = [ t, t, t, t ], axis = k_
         }
     }
 }
-
-
-
