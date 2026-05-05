@@ -6,4 +6,4 @@ set -e
 cd "$(git rev-parse --show-toplevel)"
 git config core.hooksPath scripts/hooks
 echo "Installed: core.hooksPath = scripts/hooks"
-echo "  - pre-commit: stamps VERSION = 4.0.<commits-since-v4.0.0+1> into the lib"
+echo "  - pre-commit: increments patch by default; set BIT_VERSION_BUMP=minor for feature releases"

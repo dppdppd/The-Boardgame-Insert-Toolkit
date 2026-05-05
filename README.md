@@ -20,7 +20,7 @@ This:
 # Why
 This OpenSCAD library was designed for quick design and iteration on board game inserts--specifically ones with lids. There are lots of great printable inserts out there, but very few for us vertical storers.
 
-# Version 4.00
+# Version 4
 
 **v4** is a streamlined release focused on maintainability:
 - **Smaller codebase** (3,454 lines, down from 4,456 in v3)
@@ -30,7 +30,7 @@ This OpenSCAD library was designed for quick design and iteration on board game 
 - 14 magic numbers replaced with named constants
 - Code documentation: TOC, section headers, module docs
 
-**Migrating from v3**: Change your includes from `boardgame_insert_toolkit_lib.3.scad` to `boardgame_insert_toolkit_lib.4.scad`. If you use `HEXBOX` type boxes, keep using v3 — the v3 files are archived in `tests/v3-baseline/`.
+**Migrating from v3**: Change your includes from `boardgame_insert_toolkit_lib.3.scad` to the latest full-version v4 library file in `release/lib/`, for example `boardgame_insert_toolkit_lib.4.0.8.scad`. If you use `HEXBOX` type boxes, keep using v3 — the v3 files are archived in `tests/v3-baseline/`.
 
 # Visual Editor
 
@@ -49,9 +49,10 @@ Download portable binaries from the [BGSD Releases](https://github.com/dppdppd/B
 # How (Text Editor)
 - Download [Openscad](https://www.openscad.org).
 - Create a new directory for the board game you're working on. It's best to keep the BIT file with the board game file because future BIT versions may not be backwards compatible and this way you will always be able to recreate the STLs.
-- Copy `release/lib/boardgame_insert_toolkit_lib.4.scad` and `release/my_designs/starter.scad` into the directory. Feel free to rename _starter.scad_ to something more descriptive.
+- In `release/lib/`, find the most recent full-version library file, such as `boardgame_insert_toolkit_lib.4.0.8.scad`. Use the highest version number available.
+- Copy that full-version library file and `release/my_designs/starter.scad` into the directory. Feel free to rename _starter.scad_ to something more descriptive.
 - You'll be working entirely in your copy of the starter file.
-- The first line should be __include <boardgame_insert_toolkit_lib.4.scad>;__ and the last should be __Make(data);__ All of your 'code' goes in-between.
+- The first line of your `.scad` file should include that most recent full-version library filename, for example __include <boardgame_insert_toolkit_lib.4.0.8.scad>;__ Do not include the development file `boardgame_insert_toolkit_lib.4.scad` in your own designs. The last line should be __Make(data);__ All of your 'code' goes in-between.
 - Open your new scad file in your favorite text editor and also in Openscad.
 - In Openscad, set "Automatic Reload and Preview" _on_ in the Design menu. Now openscad will update the display whenever you save the scad file in the text editor.
 - Measure, build, measure again.
@@ -556,9 +557,10 @@ Value is expected to be a number, and determines the number of characters above 
 ## Repository structure
 
 - Default branch: `master`
-- Library file: `release/lib/boardgame_insert_toolkit_lib.4.scad`
+- Development library file: `release/lib/boardgame_insert_toolkit_lib.4.scad`
+- Shipped version-locked library files: `release/lib/boardgame_insert_toolkit_lib.<version>.scad`
 - Design files are organized by publisher: `release/<publisher>/<game>.scad`
-- Each design file should start with `include <../lib/boardgame_insert_toolkit_lib.4.scad>;`
+- Shipped design files should include a full-version library filename, for example `include <../lib/boardgame_insert_toolkit_lib.4.0.8.scad>;`
 - Use `release/my_designs/starter.scad` as a template for new designs
 - Tests live in `tests/`
 
@@ -568,7 +570,17 @@ To contribute a design, fork this repo, add your `.scad` file to the appropriate
 
 ## Working on the library itself
 
-After cloning, run `./scripts/install-hooks.sh` once to enable the version-stamping pre-commit hook. The hook updates `VERSION` in `release/lib/boardgame_insert_toolkit_lib.4.scad` to `4.0.<N>` on every commit, where `<N>` is the number of commits since the `v4.0.0` baseline tag (so each commit auto-bumps the patch number — no manual version bumps).
+After cloning, run `./scripts/install-hooks.sh` once to enable the version-stamping pre-commit hook. The hook increments the patch version by default when the development library has changed since the current full-version file. For user-facing feature releases, commit with `BIT_VERSION_BUMP=minor` so the minor version increments instead.
+
+Version policy:
+- Use a patch release for bug fixes and internal changes with no user-facing impact.
+- Use a minor release for user-facing features.
+- Keep `release/lib/boardgame_insert_toolkit_lib.4.scad` as the moving development file.
+- Ship immutable full-version files beside it, such as `release/lib/boardgame_insert_toolkit_lib.4.0.8.scad`.
+
+Before shipping a release, run `./scripts/package-release.sh --patch` for a patch release or `./scripts/package-release.sh --minor` for a minor release. The script stamps the development library, writes the full-version copy beside it in `release/lib/`, updates shipped starter/example includes to that immutable filename, and smoke-compiles the shipped entry files against the versioned library. Re-running the script is idempotent when the current library already matches its full-version file.
+
+The test suite should continue to include `release/lib/boardgame_insert_toolkit_lib.4.scad`, not a full-version copy. That keeps regression tests on the current development surface while shipped designs stay locked to the library version they were created against.
 
 ## Reporting bugs
 

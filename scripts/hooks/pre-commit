@@ -1,34 +1,29 @@
 #!/usr/bin/env bash
-# Stamp VERSION into the v4 lib based on commit count since the v4.0.0 tag.
-# version = "4.0.<N>" where N = (commits since v4.0.0) + 1, accounting for
-# the in-progress commit that hasn't landed yet.
+# Stamp VERSION into the v4 lib.
+#
+# Default behavior increments patch. Set BIT_VERSION_BUMP=minor for
+# user-facing feature releases.
 #
 # Activate by running ./scripts/install-hooks.sh once per clone (sets
 # git config core.hooksPath = scripts/hooks).
 set -e
 
 LIB="release/lib/boardgame_insert_toolkit_lib.4.scad"
-BASELINE="v4.0.0"
+BUMP="${BIT_VERSION_BUMP:-patch}"
+
+. "$(git rev-parse --show-toplevel)/scripts/version-common.sh"
 
 # Skip silently if the lib file isn't present (rebase, partial checkout, etc).
 [ -f "$LIB" ] || exit 0
 
-# Skip silently if the baseline tag is missing — operator may be on an older
-# branch or doing surgery; don't block the commit.
-git rev-parse "$BASELINE" >/dev/null 2>&1 || {
-    echo "pre-commit: tag $BASELINE not found, skipping VERSION stamp" >&2
-    exit 0
-}
+CURRENT_VERSION="$(bit_current_version "$LIB")"
+if bit_versioned_lib_matches "$CURRENT_VERSION" "$LIB"; then
+    NEW_VERSION="$CURRENT_VERSION"
+else
+    NEW_VERSION="$(bit_next_version "$BUMP" "$CURRENT_VERSION")"
+fi
 
-COUNT=$(git rev-list --count "${BASELINE}..HEAD" 2>/dev/null || echo 0)
-NEW_PATCH=$((COUNT + 1))
-NEW_VERSION="4.0.${NEW_PATCH}"
-
-# Idempotent rewrite: -i.bak works on both GNU and BSD sed; the .bak file is
-# removed afterward.
-sed -i.bak "s/^VERSION = \"[^\"]*\";/VERSION = \"${NEW_VERSION}\";/" "$LIB"
-sed -i.bak "s|^ \* Version: .*| * Version: ${NEW_VERSION}|" "$LIB"
-rm -f "${LIB}.bak"
+bit_stamp_version "$NEW_VERSION" "$LIB"
 
 # Stage the (possibly no-op) version edit so it rides along with the commit.
 git add "$LIB"

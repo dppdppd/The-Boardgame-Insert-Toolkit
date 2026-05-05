@@ -47,7 +47,7 @@ data = [
         ],
     ],
 
-    // Box with no explicit CHAMFER_N — exercises the default (0.5 surface mm)
+    // Box with no explicit CHAMFER_N — exercises the default (0.6 surface mm)
     [ OBJECT_BOX,
         [ NAME, "default chamfer" ],
         [ BOX_SIZE_XYZ, [70, 50, 25] ],
@@ -104,7 +104,7 @@ data = [
         ],
     ],
 
-    // CHAMFER_N = 1.0 — visible chamfer, 2× the default (0.5).
+    // CHAMFER_N = 1.0 — visible chamfer larger than the default.
     [ OBJECT_BOX,
         [ NAME, "chamfer 1.0" ],
         [ BOX_SIZE_XYZ, [70, 50, 25] ],

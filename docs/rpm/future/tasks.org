@@ -2,3 +2,39 @@
 #+TODO: TODO IN-PROGRESS BLOCKED | DONE
 
 * v4 Maintenance
+** IN-PROGRESS Add physical validation for fit and printability [[file:2026-05-05-physical-validation.md]]
+   :PROPERTIES:
+   :ID: physical-validation
+   :END:
+** TODO Add cutout physical validation [[file:2026-05-05-cutout-physical-validation.md]]
+   :PROPERTIES:
+   :ID: cutout-physical-validation
+   :END:
+** TODO Add detent physical validation [[file:2026-05-05-detent-physical-validation.md]]
+   :PROPERTIES:
+   :ID: detent-physical-validation
+   :END:
+** TODO Add lid fit physical validation [[file:2026-05-05-lid-fit-physical-validation.md]]
+   :PROPERTIES:
+   :ID: lid-fit-physical-validation
+   :END:
+** TODO Add rotated and sheared footprint physical validation [[file:2026-05-05-rotated-sheared-footprint-validation.md]]
+   :PROPERTIES:
+   :ID: rotated-sheared-footprint-validation
+   :END:
+** TODO Decide on a separate physical validation enable flag [[file:2026-05-05-validation-enable-flag.md]]
+   :PROPERTIES:
+   :ID: validation-enable-flag
+   :END:
+** TODO Improve divider integration with boxes and generated layouts [[file:2026-05-05-better-divider-integration.md]]
+   :PROPERTIES:
+   :ID: better-divider-integration
+   :END:
+** TODO Resolve known chamfer gaps [[file:2026-05-05-known-chamfer-gaps.md]]
+   :PROPERTIES:
+   :ID: known-chamfer-gaps
+   :END:
+** TODO Add subcomponents for nesting features inside features [[file:2026-05-05-subcomponents-nesting-features.md]]
+   :PROPERTIES:
+   :ID: subcomponents-nesting-features
+   :END:

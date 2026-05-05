@@ -58,7 +58,7 @@ Tests live in `tests/v4/scad/`; v3 baseline in `tests/v3-baseline/`.
 | `release/my_designs/` | User projects, starter, examples |
 | `tests/v4/scad/test_*.scad` | 53 v4 test files |
 | `tests/v3-baseline/` | v3 regression baseline (read-only) |
-| `scripts/hooks/pre-commit` | Auto-stamps `VERSION = "4.0.<N>"` (N = commits since `v4.0.0` tag) |
+| `scripts/hooks/pre-commit` | Stamps `VERSION`; patch by default, `BIT_VERSION_BUMP=minor` for feature releases |
 | `scripts/install-hooks.sh` | One-time per clone: `git config core.hooksPath scripts/hooks` |
 
 > Full file conventions table and test template: [docs/guidance/RENDERING.md](docs/guidance/RENDERING.md)
@@ -76,7 +76,7 @@ The visual editor (BGSD — Board Game Storage Designer) has been split into its
 ## Key Design Decisions
 
 - **Two-phase rendering**: STL export (slow, CGAL) then PNG views (fast, import STL) — separated for efficiency
-- **Pre-commit version stamping**: the `scripts/hooks/pre-commit` hook mutates the lib and `git add`s it from inside the hook so the bump rides along in the commit being made. Pre-push wouldn't work for new commits — git determines the push spec before the hook runs, so a hook-created commit wouldn't be included in the current push.
+- **Pre-commit version stamping**: the `scripts/hooks/pre-commit` hook mutates the lib and `git add`s it from inside the hook so the version stamp rides along in the commit being made. Patch is the default bump for bug fixes/internal changes; set `BIT_VERSION_BUMP=minor` for user-facing feature releases. Pre-push wouldn't work for new commits — git determines the push spec before the hook runs, so a hook-created commit wouldn't be included in the current push.
 
 ## Library Refactor Workflow
 

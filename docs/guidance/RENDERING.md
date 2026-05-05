@@ -42,6 +42,8 @@ All use `--projection=ortho --view=edges --autocenter --viewall`:
 - `tests/run_tests.sh` — runs all tests from `tests/v4/scad/`, generates 7 PNG views per test
 - Each test includes the lib via symlink: `include <boardgame_insert_toolkit_lib.4.scad>;`
 
+Tests should continue targeting the moving development library file, not a full-version shipped copy. Version-locked release files are checked by `scripts/package-release.sh` through a packaged starter smoke compile; the regression suite stays focused on the current v4 development surface.
+
 ### Regression Baseline: `tests/v3-baseline/`
 
 - `tests/v3-baseline/scad/` — 53 v3-format test files + v3 lib files (self-contained, renderable)
