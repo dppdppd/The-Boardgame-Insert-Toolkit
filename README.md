@@ -277,7 +277,7 @@ As of v2.09, all lid parameters are specified in a BOX_LID container. This makes
 #### `LID_TYPE`
 Value is expected to be one of `LID_CAP`, `LID_INSET`, or `LID_SLIDING`. If omitted, BIT preserves the legacy behavior: cap lids by default, or inset lids when `LID_INSET_B` or `BOX_STACKABLE_B` is true.
 
-`LID_SLIDING` creates a sliding panel and adds side rails plus a stop to the box. The rails use a printable groove with a horizontal bottom and 45-degree top, and the lid edge has the matching bevel. The groove extends halfway into the wall so the lid rests on a wall shelf under the wedge. The slide opening has a top-open lead-in rather than a covered slot. Patterned sliding lids include a perimeter frame for rigidity, clipped to the same wedge edges and chamfered corners as solid sliding lids. Sliding lids also include a 45-degree friction detent on the top of the opening-side wall with a matching groove in the underside of the lid, sized from the global detent settings. The sliding lid can still use the normal solid, pattern, and label parameters.
+`LID_SLIDING` creates a sliding panel and adds side rails plus a stop to the box. The rails use a printable groove with a horizontal bottom and 45-degree top, and the lid edge has the matching bevel. The groove extends halfway into the wall so the lid rests on a wall shelf under the wedge. The slide opening has a top-open lead-in rather than a covered slot. Patterned sliding lids include a perimeter frame for rigidity, clipped to the same wedge edges and chamfered corners as solid sliding lids. Sliding lids also include a right-triangle locking detent on the top of the opening-side wall with a matching groove in the underside of the lid. The detent stays on the flat rail shelf after the chamfer, spans that flat width minus `G_TOLERANCE` on both sides, uses `G_DETENT_THICKNESS` for protrusion height, and orients the vertical face to resist the lid sliding back out. Detached sliding lids are rotated 180 degrees for printing so the wedge edges and detent groove face upward. `G_LID_THICKNESS` controls sliding panel and rail height; when omitted, it follows the box wall thickness. The sliding lid can still use the normal solid, pattern, and label parameters.
 e.g. `[ LID_TYPE, LID_SLIDING ]`
 
 #### `LID_SLIDE_SIDE`
@@ -345,7 +345,7 @@ Value is expected to be a number, and determines the thickness of the lines in t
 Value is expected to be a number, and determines the spacing of the lines in the striped grid behind the label.  Default is 1.0 mm
 
 #### `LID_HEIGHT`
-Value is expected to be a number, and determines how deep cap and inset lid walls are. Defaults are 2mm for inset lids and 4mm for cap lids. Ignored for sliding lids; sliding groove height is the lid thickness, with the top of the 45-degree wall forming the top of the groove.
+Value is expected to be a number, and determines how deep cap and inset lid walls are. Defaults are 2mm for inset lids and 4mm for cap lids. Ignored for sliding lids; sliding panel and groove height are controlled by `G_LID_THICKNESS`, with the top of the 45-degree wall forming the top of the groove.
 
 #### `LID_CUTOUT_SIDES_4B`
 Value is expected to be an array of 4 bools, and determines whether finger cutouts are to be added to the lid. This allows the lid to be used as a card tray during play. The values represent [front, back, left, right ].  
@@ -404,7 +404,7 @@ Value is expected to be an array of 4 bools, and determines whether finger cutou
 e.g. `[ FTR_CUTOUT_SIDES_4B, [ t, t, f, f ] ]`
 
 #### `FTR_CUTOUT_HEIGHT_PCT`
-Value is expected to be an float between 0 and 100, and determines what percent of the box height is removed for finger cutouts, starting from the top.  The default is 100. 
+Value is expected to be an float between 0 and 100, and determines what percent of the box height is removed for finger cutouts, starting from the top.  At 100, side finger cutouts pass through the floor instead of leaving a bottom skin.  The default is 100.
 e.g. `[ FTR_CUTOUT_HEIGHT_PCT, 100 ]`
 
 #### `FTR_CUTOUT_DEPTH_PCT`
@@ -574,7 +574,7 @@ Value is expected to be a number, and determines the number of characters above 
 
 ## Submitting a design
 
-To contribute a design, fork this repo, add your `.scad` file to the appropriate publisher folder under `release/` (e.g. `release/my_designs/MyGame.scad`), and open a pull request against the `master` branch. If your publisher doesn't have a folder yet, create one.
+To contribute a design, fork this repo, add your `.scad` file to the appropriate publisher folder under `release/` (for example, the `release/my_designs/` folder), and open a pull request against the `master` branch. If your publisher doesn't have a folder yet, create one.
 
 ## Working on the library itself
 
@@ -586,7 +586,7 @@ Version policy:
 - Keep `release/lib/boardgame_insert_toolkit_lib.4.scad` as the moving development file.
 - Ship immutable full-version files beside it, such as `release/lib/boardgame_insert_toolkit_lib.4.0.8.scad`.
 
-Before shipping a release, run `./scripts/package-release.sh --patch` for a patch release or `./scripts/package-release.sh --minor` for a minor release. The script stamps the development library, writes the full-version copy beside it in `release/lib/`, updates shipped starter/example includes to that immutable filename, and smoke-compiles the shipped entry files against the versioned library. Re-running the script is idempotent when the current library already matches its full-version file.
+Before shipping a release, run `./scripts/package-release.sh` with `--patch` for a patch release or with `--minor` for a minor release. The script stamps the development library, writes the full-version copy beside it in `release/lib/`, updates shipped starter/example includes to that immutable filename, and smoke-compiles the shipped entry files against the versioned library. Re-running the script is idempotent when the current library already matches its full-version file.
 
 The test suite should continue to include `release/lib/boardgame_insert_toolkit_lib.4.scad`, not a full-version copy. That keeps regression tests on the current development surface while shipped designs stay locked to the library version they were created against.
 

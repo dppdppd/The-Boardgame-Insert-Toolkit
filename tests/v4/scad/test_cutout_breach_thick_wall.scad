@@ -1,5 +1,5 @@
 // Regression: finger cutout must breach the outer wall when BOX_WALL_THICKNESS
-// is set per-box (overriding the global default $g_wall_thickness=1.5).
+// is set per-box (overriding the global default $g_wall_thickness=2.0).
 //
 // Bug history: MakeSideCutouts used $g_wall_thickness for the margin-side
 // slot, so a wall of e.g. 3mm left a sliver of material at the outer surface
@@ -47,7 +47,7 @@ data = [
         ],
     ],
 
-    // Box 3 — default wall (1.5mm). Common case must still breach (no
+    // Box 3 — default wall (2.0mm). Common case must still breach (no
     // regression on the path that already worked).
     [ OBJECT_BOX,
         [ NAME, "default-w" ],

@@ -2,7 +2,7 @@
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 inch = 25.4;
-wall = 1.5;
+wall = 2;
 
 // Standard poker cards are 2.5" x 3.5"; boxed decks are larger.
 poker_pack_xyz = [ 2.625 * inch, 3.625 * inch, 0.75 * inch ];

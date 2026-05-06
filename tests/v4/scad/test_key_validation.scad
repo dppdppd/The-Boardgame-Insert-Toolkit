@@ -79,7 +79,7 @@ data = [
         ],
         [ BOX_LID,
             [ LID_FIT_UNDER_B, true ],
-            // default cap lid: 4mm wall + 1.5mm thickness = 5.5mm > 4.5mm interior
+            // default cap lid: 4mm wall + 2mm thickness = 6mm > 4mm interior
         ],
     ],
 ];

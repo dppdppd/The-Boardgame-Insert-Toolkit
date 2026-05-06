@@ -34,3 +34,20 @@ Add validation that catches designs which compile but are physically invalid, fr
 ## Estimate
 
 Large. Likely best split into validation framework, box/feature bounds checks, then printability thresholds.
+
+## Worker Result
+
+Summary: Verified the parent `physical-validation` item is complete as an umbrella task. The current v4 library includes the first physical validation slice for printable wall/detail thresholds, patterned lid detail/frame thresholds, too-tall compartments, unrotated/unsheared feature footprint bounds, unrotated/unsheared feature footprint overlap, and divider thickness. The remaining validation scope is already split into dedicated follow-up backlog items for cutouts, detents, lid fit, rotated/sheared footprints, and the validation enable flag.
+
+Files changed:
+- `docs/rpm/future/tasks.org`
+- `docs/rpm/future/2026-05-05-physical-validation.md`
+
+Verification run:
+- `./tests/run_tests.sh --csg-only test_physical_validation` - passed.
+- `openscad -o /tmp/bit_physical_validation_check.csg tests/v4/scad/test_physical_validation.scad` - emitted the expected physical validation messages for wall thickness, lid pattern thickness, lid frame width, too-tall component, out-of-bounds footprint, overlapping components, and divider thickness.
+- `./tests/run_tests.sh --csg-only` - 60 passed, 0 failed, 0 warnings.
+
+Remaining risks or follow-ups:
+- No further implementation is needed under this parent item.
+- The remaining physical validation work should continue through `cutout-physical-validation`, `detent-physical-validation`, `lid-fit-physical-validation`, `rotated-sheared-footprint-validation`, and `validation-enable-flag`.
