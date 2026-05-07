@@ -165,10 +165,10 @@ fi
 
 echo "OK"
 
-warning_count=$(grep -Eci "WARNING|BIT:" "$LOG_FILE" || true)
+warning_count=$(grep -Eci "WARNING|BGSD_(WARNING|ERROR|INFO):|BIT:" "$LOG_FILE" || true)
 if [[ "$warning_count" -gt 0 ]]; then
     echo "Warnings/messages ($warning_count):"
-    grep -Ei "WARNING|BIT:" "$LOG_FILE" | head -20 | sed 's/^/  /'
+    grep -Ei "WARNING|BGSD_(WARNING|ERROR|INFO):|BIT:" "$LOG_FILE" | head -20 | sed 's/^/  /'
 fi
 
 if [[ "$RENDER" != true ]]; then
@@ -244,10 +244,10 @@ for view_name in "${VIEW_LIST[@]}"; do
     echo "$png_file"
 done
 
-final_warning_count=$(grep -Eci "WARNING|BIT:" "$LOG_FILE" || true)
+final_warning_count=$(grep -Eci "WARNING|BGSD_(WARNING|ERROR|INFO):|BIT:" "$LOG_FILE" || true)
 if [[ "$final_warning_count" -gt "$warning_count" ]]; then
     echo "Additional warnings/messages after STL export or render ($((final_warning_count - warning_count))):"
-    grep -Ei "WARNING|BIT:" "$LOG_FILE" | tail -20 | sed 's/^/  /'
+    grep -Ei "WARNING|BGSD_(WARNING|ERROR|INFO):|BIT:" "$LOG_FILE" | tail -20 | sed 's/^/  /'
 fi
 
 echo "STL: $STL_FILE"

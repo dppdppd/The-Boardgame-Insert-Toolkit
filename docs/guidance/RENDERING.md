@@ -95,7 +95,7 @@ scripts/validate-design.sh path/to/design.scad
 scripts/validate-design.sh --render --views iso,top path/to/design.scad
 ```
 
-Output goes to `tests/v4/renders/generated/` by default. The script fails on OpenSCAD errors, reports `BIT:` validation messages, and can export STL plus PNG views when `--render` is set.
+Output goes to `tests/v4/renders/generated/` by default. The script fails on OpenSCAD errors, reports structured `BGSD_WARNING:`/`BGSD_INFO:` validation messages, and can export STL plus PNG views when `--render` is set.
 
 ## File Conventions
 

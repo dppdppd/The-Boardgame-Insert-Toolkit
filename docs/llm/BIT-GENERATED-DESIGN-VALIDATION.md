@@ -8,7 +8,7 @@ Use this workflow for arbitrary user `.scad` files generated with BIT. Library r
 scripts/validate-design.sh path/to/design.scad
 ```
 
-This writes a CSG compile artifact and log under `tests/v4/renders/generated/` by default. It fails on OpenSCAD errors and reports `BIT:` messages and warnings.
+This writes a CSG compile artifact and log under `tests/v4/renders/generated/` by default. It fails on OpenSCAD errors and reports structured `BGSD_WARNING:`/`BGSD_INFO:` validation messages and native OpenSCAD warnings.
 
 ## Compile And Render
 
@@ -30,7 +30,7 @@ scripts/validate-design.sh --csg-timeout 90 --stl-timeout 900 path/to/design.sca
 
 - OpenSCAD `ERROR` lines mean the file is not ready.
 - `WARNING` lines are OpenSCAD warnings. They may indicate manifold or geometry repair risks even when OpenSCAD exits successfully.
-- `BIT:` lines are validation messages from BIT. Treat physical validation messages as design risks even when OpenSCAD exits successfully.
+- `BGSD_WARNING:` lines are validation messages from BIT. Treat physical validation messages as design risks even when OpenSCAD exits successfully.
 - Empty CSG or STL output means the design did not produce usable geometry.
 - A passing compile does not prove physical fit. Compare the design against the measurement checklist.
 

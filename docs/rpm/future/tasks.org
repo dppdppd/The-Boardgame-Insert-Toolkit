@@ -16,19 +16,22 @@
    :PROPERTIES:
    :ID: detent-physical-validation
    :END:
-** TODO Add lid fit physical validation [[file:2026-05-05-lid-fit-physical-validation.md]]
+** DONE Add lid fit physical validation [[file:2026-05-05-lid-fit-physical-validation.md]]
+   CLOSED: [2026-05-06]
    :PROPERTIES:
    :ID: lid-fit-physical-validation
    :END:
-** TODO Add rotated and sheared footprint physical validation [[file:2026-05-05-rotated-sheared-footprint-validation.md]]
+** DONE Add rotated and sheared footprint physical validation [[file:2026-05-05-rotated-sheared-footprint-validation.md]]
+   CLOSED: [2026-05-06]
    :PROPERTIES:
    :ID: rotated-sheared-footprint-validation
    :END:
-** TODO Decide on a separate physical validation enable flag [[file:2026-05-05-validation-enable-flag.md]]
+** DONE Decide on a separate physical validation enable flag [[file:2026-05-05-validation-enable-flag.md]]
+   CLOSED: [2026-05-06]
    :PROPERTIES:
    :ID: validation-enable-flag
    :END:
-** TODO Improve divider integration with boxes and generated layouts [[file:2026-05-05-better-divider-integration.md]]
+** IN-PROGRESS Improve divider integration with boxes and generated layouts [[file:2026-05-05-better-divider-integration.md]]
    :PROPERTIES:
    :ID: better-divider-integration
    :END:
@@ -44,11 +47,13 @@
    :PROPERTIES:
    :ID: subcomponents-nesting-features
    :END:
-** TODO Fix finger cutouts not cutting through sliding lid rails [[file:2026-05-05-sliding-lid-finger-cutouts-rails.md]]
+** DONE Fix finger cutouts not cutting through sliding lid rails [[file:2026-05-05-sliding-lid-finger-cutouts-rails.md]]
+   CLOSED: [2026-05-06]
    :PROPERTIES:
    :ID: sliding-lid-finger-cutouts-rails
    :END:
-** TODO Fix finger cutout top profile looking like two pills [[file:2026-05-05-finger-cutout-top-profile.md]]
+** DONE Fix finger cutout top profile looking like two pills [[file:2026-05-05-finger-cutout-top-profile.md]]
+   CLOSED: [2026-05-06]
    :PROPERTIES:
    :ID: finger-cutout-top-profile
    :END:

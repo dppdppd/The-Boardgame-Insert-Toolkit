@@ -22,3 +22,19 @@ Extend feature bounds and overlap validation to components with rotation and she
 ## Estimate
 
 Medium to large. Rotated AABB validation is likely straightforward; shear requires closer alignment with the rendering pipeline.
+
+## 2026-05-06 Status
+
+Moved to `IN-PROGRESS` after a read-only preparation pass and the lid-fit validation closure. Implementation should add conservative transformed AABB helpers for `ROTATION` and `FTR_SHEAR`, wire them into component bounds and overlap validation, and keep cutout-local physical validation gated to the existing unrotated/unsheared path.
+
+## Completion Note
+
+Closed after adding conservative transformed AABB validation for `ROTATION` and `FTR_SHEAR`. Component bounds and overlap checks now use the transformed footprint; cutout-local validation remains on the existing unrotated/unsheared support path.
+
+Regression coverage:
+- `tests/v4/scad/test_rotated_sheared_physical_validation.scad`
+
+Verification:
+- Direct `openscad -o /tmp/bit_rotated_sheared_validation.csg tests/v4/scad/test_rotated_sheared_physical_validation.scad` emitted only the expected transformed bounds and overlap warnings.
+- `./tests/run_tests.sh --csg-only test_rotated_sheared_physical_validation test_position_rotation test_shear`
+- Full CSG suite covered in chunks: 63 test files passed, 0 failed, 0 warnings.

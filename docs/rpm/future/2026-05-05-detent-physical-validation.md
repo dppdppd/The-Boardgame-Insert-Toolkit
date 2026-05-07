@@ -50,3 +50,7 @@ The backlog entry remains `IN-PROGRESS` because this does not attempt full colli
 - Full collision validation against cutouts, rail grooves, and corner geometry remains to be designed.
 - Legacy cap/inset detents were read for context but were not changed in this first pass.
 - The checks intentionally skip disabled detents (`G_DETENT_THICKNESS <= 0`) and non-numeric detent globals to avoid noisy physical false positives beyond existing type validation behavior.
+
+## 2026-05-06 Audit Note
+
+Keep this task `IN-PROGRESS`. The `v4.1.0` sliding-lid work added right-triangle detent geometry, matching lid cavities, flat-shelf constraints, and limited cutout collision validation, but the original task still includes broader detent collision/groove/corner coverage and the legacy cap/inset detent path.

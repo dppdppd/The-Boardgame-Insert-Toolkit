@@ -67,7 +67,7 @@ For a full response, produce:
 
 If validation fails:
 
-- Read the OpenSCAD and `BIT:` messages.
+- Read the OpenSCAD and structured `BGSD_WARNING:`/`BGSD_INFO:` messages.
 - Fix unknown keys by checking `docs/guidance/BIT-PARAMETERS.md`.
 - Fix impossible geometry by increasing `BOX_SIZE_XYZ`, reducing compartment counts, or increasing wall/clearance values.
 - Re-run validation.

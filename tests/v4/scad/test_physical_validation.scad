@@ -166,6 +166,62 @@ detent_collapsed_data = [
     ],
 ];
 
+cap_lid_fit_data = [
+    [ G_PRINT_LID_B, false ],
+    [ G_PRINT_BOX_B, false ],
+    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_TOLERANCE, 0.6 ],
+    [ OBJECT_BOX,
+        [ NAME, "collapsed cap lid fit" ],
+        [ BOX_SIZE_XYZ, [20, 18, 1.4] ],
+        [ BOX_WALL_THICKNESS, 1.0 ],
+        [ BOX_LID,
+            [ LID_TYPE, LID_CAP ],
+            [ LID_HEIGHT, 0.2 ],
+            [ LID_FRAME_WIDTH, 9.5 ],
+        ],
+    ],
+];
+
+inset_lid_fit_data = [
+    [ G_PRINT_LID_B, false ],
+    [ G_PRINT_BOX_B, false ],
+    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_TOLERANCE, 0.1 ],
+    [ OBJECT_BOX,
+        [ NAME, "collapsed inset lid fit" ],
+        [ BOX_SIZE_XYZ, [3.5, 3.4, 5] ],
+        [ BOX_WALL_THICKNESS, 1.0 ],
+        [ BOX_LID,
+            [ LID_TYPE, LID_INSET ],
+            [ LID_HEIGHT, 0 ],
+            [ LID_SOLID_B, true ],
+        ],
+    ],
+];
+
+sliding_lid_fit_data = [
+    [ G_PRINT_LID_B, false ],
+    [ G_PRINT_BOX_B, false ],
+    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_LID_THICKNESS, 0.8 ],
+    [ G_TOLERANCE, 0.5 ],
+    [ G_DETENT_THICKNESS, 0 ],
+    [ OBJECT_BOX,
+        [ NAME, "collapsed sliding lid fit" ],
+        [ BOX_SIZE_XYZ, [3, 3, 4] ],
+        [ BOX_WALL_THICKNESS, 1.2 ],
+        [ BOX_LID,
+            [ LID_TYPE, LID_SLIDING ],
+            [ LID_SLIDE_SIDE, FRONT ],
+            [ LID_SOLID_B, true ],
+        ],
+    ],
+];
+
 Make(data);
 Make(detent_thin_data);
 Make(detent_collapsed_data);
+Make(cap_lid_fit_data);
+Make(inset_lid_fit_data);
+Make(sliding_lid_fit_data);

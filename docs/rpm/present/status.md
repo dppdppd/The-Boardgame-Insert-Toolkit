@@ -2,8 +2,8 @@
 
 ## Project Status
 - **Current phase**: v4 stable — incremental feature work and docs maintenance
-- **Library version**: `4.0.8`
-- **Last updated**: 2026-05-05
+- **Library version**: `4.1.0`
+- **Last updated**: 2026-05-06
 
 ## Completed Work
 - v4 library shipped as the active version
@@ -18,12 +18,16 @@
 - `v4.0.8` published on GitHub with `release/lib/boardgame_insert_toolkit_lib.4.0.8.scad` as the first version-locked release asset.
 - Sliding lids added via `LID_TYPE = LID_SLIDING`, including configurable slide side, printable 45-degree rail/lid wedge, half-wall bearing shelf, top-open slide entry, and opening-side detent.
 - Sliding lid sizing now accounts for rail shelf clearance, `2 * G_TOLERANCE` on each rail side, `G_TOLERANCE` at the stop side, and vertical tolerance above/below the panel.
+- `v4.1.0` published on GitHub with `release/lib/boardgame_insert_toolkit_lib.4.1.0.scad` as the version-locked release asset.
+- Default wall thickness is now `2.0mm`.
+- Sliding lids print right-side-up with a fixed 180-degree print rotation, right-triangle locking detents/grooves, detents constrained to the flat rail shelf after chamfer, and `G_LID_THICKNESS` controlling sliding panel/rail height when set.
+- Side finger cutouts at `FTR_CUTOUT_HEIGHT_PCT = 100` now cut through the floor, and `EXTERIOR` side cutouts can breach sliding lid rail geometry.
 - Patterned non-solid lids support `LID_FRAME_WIDTH` across cap, inset, and sliding lid types; default is wall thickness, and `0` omits the frame.
 - Physical validation first slice added under `G_VALIDATE_KEYS_B`: thin walls/details, component bounds/height, component footprint overlap, and thin divider warnings.
 - LLM-friendly design workflow added via `llms.txt`, `.github/copilot-instructions.md`, `docs/llm/`, a generated-design validation script, and a short README prompt for AI chats.
 
 ## Active Specs
-_None tracked yet._
+- `better-divider-integration`: active planning pass for explicit box divider slots before generated divider layouts.
 
 ## Known Issues
 - `CHAMFER_N` top chamfer for square cavities eats into partition walls in multi-compartment grids (no per-side cap yet)

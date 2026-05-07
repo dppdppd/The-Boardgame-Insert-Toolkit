@@ -1,5 +1,5 @@
 // Test: Key validation catches typos, malformed entries, and wrong value types
-// Expected: renders successfully with BIT: messages in console
+// Expected: renders successfully with BGSD_WARNING messages in console
 // NOTE: type errors here use values that still render (no OpenSCAD WARNINGs)
 //       but are caught by our validation as semantically wrong.
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;

@@ -21,7 +21,7 @@ This OpenSCAD library was designed for quick design and iteration on board game 
 
 **v4** is a streamlined release focused on maintainability:
 - **Smaller codebase** (3,454 lines, down from 4,456 in v3)
-- **Key validation**: typos and unrecognized keys in your data produce helpful `BIT:` messages in the console (set `g_validate_keys_b = false;` to suppress)
+- **Key validation**: typos and unrecognized keys in your data produce structured `BGSD_WARNING:` messages in the console (set `g_validate_keys_b = false;` to suppress)
 - Removed hexagonal box type (`HEXBOX`) — hex-shaped *compartments* (`FTR_SHAPE` = `HEX`/`HEX2`) still work in regular boxes
 - Bug fixes: asymmetric cutouts with `FTR_CUTOUT_HEIGHT_PCT` (#65), label clipping with shear (#69)
 - 14 magic numbers replaced with named constants
