@@ -1,5 +1,5 @@
 // BGSD
-include <../lib/boardgame_insert_toolkit_lib.4.2.0.scad>;
+include <../lib/boardgame_insert_toolkit_lib.4.2.1.scad>;
 // Toolkit that performs all the model generation operations
 // Helper library to simplify creation of single components
 // Also includes some basic lid helpers
