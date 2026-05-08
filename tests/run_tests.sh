@@ -19,7 +19,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 TEST_DIR="$SCRIPT_DIR/v4/scad"
 RENDER_DIR="$SCRIPT_DIR/v4/renders"
 STL_DIR="$SCRIPT_DIR/v4/stl"
-IMGSIZE="800,600"
+IMGSIZE="1600,1200"
 STL_TIMEOUT=900
 VIEW_TIMEOUT=30
 
@@ -47,7 +47,7 @@ usage() {
     echo "  --csg-only        Only check compilation (fast, no STL/PNG)"
     echo "  --views LIST      Comma-separated views to render (default: all)"
     echo "                    Available: top,bottom,front,back,left,right,iso"
-    echo "  --imgsize WxH     Image size (default: 800,600)"
+    echo "  --imgsize WxH     Image size (default: 1600,1200)"
     echo "  --stl-timeout N   STL export timeout in seconds (default: 300)"
     echo "  --view-timeout N  Per-view PNG timeout in seconds (default: 30)"
     echo "  --help            Show this help"
@@ -154,10 +154,10 @@ for f in "${FILES[@]}"; do
     if [[ $csg_exit -eq 124 ]]; then
         has_error=true
         csg_err="TIMEOUT on CSG export"
-    elif echo "$csg_err" | grep -qi "ERROR"; then
+    elif grep -qi "ERROR" <<< "$csg_err"; then
         has_error=true
     fi
-    if echo "$csg_err" | grep -qi "WARNING"; then
+    if grep -qi "WARNING" <<< "$csg_err"; then
         has_warning=true
     fi
 
@@ -174,7 +174,7 @@ WARNING: CSG output nearly empty ($csg_lines lines)"
 
     if $has_error; then
         echo -e "${RED}FAIL${NC} $name — compile error"
-        echo "$csg_err" | head -5 | sed 's/^/  /'
+        awk 'NR <= 5 { print }' <<< "$csg_err" | sed 's/^/  /'
         FAIL=$((FAIL + 1))
         continue
     fi
@@ -231,7 +231,7 @@ WARNING: CSG output nearly empty ($csg_lines lines)"
 
     if $has_warning; then
         echo -e "${YELLOW}WARN${NC} $name (${elapsed}s)"
-        echo "$csg_err" | grep -i "WARNING" | head -3 | sed 's/^/  /'
+        awk 'BEGIN { IGNORECASE = 1 } /WARNING/ { print; if (++n == 3) exit }' <<< "$csg_err" | sed 's/^/  /'
         WARN=$((WARN + 1))
     else
         echo -e "${GREEN}PASS${NC} $name (${elapsed}s)"

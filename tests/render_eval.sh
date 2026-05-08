@@ -12,7 +12,7 @@
 #   --views LIST        Comma-separated: top,bottom,front,back,left,right,iso (default: iso,top)
 #   --camera RX,RY,RZ   Custom camera angle (adds one extra view named "custom")
 #   --cross-section AXIS,POS  Cut the model: x,25 or y,0 or z,10 (renders the cut face)
-#   --imgsize WxH       Image size (default: 800,600)
+#   --imgsize WxH       Image size (default: 1600,1200)
 #   --wireframe         Also render wireframe versions of each view
 #   --outdir DIR        Output directory (default: tests/renders/eval)
 #   --name NAME         Base name for output files (default: derived from input)
@@ -50,7 +50,7 @@ Options:
                           Available: top,bottom,front,back,left,right,iso
   --camera RX,RY,RZ      Add a custom camera angle
   --cross-section AXIS,POS  Cross-section cut (e.g., z,10 cuts at z=10)
-  --imgsize WxH           Image size (default: 800,600)
+  --imgsize WxH           Image size (default: 1600,1200)
   --wireframe             Also render wireframe views
   --outdir DIR            Output directory
   --name NAME             Base name for files

@@ -14,7 +14,7 @@ openscad -o output.stl input.scad
 # PNG from STL (fast, ~1s, finalized + edges overlay)
 echo 'import(stl_file);' > /tmp/render.scad
 xvfb-run -a openscad --render -o output.png \
-  --imgsize=800,600 --autocenter --viewall \
+  --imgsize=1600,1200 --autocenter --viewall \
   --projection=ortho --view=edges \
   --camera=0,0,0,55,0,25,0 \
   -D 'stl_file="/path/to/file.stl"' /tmp/render.scad

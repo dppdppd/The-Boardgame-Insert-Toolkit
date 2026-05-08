@@ -6,6 +6,7 @@ data = [
     [ G_PRINT_BOX_B, false ],
     [ G_ISOLATED_PRINT_BOX, "" ],
     [ G_WALL_THICKNESS, 3 ],
+    [ G_DETENT_THICKNESS, 0.5 ],
     [ OBJECT_BOX,
         [ NAME, "cap default frame" ],
         [ BOX_SIZE_XYZ, [68, 48, 18] ],

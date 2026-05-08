@@ -12,7 +12,8 @@
    :PROPERTIES:
    :ID: cutout-physical-validation
    :END:
-** IN-PROGRESS Add detent physical validation [[file:2026-05-05-detent-physical-validation.md]]
+** DONE Add detent physical validation [[file:2026-05-05-detent-physical-validation.md]]
+   CLOSED: [2026-05-07]
    :PROPERTIES:
    :ID: detent-physical-validation
    :END:

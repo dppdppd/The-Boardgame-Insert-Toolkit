@@ -31,11 +31,12 @@ Implement explicit compartment-local divider rail grooves as an `FTR_DIVIDERS` s
 
 Subgroup keys:
 - `FTR_DIVIDERS` inside `BOX_FEATURE`, like `LABEL`, owns the compartment's divider spec.
-- `DIV_NUM_DIVIDERS`: number of evenly spaced generated divider panels on one axis.
+- `DIV_LAYOUT_BAYS`: number of stored bays along one axis; BIT generates one divider between adjacent bays.
+- `DIV_LAYOUT_BAY_SIZE`: physical bay span along the selected axis, in mm. Use `0` for evenly spaced generated dividers.
 - `DIV_AXIS`: selected divider axis, `X` or `Y`. Defaults to `X`.
-- `DIV_RAILS_B`: when true, generate matching box-side rail grooves. Defaults to true.
+- `DIV_NO_RAILS_B`: when true, suppress matching box-side rail grooves. Defaults to false.
 - Divider slot gap is inferred from `DIV_THICKNESS + G_TOLERANCE`.
-- Optional `DIV_SLOT_DEPTH`: rail projection into the compartment from the side wall; defaults to wall thickness.
+- Optional `DIV_RAIL_SIZE_XYZ`: positive rail dimensions `[thickness, width, height]`; defaults to `[wall_thickness / 2, wall_thickness, compartment_height]`.
 - `DIV_OUTPUT_ONLY_B`: when true, suppresses the parent box/lid and outputs only generated fitted divider panels from output-only subgroups.
 - `G_PRINT_DIVIDERS`: global selector for generated divider panels. `true` prints all, `false` prints none, string/list prints matching divider/component/box names.
 - `G_PRINT_DIVIDERS_ONLY_B`: global exclusive mode; when true, suppresses boxes/lids and prints only the selected generated divider panels.
@@ -62,3 +63,60 @@ Out of scope for this slice:
 Implementation should add validation, a focused render test, and preserve the existing `OBJECT_DIVIDERS` path.
 
 First implementation note: the initial worker patch used negative floor slits. That was rejected; the accepted direction is positive side-wall rails that create removable divider grooves while leaving the compartment floor intact.
+
+## Next Executable Plan
+
+The current public layout model uses a single input path:
+
+1. `DIV_LAYOUT_BAYS` is the number of bays along `DIV_AXIS`.
+2. `DIV_LAYOUT_BAY_SIZE > 0` places dividers at accumulated physical bay boundaries, centered in the compartment. Required span is `DIV_LAYOUT_BAYS * DIV_LAYOUT_BAY_SIZE + (DIV_LAYOUT_BAYS - 1) * DIV_THICKNESS`.
+3. `DIV_LAYOUT_BAY_SIZE == 0` evenly spaces `DIV_LAYOUT_BAYS - 1` generated dividers across the compartment.
+4. `DIV_AXIS`, `DIV_NO_RAILS_B`, `DIV_RAIL_SIZE_XYZ`, `G_PRINT_DIVIDERS`, `G_PRINT_DIVIDERS_ONLY_B`, and `DIV_OUTPUT_ONLY_B` all consume the same generated centerline list after layout resolution.
+5. Fitted panel dimensions come from the matching `BOX_FEATURE` compartment. `DIV_FRAME_SIZE_XY` does not override fitted generated panel extents; `DIV_FRAME_*` controls only optional frame openings.
+
+## Worker Result - 2026-05-07 - 019e0509-8157-7091-9615-975af4fcb917
+
+Summary: Plan-only result. I inspected `tasks.org`, this detail file, the current `FTR_DIVIDERS` implementation, divider validation, generated panel code, divider tests, and public parameter docs. The first slice is already implemented in the current tree. The remaining generated card/deck layout behavior is ambiguous because the BIT SCAD API currently has no card/deck spec keys to derive from, so I wrote the concrete plan above instead of inventing broad public behavior.
+
+Files changed:
+- `docs/rpm/future/2026-05-05-better-divider-integration.md`
+
+Verification:
+- Read implementation regions around divider accessors, validation, `MakeDividerSlotRails()`, and `MakeFeatureDividers()`.
+- Read focused tests `test_divider_slots.scad`, `test_divider_slots_validation.scad`, `test_divider_compartment_variations.scad`, and `test_divider_print_controls.scad`.
+- No CSG/render tests run because no library or test code changed.
+
+Remaining risks/follow-ups:
+- Product decision needed on new public layout keys before coding automatic card/deck divider layouts.
+- Tab/lid clearance validation should remain a separate narrow slice after layout semantics are settled.
+
+## 2026-05-07 Review Note
+
+Approved the `019e0509-8157-7091-9615-975af4fcb917` plan-written result. The proposed slice is concrete enough to implement after product confirmation: add layout keys, derive divider centerlines from compartment span, document fitted-panel inheritance, and defer tab/lid clearance validation to a separate slice.
+
+## Implementation Result - 2026-05-07 - DIV_LAYOUT keys
+
+Summary: Implemented the approved layout-key slice. `FTR_DIVIDERS` now accepts `DIV_LAYOUT_BAYS` and `DIV_LAYOUT_BAY_SIZE`. The old direct-count and layout-gap keys were removed from the active API. The layout mode derives divider centerlines from the selected compartment axis and requested bay spans, then feeds the same rail, preview, render-layout, selector, and fitted-panel paths. `DIV_LAYOUT_BAY_SIZE` set to `0` evenly spaces the generated dividers. Rail controls now use explicit `DIV_NO_RAILS_B` to suppress rails and `DIV_RAIL_SIZE_XYZ` for rail `[thickness, width, height]`.
+
+Files changed:
+- `release/lib/boardgame_insert_toolkit_lib.4.scad`
+- `docs/guidance/BIT-PARAMETERS.md`
+- `tests/v4/scad/test_divider_layouts.scad`
+- `tests/v4/scad/test_divider_slots.scad`
+- `tests/v4/scad/test_divider_slots_validation.scad`
+- `tests/v4/scad/test_divider_compartment_variations.scad`
+- `tests/v4/scad/test_divider_print_controls.scad`
+- `tests/v4/scad/test_divider_print_none.scad`
+- `tests/v4/scad/test_divider_box_seven_all.scad`
+- `docs/rpm/future/2026-05-05-better-divider-integration.md`
+
+Verification:
+- `./tests/run_tests.sh --csg-only test_divider_layouts test_divider_slots test_divider_slots_validation test_divider_compartment_variations test_divider_print_controls test_divider_print_none test_divider_box_seven_all` - passed, 7 tests, 0 failures, 1 expected warning-classified validation fixture.
+- Rendered changed divider tests and regenerated STL/PNG artifacts: `test_divider_layouts`, `test_divider_slots`, `test_divider_slots_validation`, `test_divider_compartment_variations`, `test_divider_print_controls`, `test_divider_print_none`, and `test_divider_box_seven_all`.
+- `./tests/run_tests.sh --csg-only` - passed, 71 tests, 0 failures, 18 warning-classified tests.
+- `git diff --check` - passed.
+- `rg` over active lib, tests, and docs found no remaining removed divider-count/gap key references.
+
+Remaining risks/follow-ups:
+- Tab/lid clearance validation remains a separate slice.
+- Layout mode covers uniform bays along one selected axis; variable-size bays would need another explicit public API decision.

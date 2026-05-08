@@ -38,6 +38,7 @@ box_data = [
     [ G_PRINT_BOX_B, true ],
     [ G_ISOLATED_PRINT_BOX, "" ],
     [ G_TOLERANCE, tolerance ],
+    [ G_DETENT_THICKNESS, 0.5 ],
     box_object,
 ];
 
@@ -46,6 +47,7 @@ lid_data = [
     [ G_PRINT_BOX_B, false ],
     [ G_ISOLATED_PRINT_BOX, "" ],
     [ G_TOLERANCE, tolerance ],
+    [ G_DETENT_THICKNESS, 0.5 ],
     box_object,
 ];
 

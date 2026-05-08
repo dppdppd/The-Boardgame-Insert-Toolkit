@@ -1,6 +1,126 @@
 // Test: Physical validation messages for fit and printability issues
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
+function __test_all_true( values, i = 0 ) =
+    i >= len( values ) ? true : values[ i ] && __test_all_true( values, i + 1 );
+
+function __test_close( a, b, eps = 0.000001 ) =
+    is_list( a ) ?
+        ( is_list( b ) && len( a ) == len( b ) &&
+          __test_all_true( [ for ( i = [ 0 : len( a ) - 1 ] ) __test_close( a[ i ], b[ i ], eps ) ] ) ) :
+        abs( a - b ) <= eps;
+
+function __test_expected_sliding_detent_aabb(
+    slide_side,
+    rail_side_clearance,
+    detent_width,
+    detent_height,
+    detent_length,
+    opening_side_edge_pos,
+    cross_axis_span,
+    z_min = 0,
+    z_overcut = 0
+) =
+    let( cross_axis_start = max( 0, ( cross_axis_span - detent_length ) / 2 ) )
+    ( slide_side == LEFT || slide_side == RIGHT ) ?
+        [
+            [ opening_side_edge_pos, rail_side_clearance + cross_axis_start, z_min ],
+            [ opening_side_edge_pos + detent_width, rail_side_clearance + cross_axis_start + detent_length, z_min + detent_height + z_overcut ]
+        ] :
+        [
+            [ rail_side_clearance + cross_axis_start, opening_side_edge_pos, z_min ],
+            [ rail_side_clearance + cross_axis_start + detent_length, opening_side_edge_pos + detent_width, z_min + detent_height + z_overcut ]
+        ];
+
+function __test_expected_sliding_detent_groove_aabb(
+    slide_side,
+    rail_side_clearance,
+    detent_width,
+    detent_height,
+    detent_length,
+    opening_side_edge_pos,
+    cross_axis_span,
+    lid_panel_thickness
+) =
+    __test_expected_sliding_detent_aabb(
+        slide_side,
+        rail_side_clearance,
+        detent_width,
+        detent_height,
+        detent_length,
+        opening_side_edge_pos,
+        cross_axis_span,
+        lid_panel_thickness - detent_height,
+        HULL_EPSILON
+    );
+
+test_detent_rail_side_clearance = 3.2;
+test_detent_width = 0.75;
+test_detent_height = 0.5;
+test_detent_length = 12;
+test_detent_cross_axis_span = 44;
+test_detent_lid_panel_thickness = 1.7;
+test_detent_near_edge_pos = 0.15;
+test_detent_far_edge_pos = 52.1;
+
+for ( slide_side = [ FRONT, BACK, LEFT, RIGHT ] )
+{
+    test_detent_opening_side_edge_pos =
+        ( slide_side == FRONT || slide_side == LEFT ) ?
+            test_detent_near_edge_pos :
+            test_detent_far_edge_pos;
+
+    assert(
+        __test_close(
+            __sliding_detent_box_aabb_from_values(
+                slide_side,
+                test_detent_rail_side_clearance,
+                test_detent_width,
+                test_detent_height,
+                test_detent_length,
+                test_detent_opening_side_edge_pos,
+                test_detent_cross_axis_span
+            ),
+            __test_expected_sliding_detent_aabb(
+                slide_side,
+                test_detent_rail_side_clearance,
+                test_detent_width,
+                test_detent_height,
+                test_detent_length,
+                test_detent_opening_side_edge_pos,
+                test_detent_cross_axis_span
+            )
+        ),
+        str( "box sliding detent AABB mismatch for ", slide_side )
+    );
+
+    assert(
+        __test_close(
+            __sliding_detent_lid_groove_aabb_from_values(
+                slide_side,
+                0,
+                test_detent_width,
+                test_detent_height,
+                test_detent_length,
+                test_detent_opening_side_edge_pos,
+                test_detent_cross_axis_span,
+                test_detent_lid_panel_thickness
+            ),
+            __test_expected_sliding_detent_groove_aabb(
+                slide_side,
+                0,
+                test_detent_width,
+                test_detent_height,
+                test_detent_length,
+                test_detent_opening_side_edge_pos,
+                test_detent_cross_axis_span,
+                test_detent_lid_panel_thickness
+            )
+        ),
+        str( "lid sliding detent groove AABB mismatch for ", slide_side )
+    );
+}
+
 data = [
     [ G_PRINT_LID_B, true ],
     [ G_PRINT_BOX_B, false ],
@@ -166,6 +286,227 @@ detent_collapsed_data = [
     ],
 ];
 
+detent_chamfer_collision_data = [
+    [ G_PRINT_LID_B, false ],
+    [ G_PRINT_BOX_B, false ],
+    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_DETENT_THICKNESS, 0.5 ],
+    [ G_DETENT_SPACING, 10 ],
+    [ G_DETENT_DIST_FROM_CORNER, 0.5 ],
+    [ OBJECT_BOX,
+        [ NAME, "sliding detent clipped by chamfer" ],
+        [ BOX_SIZE_XYZ, [24, 20, 8] ],
+        [ BOX_WALL_THICKNESS, 2.0 ],
+        [ CHAMFER_N, 4 ],
+        [ BOX_LID,
+            [ LID_TYPE, LID_SLIDING ],
+            [ LID_SLIDE_SIDE, FRONT ],
+            [ LID_SOLID_B, true ],
+        ],
+    ],
+];
+
+detent_cutout_collision_data = [
+    [ G_PRINT_LID_B, false ],
+    [ G_PRINT_BOX_B, false ],
+    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_LID_THICKNESS, 2.0 ],
+    [ G_DETENT_THICKNESS, 0.5 ],
+    [ G_DETENT_SPACING, 6 ],
+    [ G_DETENT_DIST_FROM_CORNER, 3 ],
+    [ OBJECT_BOX,
+        [ NAME, "sliding detent cut by exterior opening cutout" ],
+        [ BOX_SIZE_XYZ, [40, 30, 10] ],
+        [ BOX_WALL_THICKNESS, 1.2 ],
+        [ BOX_LID,
+            [ LID_TYPE, LID_SLIDING ],
+            [ LID_SLIDE_SIDE, FRONT ],
+            [ LID_SOLID_B, true ],
+        ],
+        [ BOX_FEATURE,
+            [ NAME, "front exterior cutout overlaps detent envelope" ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [20, 10, 8] ],
+            [ POSITION_XY, [9, 0] ],
+            [ FTR_CUTOUT_SIDES_4B, [true, false, false, false] ],
+            [ FTR_CUTOUT_TYPE, EXTERIOR ],
+            [ FTR_CUTOUT_DEPTH_PCT, 60 ],
+        ],
+    ],
+    [ OBJECT_BOX,
+        [ NAME, "sliding detent cutout no cross overlap" ],
+        [ BOX_SIZE_XYZ, [40, 30, 10] ],
+        [ BOX_WALL_THICKNESS, 1.2 ],
+        [ BOX_LID,
+            [ LID_TYPE, LID_SLIDING ],
+            [ LID_SLIDE_SIDE, FRONT ],
+            [ LID_SOLID_B, true ],
+        ],
+        [ BOX_FEATURE,
+            [ NAME, "front exterior cutout away from detent cross span" ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [14, 10, 8] ],
+            [ POSITION_XY, [0, 0] ],
+            [ FTR_CUTOUT_SIDES_4B, [true, false, false, false] ],
+            [ FTR_CUTOUT_TYPE, EXTERIOR ],
+            [ FTR_CUTOUT_DEPTH_PCT, 60 ],
+        ],
+    ],
+    [ OBJECT_BOX,
+        [ NAME, "sliding detent cutout no opening-depth overlap" ],
+        [ BOX_SIZE_XYZ, [40, 30, 10] ],
+        [ BOX_WALL_THICKNESS, 1.2 ],
+        [ BOX_LID,
+            [ LID_TYPE, LID_SLIDING ],
+            [ LID_SLIDE_SIDE, FRONT ],
+            [ LID_SOLID_B, true ],
+        ],
+        [ BOX_FEATURE,
+            [ NAME, "front exterior cutout behind detent depth span" ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [20, 10, 8] ],
+            [ POSITION_XY, [9, 8] ],
+            [ FTR_CUTOUT_SIDES_4B, [true, false, false, false] ],
+            [ FTR_CUTOUT_TYPE, EXTERIOR ],
+            [ FTR_CUTOUT_DEPTH_PCT, 60 ],
+        ],
+    ],
+    [ OBJECT_BOX,
+        [ NAME, "sliding detent interior opening cutout stays quiet" ],
+        [ BOX_SIZE_XYZ, [40, 30, 10] ],
+        [ BOX_WALL_THICKNESS, 1.2 ],
+        [ BOX_LID,
+            [ LID_TYPE, LID_SLIDING ],
+            [ LID_SLIDE_SIDE, FRONT ],
+            [ LID_SOLID_B, true ],
+        ],
+        [ BOX_FEATURE,
+            [ NAME, "front interior cutout overlaps detent envelope only inside" ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [20, 10, 8] ],
+            [ POSITION_XY, [9, 0] ],
+            [ FTR_CUTOUT_SIDES_4B, [true, false, false, false] ],
+            [ FTR_CUTOUT_TYPE, INTERIOR ],
+            [ FTR_CUTOUT_DEPTH_PCT, 60 ],
+        ],
+    ],
+];
+
+detent_cutout_stops_below_data = [
+    [ G_PRINT_LID_B, false ],
+    [ G_PRINT_BOX_B, false ],
+    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_LID_THICKNESS, 1.2 ],
+    [ G_DETENT_THICKNESS, 0.5 ],
+    [ G_DETENT_SPACING, 6 ],
+    [ G_DETENT_DIST_FROM_CORNER, 3 ],
+    [ OBJECT_BOX,
+        [ NAME, "sliding detent cutout stops below detent" ],
+        [ BOX_SIZE_XYZ, [40, 30, 10] ],
+        [ BOX_WALL_THICKNESS, 1.2 ],
+        [ BOX_LID,
+            [ LID_TYPE, LID_SLIDING ],
+            [ LID_SLIDE_SIDE, FRONT ],
+            [ LID_SOLID_B, true ],
+        ],
+        [ BOX_FEATURE,
+            [ NAME, "front exterior cutout reaches only to rail base" ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [20, 10, 8] ],
+            [ POSITION_XY, [9, 0] ],
+            [ FTR_CUTOUT_SIDES_4B, [true, false, false, false] ],
+            [ FTR_CUTOUT_TYPE, EXTERIOR ],
+            [ FTR_CUTOUT_DEPTH_PCT, 60 ],
+        ],
+    ],
+];
+
+detent_cutout_disabled_data = [
+    [ G_PRINT_LID_B, false ],
+    [ G_PRINT_BOX_B, false ],
+    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_LID_THICKNESS, 2.0 ],
+    [ G_DETENT_THICKNESS, 0 ],
+    [ G_DETENT_SPACING, 6 ],
+    [ G_DETENT_DIST_FROM_CORNER, 3 ],
+    [ OBJECT_BOX,
+        [ NAME, "disabled sliding detent ignores opening cutout" ],
+        [ BOX_SIZE_XYZ, [40, 30, 10] ],
+        [ BOX_WALL_THICKNESS, 1.2 ],
+        [ BOX_LID,
+            [ LID_TYPE, LID_SLIDING ],
+            [ LID_SLIDE_SIDE, FRONT ],
+            [ LID_SOLID_B, true ],
+        ],
+        [ BOX_FEATURE,
+            [ NAME, "front exterior cutout where disabled detent would be" ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [20, 10, 8] ],
+            [ POSITION_XY, [9, 0] ],
+            [ FTR_CUTOUT_SIDES_4B, [true, false, false, false] ],
+            [ FTR_CUTOUT_TYPE, EXTERIOR ],
+            [ FTR_CUTOUT_DEPTH_PCT, 60 ],
+        ],
+    ],
+];
+
+detent_groove_width_data = [
+    [ G_PRINT_LID_B, false ],
+    [ G_PRINT_BOX_B, false ],
+    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_LID_THICKNESS, 4.0 ],
+    [ G_TOLERANCE, 0.7 ],
+    [ G_DETENT_THICKNESS, 2.0 ],
+    [ G_DETENT_SPACING, 4 ],
+    [ G_DETENT_DIST_FROM_CORNER, 5 ],
+    [ OBJECT_BOX,
+        [ NAME, "sliding detent groove collapsed width" ],
+        [ BOX_SIZE_XYZ, [48, 36, 12] ],
+        [ BOX_WALL_THICKNESS, 4.0 ],
+        [ BOX_LID,
+            [ LID_TYPE, LID_SLIDING ],
+            [ LID_SLIDE_SIDE, FRONT ],
+            [ LID_SOLID_B, true ],
+        ],
+    ],
+];
+
+detent_groove_height_data = [
+    [ G_PRINT_LID_B, false ],
+    [ G_PRINT_BOX_B, false ],
+    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_LID_THICKNESS, 1.0 ],
+    [ G_TOLERANCE, 0.49 ],
+    [ G_DETENT_THICKNESS, 0.5 ],
+    [ G_DETENT_SPACING, 4 ],
+    [ G_DETENT_DIST_FROM_CORNER, 4 ],
+    [ OBJECT_BOX,
+        [ NAME, "sliding detent groove collapsed height" ],
+        [ BOX_SIZE_XYZ, [36, 30, 10] ],
+        [ BOX_WALL_THICKNESS, 2.0 ],
+        [ BOX_LID,
+            [ LID_TYPE, LID_SLIDING ],
+            [ LID_SLIDE_SIDE, FRONT ],
+            [ LID_SOLID_B, true ],
+        ],
+    ],
+];
+
+detent_custom_lid_thickness_data = [
+    [ G_PRINT_LID_B, false ],
+    [ G_PRINT_BOX_B, false ],
+    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_LID_THICKNESS, 3.0 ],
+    [ G_TOLERANCE, 0.2 ],
+    [ G_DETENT_THICKNESS, 0.6 ],
+    [ G_DETENT_SPACING, 4 ],
+    [ G_DETENT_DIST_FROM_CORNER, 5 ],
+    [ OBJECT_BOX,
+        [ NAME, "sliding detent custom lid thickness stays quiet" ],
+        [ BOX_SIZE_XYZ, [48, 36, 12] ],
+        [ BOX_WALL_THICKNESS, 2.0 ],
+        [ BOX_LID,
+            [ LID_TYPE, LID_SLIDING ],
+            [ LID_SLIDE_SIDE, FRONT ],
+            [ LID_SOLID_B, true ],
+        ],
+    ],
+];
+
 cap_lid_fit_data = [
     [ G_PRINT_LID_B, false ],
     [ G_PRINT_BOX_B, false ],
@@ -219,9 +560,46 @@ sliding_lid_fit_data = [
     ],
 ];
 
+legacy_detent_data = [
+    [ G_PRINT_LID_B, false ],
+    [ G_PRINT_BOX_B, false ],
+    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_DETENT_THICKNESS, 0.1 ],
+    [ G_DETENT_SPACING, 9 ],
+    [ G_DETENT_DIST_FROM_CORNER, 0.1 ],
+    [ G_DETENT_MIN_SPACING, -1 ],
+    [ G_TOLERANCE, 0.5 ],
+    [ OBJECT_BOX,
+        [ NAME, "thin legacy cap detent" ],
+        [ BOX_SIZE_XYZ, [14, 12, 8] ],
+        [ BOX_WALL_THICKNESS, 1.0 ],
+        [ BOX_LID,
+            [ LID_TYPE, LID_CAP ],
+            [ LID_SOLID_B, true ],
+        ],
+    ],
+    [ OBJECT_BOX,
+        [ NAME, "collapsed legacy inset detent" ],
+        [ BOX_SIZE_XYZ, [30, 30, 8] ],
+        [ BOX_WALL_THICKNESS, 1.0 ],
+        [ BOX_LID,
+            [ LID_TYPE, LID_INSET ],
+            [ LID_SOLID_B, true ],
+        ],
+    ],
+];
+
 Make(data);
 Make(detent_thin_data);
 Make(detent_collapsed_data);
+Make(detent_chamfer_collision_data);
+Make(detent_cutout_collision_data);
+Make(detent_cutout_stops_below_data);
+Make(detent_cutout_disabled_data);
+Make(detent_groove_width_data);
+Make(detent_groove_height_data);
+Make(detent_custom_lid_thickness_data);
 Make(cap_lid_fit_data);
 Make(inset_lid_fit_data);
 Make(sliding_lid_fit_data);
+Make(legacy_detent_data);
