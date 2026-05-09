@@ -2,7 +2,7 @@
 
 ## Project Status
 - **Current phase**: v4 stable — incremental feature work and docs maintenance
-- **Library version**: `4.3.1`
+- **Library version**: `4.5.0`
 - **Last updated**: 2026-05-09
 
 ## Completed Work
@@ -29,9 +29,11 @@
 - `v4.2.1` published with BGSD-compatible physical validation diagnostic prefixes.
 - `v4.3.0` published with bay-based divider layout keys, optional rails, refined print/preview placement, and 1600x1200 test render defaults.
 - `v4.3.1` published with `DIV_RAIL_SIZE_XYZ` Z defaulting to `MAX`, frame/tab sizing fixes, and divider validation cleanup.
+- `v4.4.0` published with `FTR_SHAPE_AXIS` replacing `FTR_SHAPE_ROTATED_B`, BGSD key metadata on physical validation diagnostics, and sliding-detent validation wording cleanup.
+- `v4.5.0` published with taller default sliding-lid detents, `LID_DETENT_LOCK_ANGLE` for lid-cavity lock resistance, a 45-degree default lock-side cavity angle, docs, and validation coverage.
 
 ## Active Specs
-- `better-divider-integration`: active implementation and hardening pass for generated dividers, rails, and box integration. Current open follow-up is the BGSD nested object wrapper shape that can produce degenerate geometry.
+- `nested-object-wrapper-degenerate-geometry`: next maintenance item. BGSD-shaped nested `OBJECT_BOX` data can produce degenerate geometry instead of being normalized or rejected.
 
 ## Known Issues
 - `CHAMFER_N` top chamfer for square cavities eats into partition walls in multi-compartment grids (no per-side cap yet)
