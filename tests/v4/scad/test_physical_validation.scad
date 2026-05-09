@@ -40,19 +40,25 @@ function __test_expected_sliding_detent_groove_aabb(
     detent_length,
     opening_side_edge_pos,
     cross_axis_span,
-    lid_panel_thickness
+    lid_panel_thickness,
+    lock_relief = 0
 ) =
-    __test_expected_sliding_detent_aabb(
-        slide_side,
-        rail_side_clearance,
-        detent_width,
-        detent_height,
-        detent_length,
-        opening_side_edge_pos,
-        cross_axis_span,
-        lid_panel_thickness - detent_height,
-        HULL_EPSILON
-    );
+    let(
+        cross_axis_start = max( 0, ( cross_axis_span - detent_length ) / 2 ),
+        opening_min = opening_side_edge_pos + ( ( slide_side == FRONT || slide_side == LEFT ) ? 0 : -lock_relief ),
+        opening_max = opening_side_edge_pos + detent_width + ( ( slide_side == FRONT || slide_side == LEFT ) ? lock_relief : 0 ),
+        z_min = lid_panel_thickness - detent_height,
+        z_max = lid_panel_thickness + HULL_EPSILON
+    )
+    ( slide_side == LEFT || slide_side == RIGHT ) ?
+        [
+            [ opening_min, rail_side_clearance + cross_axis_start, z_min ],
+            [ opening_max, rail_side_clearance + cross_axis_start + detent_length, z_max ]
+        ] :
+        [
+            [ rail_side_clearance + cross_axis_start, opening_min, z_min ],
+            [ rail_side_clearance + cross_axis_start + detent_length, opening_max, z_max ]
+        ];
 
 test_detent_rail_side_clearance = 3.2;
 test_detent_width = 0.75;
@@ -62,6 +68,22 @@ test_detent_cross_axis_span = 44;
 test_detent_lid_panel_thickness = 1.7;
 test_detent_near_edge_pos = 0.15;
 test_detent_far_edge_pos = 52.1;
+test_detent_lock_relief = 0.3;
+
+assert(
+    __test_close( __sliding_detent_lock_angle_for_validation( [] ), 45 ),
+    "default sliding detent lock angle should be 45 degrees"
+);
+
+assert(
+    __test_close( __sliding_detent_lock_relief_from_values( 0.8, 0.8, 45 ), 0.8 ),
+    "45-degree sliding detent lock angle should make relief match detent height"
+);
+
+assert(
+    __test_close( __sliding_detent_lock_relief_from_values( 0.8, 0.8, 90 ), 0 ),
+    "90-degree sliding detent lock angle should keep a vertical lock face"
+);
 
 for ( slide_side = [ FRONT, BACK, LEFT, RIGHT ] )
 {
@@ -118,6 +140,34 @@ for ( slide_side = [ FRONT, BACK, LEFT, RIGHT ] )
             )
         ),
         str( "lid sliding detent groove AABB mismatch for ", slide_side )
+    );
+
+    assert(
+        __test_close(
+            __sliding_detent_lid_groove_aabb_from_values(
+                slide_side,
+                0,
+                test_detent_width,
+                test_detent_height,
+                test_detent_length,
+                test_detent_opening_side_edge_pos,
+                test_detent_cross_axis_span,
+                test_detent_lid_panel_thickness,
+                test_detent_lock_relief
+            ),
+            __test_expected_sliding_detent_groove_aabb(
+                slide_side,
+                0,
+                test_detent_width,
+                test_detent_height,
+                test_detent_length,
+                test_detent_opening_side_edge_pos,
+                test_detent_cross_axis_span,
+                test_detent_lid_panel_thickness,
+                test_detent_lock_relief
+            )
+        ),
+        str( "lid sliding detent angled groove AABB mismatch for ", slide_side )
     );
 }
 

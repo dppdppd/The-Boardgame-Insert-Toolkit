@@ -1,6 +1,6 @@
 /*
  * The Boardgame Insert Toolkit - Library File
- * Version: 4.4.0
+ * Version: 4.5.0
  * 
  * A parametric system for creating custom board game inserts and organizers
  * https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
@@ -49,7 +49,7 @@
 
 
 // Version information
-VERSION = "4.4.0";
+VERSION = "4.5.0";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 // Resolution settings
@@ -171,6 +171,7 @@ LID_STRIPE_WIDTH = "lid_stripe_width";  // Width of decorative stripes on lid
 LID_STRIPE_SPACE = "lid_stripe_space";  // Space between stripes
 LID_TYPE = "lid_type";                  // Lid style: LID_CAP, LID_INSET, or LID_SLIDING
 LID_SLIDE_SIDE = "lid_slide_side";      // Side a sliding lid opens from: FRONT, BACK, LEFT, or RIGHT
+LID_DETENT_LOCK_ANGLE = "lid_detent_lock_angle"; // Sliding lid groove lock-side angle in degrees
 LID_FRAME_WIDTH = "lid_frame_width";    // Width of patterned lid perimeter frame
 LID_INSET_B = "lid_inset";              // Boolean: lid is inset into box
 LID_TABS_4B = "lid_tabs";               // Boolean array: which sides have tabs [front,back,left,right]
@@ -369,7 +370,7 @@ $g_wall_thickness = 2.0;
 // For a looser snap fit, reduce this value
 // For a tighter snap fit, increase this value
 // Recommended 0.05 increments for adjustments
-$g_detent_thickness = 0.25;
+$g_detent_thickness = 0.8;
 
 // Translates to length of detent in mm
 $g_detent_spacing = 2;
@@ -832,7 +833,8 @@ __VALID_COMPONENT_KEYS = [
 
 // Lid-level valid keys (inside BOX_LID)
 __VALID_LID_KEYS = [
-    NAME, LID_FIT_UNDER_B, LID_SOLID_B, LID_HEIGHT, LID_TYPE, LID_SLIDE_SIDE, LID_FRAME_WIDTH, LID_INSET_B,
+    NAME, LID_FIT_UNDER_B, LID_SOLID_B, LID_HEIGHT, LID_TYPE, LID_SLIDE_SIDE,
+    LID_DETENT_LOCK_ANGLE, LID_FRAME_WIDTH, LID_INSET_B,
     LID_CUTOUT_SIDES_4B, LID_TABS_4B,
     LID_LABELS_INVERT_B, LID_SOLID_LABELS_DEPTH,
     LID_LABELS_BG_THICKNESS, LID_LABELS_BORDER_THICKNESS,
@@ -948,6 +950,7 @@ function __key_display_name( key ) =
     key == LID_HEIGHT ? "LID_HEIGHT" :
     key == LID_TYPE ? "LID_TYPE" :
     key == LID_SLIDE_SIDE ? "LID_SLIDE_SIDE" :
+    key == LID_DETENT_LOCK_ANGLE ? "LID_DETENT_LOCK_ANGLE" :
     key == LID_FRAME_WIDTH ? "LID_FRAME_WIDTH" :
     key == LID_INSET_B ? "LID_INSET_B" :
     key == LID_CUTOUT_SIDES_4B ? "LID_CUTOUT_SIDES_4B" :
@@ -1711,6 +1714,10 @@ module __ValidateLidTypes( table, ctx )
     if ( v_slide_side != false && !__is_valid_key( v_slide_side, __VALID_LID_SLIDE_SIDES ) )
         __TypeMsg( LID_SLIDE_SIDE, ctx, "one of FRONT, BACK, LEFT, RIGHT", v_slide_side );
 
+    v_detent_angle = __value( table, LID_DETENT_LOCK_ANGLE, default = false );
+    if ( v_detent_angle != false && !is_num( v_detent_angle ) )
+        __TypeMsg( LID_DETENT_LOCK_ANGLE, ctx, "number (degrees, >0 to 90)", v_detent_angle );
+
     v_frame_width = __value( table, LID_FRAME_WIDTH, default = false );
     if ( v_frame_width != false && !is_num( v_frame_width ) )
         __TypeMsg( LID_FRAME_WIDTH, ctx, "number", v_frame_width );
@@ -2234,21 +2241,24 @@ function __sliding_detent_lid_groove_aabb_from_values(
     detent_length,
     opening_side_edge_pos,
     cross_axis_span,
-    lid_panel_thickness
+    lid_panel_thickness,
+    lock_relief = 0
 ) =
     let(
         cross_axis_start = __sliding_detent_start_from_values( cross_axis_span, detent_length ),
+        opening_min = opening_side_edge_pos + ( __sliding_detent_near_opening_side_for_validation( slide_side ) ? 0 : -lock_relief ),
+        opening_max = opening_side_edge_pos + detent_width + ( __sliding_detent_near_opening_side_for_validation( slide_side ) ? lock_relief : 0 ),
         z_min = lid_panel_thickness - detent_height,
         z_max = lid_panel_thickness + HULL_EPSILON
     )
     __sliding_lid_slide_side_slides_x( slide_side ) ?
         [
-            [ opening_side_edge_pos, rail_side_clearance + cross_axis_start, z_min ],
-            [ opening_side_edge_pos + detent_width, rail_side_clearance + cross_axis_start + detent_length, z_max ]
+            [ opening_min, rail_side_clearance + cross_axis_start, z_min ],
+            [ opening_max, rail_side_clearance + cross_axis_start + detent_length, z_max ]
         ] :
         [
-            [ rail_side_clearance + cross_axis_start, opening_side_edge_pos, z_min ],
-            [ rail_side_clearance + cross_axis_start + detent_length, opening_side_edge_pos + detent_width, z_max ]
+            [ rail_side_clearance + cross_axis_start, opening_min, z_min ],
+            [ rail_side_clearance + cross_axis_start + detent_length, opening_max, z_max ]
         ];
 
 function __sliding_lid_raw_cross_extent_for_detent_validation( box_size, wall_thickness, lid ) =
@@ -2260,8 +2270,11 @@ function __sliding_lid_raw_cross_extent_for_detent_validation( box_size, wall_th
         box_size[ k_y ] - 2 * side_clearance :
         box_size[ k_x ] - 2 * side_clearance;
 
+function __sliding_detent_height_limit_for_validation( wall_thickness ) =
+    max( HULL_EPSILON, min( wall_thickness, __sliding_lid_panel_thickness_for_validation( wall_thickness ) - HULL_EPSILON ) );
+
 function __sliding_detent_height_for_validation( wall_thickness ) =
-    min( max( HULL_EPSILON, $g_detent_thickness ), wall_thickness / 2, __lid_thickness_for_validation( wall_thickness ) / 2 );
+    min( max( HULL_EPSILON, $g_detent_thickness ), __sliding_detent_height_limit_for_validation( wall_thickness ) );
 
 function __sliding_detent_width_for_validation( wall_thickness ) =
     max( HULL_EPSILON, __sliding_lid_rail_width_for_validation( wall_thickness ) - 2 * __sliding_lid_fit_tolerance_for_validation() );
@@ -2312,6 +2325,26 @@ function __sliding_detent_opening_side_edge_pos_for_validation( slide_side, open
         __sliding_detent_near_edge_pos_for_validation() :
         __sliding_detent_far_edge_pos_for_validation( opening_axis_extent, wall_thickness );
 
+function __sliding_detent_lock_angle_raw_for_validation( lid ) =
+    __value( lid, LID_DETENT_LOCK_ANGLE, default = 45 );
+
+function __sliding_detent_lock_angle_for_validation( lid ) =
+    let( raw = __sliding_detent_lock_angle_raw_for_validation( lid ) )
+    is_num( raw ) ? min( 90, max( HULL_EPSILON, raw ) ) : 90;
+
+function __sliding_detent_lock_relief_raw_from_values( detent_height, lock_angle ) =
+    lock_angle >= 90 ? 0 : detent_height / tan( lock_angle );
+
+function __sliding_detent_lock_relief_from_values( detent_width, detent_height, lock_angle ) =
+    min( detent_width, max( 0, __sliding_detent_lock_relief_raw_from_values( detent_height, lock_angle ) ) );
+
+function __sliding_detent_lock_relief_for_validation( wall_thickness, lid ) =
+    __sliding_detent_lock_relief_from_values(
+        __sliding_detent_width_for_validation( wall_thickness ),
+        __sliding_detent_height_for_validation( wall_thickness ),
+        __sliding_detent_lock_angle_for_validation( lid )
+    );
+
 function __sliding_detent_box_aabb_for_validation( box_size, wall_thickness, lid ) =
     let(
         slide_side = __sliding_lid_slide_side_for_validation( lid ),
@@ -2354,7 +2387,8 @@ function __sliding_detent_lid_groove_aabb_for_validation( box_size, wall_thickne
         __sliding_detent_length_for_validation( box_size, wall_thickness, lid ),
         opening_side_edge_pos,
         lid_size[ cross_d ],
-        __sliding_lid_panel_thickness_for_validation( wall_thickness )
+        __sliding_lid_panel_thickness_for_validation( wall_thickness ),
+        __sliding_detent_lock_relief_for_validation( wall_thickness, lid )
     );
 
 function __sliding_lid_bottom_chamfer_active_for_validation( lid_size, wall_thickness ) =
@@ -2608,7 +2642,7 @@ module __ValidateSlidingDetentPhysical( element, ctx, box_size, wall_thickness, 
 {
     _detent_ctx = str( ctx, " > lid > sliding detent" );
     _detent_keys = [
-        LID_TYPE, LID_SLIDE_SIDE,
+        LID_TYPE, LID_SLIDE_SIDE, LID_DETENT_LOCK_ANGLE,
         G_DETENT_THICKNESS, G_DETENT_SPACING, G_DETENT_DIST_FROM_CORNER,
         G_TOLERANCE, G_LID_THICKNESS,
         BOX_SIZE_XYZ, BOX_WALL_THICKNESS, CHAMFER_N
@@ -2633,7 +2667,7 @@ module __ValidateSlidingDetentPhysical( element, ctx, box_size, wall_thickness, 
         _box_detent_aabb = __sliding_detent_box_aabb_for_validation( box_size, wall_thickness, lid );
         _lid_groove_aabb = __sliding_detent_lid_groove_aabb_for_validation( box_size, wall_thickness, lid );
         _lid_thickness = __lid_thickness_for_validation( wall_thickness );
-        _detent_height_limit = min( wall_thickness / 2, _lid_thickness / 2 );
+        _detent_height_limit = __sliding_detent_height_limit_for_validation( wall_thickness );
         _detent_height = _box_detent_aabb[ k_aabb_max ][ k_z ] - _box_detent_aabb[ k_aabb_min ][ k_z ];
         _rail_width = __sliding_lid_rail_width_for_validation( wall_thickness );
         _rail_side_clearance = __sliding_lid_rail_side_clearance_for_validation( wall_thickness );
@@ -2642,6 +2676,10 @@ module __ValidateSlidingDetentPhysical( element, ctx, box_size, wall_thickness, 
         _panel_thickness = __sliding_lid_panel_thickness_for_validation( wall_thickness );
         _remaining_lid_skin = _lid_groove_aabb[ k_aabb_min ][ k_z ];
         _groove_width = _lid_groove_aabb[ k_aabb_max ][ _opening_d ] - _lid_groove_aabb[ k_aabb_min ][ _opening_d ];
+        _lock_angle_raw = __sliding_detent_lock_angle_raw_for_validation( lid );
+        _lock_angle = __sliding_detent_lock_angle_for_validation( lid );
+        _lock_relief_raw = __sliding_detent_lock_relief_raw_from_values( _detent_height, _lock_angle );
+        _lock_relief = __sliding_detent_lock_relief_for_validation( wall_thickness, lid );
         _usable_groove_width = __sliding_detent_lid_groove_usable_width_for_validation( box_size, wall_thickness, lid );
         _usable_groove_height = __sliding_detent_lid_groove_usable_height_for_validation( box_size, wall_thickness, lid );
         _requested_length = __sliding_detent_requested_length_for_validation( wall_thickness );
@@ -2665,8 +2703,8 @@ module __ValidateSlidingDetentPhysical( element, ctx, box_size, wall_thickness, 
         else if ( _detent_height < MIN_PRINTABLE_DETAIL_THICKNESS )
             __PhysicalMsg( _detent_ctx, str( "generates detent height ",
                 _detent_height, "mm from ", G_DETENT_THICKNESS, " ",
-                $g_detent_thickness, "mm and wall/lid thickness ",
-                [ wall_thickness, _lid_thickness ], "mm; below printable detail threshold ",
+                $g_detent_thickness, "mm and wall/lid panel thickness ",
+                [ wall_thickness, _panel_thickness ], "mm; below printable detail threshold ",
                 MIN_PRINTABLE_DETAIL_THICKNESS, "mm. Increase ",
                 BOX_WALL_THICKNESS, " or ", G_LID_THICKNESS, "." ),
                 _detent_keys );
@@ -2674,10 +2712,25 @@ module __ValidateSlidingDetentPhysical( element, ctx, box_size, wall_thickness, 
         if ( $g_detent_thickness > _detent_height_limit )
             __PhysicalMsg( _detent_ctx, str( "has ", G_DETENT_THICKNESS, " ",
                 $g_detent_thickness, "mm exceeding the sliding detent height limit ",
-                _detent_height_limit, "mm from wall/lid thickness ",
-                [ wall_thickness, _lid_thickness ], "mm; generated height clamps to ",
+                _detent_height_limit, "mm from wall/lid panel thickness ",
+                [ wall_thickness, _panel_thickness ], "mm; generated height clamps to ",
                 _detent_height, "mm. Reduce ", G_DETENT_THICKNESS,
                 " or increase ", BOX_WALL_THICKNESS, " / ", G_LID_THICKNESS, "." ),
+                _detent_keys );
+
+        if ( is_num( _lock_angle_raw ) && ( _lock_angle_raw <= 0 || _lock_angle_raw > 90 ) )
+            __PhysicalMsg( _detent_ctx, str( "has ", LID_DETENT_LOCK_ANGLE, " ",
+                _lock_angle_raw, " degrees; expected >0 and <=90. Generated lid cavity lock face clamps to ",
+                _lock_angle, " degrees. Use 90 for a vertical lock face; lower values bevel the lock side for less resistance." ),
+                _detent_keys );
+
+        if ( is_num( _lock_angle_raw ) && _lock_angle_raw > 0 && _lock_angle_raw < 90 && _lock_relief_raw > _detent_width )
+            __PhysicalMsg( _detent_ctx, str( "requests ", LID_DETENT_LOCK_ANGLE, " ",
+                _lock_angle_raw, " degrees, which needs ", _lock_relief_raw,
+                "mm of lock-side cavity relief at detent height ", _detent_height,
+                "mm. Generated relief clamps to detent width ", _lock_relief,
+                "mm. Increase detent width by increasing ", BOX_WALL_THICKNESS,
+                " or reducing ", G_TOLERANCE, ", or use a steeper lock angle." ),
                 _detent_keys );
 
         if ( _detent_width_raw <= 0 )
@@ -4135,6 +4188,7 @@ module MakeBox( box )
     m_lid_slide_side = ( m_lid_slide_side_raw == FRONT || m_lid_slide_side_raw == BACK || m_lid_slide_side_raw == LEFT || m_lid_slide_side_raw == RIGHT ) ?
         m_lid_slide_side_raw :
         FRONT;
+    m_lid_detent_lock_angle_raw = __value( m_lid, LID_DETENT_LOCK_ANGLE, default = 45 );
     m_lid_slides_x = m_lid_slide_side == LEFT || m_lid_slide_side == RIGHT;
     m_lid_fit_under = !m_lid_sliding && __value( m_lid, LID_FIT_UNDER_B, default = true );
 
@@ -4953,8 +5007,10 @@ module MakeBox( box )
             }
         }
 
+        function __sliding_detent_height_limit() =
+            max( HULL_EPSILON, min( m_wall_thickness, m_sliding_lid_panel_thickness - HULL_EPSILON ) );
         function __sliding_detent_height() =
-            min( max( HULL_EPSILON, $g_detent_thickness ), m_wall_thickness / 2, m_lid_thickness / 2 );
+            min( max( HULL_EPSILON, $g_detent_thickness ), __sliding_detent_height_limit() );
         function __sliding_detent_width() = max( HULL_EPSILON, m_sliding_lid_rail_width - 2*m_sliding_lid_fit_tolerance );
         function __sliding_detent_length() =
             let( cross_extent = m_lid_slides_x ? __lid_external_size( k_y ) : __lid_external_size( k_x ) )
@@ -4966,6 +5022,12 @@ module MakeBox( box )
             __sliding_detent_near_edge_pos_from_values( m_sliding_lid_fit_tolerance );
         function __sliding_detent_far_edge_pos( extent ) =
             __sliding_detent_far_edge_pos_from_values( extent, m_sliding_lid_rail_width, m_sliding_lid_fit_tolerance );
+        function __sliding_detent_lock_angle() =
+            is_num( m_lid_detent_lock_angle_raw ) ?
+                min( 90, max( HULL_EPSILON, m_lid_detent_lock_angle_raw ) ) :
+                90;
+        function __sliding_detent_lock_relief() =
+            __sliding_detent_lock_relief_from_values( __sliding_detent_width(), __sliding_detent_height(), __sliding_detent_lock_angle() );
 
         module MakeSlidingLidDetentPrismX( length, width, height, high_at_max_y )
         {
@@ -4995,16 +5057,42 @@ module MakeBox( box )
             }
         }
 
-        module MakeSlidingLidDetentCavityPrismX( length, width, height, high_at_max_y )
+        module MakeSlidingLidDetentCavityPrismX( length, width, height, high_at_max_y, lock_relief )
         {
-            MirrorAboutPoint( [0, 0, 1], [0, 0, height / 2] )
-                MakeSlidingLidDetentPrismX( length, width, height, high_at_max_y );
+            relief = max( 0, lock_relief );
+            base_width = width + relief;
+            lock_y = high_at_max_y ? width - HULL_EPSILON : relief;
+
+            hull()
+            {
+                translate( [ 0, 0, height - HULL_EPSILON ] )
+                    cube( [ length, HULL_EPSILON, HULL_EPSILON ] );
+
+                translate( [ 0, base_width - HULL_EPSILON, height - HULL_EPSILON ] )
+                    cube( [ length, HULL_EPSILON, HULL_EPSILON ] );
+
+                translate( [ 0, lock_y, 0 ] )
+                    cube( [ length, HULL_EPSILON, HULL_EPSILON ] );
+            }
         }
 
-        module MakeSlidingLidDetentCavityPrismY( length, width, height, high_at_max_x )
+        module MakeSlidingLidDetentCavityPrismY( length, width, height, high_at_max_x, lock_relief )
         {
-            MirrorAboutPoint( [0, 0, 1], [0, 0, height / 2] )
-                MakeSlidingLidDetentPrismY( length, width, height, high_at_max_x );
+            relief = max( 0, lock_relief );
+            base_width = width + relief;
+            lock_x = high_at_max_x ? width - HULL_EPSILON : relief;
+
+            hull()
+            {
+                translate( [ 0, 0, height - HULL_EPSILON ] )
+                    cube( [ HULL_EPSILON, length, HULL_EPSILON ] );
+
+                translate( [ base_width - HULL_EPSILON, 0, height - HULL_EPSILON ] )
+                    cube( [ HULL_EPSILON, length, HULL_EPSILON ] );
+
+                translate( [ lock_x, 0, 0 ] )
+                    cube( [ HULL_EPSILON, length, HULL_EPSILON ] );
+            }
         }
 
         module MakeSlidingLidOpeningDetent()
@@ -6113,6 +6201,7 @@ module MakeBox( box )
                     detent_h = __sliding_detent_height();
                     detent_w = __sliding_detent_width();
                     detent_len = __sliding_detent_length();
+                    detent_lock_relief = __sliding_detent_lock_relief();
                     detent_cross_extent = m_lid_slides_x ? __lid_external_size( k_y ) : __lid_external_size( k_x );
                     detent_opening_extent = m_lid_slides_x ? __lid_external_size( k_x ) : __lid_external_size( k_y );
                     detent_opening_edge_pos = ( m_lid_slide_side == FRONT || m_lid_slide_side == LEFT ) ?
@@ -6126,18 +6215,29 @@ module MakeBox( box )
                         detent_len,
                         detent_opening_edge_pos,
                         detent_cross_extent,
-                        __lid_external_size( k_z )
+                        __lid_external_size( k_z ),
+                        detent_lock_relief
                     );
 
                     if ( !m_lid_slides_x )
                     {
                         translate( detent_groove_aabb[ k_aabb_min ] )
-                            MakeSlidingLidDetentCavityPrismX( detent_len, detent_w, detent_h + HULL_EPSILON, m_lid_slide_side == FRONT );
+                            MakeSlidingLidDetentCavityPrismX(
+                                detent_len,
+                                detent_w,
+                                detent_h + HULL_EPSILON,
+                                m_lid_slide_side == FRONT,
+                                detent_lock_relief );
                     }
                     else
                     {
                         translate( detent_groove_aabb[ k_aabb_min ] )
-                            MakeSlidingLidDetentCavityPrismY( detent_len, detent_w, detent_h + HULL_EPSILON, m_lid_slide_side == LEFT );
+                            MakeSlidingLidDetentCavityPrismY(
+                                detent_len,
+                                detent_w,
+                                detent_h + HULL_EPSILON,
+                                m_lid_slide_side == LEFT,
+                                detent_lock_relief );
                     }
                 }
             }
