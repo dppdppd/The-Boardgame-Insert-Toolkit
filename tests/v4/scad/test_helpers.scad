@@ -31,7 +31,7 @@ data = [
             [ POSITION_XY, [1 * pitch, 1 * pitch] ],
             [ FTR_SHAPE, FILLET ],
             [ FTR_FILLET_RADIUS, 5 ],
-            [ FTR_SHAPE_ROTATED_B, f ],
+            [ FTR_SHAPE_AXIS, X ],
         ],
         // round
         [ BOX_FEATURE,
@@ -44,7 +44,7 @@ data = [
             [ FTR_COMPARTMENT_SIZE_XYZ, [sz, sz, sz] ],
             [ POSITION_XY, [2 * pitch, 1 * pitch] ],
             [ FTR_SHAPE, ROUND ],
-            [ FTR_SHAPE_ROTATED_B, f ],
+            [ FTR_SHAPE_AXIS, X ],
         ],
         // round vertical
         [ BOX_FEATURE,
@@ -64,7 +64,7 @@ data = [
             [ FTR_COMPARTMENT_SIZE_XYZ, [sz, sz, sz] ],
             [ POSITION_XY, [3 * pitch, 1 * pitch] ],
             [ FTR_SHAPE, HEX ],
-            [ FTR_SHAPE_ROTATED_B, f ],
+            [ FTR_SHAPE_AXIS, X ],
         ],
         // hex vertical
         [ BOX_FEATURE,
@@ -84,7 +84,7 @@ data = [
             [ FTR_COMPARTMENT_SIZE_XYZ, [sz, sz, sz] ],
             [ POSITION_XY, [4 * pitch, 1 * pitch] ],
             [ FTR_SHAPE, HEX2 ],
-            [ FTR_SHAPE_ROTATED_B, f ],
+            [ FTR_SHAPE_AXIS, X ],
         ],
         // hex2 vertical
         [ BOX_FEATURE,
@@ -104,7 +104,7 @@ data = [
             [ FTR_COMPARTMENT_SIZE_XYZ, [sz, sz, sz] ],
             [ POSITION_XY, [5 * pitch, 1 * pitch] ],
             [ FTR_SHAPE, OCT ],
-            [ FTR_SHAPE_ROTATED_B, f ],
+            [ FTR_SHAPE_AXIS, X ],
         ],
         // oct vertical
         [ BOX_FEATURE,
@@ -124,7 +124,7 @@ data = [
             [ FTR_COMPARTMENT_SIZE_XYZ, [sz, sz, sz] ],
             [ POSITION_XY, [6 * pitch, 1 * pitch] ],
             [ FTR_SHAPE, OCT2 ],
-            [ FTR_SHAPE_ROTATED_B, f ],
+            [ FTR_SHAPE_AXIS, X ],
         ],
         // oct2 vertical
         [ BOX_FEATURE,

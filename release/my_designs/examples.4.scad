@@ -1,5 +1,5 @@
 // BGSD
-include <../lib/boardgame_insert_toolkit_lib.4.3.1.scad>;
+include <../lib/boardgame_insert_toolkit_lib.4.4.0.scad>;
 // Variables for components box
 cmp_size = 20;
 wall = $g_wall_thickness;
@@ -54,7 +54,7 @@ data = [
             [ FTR_COMPARTMENT_SIZE_XYZ, [22, 60.0, 20.0] ],
             [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
             [ FTR_SHAPE, SQUARE ],
-            [ FTR_SHAPE_ROTATED_B, f ],
+            [ FTR_SHAPE_AXIS, Y ],
             [ FTR_SHAPE_VERTICAL_B, f ],
             [ FTR_PADDING_XY, [10, 12] ],
             [ FTR_PADDING_HEIGHT_ADJUST_XY, [-5, 0] ],
@@ -104,7 +104,7 @@ data = [
             [ POSITION_XY, [1 * cmp_pitch, 1 * cmp_pitch] ],
             [ FTR_SHAPE, FILLET ],
             [ FTR_FILLET_RADIUS, 5 ],
-            [ FTR_SHAPE_ROTATED_B, f ],
+            [ FTR_SHAPE_AXIS, X ],
         ],
         // round
         [ BOX_FEATURE,
@@ -117,7 +117,7 @@ data = [
             [ FTR_COMPARTMENT_SIZE_XYZ, [cmp_size, cmp_size, cmp_size] ],
             [ POSITION_XY, [2 * cmp_pitch, 1 * cmp_pitch] ],
             [ FTR_SHAPE, ROUND ],
-            [ FTR_SHAPE_ROTATED_B, f ],
+            [ FTR_SHAPE_AXIS, X ],
         ],
         // round vertical
         [ BOX_FEATURE,
@@ -137,7 +137,7 @@ data = [
             [ FTR_COMPARTMENT_SIZE_XYZ, [cmp_size, cmp_size, cmp_size] ],
             [ POSITION_XY, [3 * cmp_pitch, 1 * cmp_pitch] ],
             [ FTR_SHAPE, HEX ],
-            [ FTR_SHAPE_ROTATED_B, f ],
+            [ FTR_SHAPE_AXIS, X ],
         ],
         // hex vertical
         [ BOX_FEATURE,
@@ -157,7 +157,7 @@ data = [
             [ FTR_COMPARTMENT_SIZE_XYZ, [cmp_size, cmp_size, cmp_size] ],
             [ POSITION_XY, [4 * cmp_pitch, 1 * cmp_pitch] ],
             [ FTR_SHAPE, HEX2 ],
-            [ FTR_SHAPE_ROTATED_B, f ],
+            [ FTR_SHAPE_AXIS, X ],
         ],
         // hex2 vertical
         [ BOX_FEATURE,
@@ -177,7 +177,7 @@ data = [
             [ FTR_COMPARTMENT_SIZE_XYZ, [cmp_size, cmp_size, cmp_size] ],
             [ POSITION_XY, [5 * cmp_pitch, 1 * cmp_pitch] ],
             [ FTR_SHAPE, OCT ],
-            [ FTR_SHAPE_ROTATED_B, f ],
+            [ FTR_SHAPE_AXIS, X ],
         ],
         // oct vertical
         [ BOX_FEATURE,
@@ -197,7 +197,7 @@ data = [
             [ FTR_COMPARTMENT_SIZE_XYZ, [cmp_size, cmp_size, cmp_size] ],
             [ POSITION_XY, [6 * cmp_pitch, 1 * cmp_pitch] ],
             [ FTR_SHAPE, OCT2 ],
-            [ FTR_SHAPE_ROTATED_B, f ],
+            [ FTR_SHAPE_AXIS, X ],
         ],
         // oct2 vertical
         [ BOX_FEATURE,

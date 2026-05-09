@@ -123,7 +123,7 @@ Here is an example of some compartments designed to hold cards, with holes to ge
             [ FTR_COMPARTMENT_SIZE_XYZ, [22, 60.0, 20.0] ],
             [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
             [ FTR_SHAPE, SQUARE ],
-            [ FTR_SHAPE_ROTATED_B, f ],
+            [ FTR_SHAPE_AXIS, Y ],
             [ FTR_SHAPE_VERTICAL_B, f ],
             [ FTR_PADDING_XY, [10, 12] ],
             [ FTR_PADDING_HEIGHT_ADJUST_XY, [-5, 0] ],
@@ -371,12 +371,12 @@ Value is expected to be one of the following:
 - `OCT`      an 8-sided compartment (flat side down)
 - `OCT2`     an 8-sided compartment that is rotated 22.5 degrees (corner down)
 
-e.g. `[ FTR_SHAPE, HEX2 ]`. The following box shows all the different components. The front row has the components in the order listed above. The second row shows the same, but rotated (`[FTR_SHAPE_ROTATED_B]` below). The third row has the same order for vertical stacks of pieces (`[FTR_SHAPE_VERTICAL_B]` below).
+e.g. `[ FTR_SHAPE, HEX2 ]`. The following box shows all the different components. The front row has the components in the order listed above. The second row shows the same, but with the horizontal axis set (`[FTR_SHAPE_AXIS, X]` below). The third row has the same order for vertical stacks of pieces (`[FTR_SHAPE_VERTICAL_B]` below).
 
 ![All component types](images/components.png)
 
-#### `FTR_SHAPE_ROTATED_B`
-Value is expected to be a bool, and determines whether the shape is rotated along the Z axis. That is, whether it goes back and forth or side to side.
+#### `FTR_SHAPE_AXIS`
+Value is expected to be `X` or `Y`, and determines which horizontal axis the shape runs along. The default is `Y`.
 
 #### `FTR_SHAPE_VERTICAL_B`
 Value is expected to be a bool, and determines whether the shape is rotated for vertical stacks of pieces.

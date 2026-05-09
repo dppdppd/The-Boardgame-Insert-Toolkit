@@ -21,7 +21,7 @@ data = [
             [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
             [ FTR_COMPARTMENT_SIZE_XYZ, [20, 20, 18] ],
             [ FTR_SHAPE, HEX2 ],
-            [ FTR_SHAPE_ROTATED_B, t ],
+            [ FTR_SHAPE_AXIS, X ],
         ],
     ],
     [ OBJECT_BOX,

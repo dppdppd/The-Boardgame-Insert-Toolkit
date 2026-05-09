@@ -83,6 +83,27 @@ data = [
             ],
         ],
     ],
+
+    [ OBJECT_BOX,
+        [ NAME, "divider tab and inset lid clearance" ],
+        [ BOX_SIZE_XYZ, [36, 36, 12] ],
+        [ BOX_WALL_THICKNESS, 2 ],
+        [ BOX_LID,
+            [ LID_TYPE, LID_INSET ],
+            [ LID_HEIGHT, 4 ],
+            [ LID_SOLID_B, true ],
+        ],
+        [ BOX_FEATURE,
+            [ NAME, "tall tabbed fitted divider" ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [30, 30, 9] ],
+            [ FTR_DIVIDERS,
+                [ DIV_LAYOUT_BAYS, 2 ],
+                [ DIV_LAYOUT_BAY_SIZE, 0 ],
+                [ DIV_THICKNESS, 1 ],
+                [ DIV_TAB_SIZE_XY, [12, 12] ],
+            ],
+        ],
+    ],
 ];
 
 Make(data);

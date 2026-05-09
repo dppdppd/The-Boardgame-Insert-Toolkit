@@ -53,6 +53,9 @@ data = [
             // Wrong type: string where enum expected (caught as invalid shape)
             [ FTR_SHAPE, "triangle" ],
             // not a valid shape enum
+            // Wrong value: shape axis must be X or Y
+            [ FTR_SHAPE_AXIS, "z" ],
+            // not a valid axis enum
             // Wrong type: string where bool expected
             [ FTR_PEDESTAL_BASE_B, "yes" ],
             // should be bool
