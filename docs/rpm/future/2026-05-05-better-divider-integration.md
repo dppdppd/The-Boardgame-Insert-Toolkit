@@ -36,7 +36,7 @@ Subgroup keys:
 - `DIV_AXIS`: selected divider axis, `X` or `Y`. Defaults to `X`.
 - `DIV_NO_RAILS_B`: when true, suppress matching box-side rail grooves. Defaults to false.
 - Divider slot gap is inferred from `DIV_THICKNESS + G_TOLERANCE`.
-- Optional `DIV_RAIL_SIZE_XYZ`: positive rail dimensions `[thickness, width, height]`; defaults to `[wall_thickness / 2, wall_thickness, compartment_height]`.
+- Optional `DIV_RAIL_SIZE_XYZ`: positive rail dimensions `[thickness, width, height]`; height may be `MAX` for full compartment height and defaults to `MAX`, so the full default is `[wall_thickness / 2, wall_thickness, MAX]`.
 - `DIV_OUTPUT_ONLY_B`: when true, suppresses the parent box/lid and outputs only generated fitted divider panels from output-only subgroups.
 - `G_PRINT_DIVIDERS`: global selector for generated divider panels. `true` prints all, `false` prints none, string/list prints matching divider/component/box names.
 - `G_PRINT_DIVIDERS_ONLY_B`: global exclusive mode; when true, suppresses boxes/lids and prints only the selected generated divider panels.
@@ -72,7 +72,7 @@ The current public layout model uses a single input path:
 2. `DIV_LAYOUT_BAY_SIZE > 0` places dividers at accumulated physical bay boundaries, centered in the compartment. Required span is `DIV_LAYOUT_BAYS * DIV_LAYOUT_BAY_SIZE + (DIV_LAYOUT_BAYS - 1) * DIV_THICKNESS`.
 3. `DIV_LAYOUT_BAY_SIZE == 0` evenly spaces `DIV_LAYOUT_BAYS - 1` generated dividers across the compartment.
 4. `DIV_AXIS`, `DIV_NO_RAILS_B`, `DIV_RAIL_SIZE_XYZ`, `G_PRINT_DIVIDERS`, `G_PRINT_DIVIDERS_ONLY_B`, and `DIV_OUTPUT_ONLY_B` all consume the same generated centerline list after layout resolution.
-5. Fitted panel dimensions come from the matching `BOX_FEATURE` compartment. `DIV_FRAME_SIZE_XY` does not override fitted generated panel extents; `DIV_FRAME_*` controls only optional frame openings.
+5. Fitted panel dimensions come from the matching `BOX_FEATURE` compartment. `DIV_FRAME_SIZE_XY` is only for standalone `OBJECT_DIVIDERS`; `DIV_FRAME_*` controls only optional frame openings in generated feature dividers.
 
 ## Worker Result - 2026-05-07 - 019e0509-8157-7091-9615-975af4fcb917
 

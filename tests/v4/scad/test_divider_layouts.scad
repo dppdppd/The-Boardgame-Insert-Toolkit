@@ -43,7 +43,7 @@ data = [
                 [ DIV_RAIL_SIZE_XYZ, [1, 1.4, 16] ],
                 [ DIV_TAB_TEXT, ["", "", ""] ],
                 [ DIV_TAB_SIZE_XY, [0.4, 1.0] ],
-                [ DIV_FRAME_NUM_COLUMNS, 3 ],
+                [ DIV_FRAME_NUM_COLUMNS, 1 ],
             ],
         ],
     ],

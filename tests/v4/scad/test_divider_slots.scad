@@ -20,7 +20,7 @@ data = [
                 [ DIV_LAYOUT_BAYS, 3 ],
                 [ DIV_LAYOUT_BAY_SIZE, 0 ],
                 [ DIV_THICKNESS, 0.8 ],
-                [ DIV_RAIL_SIZE_XYZ, [1, 1.5, 27] ],
+                [ DIV_RAIL_SIZE_XYZ, [1, 1.5, MAX] ],
             ],
             [ FTR_CUTOUT_SIDES_4B, [true, false, false, false] ],
             [ FTR_CUTOUT_HEIGHT_PCT, 45 ],
