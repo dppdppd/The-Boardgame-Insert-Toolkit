@@ -2,8 +2,8 @@
 
 ## Project Status
 - **Current phase**: v4 stable — incremental feature work and docs maintenance
-- **Library version**: `4.1.0`
-- **Last updated**: 2026-05-06
+- **Library version**: `4.3.1`
+- **Last updated**: 2026-05-09
 
 ## Completed Work
 - v4 library shipped as the active version
@@ -25,11 +25,16 @@
 - Patterned non-solid lids support `LID_FRAME_WIDTH` across cap, inset, and sliding lid types; default is wall thickness, and `0` omits the frame.
 - Physical validation first slice added under `G_VALIDATE_KEYS_B`: thin walls/details, component bounds/height, component footprint overlap, and thin divider warnings.
 - LLM-friendly design workflow added via `llms.txt`, `.github/copilot-instructions.md`, `docs/llm/`, a generated-design validation script, and a short README prompt for AI chats.
+- `v4.2.0` published with generated `FTR_DIVIDERS`, divider print controls, BGSD diagnostic formatting, and sliding-lid fixes.
+- `v4.2.1` published with BGSD-compatible physical validation diagnostic prefixes.
+- `v4.3.0` published with bay-based divider layout keys, optional rails, refined print/preview placement, and 1600x1200 test render defaults.
+- `v4.3.1` published with `DIV_RAIL_SIZE_XYZ` Z defaulting to `MAX`, frame/tab sizing fixes, and divider validation cleanup.
 
 ## Active Specs
-- `better-divider-integration`: active planning pass for explicit box divider slots before generated divider layouts.
+- `better-divider-integration`: active implementation and hardening pass for generated dividers, rails, and box integration. Current open follow-up is the BGSD nested object wrapper shape that can produce degenerate geometry.
 
 ## Known Issues
 - `CHAMFER_N` top chamfer for square cavities eats into partition walls in multi-compartment grids (no per-side cap yet)
 - `CHAMFER_N` for laid-down hex/oct cavities is a no-op (the floor is curved; no clean chamfer geometry)
 - LLM instructions validate through OpenSCAD but should explicitly tell assistants to check or install OpenSCAD before running validation.
+- BGSD-style nested element data such as `[ OBJECT_BOX, [ ... ]]` can bypass flat key lookup and produce degenerate geometry instead of being normalized or rejected.

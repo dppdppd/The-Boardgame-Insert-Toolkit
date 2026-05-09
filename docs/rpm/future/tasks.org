@@ -2,39 +2,13 @@
 #+TODO: TODO IN-PROGRESS BLOCKED | DONE
 
 * v4 Maintenance
-** DONE Add physical validation for fit and printability [[file:2026-05-05-physical-validation.md]]
-   CLOSED: [2026-05-05]
-   :PROPERTIES:
-   :ID: physical-validation
-   :END:
-** DONE Add cutout physical validation [[file:2026-05-05-cutout-physical-validation.md]]
-   CLOSED: [2026-05-05]
-   :PROPERTIES:
-   :ID: cutout-physical-validation
-   :END:
-** DONE Add detent physical validation [[file:2026-05-05-detent-physical-validation.md]]
-   CLOSED: [2026-05-07]
-   :PROPERTIES:
-   :ID: detent-physical-validation
-   :END:
-** DONE Add lid fit physical validation [[file:2026-05-05-lid-fit-physical-validation.md]]
-   CLOSED: [2026-05-06]
-   :PROPERTIES:
-   :ID: lid-fit-physical-validation
-   :END:
-** DONE Add rotated and sheared footprint physical validation [[file:2026-05-05-rotated-sheared-footprint-validation.md]]
-   CLOSED: [2026-05-06]
-   :PROPERTIES:
-   :ID: rotated-sheared-footprint-validation
-   :END:
-** DONE Decide on a separate physical validation enable flag [[file:2026-05-05-validation-enable-flag.md]]
-   CLOSED: [2026-05-06]
-   :PROPERTIES:
-   :ID: validation-enable-flag
-   :END:
 ** IN-PROGRESS Improve divider integration with boxes and generated layouts [[file:2026-05-05-better-divider-integration.md]]
    :PROPERTIES:
    :ID: better-divider-integration
+   :END:
+** TODO Normalize or reject nested OBJECT_BOX wrapper data [[file:2026-05-09-nested-object-wrapper-degenerate-geometry.md]]
+   :PROPERTIES:
+   :ID: nested-object-wrapper-degenerate-geometry
    :END:
 ** TODO Add explicit OpenSCAD prerequisite to LLM instructions [[file:2026-05-05-llm-openscad-prerequisite.md]]
    :PROPERTIES:
@@ -47,14 +21,4 @@
 ** TODO Add subcomponents for nesting features inside features [[file:2026-05-05-subcomponents-nesting-features.md]]
    :PROPERTIES:
    :ID: subcomponents-nesting-features
-   :END:
-** DONE Fix finger cutouts not cutting through sliding lid rails [[file:2026-05-05-sliding-lid-finger-cutouts-rails.md]]
-   CLOSED: [2026-05-06]
-   :PROPERTIES:
-   :ID: sliding-lid-finger-cutouts-rails
-   :END:
-** DONE Fix finger cutout top profile looking like two pills [[file:2026-05-05-finger-cutout-top-profile.md]]
-   CLOSED: [2026-05-06]
-   :PROPERTIES:
-   :ID: finger-cutout-top-profile
    :END:
