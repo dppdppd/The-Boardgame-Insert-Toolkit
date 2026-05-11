@@ -1,4 +1,4 @@
-// Test: BOX_GROUP moves and rotates adjacent sibling features together without
+// Test: FEATURE_GROUP moves and rotates adjacent sibling features together without
 // creating parent geometry.
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
@@ -8,11 +8,11 @@ data = [
     [ G_ISOLATED_PRINT_BOX, "" ],
 
     [ OBJECT_BOX,
-        [ NAME, "box group adjacent wells" ],
+        [ NAME, "feature group adjacent wells" ],
         [ BOX_SIZE_XYZ, [92, 62, 24] ],
         [ BOX_NO_LID_B, true ],
 
-        [ BOX_GROUP,
+        [ FEATURE_GROUP,
             [ NAME, "rotated player resource pair" ],
             [ POSITION_XY, [18, 16] ],
             [ ROTATION, 12 ],

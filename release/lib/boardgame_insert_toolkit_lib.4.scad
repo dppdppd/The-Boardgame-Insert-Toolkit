@@ -1,6 +1,6 @@
 /*
  * The Boardgame Insert Toolkit - Library File
- * Version: 4.6.1
+ * Version: 4.7.0
  * 
  * A parametric system for creating custom board game inserts and organizers
  * https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
@@ -49,7 +49,7 @@
 
 
 // Version information
-VERSION = "4.6.1";
+VERSION = "4.7.0";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 // Resolution settings
@@ -150,7 +150,7 @@ DIV_FRAME_NUM_COLUMNS = "div_frame_num_columns"; // Number of columns in frame
 // =============================================================================
 BOX_SIZE_XYZ = "box_size";              // Box dimensions [x,y,z]
 BOX_FEATURE = "component";            // Component to be contained in box
-BOX_GROUP = "box_group";               // Non-geometry transform wrapper for grouped components
+FEATURE_GROUP = "feature_group";       // Non-geometry transform wrapper for grouped features
 FTR_DIVIDERS = "dividers";             // Divider subgroup inside a box component
 BOX_VISUALIZATION = "visualization";    // Visualization settings
 
@@ -561,7 +561,7 @@ function __group_child_extent( entry, D ) =
                 ( is_list( pos_raw ) && len( pos_raw ) > pi && is_num( pos_raw[ pi ] ) ? pos_raw[ pi ] : 0 )
         )
         pos_val + __cmp_auto_size( entry, D ) :
-    __is_box_group_entry( entry ) ?
+    __is_feature_group_entry( entry ) ?
         __group_position_raw( entry, D ) + __group_max_child_extent( entry, D ) :
     0;
 
@@ -569,7 +569,7 @@ function __group_max_child_extent( group, D, i = 0 ) =
     !is_list( group ) || i >= len( group ) ? 0 :
     max( __group_child_extent( group[ i ], D ), __group_max_child_extent( group, D, i + 1 ) );
 
-// Scan all BOX_FEATURE entries in box, return the max component size per dimension.
+// Scan all feature/group entries in box, return the max component size per dimension.
 // For centered components (default), the box needs to fit the largest one.
 // For explicitly positioned components, compute position + size to find the envelope.
 function __box_max_component_extent( box, D, i = 0 ) = 
@@ -590,7 +590,7 @@ function __box_max_component_extent( box, D, i = 0 ) =
                      comp_size  // CENTER or MAX — just use component size
         )
         max( extent, __box_max_component_extent( box, D, i + 1 ) ) :
-    ( is_list( box[i] ) && len( box[i] ) >= 2 && box[i][ k_key ] == BOX_GROUP ) ?
+    ( is_list( box[i] ) && len( box[i] ) >= 2 && box[i][ k_key ] == FEATURE_GROUP ) ?
         max(
             __group_position_raw( box[i], D ) + __group_max_child_extent( box[i], D ),
             __box_max_component_extent( box, D, i + 1 )
@@ -824,7 +824,7 @@ function __is_valid_key( key, valid_keys ) =
 
 // Box-level valid keys (TYPE=BOX or TYPE=SPACER)
 __VALID_BOX_KEYS = [
-    TYPE, NAME, BOX_SIZE_XYZ, BOX_FEATURE, BOX_GROUP, BOX_LID, BOX_VISUALIZATION,
+    TYPE, NAME, BOX_SIZE_XYZ, BOX_FEATURE, FEATURE_GROUP, BOX_LID, BOX_VISUALIZATION,
     BOX_NO_LID_B, BOX_STACKABLE_B, BOX_WALL_THICKNESS, CHAMFER_N,
     ENABLED_B, DEBUG_B, LABEL, ROTATION, POSITION_XY
 ];
@@ -867,12 +867,12 @@ __VALID_COMPONENT_KEYS = [
     FTR_CUTOUT_BOTTOM_B, FTR_CUTOUT_BOTTOM_PCT, FTR_CUTOUT_TYPE,
     FTR_CUTOUT_DEPTH_MAX,
     FTR_SHEAR, FTR_FILLET_RADIUS, FTR_PEDESTAL_BASE_B, CHAMFER_N,
-    ENABLED_B, DEBUG_B, LABEL, FTR_DIVIDERS, BOX_FEATURE, BOX_GROUP, ROTATION, POSITION_XY
+    ENABLED_B, DEBUG_B, LABEL, FTR_DIVIDERS, BOX_FEATURE, FEATURE_GROUP, ROTATION, POSITION_XY
 ];
 
-// Group-level valid keys (inside BOX_GROUP)
+// Group-level valid keys (inside FEATURE_GROUP)
 __VALID_GROUP_KEYS = [
-    NAME, ENABLED_B, DEBUG_B, BOX_FEATURE, BOX_GROUP, ROTATION, POSITION_XY
+    NAME, ENABLED_B, DEBUG_B, BOX_FEATURE, FEATURE_GROUP, ROTATION, POSITION_XY
 ];
 
 // Lid-level valid keys (inside BOX_LID)
@@ -961,7 +961,7 @@ function __key_display_name( key ) =
     key == G_DEFAULT_FONT ? "G_DEFAULT_FONT" :
     key == BOX_SIZE_XYZ ? "BOX_SIZE_XYZ" :
     key == BOX_FEATURE ? "BOX_FEATURE" :
-    key == BOX_GROUP ? "BOX_GROUP" :
+    key == FEATURE_GROUP ? "FEATURE_GROUP" :
     key == BOX_LID ? "BOX_LID" :
     key == BOX_VISUALIZATION ? "BOX_VISUALIZATION" :
     key == BOX_NO_LID_B ? "BOX_NO_LID_B" :
@@ -1067,20 +1067,20 @@ module __PhysicalMsg( context, message, keys = [] )
 function __is_box_feature_entry( entry ) =
     is_list( entry ) && len( entry ) >= 2 && entry[ k_key ] == BOX_FEATURE;
 
-function __is_box_group_entry( entry ) =
-    is_list( entry ) && len( entry ) >= 2 && entry[ k_key ] == BOX_GROUP;
+function __is_feature_group_entry( entry ) =
+    is_list( entry ) && len( entry ) >= 2 && entry[ k_key ] == FEATURE_GROUP;
 
-function __is_box_feature_or_group_entry( entry ) =
-    __is_box_feature_entry( entry ) || __is_box_group_entry( entry );
+function __is_feature_or_group_entry( entry ) =
+    __is_box_feature_entry( entry ) || __is_feature_group_entry( entry );
 
 function __component_child_count( component, i = 0 ) =
     !is_list( component ) || i >= len( component ) ? 0 :
-    ( __is_box_feature_or_group_entry( component[ i ] ) ? 1 : 0 ) +
+    ( __is_feature_or_group_entry( component[ i ] ) ? 1 : 0 ) +
         __component_child_count( component, i + 1 );
 
 function __component_child_at( component, n, i = 0, found = 0 ) =
     !is_list( component ) || n < 0 || i >= len( component ) ? [] :
-    __is_box_feature_or_group_entry( component[ i ] ) ?
+    __is_feature_or_group_entry( component[ i ] ) ?
         ( found == n ? component[ i ] : __component_child_at( component, n, i + 1, found + 1 ) ) :
         __component_child_at( component, n, i + 1, found );
 
@@ -1777,7 +1777,7 @@ module __ValidateGroupFeaturePosition( table, ctx )
 {
     v_pos = __value( table, POSITION_XY, default = false );
     if ( v_pos != false && !__all_num_list( v_pos, 2 ) )
-        __TypeMsg( POSITION_XY, ctx, "[x, y] (2 numbers in BOX_GROUP-local coordinates)", v_pos );
+        __TypeMsg( POSITION_XY, ctx, "[x, y] (2 numbers in FEATURE_GROUP-local coordinates)", v_pos );
 }
 
 // Validate value types for component-level keys
@@ -4108,7 +4108,7 @@ module __ValidateGroup( group, context_name, nested_b = false, depth = 0 )
                 __ValidateComponentDefaultSizeWarning( child, _child_ctx );
                 __ValidateNestedFeatures( child, _child_ctx, depth + 1 );
             }
-            else if ( __is_box_group_entry( group[ i ] ) )
+            else if ( __is_feature_group_entry( group[ i ] ) )
             {
                 _group_ctx = str( context_name, " > group[", i, "]" );
                 __ValidateGroup( group[ i ], _group_ctx, nested_b, depth + 1 );
@@ -4141,7 +4141,7 @@ module __ValidateNestedFeatures( component, context_name, depth = 0 )
                     __ValidateComponentDefaultSizeWarning( child, _child_ctx );
                     __ValidateNestedFeatures( child, _child_ctx, depth + 1 );
                 }
-                else if ( __is_box_group_entry( component[ i ] ) )
+                else if ( __is_feature_group_entry( component[ i ] ) )
                 {
                     _group_ctx = str( context_name, " > group[", i, "]" );
                     __ValidateGroup( component[ i ], _group_ctx, true, depth + 1 );
@@ -4275,7 +4275,7 @@ module __ValidateElement( element, element_name, element_type = undef )
                             __ValidateSlidingDetentCutoutCollision( comp, _comp_ctx, _box_size, _wt, lid );
                     }
                 }
-                else if ( element[i][ k_key ] == BOX_GROUP )
+                else if ( element[i][ k_key ] == FEATURE_GROUP )
                 {
                     _group_ctx = str( _ctx, " > group[", i, "]" );
                     if ( $g_validate_keys_b )
@@ -4758,7 +4758,7 @@ module MakeBox( box )
         )
         is_list( pos ) && len( pos ) > pi && is_num( pos[ pi ] ) ? pos[ pi ] : 0;
 
-    module PositionBoxGroup( group, top_level_b = false )
+    module PositionFeatureGroup( group, top_level_b = false )
     {
         translate( [
             __group_position_raw( group, k_x ) + ( top_level_b ? m_wall_thickness : 0 ),
@@ -4812,16 +4812,16 @@ module MakeBox( box )
             FeatureBody();
     }
 
-    module MakeBoxGroupNegativeModel( group, top_level_b = false )
+    module MakeFeatureGroupNegativeModel( group, top_level_b = false )
     {
         if ( __group_enabled( group ) )
-            PositionBoxGroup( group, top_level_b )
+            PositionFeatureGroup( group, top_level_b )
                 for ( i = [ 0 : max( len( group ) - 1, 0 ) ] )
                 {
                     if ( __is_box_feature_entry( group[ i ] ) )
                         MakeFeatureNegativeModel( group[ i ], grouped_b = true );
-                    else if ( __is_box_group_entry( group[ i ] ) )
-                        MakeBoxGroupNegativeModel( group[ i ], top_level_b = false );
+                    else if ( __is_feature_group_entry( group[ i ] ) )
+                        MakeFeatureGroupNegativeModel( group[ i ], top_level_b = false );
                 }
     }
 
@@ -4829,8 +4829,8 @@ module MakeBox( box )
     {
         if ( __is_box_feature_entry( entry ) )
             MakeFeatureNegativeModel( entry );
-        else if ( __is_box_group_entry( entry ) )
-            MakeBoxGroupNegativeModel( entry, top_level_b = true );
+        else if ( __is_feature_group_entry( entry ) )
+            MakeFeatureGroupNegativeModel( entry, top_level_b = true );
     }
 
     if ( m_box_is_spacer )
@@ -4859,7 +4859,7 @@ module MakeBox( box )
                         // create a negative of the component
                         for( i = [ 0: m_num_components - 1 ] )
                         {
-                            if ( __is_box_feature_or_group_entry( box[ i ] ) )
+                            if ( __is_feature_or_group_entry( box[ i ] ) )
                                 __MaybeDebug( __value( box[ i ], DEBUG_B, default = false ) )
                                     MakeBoxEntryNegativeModel( box[ i ] );
                         }          
@@ -6361,11 +6361,11 @@ module MakeBox( box )
                         MakeLayer( child, layer = "final_component_subtractions", local_b = true, tree_depth = tree_depth + 1 );
                 }
             }
-            else if ( __is_box_group_entry( child ) && __group_enabled( child ) )
+            else if ( __is_feature_group_entry( child ) && __group_enabled( child ) )
             {
                 PositionChildGroupLayer( child )
                     for ( group_child_idx = [ 0 : max( len( child ) - 1, 0 ) ] )
-                        if ( __is_box_feature_or_group_entry( child[ group_child_idx ] ) )
+                        if ( __is_feature_or_group_entry( child[ group_child_idx ] ) )
                             MakeComponentChildEntryNegativeTree( child[ group_child_idx ] );
             }
         }
