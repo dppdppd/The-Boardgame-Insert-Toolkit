@@ -4,6 +4,26 @@
 Closed entries swept from tasks.org by session-end. Newest first.
 
 * v4 Maintenance
+** DONE Add subcomponents for nesting features inside features [[file:2026-05-05-subcomponents-nesting-features.md]]
+   CLOSED: [2026-05-11]
+   :PROPERTIES:
+   :ID: subcomponents-nesting-features
+   :END:
+** DONE Normalize or reject nested OBJECT_BOX wrapper data [[file:2026-05-09-nested-object-wrapper-degenerate-geometry.md]]
+   CLOSED: [2026-05-11]
+   :PROPERTIES:
+   :ID: nested-object-wrapper-degenerate-geometry
+   :END:
+** DONE Add explicit OpenSCAD prerequisite to LLM instructions [[file:2026-05-05-llm-openscad-prerequisite.md]]
+   CLOSED: [2026-05-11]
+   :PROPERTIES:
+   :ID: llm-openscad-prerequisite
+   :END:
+** DONE Resolve known chamfer gaps [[file:2026-05-05-known-chamfer-gaps.md]]
+   CLOSED: [2026-05-11]
+   :PROPERTIES:
+   :ID: known-chamfer-gaps
+   :END:
 ** DONE Improve divider integration with boxes and generated layouts [[file:2026-05-05-better-divider-integration.md]]
    CLOSED: [2026-05-09]
    :PROPERTIES:

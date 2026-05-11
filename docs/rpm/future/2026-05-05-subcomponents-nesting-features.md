@@ -418,3 +418,38 @@ Remaining risks or follow-ups:
 - Nested feature divider print output remains incomplete and intentionally out of scope for this slice.
 - User-facing parameter docs remain a follow-up; this slice only updates the experimental warning and adds render-backed coverage.
 - The all-in-one CSG runner needs a clean final-summary rerun when the environment stops killing the long command.
+
+## Worker Result
+
+Summary:
+
+- Completed and released the practical user-facing nested feature surface.
+- Fixed nested child CSG so child negative trees cut into restored parent material and child additions are clipped at the parent floor.
+- Replaced abstract nested tests with practical tray/well examples.
+- Added `FEATURE_GROUP` as a non-geometry transform wrapper for grouped child features.
+- Added `FEATURE_COPY` plus `FEATURE_REFERENCE` to repeat a named `BOX_FEATURE` or `FEATURE_GROUP` with a new outer position/rotation.
+- Published `v4.6.1`, `v4.7.0`, and `v4.8.0`.
+
+Files changed:
+
+- `release/lib/boardgame_insert_toolkit_lib.4.scad`
+- `docs/guidance/BIT-PARAMETERS.md`
+- `release/lib/boardgame_insert_toolkit_lib.4.6.1.scad`
+- `release/lib/boardgame_insert_toolkit_lib.4.7.0.scad`
+- `release/lib/boardgame_insert_toolkit_lib.4.8.0.scad`
+- `release/my_designs/starter.scad`
+- `release/my_designs/examples.4.scad`
+- `tests/v4/scad/test_nested_feature_*.scad`
+- `tests/v4/scad/test_feature_group_*.scad`
+- `tests/v4/scad/test_feature_copy_*.scad`
+
+Verification run:
+
+- `./tests/run_tests.sh --csg-only` - 86 passed, 0 failed, 27 warning-reporting tests after `FEATURE_COPY`.
+- `./tests/run_tests.sh test_feature_copy_basic test_feature_copy_group test_feature_copy_nested test_feature_copy_validation` - 4 passed, 0 failed, 2 expected warning-reporting tests.
+- `./scripts/package-release.sh --minor` smoke-compiled shipped starter/example files for `v4.8.0`.
+- GitHub release `v4.8.0` published with `boardgame_insert_toolkit_lib.4.8.0.scad`.
+
+Remaining risks or follow-ups:
+
+- Nested feature divider print output remains incomplete/experimental and is tracked separately in `2026-05-11-nested-feature-divider-print-output.md`.

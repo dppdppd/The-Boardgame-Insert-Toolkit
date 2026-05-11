@@ -2,19 +2,7 @@
 #+TODO: TODO IN-PROGRESS BLOCKED | DONE
 
 * v4 Maintenance
-** DONE Normalize or reject nested OBJECT_BOX wrapper data [[file:2026-05-09-nested-object-wrapper-degenerate-geometry.md]]
+** TODO Complete nested feature divider print output [[file:2026-05-11-nested-feature-divider-print-output.md]]
    :PROPERTIES:
-   :ID: nested-object-wrapper-degenerate-geometry
-   :END:
-** DONE Add explicit OpenSCAD prerequisite to LLM instructions [[file:2026-05-05-llm-openscad-prerequisite.md]]
-   :PROPERTIES:
-   :ID: llm-openscad-prerequisite
-   :END:
-** DONE Resolve known chamfer gaps [[file:2026-05-05-known-chamfer-gaps.md]]
-   :PROPERTIES:
-   :ID: known-chamfer-gaps
-   :END:
-** IN-PROGRESS Add subcomponents for nesting features inside features [[file:2026-05-05-subcomponents-nesting-features.md]]
-   :PROPERTIES:
-   :ID: subcomponents-nesting-features
+   :ID: nested-feature-divider-print-output
    :END:

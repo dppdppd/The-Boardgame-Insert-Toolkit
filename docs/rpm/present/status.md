@@ -2,8 +2,8 @@
 
 ## Project Status
 - **Current phase**: v4 stable — incremental feature work and docs maintenance
-- **Library version**: `4.5.0`
-- **Last updated**: 2026-05-10
+- **Library version**: `4.8.0`
+- **Last updated**: 2026-05-11
 
 ## Completed Work
 - v4 library shipped as the active version
@@ -33,9 +33,12 @@
 - `v4.3.1` published with `DIV_RAIL_SIZE_XYZ` Z defaulting to `MAX`, frame/tab sizing fixes, and divider validation cleanup.
 - `v4.4.0` published with `FTR_SHAPE_AXIS` replacing `FTR_SHAPE_ROTATED_B`, BGSD key metadata on physical validation diagnostics, and sliding-detent validation wording cleanup.
 - `v4.5.0` published with taller default sliding-lid detents, `LID_DETENT_LOCK_ANGLE` for lid-cavity lock resistance, a 45-degree default lock-side cavity angle, docs, and validation coverage.
+- `v4.6.1` published with practical nested `BOX_FEATURE` geometry support and initial transform grouping.
+- `v4.7.0` published with transform groups renamed to `FEATURE_GROUP` / `feature_group` and no deprecated `BOX_GROUP` alias.
+- `v4.8.0` published with `FEATURE_COPY` / `feature_copy` and `FEATURE_REFERENCE` / `feature_reference` for repeating named features or groups.
 
 ## Active Specs
 - No active implementation spec is currently in flight.
 
 ## Known Issues
-- No current v4 maintenance blocker is tracked here; see `docs/rpm/future/tasks.org` for future work.
+- Nested feature divider print output remains incomplete/experimental; normal nested geometry, labels, and cutouts are supported.
