@@ -1,4 +1,7 @@
-// Test: nested BOX_FEATURE child renders local geometry inside a parent feature.
+// Use-case:
+// A shallow card tray has a deeper round token bay in the tray floor. The child
+// cavity is deeper than the parent tray so its opening is flush with the tray
+// floor instead of protruding into the card space.
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
@@ -7,20 +10,20 @@ data = [
     [ G_ISOLATED_PRINT_BOX, "" ],
 
     [ OBJECT_BOX,
-        [ NAME, "nested feature basic" ],
-        [ BOX_SIZE_XYZ, [80, 60, 22] ],
+        [ NAME, "card tray with token bay in floor" ],
+        [ BOX_SIZE_XYZ, [96, 70, 26] ],
         [ BOX_NO_LID_B, true ],
         [ BOX_FEATURE,
-            [ NAME, "parent square cavity" ],
-            [ FTR_COMPARTMENT_SIZE_XYZ, [68, 48, 18] ],
+            [ NAME, "shallow card tray" ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [82, 56, 12] ],
             [ POSITION_XY, [CENTER, CENTER] ],
 
             [ BOX_FEATURE,
-                [ NAME, "child round well" ],
-                [ FTR_COMPARTMENT_SIZE_XYZ, [22, 22, 12] ],
+                [ NAME, "round token bay below tray floor" ],
+                [ FTR_COMPARTMENT_SIZE_XYZ, [22, 22, 22] ],
                 [ FTR_SHAPE, ROUND ],
                 [ FTR_SHAPE_VERTICAL_B, true ],
-                [ POSITION_XY, [CENTER, MAX] ],
+                [ POSITION_XY, [CENTER, 12] ],
             ],
         ],
     ],

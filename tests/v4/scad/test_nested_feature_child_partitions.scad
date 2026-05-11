@@ -1,4 +1,7 @@
-// Test: nested BOX_FEATURE child grid preserves floors and partitions.
+// Use-case:
+// A shallow card tray has a 3x2 set of round token bays nested into its floor.
+// The token bays are deeper than the parent tray, so their openings are flush
+// with the card-tray floor instead of rising into the card space.
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
@@ -7,19 +10,21 @@ data = [
     [ G_ISOLATED_PRINT_BOX, "" ],
 
     [ OBJECT_BOX,
-        [ NAME, "nested child partitions" ],
-        [ BOX_SIZE_XYZ, [90, 70, 24] ],
+        [ NAME, "card tray over round token bays" ],
+        [ BOX_SIZE_XYZ, [120, 86, 28] ],
         [ BOX_NO_LID_B, true ],
         [ BOX_FEATURE,
-            [ NAME, "parent deep cavity" ],
-            [ FTR_COMPARTMENT_SIZE_XYZ, [74, 54, 20] ],
+            [ NAME, "shallow card tray" ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [104, 70, 12] ],
             [ POSITION_XY, [CENTER, CENTER] ],
 
             [ BOX_FEATURE,
-                [ NAME, "child 2x2 tray" ],
-                [ FTR_NUM_COMPARTMENTS_XY, [2, 2] ],
-                [ FTR_COMPARTMENT_SIZE_XYZ, [14, 12, 12] ],
-                [ FTR_PADDING_XY, [2, 2] ],
+                [ NAME, "3x2 token bays below tray floor" ],
+                [ FTR_NUM_COMPARTMENTS_XY, [3, 2] ],
+                [ FTR_COMPARTMENT_SIZE_XYZ, [18, 18, 24] ],
+                [ FTR_PADDING_XY, [5, 5] ],
+                [ FTR_SHAPE, ROUND ],
+                [ FTR_SHAPE_VERTICAL_B, true ],
                 [ POSITION_XY, [CENTER, CENTER] ],
             ],
         ],

@@ -1,4 +1,6 @@
-// Test: nested BOX_FEATURE child labels and cutouts use the child frame.
+// Practical nested geometry example:
+// A shallow player-dashboard tray has deeper scoring/resource wells cut into
+// the tray floor. The nested children also carry labels and finger cutouts.
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
@@ -7,29 +9,29 @@ data = [
     [ G_ISOLATED_PRINT_BOX, "" ],
 
     [ OBJECT_BOX,
-        [ NAME, "nested child labels and cutouts" ],
+        [ NAME, "player dashboard with nested wells" ],
         [ BOX_SIZE_XYZ, [104, 70, 26] ],
         [ BOX_NO_LID_B, true ],
         [ BOX_FEATURE,
-            [ NAME, "parent display cavity" ],
-            [ FTR_COMPARTMENT_SIZE_XYZ, [88, 54, 22] ],
+            [ NAME, "player dashboard cavity" ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [88, 54, 12] ],
             [ POSITION_XY, [CENTER, CENTER] ],
 
             [ BOX_FEATURE,
-                [ NAME, "labeled child well" ],
-                [ FTR_COMPARTMENT_SIZE_XYZ, [30, 34, 14] ],
+                [ NAME, "victory point marker well" ],
+                [ FTR_COMPARTMENT_SIZE_XYZ, [30, 34, 22] ],
                 [ POSITION_XY, [8, CENTER] ],
                 [ LABEL,
-                    [ LBL_TEXT, "X" ],
+                    [ LBL_TEXT, "VP" ],
                     [ LBL_PLACEMENT, CENTER ],
-                    [ LBL_SIZE, 16 ],
+                    [ LBL_SIZE, 12 ],
                     [ LBL_DEPTH, 20 ],
                 ],
             ],
 
             [ BOX_FEATURE,
-                [ NAME, "cutout child well" ],
-                [ FTR_COMPARTMENT_SIZE_XYZ, [30, 34, 14] ],
+                [ NAME, "resource grab well" ],
+                [ FTR_COMPARTMENT_SIZE_XYZ, [30, 34, 22] ],
                 [ POSITION_XY, [50, CENTER] ],
                 [ FTR_CUTOUT_SIDES_4B, [t, f, f, t] ],
                 [ FTR_CUTOUT_CORNERS_4B, [f, t, f, f] ],

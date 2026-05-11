@@ -1,7 +1,7 @@
-// Test: nested BOX_FEATURE entries are schema- and physical-validated.
-// Expected: renders parent geometry and emits BGSD_WARNING messages for nested
-// feature limitation, nested key/type validation contexts, parent-local child
-// bounds, and sibling child overlap.
+// Practical nested validation example:
+// A card-and-token tray intentionally includes realistic authoring mistakes:
+// a typo in a nested label, a bad nested divider axis, overlapping coin wells,
+// an oversized token cup that escapes the parent tray, and malformed child data.
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
@@ -10,21 +10,21 @@ data = [
     [ G_ISOLATED_PRINT_BOX, "" ],
 
     [ OBJECT_BOX,
-        [ NAME, "nested_feature_validation" ],
-        [ BOX_SIZE_XYZ, [72, 44, 18] ],
+        [ NAME, "nested tray validation examples" ],
+        [ BOX_SIZE_XYZ, [76, 48, 20] ],
         [ BOX_NO_LID_B, true ],
         [ BOX_FEATURE,
-            [ NAME, "parent cavity" ],
-            [ FTR_COMPARTMENT_SIZE_XYZ, [64, 36, 14] ],
+            [ NAME, "card and token parent tray" ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [66, 38, 16] ],
             [ POSITION_XY, [CENTER, CENTER] ],
 
             [ BOX_FEATURE,
-                [ NAME, "schema only child" ],
+                [ NAME, "coin pool with label typo" ],
                 [ FTR_COMPARTMENT_SIZE_XYZ, [18, 18, 10] ],
                 [ FTR_SHAPE, ROUND ],
                 [ POSITION_XY, [4, 4] ],
                 [ LABEL,
-                    [ LBL_TEXT, "child" ],
+                    [ LBL_TEXT, "coin" ],
                     [ LBL_SIZE, 5 ],
                     [ "lbl_fontt", "sans" ],
                 ],
@@ -33,7 +33,7 @@ data = [
                 ],
 
                 [ BOX_FEATURE,
-                    [ NAME, "grandchild validation" ],
+                    [ NAME, "malformed nested gem pocket" ],
                     [ FTR_COMPARTMENT_SIZE_XYZ, ["bad", 4, 3] ],
                     [ "cmp_shapee", ROUND ],
                     [ POSITION_XY, [CENTER, MAX] ],
@@ -41,19 +41,19 @@ data = [
             ],
 
             [ BOX_FEATURE,
-                [ NAME, "overlap child" ],
+                [ NAME, "overlapping coin pool" ],
                 [ FTR_COMPARTMENT_SIZE_XYZ, [16, 16, 8] ],
                 [ POSITION_XY, [12, 12] ],
             ],
 
             [ BOX_FEATURE,
-                [ NAME, "out of parent child" ],
+                [ NAME, "oversized token cup" ],
                 [ FTR_COMPARTMENT_SIZE_XYZ, [20, 12, 8] ],
-                [ POSITION_XY, [50, 28] ],
+                [ POSITION_XY, [52, 30] ],
             ],
 
             [ BOX_FEATURE,
-                [ NAME, "bad child types" ],
+                [ NAME, "malformed card slot" ],
                 [ FTR_SHAPE, "triangle" ],
                 [ POSITION_XY, ["left", CENTER] ],
             ],
