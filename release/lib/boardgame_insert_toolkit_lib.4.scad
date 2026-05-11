@@ -1,6 +1,6 @@
 /*
  * The Boardgame Insert Toolkit - Library File
- * Version: 4.7.0
+ * Version: 4.8.0
  * 
  * A parametric system for creating custom board game inserts and organizers
  * https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
@@ -49,7 +49,7 @@
 
 
 // Version information
-VERSION = "4.7.0";
+VERSION = "4.8.0";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 // Resolution settings
@@ -151,6 +151,8 @@ DIV_FRAME_NUM_COLUMNS = "div_frame_num_columns"; // Number of columns in frame
 BOX_SIZE_XYZ = "box_size";              // Box dimensions [x,y,z]
 BOX_FEATURE = "component";            // Component to be contained in box
 FEATURE_GROUP = "feature_group";       // Non-geometry transform wrapper for grouped features
+FEATURE_COPY = "feature_copy";         // Non-geometry transform wrapper that repeats a named feature/group
+FEATURE_REFERENCE = "feature_reference"; // Name of feature/group repeated by FEATURE_COPY
 FTR_DIVIDERS = "dividers";             // Divider subgroup inside a box component
 BOX_VISUALIZATION = "visualization";    // Visualization settings
 
@@ -552,7 +554,16 @@ function __group_position_raw( group, D ) =
     )
     is_list( pos ) && len( pos ) > pi && is_num( pos[ pi ] ) ? pos[ pi ] : 0;
 
-function __group_child_extent( entry, D ) =
+function __feature_reference_body_extent( entry, D, reference_root, depth = 0 ) =
+    depth >= NESTED_FEATURE_VALIDATION_MAX_DEPTH ? 0 :
+    __is_box_feature_entry( entry ) ?
+        __cmp_auto_size( entry, D ) :
+    __is_feature_group_entry( entry ) ?
+        __group_max_child_extent( entry, D, reference_root, depth + 1 ) :
+    0;
+
+function __group_child_extent( entry, D, reference_root, depth = 0 ) =
+    depth >= NESTED_FEATURE_VALIDATION_MAX_DEPTH ? 0 :
     __is_box_feature_entry( entry ) ?
         let(
             pos_raw = __value( entry, POSITION_XY, default = [0, 0] ),
@@ -562,12 +573,21 @@ function __group_child_extent( entry, D ) =
         )
         pos_val + __cmp_auto_size( entry, D ) :
     __is_feature_group_entry( entry ) ?
-        __group_position_raw( entry, D ) + __group_max_child_extent( entry, D ) :
+        __group_position_raw( entry, D ) + __group_max_child_extent( entry, D, reference_root, depth + 1 ) :
+    __is_feature_copy_entry( entry ) ?
+        let(
+            ref_name = __value( entry, FEATURE_REFERENCE, default = false ),
+            target = __feature_reference_entry_in_scope( reference_root, reference_root, ref_name )
+        )
+        __group_position_raw( entry, D ) +
+            __feature_reference_body_extent( target, D, reference_root, depth + 1 ) :
     0;
 
-function __group_max_child_extent( group, D, i = 0 ) =
+function __group_max_child_extent( group, D, reference_root, depth = 0, i = 0 ) =
     !is_list( group ) || i >= len( group ) ? 0 :
-    max( __group_child_extent( group[ i ], D ), __group_max_child_extent( group, D, i + 1 ) );
+    max(
+        __group_child_extent( group[ i ], D, reference_root, depth ),
+        __group_max_child_extent( group, D, reference_root, depth, i + 1 ) );
 
 // Scan all feature/group entries in box, return the max component size per dimension.
 // For centered components (default), the box needs to fit the largest one.
@@ -592,7 +612,12 @@ function __box_max_component_extent( box, D, i = 0 ) =
         max( extent, __box_max_component_extent( box, D, i + 1 ) ) :
     ( is_list( box[i] ) && len( box[i] ) >= 2 && box[i][ k_key ] == FEATURE_GROUP ) ?
         max(
-            __group_position_raw( box[i], D ) + __group_max_child_extent( box[i], D ),
+            __group_position_raw( box[i], D ) + __group_max_child_extent( box[i], D, box ),
+            __box_max_component_extent( box, D, i + 1 )
+        ) :
+    ( is_list( box[i] ) && len( box[i] ) >= 2 && box[i][ k_key ] == FEATURE_COPY ) ?
+        max(
+            __group_child_extent( box[i], D, box ),
             __box_max_component_extent( box, D, i + 1 )
         ) :
     __box_max_component_extent( box, D, i + 1 );
@@ -824,7 +849,7 @@ function __is_valid_key( key, valid_keys ) =
 
 // Box-level valid keys (TYPE=BOX or TYPE=SPACER)
 __VALID_BOX_KEYS = [
-    TYPE, NAME, BOX_SIZE_XYZ, BOX_FEATURE, FEATURE_GROUP, BOX_LID, BOX_VISUALIZATION,
+    TYPE, NAME, BOX_SIZE_XYZ, BOX_FEATURE, FEATURE_GROUP, FEATURE_COPY, BOX_LID, BOX_VISUALIZATION,
     BOX_NO_LID_B, BOX_STACKABLE_B, BOX_WALL_THICKNESS, CHAMFER_N,
     ENABLED_B, DEBUG_B, LABEL, ROTATION, POSITION_XY
 ];
@@ -867,12 +892,17 @@ __VALID_COMPONENT_KEYS = [
     FTR_CUTOUT_BOTTOM_B, FTR_CUTOUT_BOTTOM_PCT, FTR_CUTOUT_TYPE,
     FTR_CUTOUT_DEPTH_MAX,
     FTR_SHEAR, FTR_FILLET_RADIUS, FTR_PEDESTAL_BASE_B, CHAMFER_N,
-    ENABLED_B, DEBUG_B, LABEL, FTR_DIVIDERS, BOX_FEATURE, FEATURE_GROUP, ROTATION, POSITION_XY
+    ENABLED_B, DEBUG_B, LABEL, FTR_DIVIDERS, BOX_FEATURE, FEATURE_GROUP, FEATURE_COPY, ROTATION, POSITION_XY
 ];
 
 // Group-level valid keys (inside FEATURE_GROUP)
 __VALID_GROUP_KEYS = [
-    NAME, ENABLED_B, DEBUG_B, BOX_FEATURE, FEATURE_GROUP, ROTATION, POSITION_XY
+    NAME, ENABLED_B, DEBUG_B, BOX_FEATURE, FEATURE_GROUP, FEATURE_COPY, ROTATION, POSITION_XY
+];
+
+// Copy-level valid keys (inside FEATURE_COPY)
+__VALID_COPY_KEYS = [
+    NAME, ENABLED_B, DEBUG_B, FEATURE_REFERENCE, ROTATION, POSITION_XY
 ];
 
 // Lid-level valid keys (inside BOX_LID)
@@ -962,6 +992,8 @@ function __key_display_name( key ) =
     key == BOX_SIZE_XYZ ? "BOX_SIZE_XYZ" :
     key == BOX_FEATURE ? "BOX_FEATURE" :
     key == FEATURE_GROUP ? "FEATURE_GROUP" :
+    key == FEATURE_COPY ? "FEATURE_COPY" :
+    key == FEATURE_REFERENCE ? "FEATURE_REFERENCE" :
     key == BOX_LID ? "BOX_LID" :
     key == BOX_VISUALIZATION ? "BOX_VISUALIZATION" :
     key == BOX_NO_LID_B ? "BOX_NO_LID_B" :
@@ -1064,23 +1096,54 @@ module __PhysicalMsg( context, message, keys = [] )
     echo( str( "BGSD_WARNING: [code=BIT-PHYSICAL]", __metadata_keys( keys ), ": physical validation: ", context, " ", message ) );
 }
 
+module __ReferenceMsg( context, ref_name )
+{
+    echo( str( "BGSD_WARNING: [code=BIT-REFERENCE] [key=", __key_display_name( FEATURE_REFERENCE ),
+               "]: ", context, " references \"", ref_name,
+               "\", but no BOX_FEATURE or FEATURE_GROUP with that NAME was found in scope." ) );
+}
+
 function __is_box_feature_entry( entry ) =
     is_list( entry ) && len( entry ) >= 2 && entry[ k_key ] == BOX_FEATURE;
 
 function __is_feature_group_entry( entry ) =
     is_list( entry ) && len( entry ) >= 2 && entry[ k_key ] == FEATURE_GROUP;
 
-function __is_feature_or_group_entry( entry ) =
+function __is_feature_copy_entry( entry ) =
+    is_list( entry ) && len( entry ) >= 2 && entry[ k_key ] == FEATURE_COPY;
+
+function __is_referenceable_feature_entry( entry ) =
     __is_box_feature_entry( entry ) || __is_feature_group_entry( entry );
+
+function __is_feature_container_entry( entry ) =
+    __is_referenceable_feature_entry( entry ) || __is_feature_copy_entry( entry );
+
+function __feature_reference_entry( scope, ref_name, i = 0, depth = 0 ) =
+    !is_string( ref_name ) || !is_list( scope ) ||
+        depth >= NESTED_FEATURE_VALIDATION_MAX_DEPTH || i >= len( scope ) ? [] :
+    __is_referenceable_feature_entry( scope[ i ] ) &&
+        __value( scope[ i ], NAME, default = "" ) == ref_name ? scope[ i ] :
+    __is_referenceable_feature_entry( scope[ i ] ) ?
+        let( child_match = __feature_reference_entry( scope[ i ], ref_name, 0, depth + 1 ) )
+        len( child_match ) > 0 ? child_match :
+            __feature_reference_entry( scope, ref_name, i + 1, depth ) :
+    __feature_reference_entry( scope, ref_name, i + 1, depth );
+
+function __feature_reference_entry_in_scope( scope, root, ref_name ) =
+    let(
+        local_match = __feature_reference_entry( scope, ref_name ),
+        root_match = __feature_reference_entry( root, ref_name )
+    )
+    len( local_match ) > 0 ? local_match : root_match;
 
 function __component_child_count( component, i = 0 ) =
     !is_list( component ) || i >= len( component ) ? 0 :
-    ( __is_feature_or_group_entry( component[ i ] ) ? 1 : 0 ) +
+    ( __is_feature_container_entry( component[ i ] ) ? 1 : 0 ) +
         __component_child_count( component, i + 1 );
 
 function __component_child_at( component, n, i = 0, found = 0 ) =
     !is_list( component ) || n < 0 || i >= len( component ) ? [] :
-    __is_feature_or_group_entry( component[ i ] ) ?
+    __is_feature_container_entry( component[ i ] ) ?
         ( found == n ? component[ i ] : __component_child_at( component, n, i + 1, found + 1 ) ) :
         __component_child_at( component, n, i + 1, found );
 
@@ -1778,6 +1841,30 @@ module __ValidateGroupFeaturePosition( table, ctx )
     v_pos = __value( table, POSITION_XY, default = false );
     if ( v_pos != false && !__all_num_list( v_pos, 2 ) )
         __TypeMsg( POSITION_XY, ctx, "[x, y] (2 numbers in FEATURE_GROUP-local coordinates)", v_pos );
+}
+
+// Validate value types for copy-level keys
+module __ValidateCopyTypes( table, ctx )
+{
+    v_name = __value( table, NAME, default = false );
+    if ( v_name != false && !is_string( v_name ) )
+        __TypeMsg( NAME, ctx, "string", v_name );
+
+    v_en = __value( table, ENABLED_B, default = false );
+    if ( __is_valid_key( ENABLED_B, table ) && !is_bool( v_en ) )
+        __TypeMsg( ENABLED_B, ctx, "boolean (true/false)", v_en );
+
+    v_ref = __value( table, FEATURE_REFERENCE, default = false );
+    if ( v_ref != false && !is_string( v_ref ) )
+        __TypeMsg( FEATURE_REFERENCE, ctx, "string matching a BOX_FEATURE or FEATURE_GROUP NAME", v_ref );
+
+    v_rot = __value( table, ROTATION, default = false );
+    if ( v_rot != false && !is_num( v_rot ) )
+        __TypeMsg( ROTATION, ctx, "number (degrees)", v_rot );
+
+    v_pos = __value( table, POSITION_XY, default = false );
+    if ( v_pos != false && !__all_num_list( v_pos, 2 ) )
+        __TypeMsg( POSITION_XY, ctx, "[x, y] (2 numbers, copy origin)", v_pos );
 }
 
 // Validate value types for component-level keys
@@ -4079,8 +4166,25 @@ module __NestedFeatureDepthMsg( context_name, depth )
         depth, " reached in ", context_name, "; deeper child features were not validated." ) );
 }
 
-module __ValidateGroup( group, context_name, nested_b = false, depth = 0 )
+module __ValidateFeatureCopy( copy, context_name, scope, reference_root, nested_b = false )
 {
+    __ValidateTable( copy, __VALID_COPY_KEYS, context_name );
+    __ValidateCopyTypes( copy, context_name );
+
+    _ref = __value( copy, FEATURE_REFERENCE, default = false );
+    _target = __feature_reference_entry_in_scope( scope, reference_root, _ref );
+
+    if ( is_string( _ref ) && len( _target ) == 0 )
+        __ReferenceMsg( context_name, _ref );
+
+    if ( nested_b && len( _target ) > 0 )
+        __NestedFeatureUnsupportedMsg( str( context_name, " > reference \"", _ref, "\"" ) );
+}
+
+module __ValidateGroup( group, context_name, nested_b = false, depth = 0, reference_root = [] )
+{
+    _reference_root = len( reference_root ) > 0 ? reference_root : group;
+
     if ( depth >= NESTED_FEATURE_VALIDATION_MAX_DEPTH )
     {
         __NestedFeatureDepthMsg( context_name, depth );
@@ -4106,19 +4210,26 @@ module __ValidateGroup( group, context_name, nested_b = false, depth = 0 )
                 __ValidateLabels( child, _child_ctx );
                 __ValidateFeatureDividers( child, _child_ctx );
                 __ValidateComponentDefaultSizeWarning( child, _child_ctx );
-                __ValidateNestedFeatures( child, _child_ctx, depth + 1 );
+                __ValidateNestedFeatures( child, _child_ctx, depth + 1, _reference_root );
             }
             else if ( __is_feature_group_entry( group[ i ] ) )
             {
                 _group_ctx = str( context_name, " > group[", i, "]" );
-                __ValidateGroup( group[ i ], _group_ctx, nested_b, depth + 1 );
+                __ValidateGroup( group[ i ], _group_ctx, nested_b, depth + 1, _reference_root );
+            }
+            else if ( __is_feature_copy_entry( group[ i ] ) )
+            {
+                _copy_ctx = str( context_name, " > copy[", i, "]" );
+                __ValidateFeatureCopy( group[ i ], _copy_ctx, group, _reference_root, nested_b );
             }
         }
     }
 }
 
-module __ValidateNestedFeatures( component, context_name, depth = 0 )
+module __ValidateNestedFeatures( component, context_name, depth = 0, reference_root = [] )
 {
+    _reference_root = len( reference_root ) > 0 ? reference_root : component;
+
     if ( __component_has_children( component ) )
     {
         if ( depth >= NESTED_FEATURE_VALIDATION_MAX_DEPTH )
@@ -4139,12 +4250,17 @@ module __ValidateNestedFeatures( component, context_name, depth = 0 )
                     __ValidateLabels( child, _child_ctx );
                     __ValidateFeatureDividers( child, _child_ctx );
                     __ValidateComponentDefaultSizeWarning( child, _child_ctx );
-                    __ValidateNestedFeatures( child, _child_ctx, depth + 1 );
+                    __ValidateNestedFeatures( child, _child_ctx, depth + 1, _reference_root );
                 }
                 else if ( __is_feature_group_entry( component[ i ] ) )
                 {
                     _group_ctx = str( context_name, " > group[", i, "]" );
-                    __ValidateGroup( component[ i ], _group_ctx, true, depth + 1 );
+                    __ValidateGroup( component[ i ], _group_ctx, true, depth + 1, _reference_root );
+                }
+                else if ( __is_feature_copy_entry( component[ i ] ) )
+                {
+                    _copy_ctx = str( context_name, " > copy[", i, "]" );
+                    __ValidateFeatureCopy( component[ i ], _copy_ctx, component, _reference_root, true );
                 }
             }
         }
@@ -4248,7 +4364,7 @@ module __ValidateElement( element, element_name, element_type = undef )
                         __ValidateComponentTypes( comp, _comp_ctx );
                         __ValidateLabels( comp, _comp_ctx );
                         __ValidateFeatureDividers( comp, _comp_ctx );
-                        __ValidateNestedFeatures( comp, _comp_ctx );
+                        __ValidateNestedFeatures( comp, _comp_ctx, reference_root = element );
                         __ValidateComponentDefaultSizeWarning( comp, _comp_ctx );
                     }
 
@@ -4279,7 +4395,13 @@ module __ValidateElement( element, element_name, element_type = undef )
                 {
                     _group_ctx = str( _ctx, " > group[", i, "]" );
                     if ( $g_validate_keys_b )
-                        __ValidateGroup( element[i], _group_ctx );
+                        __ValidateGroup( element[i], _group_ctx, reference_root = element );
+                }
+                else if ( element[i][ k_key ] == FEATURE_COPY )
+                {
+                    _copy_ctx = str( _ctx, " > copy[", i, "]" );
+                    if ( $g_validate_keys_b )
+                        __ValidateFeatureCopy( element[i], _copy_ctx, element, element );
                 }
             }
         }
@@ -4769,6 +4891,12 @@ module MakeBox( box )
                 children();
     }
 
+    module PositionFeatureCopy( copy, top_level_b = false )
+    {
+        PositionFeatureGroup( copy, top_level_b )
+            children();
+    }
+
     module PositionGroupFeature( component )
     {
         _pos = [
@@ -4812,25 +4940,73 @@ module MakeBox( box )
             FeatureBody();
     }
 
-    module MakeFeatureGroupNegativeModel( group, top_level_b = false )
+    module MakeFeatureLocalNegativeModel( component )
+    {
+        union()
+        {
+            difference()
+            {
+                MakeLayer( component, layer = "component_subtractions", local_b = true );
+                MakeLayer( component, layer = "component_additions", local_b = true );
+            }
+            MakeLayer( component, layer = "final_component_subtractions", local_b = true );
+        }
+    }
+
+    module MakeFeatureReferenceNegativeModel( target, reference_root, copy_depth = 0 )
+    {
+        if ( copy_depth < NESTED_FEATURE_VALIDATION_MAX_DEPTH )
+        {
+            if ( __is_box_feature_entry( target ) )
+                MakeFeatureLocalNegativeModel( target );
+            else if ( __is_feature_group_entry( target ) )
+                MakeFeatureGroupChildrenNegativeModel( target, reference_root, copy_depth + 1 );
+        }
+    }
+
+    module MakeFeatureCopyNegativeModel( copy, reference_scope, reference_root, top_level_b = false, copy_depth = 0 )
+    {
+        if ( __group_enabled( copy ) && copy_depth < NESTED_FEATURE_VALIDATION_MAX_DEPTH )
+        {
+            _target = __feature_reference_entry_in_scope(
+                reference_scope,
+                reference_root,
+                __value( copy, FEATURE_REFERENCE, default = false ) );
+
+            PositionFeatureCopy( copy, top_level_b )
+                MakeFeatureReferenceNegativeModel( _target, reference_root, copy_depth + 1 );
+        }
+    }
+
+    module MakeFeatureGroupChildrenNegativeModel( group, reference_root, copy_depth = 0 )
+    {
+        for ( i = [ 0 : max( len( group ) - 1, 0 ) ] )
+        {
+            if ( __is_feature_container_entry( group[ i ] ) )
+                MakeBoxEntryNegativeModel( group[ i ], group, reference_root, false, copy_depth );
+        }
+    }
+
+    module MakeFeatureGroupNegativeModel( group, reference_root, top_level_b = false, copy_depth = 0 )
     {
         if ( __group_enabled( group ) )
             PositionFeatureGroup( group, top_level_b )
-                for ( i = [ 0 : max( len( group ) - 1, 0 ) ] )
-                {
-                    if ( __is_box_feature_entry( group[ i ] ) )
-                        MakeFeatureNegativeModel( group[ i ], grouped_b = true );
-                    else if ( __is_feature_group_entry( group[ i ] ) )
-                        MakeFeatureGroupNegativeModel( group[ i ], top_level_b = false );
-                }
+                MakeFeatureGroupChildrenNegativeModel( group, reference_root, copy_depth );
     }
 
-    module MakeBoxEntryNegativeModel( entry )
+    module MakeBoxEntryNegativeModel( entry, reference_scope, reference_root, top_level_b = false, copy_depth = 0 )
     {
         if ( __is_box_feature_entry( entry ) )
             MakeFeatureNegativeModel( entry );
         else if ( __is_feature_group_entry( entry ) )
-            MakeFeatureGroupNegativeModel( entry, top_level_b = true );
+            MakeFeatureGroupNegativeModel( entry, reference_root, top_level_b = top_level_b, copy_depth = copy_depth );
+        else if ( __is_feature_copy_entry( entry ) )
+            MakeFeatureCopyNegativeModel(
+                entry,
+                reference_scope,
+                reference_root,
+                top_level_b = top_level_b,
+                copy_depth = copy_depth );
     }
 
     if ( m_box_is_spacer )
@@ -4859,9 +5035,9 @@ module MakeBox( box )
                         // create a negative of the component
                         for( i = [ 0: m_num_components - 1 ] )
                         {
-                            if ( __is_feature_or_group_entry( box[ i ] ) )
+                            if ( __is_feature_container_entry( box[ i ] ) )
                                 __MaybeDebug( __value( box[ i ], DEBUG_B, default = false ) )
-                                    MakeBoxEntryNegativeModel( box[ i ] );
+                                    MakeBoxEntryNegativeModel( box[ i ], box, box, top_level_b = true );
                         }          
                     }
                 }
@@ -5109,6 +5285,12 @@ module MakeBox( box )
             translate( [ __group_position_raw( group, k_x ), __group_position_raw( group, k_y ), 0 ] )
                 rotate( [ 0, 0, __value( group, ROTATION, default = 0 ) ] )
                     children();
+        }
+
+        module PositionChildCopyLayer( copy )
+        {
+            PositionChildGroupLayer( copy )
+                children();
         }
 
         module ClipToParentFloor()
@@ -6338,35 +6520,75 @@ module MakeBox( box )
 
         // Nested features cut into restored parent material, so child additions
         // must stop at the parent's floor rather than rising into the parent tray.
-        module MakeComponentChildEntryNegativeTree( child )
+        module MakeComponentChildFeatureLocalNegativeTree( child )
         {
-            if ( __is_box_feature_entry( child ) && __component_child_geometry_supported( child ) )
+            if ( __component_child_geometry_supported( child ) )
             {
                 union()
                 {
                     difference()
                     {
-                        PositionChildLayer( child )
-                            MakeLayer( child, layer = "component_subtractions", local_b = true, tree_depth = tree_depth + 1 );
+                        MakeLayer( child, layer = "component_subtractions", local_b = true, tree_depth = tree_depth + 1 );
 
                         intersection()
                         {
-                            PositionChildLayer( child )
-                                MakeLayer( child, layer = "component_additions", local_b = true, tree_depth = tree_depth + 1 );
+                            MakeLayer( child, layer = "component_additions", local_b = true, tree_depth = tree_depth + 1 );
                             ClipToParentFloor();
                         }
                     }
 
-                    PositionChildLayer( child )
-                        MakeLayer( child, layer = "final_component_subtractions", local_b = true, tree_depth = tree_depth + 1 );
+                    MakeLayer( child, layer = "final_component_subtractions", local_b = true, tree_depth = tree_depth + 1 );
                 }
+            }
+        }
+
+        module MakeComponentChildReferenceBody( target, reference_root, copy_depth = 0 )
+        {
+            if ( copy_depth < NESTED_FEATURE_VALIDATION_MAX_DEPTH )
+            {
+                if ( __is_box_feature_entry( target ) )
+                    MakeComponentChildFeatureLocalNegativeTree( target );
+                else if ( __is_feature_group_entry( target ) )
+                    MakeComponentChildGroupBody( target, reference_root, copy_depth + 1 );
+            }
+        }
+
+        module MakeComponentChildCopyTree( copy, reference_scope, reference_root, copy_depth = 0 )
+        {
+            if ( __group_enabled( copy ) && copy_depth < NESTED_FEATURE_VALIDATION_MAX_DEPTH )
+            {
+                _target = __feature_reference_entry_in_scope(
+                    reference_scope,
+                    reference_root,
+                    __value( copy, FEATURE_REFERENCE, default = false ) );
+
+                PositionChildCopyLayer( copy )
+                    MakeComponentChildReferenceBody( _target, reference_root, copy_depth + 1 );
+            }
+        }
+
+        module MakeComponentChildGroupBody( group, reference_root, copy_depth = 0 )
+        {
+            for ( group_child_idx = [ 0 : max( len( group ) - 1, 0 ) ] )
+                if ( __is_feature_container_entry( group[ group_child_idx ] ) )
+                    MakeComponentChildEntryNegativeTree( group[ group_child_idx ], group, reference_root, copy_depth );
+        }
+
+        module MakeComponentChildEntryNegativeTree( child, reference_scope, reference_root, copy_depth = 0 )
+        {
+            if ( __is_box_feature_entry( child ) )
+            {
+                PositionChildLayer( child )
+                    MakeComponentChildFeatureLocalNegativeTree( child );
             }
             else if ( __is_feature_group_entry( child ) && __group_enabled( child ) )
             {
                 PositionChildGroupLayer( child )
-                    for ( group_child_idx = [ 0 : max( len( child ) - 1, 0 ) ] )
-                        if ( __is_feature_or_group_entry( child[ group_child_idx ] ) )
-                            MakeComponentChildEntryNegativeTree( child[ group_child_idx ] );
+                    MakeComponentChildGroupBody( child, reference_root, copy_depth );
+            }
+            else if ( __is_feature_copy_entry( child ) )
+            {
+                MakeComponentChildCopyTree( child, reference_scope, reference_root, copy_depth );
             }
         }
 
@@ -6377,7 +6599,7 @@ module MakeBox( box )
                 for ( child_idx = [ 0 : m_component_child_count - 1 ] )
                 {
                     child = __component_child_at( component, child_idx );
-                    MakeComponentChildEntryNegativeTree( child );
+                    MakeComponentChildEntryNegativeTree( child, component, box );
                 }
             }
         }
