@@ -35,3 +35,11 @@ Verification:
 - Direct `openscad -o /tmp/test_validation_flags.csg tests/v4/scad/test_validation_flags.scad` confirmed key-only, physical-only, both-off, and legacy key-off modes.
 - `./tests/run_tests.sh --csg-only test_validation_flags test_key_validation test_physical_validation test_cutout_top_profile test_rotated_sheared_physical_validation`
 - Full CSG suite covered in chunks: 64 test files passed, 0 failed, 0 warnings.
+
+## Revision Note
+
+Merged the separate physical-validation option back into `G_VALIDATE_KEYS_B`.
+BIT now has one validation switch: when `G_VALIDATE_KEYS_B` is true, key/type
+and physical validation both run; when false, both are suppressed. Removed
+`G_VALIDATE_PHYSICAL_B` from the active library, focused validation-flag test,
+and public parameter guide.

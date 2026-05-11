@@ -1,6 +1,6 @@
 /*
  * The Boardgame Insert Toolkit - Library File
- * Version: 4.5.1
+ * Version: 4.6.0
  * 
  * A parametric system for creating custom board game inserts and organizers
  * https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
@@ -49,7 +49,7 @@
 
 
 // Version information
-VERSION = "4.5.1";
+VERSION = "4.6.0";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 // Resolution settings
@@ -75,6 +75,8 @@ k_z = 2;      // Z-axis index in coordinate arrays
 
 k_aabb_min = 0; // AABB minimum point index
 k_aabb_max = 1; // AABB maximum point index
+
+NESTED_FEATURE_VALIDATION_MAX_DEPTH = 8;
 
 k_hex_d = 0;  // Hex diameter index
 k_hex_z = 1;  // Hex height index
@@ -299,7 +301,6 @@ G_ISOLATED_PRINT_BOX = "g_isolated_print_box";
 G_VISUALIZATION_B = "g_visualization_b";
 G_PREVIEW_NO_LABELS_B = "g_preview_no_labels_b";
 G_VALIDATE_KEYS_B = "g_validate_keys_b";
-G_VALIDATE_PHYSICAL_B = "g_validate_physical_b";
 G_WALL_THICKNESS = "g_wall_thickness";
 G_DETENT_THICKNESS = "g_detent_thickness";
 G_DETENT_SPACING = "g_detent_spacing";
@@ -353,14 +354,9 @@ $g_vis_actual_b = $g_visualization_b && $preview;
 $g_preview_no_labels_b = f;
 $g_no_labels_actual_b = $g_preview_no_labels_b && $preview;
 
-// Validate user-provided keys and echo messages for unrecognized ones.
-// Set to false to suppress key/type validation output.
+// Validate user-provided data and echo key/type plus physical warning output.
+// Set to false to suppress validation output.
 $g_validate_keys_b = t;
-
-// Validate physical fit and printability risks.
-// Defaults to key validation when G_VALIDATE_PHYSICAL_B is not provided,
-// preserving legacy G_VALIDATE_KEYS_B=false behavior.
-$g_validate_physical_b = t;
 
 // Wall thickness in mm. Default = 2.0
 // Increasing this makes stronger but heavier components
@@ -499,6 +495,19 @@ function __type( lmnt ) =
     let(from_key = __type_from_key(lmnt[0]))
     from_key != undef ? from_key
     : __value( lmnt, TYPE, default = BOX);
+
+// BGSD may emit an OBJECT_* entry as [OBJECT_BOX, [[KEY, value], ...]].
+// Normalize exactly that one wrapper level so downstream key lookups still
+// operate on the normal flat element table.
+function __is_wrapped_object_entry( entry ) =
+    is_list( entry ) &&
+    len( entry ) == 2 &&
+    __type_from_key( entry[0] ) != undef &&
+    is_list( entry[1] ) &&
+    ( len( entry[1] ) == 0 ? true : is_list( entry[1][0] ) );
+
+function __normalize_object_entry( entry ) =
+    __is_wrapped_object_entry( entry ) ? concat( [ entry[0] ], entry[1] ) : entry;
 
 // Get display name: NAME property (new-style) or string key (old-style)
 function __element_name(i) =
@@ -828,7 +837,7 @@ __VALID_COMPONENT_KEYS = [
     FTR_CUTOUT_BOTTOM_B, FTR_CUTOUT_BOTTOM_PCT, FTR_CUTOUT_TYPE,
     FTR_CUTOUT_DEPTH_MAX,
     FTR_SHEAR, FTR_FILLET_RADIUS, FTR_PEDESTAL_BASE_B, CHAMFER_N,
-    ENABLED_B, DEBUG_B, LABEL, FTR_DIVIDERS, ROTATION, POSITION_XY
+    ENABLED_B, DEBUG_B, LABEL, FTR_DIVIDERS, BOX_FEATURE, ROTATION, POSITION_XY
 ];
 
 // Lid-level valid keys (inside BOX_LID)
@@ -904,7 +913,6 @@ function __key_display_name( key ) =
     key == G_VISUALIZATION_B ? "G_VISUALIZATION_B" :
     key == G_PREVIEW_NO_LABELS_B ? "G_PREVIEW_NO_LABELS_B" :
     key == G_VALIDATE_KEYS_B ? "G_VALIDATE_KEYS_B" :
-    key == G_VALIDATE_PHYSICAL_B ? "G_VALIDATE_PHYSICAL_B" :
     key == G_WALL_THICKNESS ? "G_WALL_THICKNESS" :
     key == G_DETENT_THICKNESS ? "G_DETENT_THICKNESS" :
     key == G_DETENT_SPACING ? "G_DETENT_SPACING" :
@@ -1022,6 +1030,49 @@ module __PhysicalMsg( context, message, keys = [] )
 
 function __is_box_feature_entry( entry ) =
     is_list( entry ) && len( entry ) >= 2 && entry[ k_key ] == BOX_FEATURE;
+
+function __component_child_count( component, i = 0 ) =
+    !is_list( component ) || i >= len( component ) ? 0 :
+    ( __is_box_feature_entry( component[ i ] ) ? 1 : 0 ) +
+        __component_child_count( component, i + 1 );
+
+function __component_child_at( component, n, i = 0, found = 0 ) =
+    !is_list( component ) || n < 0 || i >= len( component ) ? [] :
+    __is_box_feature_entry( component[ i ] ) ?
+        ( found == n ? component[ i ] : __component_child_at( component, n, i + 1, found + 1 ) ) :
+        __component_child_at( component, n, i + 1, found );
+
+function __component_has_children( component ) =
+    __component_child_count( component ) > 0;
+
+function __component_child_chamfer_ok( comp ) =
+    let( chamfer = __value( comp, CHAMFER_N, default = false ) )
+    chamfer == false || is_num( chamfer );
+
+function __component_child_shape_axis_ok( comp ) =
+    let( axis = __value( comp, FTR_SHAPE_AXIS, default = Y ) )
+    axis == X || axis == Y;
+
+function __component_child_dividers_ok( comp ) =
+    let( dividers = __component_dividers( comp ) )
+    !__feature_dividers_enabled( dividers ) ||
+        __component_divider_slots_physical_values_ok( comp );
+
+function __component_child_geometry_supported( comp ) =
+    is_bool( __value( comp, ENABLED_B, default = true ) ) &&
+    __value( comp, ENABLED_B, default = true ) &&
+    __component_cutout_physical_values_ok( comp ) &&
+    __component_corner_cutout_physical_values_ok( comp ) &&
+    __component_physical_position_ok( comp ) &&
+    __all_num_list( __value( comp, FTR_PADDING_HEIGHT_ADJUST_XY, default = [0, 0] ), 2 ) &&
+    is_num( __value( comp, ROTATION, default = 0 ) ) &&
+    __all_num_list( __value( comp, FTR_SHEAR, default = [0, 0] ), 2 ) &&
+    __is_valid_key( __value( comp, FTR_SHAPE, default = SQUARE ), __VALID_SHAPES ) &&
+    __component_child_shape_axis_ok( comp ) &&
+    is_bool( __value( comp, FTR_SHAPE_VERTICAL_B, default = false ) ) &&
+    is_num( __value( comp, FTR_FILLET_RADIUS, default = 0 ) ) &&
+    __component_child_chamfer_ok( comp ) &&
+    __component_child_dividers_ok( comp );
 
 function __component_physical_values_ok( comp ) =
     __all_num_list( __value( comp, FTR_COMPARTMENT_SIZE_XYZ, default = [10, 10, 10] ), 3 ) &&
@@ -1522,12 +1573,72 @@ function __component_validation_transformed_corners( comp, box_size, wall_thickn
     )
     [ for ( p = rotated ) [ p[ k_x ] + position[ k_x ], p[ k_y ] + position[ k_y ] ] ];
 
+function __component_validation_sheared_footprint_size( comp, D ) =
+    let(
+        comp_size = __cmp_auto_size( comp, D ),
+        comp_height = __cmp_auto_size( comp, k_z ),
+        shear = __value( comp, FTR_SHEAR, default = [0, 0] )
+    )
+    comp_size + abs( tan( shear[ D ] ) ) * comp_height;
+
+function __component_validation_transformed_footprint_size( comp, D ) =
+    let(
+        rotation = __value( comp, ROTATION, default = 0 ),
+        sheared_x = __component_validation_sheared_footprint_size( comp, k_x ),
+        sheared_y = __component_validation_sheared_footprint_size( comp, k_y )
+    )
+    D == k_x ?
+        abs( cos( rotation ) ) * sheared_x + abs( sin( rotation ) ) * sheared_y :
+        abs( sin( rotation ) ) * sheared_x + abs( cos( rotation ) ) * sheared_y;
+
+function __component_validation_parent_local_position( comp, parent, D ) =
+    let(
+        raw = __component_validation_position_raw( comp, D ),
+        comp_size = __cmp_auto_size( comp, D ),
+        transformed_size = __component_validation_transformed_footprint_size( comp, D )
+    )
+    raw == CENTER ? ( __cmp_auto_size( parent, D ) - comp_size ) / 2 :
+    raw == MAX ? __cmp_auto_size( parent, D ) - ( comp_size + transformed_size ) / 2 :
+    raw;
+
+function __component_validation_parent_local_corners( comp, parent ) =
+    let(
+        w = __cmp_auto_size( comp, k_x ),
+        d = __cmp_auto_size( comp, k_y ),
+        z = __cmp_auto_size( comp, k_z ),
+        rotation = __value( comp, ROTATION, default = 0 ),
+        shear = __value( comp, FTR_SHEAR, default = [0, 0] ),
+        shear_x = abs( tan( shear[ k_x ] ) * z / 2 ),
+        shear_y = abs( tan( shear[ k_y ] ) * z / 2 ),
+        center = [ w / 2, d / 2 ],
+        position = [
+            __component_validation_parent_local_position( comp, parent, k_x ),
+            __component_validation_parent_local_position( comp, parent, k_y )
+        ],
+        local = [
+            [ -shear_x, -shear_y ],
+            [ w + shear_x, -shear_y ],
+            [ w + shear_x, d + shear_y ],
+            [ -shear_x, d + shear_y ]
+        ],
+        rotated = [ for ( p = local ) __component_validation_rotated_point( p, rotation, center ) ]
+    )
+    [ for ( p = rotated ) [ p[ k_x ] + position[ k_x ], p[ k_y ] + position[ k_y ] ] ];
+
 function __component_validation_transformed_min( comp, box_size, wall_thickness, D ) =
     let( corners = __component_validation_transformed_corners( comp, box_size, wall_thickness ) )
     min( corners[0][ D ], corners[1][ D ], corners[2][ D ], corners[3][ D ] );
 
 function __component_validation_transformed_max( comp, box_size, wall_thickness, D ) =
     let( corners = __component_validation_transformed_corners( comp, box_size, wall_thickness ) )
+    max( corners[0][ D ], corners[1][ D ], corners[2][ D ], corners[3][ D ] );
+
+function __component_validation_parent_local_min( comp, parent, D ) =
+    let( corners = __component_validation_parent_local_corners( comp, parent ) )
+    min( corners[0][ D ], corners[1][ D ], corners[2][ D ], corners[3][ D ] );
+
+function __component_validation_parent_local_max( comp, parent, D ) =
+    let( corners = __component_validation_parent_local_corners( comp, parent ) )
     max( corners[0][ D ], corners[1][ D ], corners[2][ D ], corners[3][ D ] );
 
 function __ranges_overlap( a_min, a_max, b_min, b_max ) =
@@ -1548,6 +1659,20 @@ function __components_overlap_xy( a, b, box_size, wall_thickness ) =
         __component_validation_transformed_max( a, box_size, wall_thickness, k_y ),
         __component_validation_transformed_min( b, box_size, wall_thickness, k_y ),
         __component_validation_transformed_max( b, box_size, wall_thickness, k_y )
+    );
+
+function __nested_components_overlap_xy( a, b, parent ) =
+    __ranges_overlap(
+        __component_validation_parent_local_min( a, parent, k_x ),
+        __component_validation_parent_local_max( a, parent, k_x ),
+        __component_validation_parent_local_min( b, parent, k_x ),
+        __component_validation_parent_local_max( b, parent, k_x )
+    ) &&
+    __ranges_overlap(
+        __component_validation_parent_local_min( a, parent, k_y ),
+        __component_validation_parent_local_max( a, parent, k_y ),
+        __component_validation_parent_local_min( b, parent, k_y ),
+        __component_validation_parent_local_max( b, parent, k_y )
     );
 
 // Validate value types for box-level keys
@@ -2187,6 +2312,40 @@ function __lid_thickness_for_validation( wall_thickness ) =
 function __box_chamfer_for_validation( element ) =
     let( raw = __value( element, CHAMFER_N, default = 0.6 ) )
     is_num( raw ) ? ( $g_fit_test_b ? 0 : max( 0, raw / sqrt(2) ) ) : false;
+
+function __component_explicit_chamfer_for_validation( comp, element ) =
+    __is_valid_key( CHAMFER_N, comp ) || __is_valid_key( CHAMFER_N, element );
+
+function __component_chamfer_raw_for_validation( comp, element ) =
+    __value( comp, CHAMFER_N, default = __value( element, CHAMFER_N, default = false ) );
+
+function __component_chamfer_for_validation( comp, element ) =
+    let( raw = __component_chamfer_raw_for_validation( comp, element ) )
+    is_num( raw ) ? ( $g_fit_test_b ? 0 : max( 0, raw / sqrt(2) ) ) : false;
+
+function __component_laid_down_hex_oct_for_validation( comp ) =
+    let(
+        shape = __value( comp, FTR_SHAPE, default = SQUARE ),
+        vertical = __value( comp, FTR_SHAPE_VERTICAL_B, default = false )
+    )
+    ( shape == HEX || shape == HEX2 || shape == OCT || shape == OCT2 ) &&
+    vertical != true;
+
+module __ValidateComponentChamferPhysical( comp, ctx, element )
+{
+    _raw_chamfer = __component_chamfer_raw_for_validation( comp, element );
+    _chamfer = __component_chamfer_for_validation( comp, element );
+
+    if ( __component_explicit_chamfer_for_validation( comp, element ) &&
+         is_num( _chamfer ) && _chamfer > 0 &&
+         __component_laid_down_hex_oct_for_validation( comp ) )
+        __PhysicalMsg( ctx, str( "has laid-down ", __value( comp, FTR_SHAPE, default = SQUARE ),
+            " cavity geometry with ", CHAMFER_N, " ", _raw_chamfer,
+            "mm; cavity chamfers for laid-down hex/oct features are unsupported and are skipped. Set ",
+            CHAMFER_N, " to 0 for this feature, or set ", FTR_SHAPE_VERTICAL_B,
+            " to true for vertical hex/oct cavity chamfers." ),
+            [ FTR_SHAPE, FTR_SHAPE_VERTICAL_B, CHAMFER_N ] );
+}
 
 function __sliding_lid_bevel_for_validation( wall_thickness ) =
     max( HULL_EPSILON, min( __lid_thickness_for_validation( wall_thickness ) / 2, wall_thickness / 2 ) );
@@ -3599,7 +3758,7 @@ module __ValidateFeatureDividersPhysical( comp, ctx, box_size, wall_thickness, h
     }
 }
 
-module __ValidateComponentPhysical( comp, ctx, box_ctx, box_size, wall_thickness, lid_external_z, has_lid = false, lid = [], lid_type = LID_CAP )
+module __ValidateComponentPhysical( comp, ctx, box_ctx, box_size, wall_thickness, lid_external_z, has_lid = false, lid = [], lid_type = LID_CAP, element = [] )
 {
     if ( __component_physical_values_ok( comp ) )
     {
@@ -3641,8 +3800,10 @@ module __ValidateComponentPhysical( comp, ctx, box_ctx, box_size, wall_thickness
         }
     }
 
+    __ValidateComponentChamferPhysical( comp, ctx, element );
     __ValidateCutoutPhysical( comp, ctx, box_size, wall_thickness, lid_external_z );
     __ValidateFeatureDividersPhysical( comp, ctx, box_size, wall_thickness, has_lid, lid, lid_type );
+    __ValidateNestedFeaturesPhysical( comp, ctx );
 }
 
 module __ValidateFeatureOverlaps( element, box_ctx, box_size, wall_thickness )
@@ -3666,6 +3827,92 @@ module __ValidateFeatureOverlaps( element, box_ctx, box_size, wall_thickness )
                         [ FTR_COMPARTMENT_SIZE_XYZ, FTR_NUM_COMPARTMENTS_XY,
                           FTR_PADDING_XY, FTR_MARGIN_FBLR, POSITION_XY, ROTATION,
                           FTR_SHEAR ] );
+}
+
+module __ValidateNestedChildBoundsPhysical( parent, parent_ctx )
+{
+    if ( __component_physical_values_ok( parent ) )
+    {
+        _parent_size = [
+            __cmp_auto_size( parent, k_x ),
+            __cmp_auto_size( parent, k_y )
+        ];
+
+        for ( i = [ 0 : max( len( parent ) - 1, 0 ) ] )
+            if ( __is_box_feature_entry( parent[i] ) &&
+                 __enabled_for_physical_validation( parent[i] ) &&
+                 __component_physical_values_ok( parent[i] ) &&
+                 __component_physical_position_ok( parent[i] ) &&
+                 __component_physical_supported_transformed_footprint( parent[i] ) )
+            {
+                _child_ctx = str( parent_ctx, " > component[", i, "]" );
+                _min_x = __component_validation_parent_local_min( parent[i], parent, k_x );
+                _max_x = __component_validation_parent_local_max( parent[i], parent, k_x );
+                _min_y = __component_validation_parent_local_min( parent[i], parent, k_y );
+                _max_y = __component_validation_parent_local_max( parent[i], parent, k_y );
+
+                if ( _min_x < 0 || _min_y < 0 ||
+                     _max_x > _parent_size[ k_x ] || _max_y > _parent_size[ k_y ] )
+                    __PhysicalMsg( _child_ctx, str( "nested child footprint [", _min_x, ", ", _min_y,
+                        "] to [", _max_x, ", ", _max_y, "] exceeds parent-local bounds [0, 0] to [",
+                        _parent_size[ k_x ], ", ", _parent_size[ k_y ],
+                        "] of ", parent_ctx, "." ),
+                        [ BOX_FEATURE, FTR_COMPARTMENT_SIZE_XYZ, FTR_NUM_COMPARTMENTS_XY,
+                          FTR_PADDING_XY, FTR_MARGIN_FBLR, POSITION_XY, ROTATION,
+                          FTR_SHEAR ] );
+            }
+    }
+}
+
+module __ValidateNestedChildOverlapsPhysical( parent, parent_ctx )
+{
+    if ( __component_physical_values_ok( parent ) )
+    {
+        for ( i = [ 0 : max( len( parent ) - 1, 0 ) ] )
+            if ( i < len( parent ) - 1 &&
+                 __is_box_feature_entry( parent[i] ) &&
+                 __enabled_for_physical_validation( parent[i] ) &&
+                 __component_physical_values_ok( parent[i] ) &&
+                 __component_physical_position_ok( parent[i] ) &&
+                 __component_physical_supported_transformed_footprint( parent[i] ) )
+                for ( j = [ i + 1 : max( len( parent ) - 1, 0 ) ] )
+                    if ( __is_box_feature_entry( parent[j] ) &&
+                         __enabled_for_physical_validation( parent[j] ) &&
+                         __component_physical_values_ok( parent[j] ) &&
+                         __component_physical_position_ok( parent[j] ) &&
+                         __component_physical_supported_transformed_footprint( parent[j] ) &&
+                         __nested_components_overlap_xy( parent[i], parent[j], parent ) )
+                        __PhysicalMsg( parent_ctx, str( "nested component[", i, "] overlaps sibling component[", j,
+                            "] in parent-local XY footprint. Move one child feature or reduce size/padding/margins." ),
+                            [ BOX_FEATURE, FTR_COMPARTMENT_SIZE_XYZ, FTR_NUM_COMPARTMENTS_XY,
+                              FTR_PADDING_XY, FTR_MARGIN_FBLR, POSITION_XY, ROTATION,
+                              FTR_SHEAR ] );
+    }
+}
+
+module __ValidateNestedFeaturesPhysical( component, context_name, depth = 0 )
+{
+    if ( __component_has_children( component ) )
+    {
+        if ( depth >= NESTED_FEATURE_VALIDATION_MAX_DEPTH )
+        {
+            __NestedFeatureDepthMsg( context_name, depth );
+        }
+        else
+        {
+            __ValidateNestedChildBoundsPhysical( component, context_name );
+            __ValidateNestedChildOverlapsPhysical( component, context_name );
+
+            for ( i = [ 0 : max( len( component ) - 1, 0 ) ] )
+                if ( __is_box_feature_entry( component[ i ] ) &&
+                     __enabled_for_physical_validation( component[ i ] ) )
+                    __ValidateNestedFeaturesPhysical(
+                        component[ i ],
+                        str( context_name, " > component[", i, "]" ),
+                        depth + 1
+                    );
+        }
+    }
 }
 
 // Validate a key-value table against a set of valid keys.
@@ -3742,8 +3989,57 @@ module __ValidateFeatureDividers( table, context_name )
     }
 }
 
+module __ValidateComponentDefaultSizeWarning( comp, context_name )
+{
+    if ( __value( comp, FTR_COMPARTMENT_SIZE_XYZ, default = false ) == false )
+        echo( str( "BGSD_WARNING: [code=BIT-DEFAULT-FEATURE-SIZE] [key=", __key_display_name( FTR_COMPARTMENT_SIZE_XYZ ), "]: ", context_name,
+            " has no FTR_COMPARTMENT_SIZE_XYZ — using default [10, 10, 10].",
+            " This is probably not what you want." ) );
+}
+
+module __NestedFeatureUnsupportedMsg( context_name )
+{
+    echo( str( "BGSD_WARNING: [code=BIT-NESTED-FEATURE] [key=", __key_display_name( BOX_FEATURE ), "]: ", context_name,
+        " uses experimental nested BOX_FEATURE support. Child geometry, labels, and cutouts render through",
+        " the nested CSG tree, but nested feature divider print output remains incomplete." ) );
+}
+
+module __NestedFeatureDepthMsg( context_name, depth )
+{
+    echo( str( "BGSD_WARNING: [code=BIT-NESTED-FEATURE] [key=", __key_display_name( BOX_FEATURE ), "]: nested BOX_FEATURE validation depth ",
+        depth, " reached in ", context_name, "; deeper child features were not validated." ) );
+}
+
+module __ValidateNestedFeatures( component, context_name, depth = 0 )
+{
+    if ( __component_has_children( component ) )
+    {
+        if ( depth >= NESTED_FEATURE_VALIDATION_MAX_DEPTH )
+        {
+            __NestedFeatureDepthMsg( context_name, depth );
+        }
+        else
+        {
+            for ( i = [ 0 : max( len( component ) - 1, 0 ) ] )
+            {
+                if ( __is_box_feature_entry( component[ i ] ) )
+                {
+                    child = component[ i ];
+                    _child_ctx = str( context_name, " > component[", i, "]" );
+                    __NestedFeatureUnsupportedMsg( _child_ctx );
+                    __ValidateTable( child, __VALID_COMPONENT_KEYS, _child_ctx );
+                    __ValidateComponentTypes( child, _child_ctx );
+                    __ValidateLabels( child, _child_ctx );
+                    __ValidateFeatureDividers( child, _child_ctx );
+                    __ValidateComponentDefaultSizeWarning( child, _child_ctx );
+                    __ValidateNestedFeatures( child, _child_ctx, depth + 1 );
+                }
+            }
+        }
+    }
+}
+
 // Validate a complete element (box or divider) and its sub-structures.
-// Key/type validation and physical validation can be enabled independently.
 module __ValidateElement( element, element_name, element_type = undef )
 {
     element_type = element_type != undef ? element_type : __type( element );
@@ -3756,7 +4052,7 @@ module __ValidateElement( element, element_name, element_type = undef )
             __ValidateTable( element, __VALID_DIVIDER_KEYS, _ctx );
             __ValidateDividerTypes( element, _ctx );
         }
-        if ( $g_validate_physical_b &&
+        if ( $g_validate_keys_b &&
              __enabled_for_physical_validation( element ) )
             __ValidateDividerPhysical( element, _ctx );
     }
@@ -3783,7 +4079,7 @@ module __ValidateElement( element, element_name, element_type = undef )
         _box_size = _box_size_values_ok ? __element_dimensions_impl( element, element_type ) : false;
         _wt = __value( element, BOX_WALL_THICKNESS, default = $g_wall_thickness );
 
-        if ( $g_validate_physical_b )
+        if ( $g_validate_keys_b )
         {
             if ( is_num( _wt ) && _wt <= 0 )
                 __PhysicalMsg( _ctx, str( "has non-positive wall thickness ", _wt, "mm." ),
@@ -3806,18 +4102,18 @@ module __ValidateElement( element, element_name, element_type = undef )
                 __ValidateLidTypes( lid, _lid_ctx );
                 __ValidateLabels( lid, _lid_ctx );
             }
-            if ( $g_validate_physical_b &&
+            if ( $g_validate_keys_b &&
                  __all_num_list( _box_size, 3 ) && is_num( _wt ) )
                 __ValidateLidPhysical( element, _box_size, lid, _lid_ctx, _wt );
 
-            if ( $g_validate_physical_b &&
+            if ( $g_validate_keys_b &&
                  __optional_bool_value_ok( element, BOX_NO_LID_B ) &&
                  !__value( element, BOX_NO_LID_B, default = false ) &&
                  _lid_type == LID_SLIDING &&
                  __all_num_list( _box_size, 3 ) && is_num( _wt ) )
                 __ValidateSlidingDetentPhysical( element, _ctx, _box_size, _wt, lid );
 
-            if ( $g_validate_physical_b &&
+            if ( $g_validate_keys_b &&
                  __optional_bool_value_ok( element, BOX_NO_LID_B ) &&
                  !__value( element, BOX_NO_LID_B, default = false ) &&
                  _lid_type != LID_SLIDING &&
@@ -3840,16 +4136,11 @@ module __ValidateElement( element, element_name, element_type = undef )
                         __ValidateComponentTypes( comp, _comp_ctx );
                         __ValidateLabels( comp, _comp_ctx );
                         __ValidateFeatureDividers( comp, _comp_ctx );
+                        __ValidateNestedFeatures( comp, _comp_ctx );
+                        __ValidateComponentDefaultSizeWarning( comp, _comp_ctx );
                     }
 
-                    // #3: Warn when FTR_COMPARTMENT_SIZE_XYZ is missing
                     if ( $g_validate_keys_b &&
-                         __value( comp, FTR_COMPARTMENT_SIZE_XYZ, default = false ) == false )
-                        echo( str( "BGSD_WARNING: [code=BIT-DEFAULT-FEATURE-SIZE] [key=", __key_display_name( FTR_COMPARTMENT_SIZE_XYZ ), "]: ", _comp_ctx,
-                            " has no FTR_COMPARTMENT_SIZE_XYZ — using default [10, 10, 10].",
-                            " This is probably not what you want." ) );
-
-                    if ( $g_validate_physical_b &&
                          __enabled_for_physical_validation( comp ) &&
                          __all_num_list( _box_size, 3 ) && is_num( _wt ) )
                     {
@@ -3864,7 +4155,8 @@ module __ValidateElement( element, element_name, element_type = undef )
                             __optional_bool_value_ok( element, BOX_NO_LID_B ) &&
                                 !__value( element, BOX_NO_LID_B, default = false ),
                             lid,
-                            __box_lid_type_for_cutout_validation( element ) );
+                            __box_lid_type_for_cutout_validation( element ),
+                            element );
                         if ( __optional_bool_value_ok( element, BOX_NO_LID_B ) &&
                              !__value( element, BOX_NO_LID_B, default = false ) &&
                              __box_lid_type_for_cutout_validation( element ) == LID_SLIDING )
@@ -3874,7 +4166,7 @@ module __ValidateElement( element, element_name, element_type = undef )
             }
         }
 
-        if ( $g_validate_physical_b &&
+        if ( $g_validate_keys_b &&
              __all_num_list( _box_size, 3 ) && is_num( _wt ) )
             __ValidateFeatureOverlaps( element, _ctx, _box_size, _wt );
 
@@ -3904,13 +4196,6 @@ module Make(DATA = DATA)
     $g_preview_no_labels_b = __value(DATA, G_PREVIEW_NO_LABELS_B, default = $g_preview_no_labels_b);
     $g_no_labels_actual_b = $g_preview_no_labels_b && $preview;
     $g_validate_keys_b = __value(DATA, G_VALIDATE_KEYS_B, default = $g_validate_keys_b);
-    $g_validate_physical_b = __value(
-        DATA,
-        G_VALIDATE_PHYSICAL_B,
-        default = __value( DATA, G_VALIDATE_KEYS_B, default = $g_validate_keys_b ) ?
-            $g_validate_physical_b :
-            false
-    );
     $g_wall_thickness = __value(DATA, G_WALL_THICKNESS, default = $g_wall_thickness);
     $g_detent_thickness = __value(DATA, G_DETENT_THICKNESS, default = $g_detent_thickness);
     $g_detent_spacing = __value(DATA, G_DETENT_SPACING, default = $g_detent_spacing);
@@ -3924,7 +4209,11 @@ module Make(DATA = DATA)
     $g_default_font = __value(DATA, G_DEFAULT_FONT, default = $g_default_font);
 
     // Filter DATA to element entries only (skip globals) — uses $data for dynamic scoping
-    $data = [for (entry = DATA) if (is_list(entry) && __type_from_key(entry[0]) != undef) entry];
+    $data = [
+        for ( entry = DATA )
+            if ( is_list( entry ) && __type_from_key( entry[0] ) != undef )
+                __normalize_object_entry( entry )
+    ];
 
     echo( str( "\n\n\n", COPYRIGHT_INFO, "\n\n\tVersion ", VERSION, "\n\n" ));
 
@@ -3937,8 +4226,8 @@ module Make(DATA = DATA)
             __TypeMsg( G_PRINT_DIVIDERS_ONLY_B, "global data", "boolean (true/false)", $g_print_dividers_only_b );
     }
 
-    // Validate all elements if key/type or physical validation is enabled
-    if ( $g_validate_keys_b || $g_validate_physical_b )
+    // Validate all elements when validation is enabled.
+    if ( $g_validate_keys_b )
     {
         if ( __is_element_isolated_for_print() )
         {
@@ -4419,7 +4708,7 @@ module MakeBox( box )
     //   "component_subtractions"      — compartment holes subtracted from box
     //   "component_additions"         — walls/partitions added between compartments
     //   "final_component_subtractions"— cutouts, fillets, labels applied last
-    module MakeLayer( component, layer = "" )
+    module MakeLayer( component, layer = "", local_b = false, tree_depth = 0 )
     {
         m_is_outerbox = layer == "outerbox";
         m_is_lid = layer == "layer_lid";
@@ -4431,6 +4720,7 @@ module MakeBox( box )
         m_is_final_component_subtractions = layer == "final_component_subtractions";
         m_is_feature_dividers = layer == "feature_dividers";
         m_is_feature_dividers_preview = layer == "feature_dividers_preview";
+        m_component_child_count = __component_child_count( component );
 
         m_push_base = __value( component, FTR_PEDESTAL_BASE_B, default = f );
 
@@ -4577,6 +4867,61 @@ module MakeBox( box )
                             children();
         }
 
+        function __child_position_raw( child, D ) =
+            let(
+                pos = __value( child, POSITION_XY, default = [ CENTER, CENTER ] ),
+                pi = D == k_x ? 0 : 1
+            )
+            is_list( pos ) && len( pos ) > pi ? pos[ pi ] : CENTER;
+
+        function __child_sheared_footprint_size( child, D ) =
+            let(
+                child_size = __cmp_auto_size( child, D ),
+                child_height = __cmp_auto_size( child, k_z ),
+                shear = abs( tan( __child_shear( child, D ) ) ) * child_height
+            )
+            child_size + shear;
+
+        function __child_transformed_footprint_size( child, D ) =
+            let(
+                rotation = __child_rotation( child ),
+                sheared_x = __child_sheared_footprint_size( child, k_x ),
+                sheared_y = __child_sheared_footprint_size( child, k_y )
+            )
+            D == k_x ?
+                abs( cos( rotation ) ) * sheared_x + abs( sin( rotation ) ) * sheared_y :
+                abs( sin( rotation ) ) * sheared_x + abs( cos( rotation ) ) * sheared_y;
+
+        function __child_position( child, D ) =
+            let(
+                raw = __child_position_raw( child, D ),
+                child_size = __cmp_auto_size( child, D ),
+                transformed_size = __child_transformed_footprint_size( child, D )
+            )
+            raw == CENTER ? ( __component_size( D ) - child_size ) / 2 :
+            raw == MAX ? __component_size( D ) - ( child_size + transformed_size ) / 2 :
+            raw;
+
+        function __child_rotation( child ) = __value( child, ROTATION, default = 0 );
+        function __child_shear( child, D ) = __value( child, FTR_SHEAR, default = [0.0, 0.0] )[ D ];
+
+        module PositionChildLayer( child )
+        {
+            RotateAboutPoint( __child_rotation( child ), [0,0,1], [__child_position( child, k_x ) + __cmp_auto_size( child, k_x )/2, __child_position( child, k_y ) + __cmp_auto_size( child, k_y )/2, 0] )
+                translate( [ __child_position( child, k_x ), __child_position( child, k_y ), 0 ] )
+                    Shear( __child_shear( child, k_x ), __child_shear( child, k_y ), __cmp_auto_size( child, k_z ) )
+                        children();
+        }
+
+        module PositionComponentLayer()
+        {
+            if ( local_b )
+                children();
+            else
+                PositionInnerLayer()
+                    children();
+        }
+
         if ( __is_component_enabled() )
         {
             // we only want the labels for an mmu pass
@@ -4685,7 +5030,7 @@ module MakeBox( box )
             
             else
             { 
-                PositionInnerLayer()
+                PositionComponentLayer()
                     InnerLayer();   
              }
         }
@@ -5611,161 +5956,234 @@ module MakeBox( box )
         // Routes each MakeLayer call to the appropriate geometry stage:
         // outerbox, lid, spacer, component subtractions/additions, final subtractions.
 
-        module InnerLayer()
+        module MakeComponentSubtractionVolume()
         {
+            // 'carve-outs' are the big shapes of the 'components.' Each is then subdivided
+            // by adding partitions.
 
-            if ( m_is_component_subtractions ) 
+            // we carve all the way to the bottom and then fill it back up
+            cut_height = m_lid_sliding ?
+                m_box_size[ k_z ] - m_wall_thickness + HULL_EPSILON :
+                m_box_size[ k_z ] + __lid_external_size(k_z);
+
+            cube([  __component_size( k_x ),
+                __component_size( k_y ),
+                cut_height ]);
+        }
+
+        module MakeComponentAdditionMask()
+        {
+            MakePartitions();
+
+            InEachCompartment()
             {
-                // 'carve-outs' are the big shapes of the 'components.' Each is then subdivided
-                // by adding partitions.
+                if ( !__component_is_square() && !__component_is_fillet() )
+                {
+                    difference()
+                    {
+                        cube ( [ __compartment_size( k_x ), __compartment_size( k_y ), __smallest_partition_height() + m_component_base_height] );
+                        MakeCompartmentShape();
+                    }
+                }
 
-                // we carve all the way to the bottom and then fill it back up
-                cut_height = m_lid_sliding ?
-                    m_box_size[ k_z ] - m_wall_thickness + HULL_EPSILON :
-                    m_box_size[ k_z ] + __lid_external_size(k_z);
+                if ( __component_is_fillet())
+                {
+                    translate( [0, 0, m_component_base_height])
+                        AddFillets();
+                }
 
-                cube([  __component_size( k_x ), 
-                    __component_size( k_y ), 
-                    cut_height ]);
+                if ( __component_chamfer() > 0 )
+                {
+                    translate( [0, 0, m_component_base_height])
+                        AddCompartmentChamfers();
+                }
             }
-            else if ( m_is_component_additions )
+
+            if ( m_push_base && m_component_base_height > 0 )
             {
-                MakePartitions();
+                frac = DEFAULT_PEDESTAL_BASE_FRACTION;
 
                 InEachCompartment()
-                {
-                    if ( !__component_is_square() && !__component_is_fillet() )
-                    {
-                        difference()
-                        {
-                            cube ( [ __compartment_size( k_x ), __compartment_size( k_y ), __smallest_partition_height() + m_component_base_height] );
-                            MakeCompartmentShape();
-                        }
-                    }
-
-                    if ( __component_is_fillet())
-                    {
-                        translate( [0, 0, m_component_base_height])
-                            AddFillets();
-                    }
-
-                    if ( __component_chamfer() > 0 )
-                    {
-                        translate( [0, 0, m_component_base_height])
-                            AddCompartmentChamfers();
-                    }
-                }
-
-                if ( m_push_base && m_component_base_height > 0 )
-                {
-                    frac = DEFAULT_PEDESTAL_BASE_FRACTION;
-
-                    InEachCompartment()
-                        translate( [ (__compartment_size( k_x) * (1-frac))/2, (__compartment_size( k_y) * (1-frac))/2, 0 ])
-                            resize( [ 0, 0, m_component_base_height ], auto=false )  // fit it to the base
-                                scale( v = [ frac, frac, 1 ]) // bring in the sides
-                                    MakeCompartmentShape();
-                                                        
-                }
-                else
-                {
-                    // fill in the bottom
-                    cube ( [ __component_size( k_x ), __component_size( k_y ), m_component_base_height ] );
-                }
-
-                MakeDividerSlotRails();
-                
-            }
-            else if ( m_is_final_component_subtractions )
-            {
-                // Some shapes, such as the finger cutouts for card compartments
-                // need to be done at the end because they substract from the 
-                // entire box.
-
-                if ( m_component_has_side_cutouts )
-                {
-                    // finger cutouts
-                    insetx = m_component_cutout_side[ k_left ]  ? m_cutout_size_frac_aligned * __compartment_size( k_x ) + m_component_margin_side[ k_left]  : 0;
-                    insety = m_component_cutout_side[ k_front ] ? m_cutout_size_frac_aligned * __compartment_size( k_y ) + m_component_margin_side[ k_front] : 0;
-
-                    // Count how many cutouts are made in each direction to substract it from the size of the inner stencil box
-                    x_cutouts = (m_component_cutout_side[ k_left ]?1:0) + (m_component_cutout_side[ k_right ]?1:0);
-                    y_cutouts = (m_component_cutout_side[ k_front ]?1:0) + (m_component_cutout_side[ k_back ]?1:0);
-
-                    sizex = __component_size( k_x) - x_cutouts * m_cutout_size_frac_aligned * __compartment_size( k_x ) - __component_margins_sum( k_x );
-                    sizey = __component_size( k_y) - y_cutouts * m_cutout_size_frac_aligned * __compartment_size( k_y ) - __component_margins_sum( k_y );
-                
-                    if ( m_component_cutout_type == BOTH )
-                    {
-                        MakeAllBoxSideCutouts();
-                    }
-                    else if ( m_component_cutout_type == INTERIOR )
-                    {
-                        intersection()
-                        {
-
-                            translate( [ insetx, insety, -m_wall_thickness ] )
-                                cube ( [ sizex, sizey, m_box_size[ k_z ]]);
-
-                            MakeAllBoxSideCutouts();
-                        }                    
-                    }
-                    else if ( m_component_cutout_type == EXTERIOR )
-                    {
-                        exterior_stencil_height =
-                            m_box_size[ k_z ] +
-                            ( m_lid_sliding ? m_lid_thickness : __lid_external_size( k_z ) ) +
-                            HULL_EPSILON;
-
-                        intersection()
-                        {
-                            // Create a stencil for the cutout
-                            difference()
-                            {
-                                // From the whole box ..
-                                translate( [ -__component_position(k_x),-__component_position(k_y), -m_wall_thickness ] )
-                                    cube( [ m_box_size[ k_x], m_box_size[ k_y], exterior_stencil_height ]);
-
-                                // .. remove the inner area of the whole compartment
-                                translate( [ insetx, insety, -m_wall_thickness ] )
-                                    cube ( [ sizex, sizey, exterior_stencil_height ]);
-                            }
-
-                            MakeAllBoxSideCutouts();
-                        }
-                    }
-                }
-
-                MakeAllBoxCornerCutouts();
-
-                InEachCompartment( )
-                {
-                    frac = m_component_cutout_bottom_percent;
-
-                    // this is the finger cutout underneath
-                    if ( m_actually_cutout_the_bottom )
-                        translate( [ (__compartment_size( k_x) * (1-frac))/2, (__compartment_size( k_y) * (1-frac))/2, -m_wall_thickness ])
+                    translate( [ (__compartment_size( k_x) * (1-frac))/2, (__compartment_size( k_y) * (1-frac))/2, 0 ])
+                        resize( [ 0, 0, m_component_base_height ], auto=false )  // fit it to the base
                             scale( v = [ frac, frac, 1 ]) // bring in the sides
                                 MakeCompartmentShape();
 
-                    // chamfer the cavity opening (top edge): flares outward by c
-                    if ( __component_chamfer() > 0 )
-                        AddCompartmentTopChamfers();
-                }
+            }
+            else
+            {
+                // fill in the bottom
+                cube ( [ __component_size( k_x ), __component_size( k_y ), m_component_base_height ] );
+            }
 
-                if ( !$g_no_labels_actual_b)
+            MakeDividerSlotRails();
+        }
+
+        module MakeComponentFinalSubtractions()
+        {
+            // Some shapes, such as the finger cutouts for card compartments
+            // need to be done at the end because they substract from the
+            // entire box.
+
+            if ( m_component_has_side_cutouts )
+            {
+                // finger cutouts
+                insetx = m_component_cutout_side[ k_left ]  ? m_cutout_size_frac_aligned * __compartment_size( k_x ) + m_component_margin_side[ k_left]  : 0;
+                insety = m_component_cutout_side[ k_front ] ? m_cutout_size_frac_aligned * __compartment_size( k_y ) + m_component_margin_side[ k_front] : 0;
+
+                // Count how many cutouts are made in each direction to substract it from the size of the inner stencil box
+                x_cutouts = (m_component_cutout_side[ k_left ]?1:0) + (m_component_cutout_side[ k_right ]?1:0);
+                y_cutouts = (m_component_cutout_side[ k_front ]?1:0) + (m_component_cutout_side[ k_back ]?1:0);
+
+                sizex = __component_size( k_x) - x_cutouts * m_cutout_size_frac_aligned * __compartment_size( k_x ) - __component_margins_sum( k_x );
+                sizey = __component_size( k_y) - y_cutouts * m_cutout_size_frac_aligned * __compartment_size( k_y ) - __component_margins_sum( k_y );
+
+                if ( m_component_cutout_type == BOTH )
                 {
-                    // Clip label subtraction geometry to the component bounds
-                    // to prevent sheared/offset labels from cutting outside the box walls
+                    MakeAllBoxSideCutouts();
+                }
+                else if ( m_component_cutout_type == INTERIOR )
+                {
                     intersection()
                     {
-                        translate( [ -__component_padding( k_x ), -__component_padding( k_y ), -m_wall_thickness ] )
-                            cube( [ __component_size( k_x ) + 2 * __component_padding( k_x ),
-                                    __component_size( k_y ) + 2 * __component_padding( k_y ),
-                                    m_box_size[ k_z ] ] );
-                        LabelEachCompartment();
+
+                        translate( [ insetx, insety, -m_wall_thickness ] )
+                            cube ( [ sizex, sizey, m_box_size[ k_z ]]);
+
+                        MakeAllBoxSideCutouts();
                     }
                 }
+                else if ( m_component_cutout_type == EXTERIOR )
+                {
+                    exterior_stencil_height =
+                        m_box_size[ k_z ] +
+                        ( m_lid_sliding ? m_lid_thickness : __lid_external_size( k_z ) ) +
+                        HULL_EPSILON;
+
+                    intersection()
+                    {
+                        // Create a stencil for the cutout
+                        difference()
+                        {
+                            // From the whole box ..
+                            translate( [ -__component_position(k_x),-__component_position(k_y), -m_wall_thickness ] )
+                                cube( [ m_box_size[ k_x], m_box_size[ k_y], exterior_stencil_height ]);
+
+                            // .. remove the inner area of the whole compartment
+                            translate( [ insetx, insety, -m_wall_thickness ] )
+                                cube ( [ sizex, sizey, exterior_stencil_height ]);
+                        }
+
+                        MakeAllBoxSideCutouts();
+                    }
+                }
+            }
+
+            MakeAllBoxCornerCutouts();
+
+            n_x = __compartments_num( k_x );
+            n_y = __compartments_num( k_y );
+
+            for ( x = [ 0 : n_x - 1 ] )
+            {
+                x_pos = m_component_margin_side[ k_left ] +
+                    ( __compartment_size( k_x ) + __component_padding( k_x ) ) * x;
+
+                for ( y = [ 0 : n_y - 1 ] )
+                {
+                    y_pos = m_component_margin_side[ k_front ] +
+                        ( __compartment_size( k_y ) + __component_padding( k_y ) ) * y;
+
+                    translate( [ x_pos, y_pos, 0 ] )
+                    {
+                        frac = m_component_cutout_bottom_percent;
+
+                        // this is the finger cutout underneath
+                        if ( m_actually_cutout_the_bottom )
+                            translate( [ (__compartment_size( k_x) * (1-frac))/2, (__compartment_size( k_y) * (1-frac))/2, -m_wall_thickness ])
+                                scale( v = [ frac, frac, 1 ]) // bring in the sides
+                                    MakeCompartmentShape();
+
+                        // chamfer the cavity opening (top edge): flares outward by c
+                        if ( __component_chamfer() > 0 )
+                            AddCompartmentTopChamfers( x, y );
+                    }
+                }
+            }
+
+            if ( !$g_no_labels_actual_b)
+            {
+                // Clip label subtraction geometry to the component bounds
+                // to prevent sheared/offset labels from cutting outside the box walls
+                intersection()
+                {
+                    translate( [ -__component_padding( k_x ), -__component_padding( k_y ), -m_wall_thickness ] )
+                        cube( [ __component_size( k_x ) + 2 * __component_padding( k_x ),
+                                __component_size( k_y ) + 2 * __component_padding( k_y ),
+                                m_box_size[ k_z ] ] );
+                    LabelEachCompartment();
+                }
+            }
+        }
+
+        module MakeComponentChildTree( child_layer )
+        {
+            if ( m_component_child_count > 0 && tree_depth < NESTED_FEATURE_VALIDATION_MAX_DEPTH )
+            {
+                for ( child_idx = [ 0 : m_component_child_count - 1 ] )
+                {
+                    child = __component_child_at( component, child_idx );
+
+                    if ( __component_child_geometry_supported( child ) )
+                    {
+                        PositionChildLayer( child )
+                            MakeLayer( child, layer = child_layer, local_b = true, tree_depth = tree_depth + 1 );
+                    }
+                }
+            }
+        }
+
+        module MakeComponentSubtractionTree()
+        {
+            MakeComponentSubtractionVolume();
+            MakeComponentChildTree( "component_subtractions" );
+        }
+
+        module MakeComponentAdditionTree()
+        {
+            MakeComponentAdditionMask();
+            MakeComponentChildTree( "component_additions" );
+        }
+
+        module MakeComponentFinalSubtractionTree()
+        {
+            MakeComponentFinalSubtractions();
+            MakeComponentChildTree( "final_component_subtractions" );
+        }
+
+        module InnerLayer()
+        {
+
+            if ( m_is_component_subtractions )
+            {
+                if ( m_component_child_count > 0 )
+                    MakeComponentSubtractionTree();
+                else
+                    MakeComponentSubtractionVolume();
+            }
+            else if ( m_is_component_additions )
+            {
+                if ( m_component_child_count > 0 )
+                    MakeComponentAdditionTree();
+                else
+                    MakeComponentAdditionMask();
+            }
+            else if ( m_is_final_component_subtractions )
+            {
+                if ( m_component_child_count > 0 )
+                    MakeComponentFinalSubtractionTree();
+                else
+                    MakeComponentFinalSubtractions();
             }
         }
 
@@ -6808,11 +7226,13 @@ module MakeBox( box )
         // This is a SUBTRACTION (called from final_component_subtractions): the
         // inverted-cone shape removes wall material so the opening flares outward
         // by c at z=top, matching the cavity wall at z=top-c.
-        // Square: 4 inverted prisms (eats into surrounding wall/partition material).
+        // Square: 4 inverted prisms. Sides facing internal grid partitions cap
+        // their projection to half the partition width so neighboring opening
+        // chamfers cannot erase the wall between compartments.
         // Vertical hex/oct/round: tapered ring whose inner wall matches the cavity
         // and outer wall is offset c perpendicular outward.
         // Laid-down hex/oct: opening is the full bounding cube — no-op.
-        module AddCompartmentTopChamfers()
+        module AddCompartmentTopChamfers( x_idx = 0, y_idx = 0 )
         {
             c = __component_chamfer();
             cx = __compartment_size( k_x );
@@ -6820,20 +7240,32 @@ module MakeBox( box )
             cz = __compartment_size( k_z );
             eps = 0.001;
             top_z = m_component_base_height + cz;
+            cap_clearance = eps;
 
-            module MakeTopCornerChamfer()
+            function __partition_chamfer_cap( D ) =
+                max( 0, min( c, __component_padding( D ) / 2 - cap_clearance ) );
+
+            cap_front = y_idx > 0 ? __partition_chamfer_cap( k_y ) : c;
+            cap_back = y_idx < __compartments_num( k_y ) - 1 ? __partition_chamfer_cap( k_y ) : c;
+            cap_left = x_idx > 0 ? __partition_chamfer_cap( k_x ) : c;
+            cap_right = x_idx < __compartments_num( k_x ) - 1 ? __partition_chamfer_cap( k_x ) : c;
+
+            module MakeTopCornerChamfer( cap_x, cap_y )
             {
-                hull()
+                if ( cap_x > 0 && cap_y > 0 )
                 {
-                    translate([ 0, 0, top_z - eps ])
-                        linear_extrude( 2*eps )
-                            polygon([ [0, 0], [c + eps, 0], [0, c + eps] ]);
+                    hull()
+                    {
+                        translate([ 0, 0, top_z - eps ])
+                            linear_extrude( 2*eps )
+                                polygon([ [0, 0], [cap_x + eps, 0], [0, cap_y + eps] ]);
 
-                    translate([ c, 0, top_z - c - eps ])
-                        cube([ eps, eps, eps ]);
+                        translate([ cap_x, 0, top_z - cap_x - eps ])
+                            cube([ eps, eps, eps ]);
 
-                    translate([ 0, c, top_z - c - eps ])
-                        cube([ eps, eps, eps ]);
+                        translate([ 0, cap_y, top_z - cap_y - eps ])
+                            cube([ eps, eps, eps ]);
+                    }
                 }
             }
 
@@ -6842,38 +7274,42 @@ module MakeBox( box )
                 // Each edge: flares out by c at z=top, matches cavity wall at z=top-c.
                 // Wall slabs are nudged inward by eps to prevent coincident faces.
                 // Front edge (flares out into -y)
-                hull() {
-                    translate([ 0, -c,    top_z         ]) cube([ cx, c,   eps ]);
-                    translate([ 0,  eps,  top_z - c - eps ]) cube([ cx, eps, c   ]);
-                }
+                if ( cap_front > 0 )
+                    hull() {
+                        translate([ 0, -cap_front, top_z ]) cube([ cx, cap_front, eps ]);
+                        translate([ 0, eps, top_z - cap_front - eps ]) cube([ cx, eps, cap_front ]);
+                    }
                 // Back edge (flares out into +y)
-                hull() {
-                    translate([ 0, cy,        top_z         ]) cube([ cx, c,   eps ]);
-                    translate([ 0, cy - 2*eps, top_z - c - eps ]) cube([ cx, eps, c   ]);
-                }
+                if ( cap_back > 0 )
+                    hull() {
+                        translate([ 0, cy, top_z ]) cube([ cx, cap_back, eps ]);
+                        translate([ 0, cy - 2*eps, top_z - cap_back - eps ]) cube([ cx, eps, cap_back ]);
+                    }
                 // Left edge (flares out into -x)
-                hull() {
-                    translate([ -c,    0, top_z         ]) cube([ c,   cy, eps ]);
-                    translate([  eps,  0, top_z - c - eps ]) cube([ eps, cy, c   ]);
-                }
+                if ( cap_left > 0 )
+                    hull() {
+                        translate([ -cap_left, 0, top_z ]) cube([ cap_left, cy, eps ]);
+                        translate([ eps, 0, top_z - cap_left - eps ]) cube([ eps, cy, cap_left ]);
+                    }
                 // Right edge (flares out into +x)
-                hull() {
-                    translate([ cx,        0, top_z         ]) cube([ c,   cy, eps ]);
-                    translate([ cx - 2*eps, 0, top_z - c - eps ]) cube([ eps, cy, c   ]);
-                }
+                if ( cap_right > 0 )
+                    hull() {
+                        translate([ cx, 0, top_z ]) cube([ cap_right, cy, eps ]);
+                        translate([ cx - 2*eps, 0, top_z - cap_right - eps ]) cube([ eps, cy, cap_right ]);
+                    }
 
                 // Trim the vertical wall-to-wall corner filler after it has been
                 // added, so the top opening chamfer stays continuous at corners.
-                MakeTopCornerChamfer();
+                MakeTopCornerChamfer( cap_left, cap_front );
 
                 translate([ cx, 0, 0 ]) mirror([ 1, 0, 0 ])
-                    MakeTopCornerChamfer();
+                    MakeTopCornerChamfer( cap_right, cap_front );
 
                 translate([ 0, cy, 0 ]) mirror([ 0, 1, 0 ])
-                    MakeTopCornerChamfer();
+                    MakeTopCornerChamfer( cap_left, cap_back );
 
                 translate([ cx, cy, 0 ]) mirror([ 1, 0, 0 ]) mirror([ 0, 1, 0 ])
-                    MakeTopCornerChamfer();
+                    MakeTopCornerChamfer( cap_right, cap_back );
             }
             else if ( __component_shape_vertical() )
             {

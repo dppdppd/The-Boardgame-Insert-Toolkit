@@ -3,7 +3,7 @@
 ## Project Status
 - **Current phase**: v4 stable — incremental feature work and docs maintenance
 - **Library version**: `4.5.0`
-- **Last updated**: 2026-05-09
+- **Last updated**: 2026-05-10
 
 ## Completed Work
 - v4 library shipped as the active version
@@ -11,6 +11,8 @@
 - Repo reorganized into `release/lib/` and `release/<publisher>/`
 - `CHAMFER_N` parameter for exterior edge chamfering; units = chamfer surface diagonal width (perpendicular leg = `CHAMFER_N / sqrt(2)`); default 0.6 mm
 - `CHAMFER_N` cavity chamfers fixed for non-square shapes (vertical hex/oct/round) and now also chamfer the cavity opening; manifold-clean STL output
+- Square-cavity top `CHAMFER_N` chamfers now cap internal grid-facing sides at half the partition padding so adjacent opening chamfers preserve the partition wall cap.
+- Laid-down hex/oct cavity chamfers remain unsupported by geometry, but explicit box/feature `CHAMFER_N > 0` now emits a physical validation warning instead of silently no-oping.
 - `release/lib/bit_functions_lib.4.scad` retired (was unused by the engine)
 - AGENTS.md consolidated to ~100 lines
 - Version-stamping: `scripts/package-release.sh --patch` for bug fixes/internal changes, `--minor` for user-facing features. The pre-commit hook increments patch by default only when the dev lib has changed since the current full-version file; set `BIT_VERSION_BUMP=minor` for feature-release commits.
@@ -33,10 +35,7 @@
 - `v4.5.0` published with taller default sliding-lid detents, `LID_DETENT_LOCK_ANGLE` for lid-cavity lock resistance, a 45-degree default lock-side cavity angle, docs, and validation coverage.
 
 ## Active Specs
-- `nested-object-wrapper-degenerate-geometry`: next maintenance item. BGSD-shaped nested `OBJECT_BOX` data can produce degenerate geometry instead of being normalized or rejected.
+- No active implementation spec is currently in flight.
 
 ## Known Issues
-- `CHAMFER_N` top chamfer for square cavities eats into partition walls in multi-compartment grids (no per-side cap yet)
-- `CHAMFER_N` for laid-down hex/oct cavities is a no-op (the floor is curved; no clean chamfer geometry)
-- LLM instructions validate through OpenSCAD but should explicitly tell assistants to check or install OpenSCAD before running validation.
-- BGSD-style nested element data such as `[ OBJECT_BOX, [ ... ]]` can bypass flat key lookup and produce degenerate geometry instead of being normalized or rejected.
+- No current v4 maintenance blocker is tracked here; see `docs/rpm/future/tasks.org` for future work.

@@ -8,7 +8,6 @@ data = [
     [ G_PRINT_DIVIDERS_ONLY_B, "yes" ],
     [ G_ISOLATED_PRINT_BOX, "" ],
     [ G_VALIDATE_KEYS_B, true ],
-    [ G_VALIDATE_PHYSICAL_B, true ],
 
     [ OBJECT_BOX,
         [ NAME, "malformed divider rail groove params" ],

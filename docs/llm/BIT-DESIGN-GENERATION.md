@@ -4,6 +4,8 @@ Use this guide when a user asks an assistant to create a BIT `.scad` file for a 
 
 BIT designs are physical objects. Do not turn a game title directly into final printable geometry. First collect measurements, state assumptions, generate a structured plan, then write and validate the SCAD.
 
+Before validation, verify OpenSCAD is available on `PATH` with `command -v openscad`. If it is absent, tell the user validation cannot run locally yet and point them to the OpenSCAD download step in `README.md#how-text-editor`. After OpenSCAD is installed, validate with `scripts/validate-design.sh`.
+
 ## Required Context
 
 Read these files before generating a design:
@@ -25,7 +27,7 @@ Use `release/lib/boardgame_insert_toolkit_lib.4.scad` only for repo tests and li
 4. Propose a tray layout before SCAD: box count, component groups, lids, labels, and what each tray stores.
 5. Write SCAD only after measurements are available or the user explicitly accepts assumptions.
 6. Keep all game-specific dimensions as named variables near the top of the file.
-7. Validate with `scripts/validate-design.sh`. Repair syntax, key, type, and geometry issues before presenting the design.
+7. Confirm `openscad` is available, then validate with `scripts/validate-design.sh`. Repair syntax, key, type, and geometry issues before presenting the design.
 8. Report the generated file path, validation result, render output if produced, and any assumptions that still need measurement.
 
 ## Rules For Correct BIT SCAD

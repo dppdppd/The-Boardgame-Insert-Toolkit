@@ -2,6 +2,16 @@
 
 Use this workflow for arbitrary user `.scad` files generated with BIT. Library regression tests still use `tests/run_tests.sh`.
 
+## Prerequisite
+
+Before running validation, check that OpenSCAD is installed and available on `PATH`:
+
+```bash
+command -v openscad
+```
+
+If the command fails, do not attempt validation yet. Point the user to the OpenSCAD download step in `README.md#how-text-editor`, then re-run validation after `openscad` is available.
+
 ## Fast Compile Check
 
 ```bash
