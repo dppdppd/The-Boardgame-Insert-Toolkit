@@ -2,8 +2,8 @@
 
 ## Project Status
 - **Current phase**: v4 stable — incremental feature work and docs maintenance
-- **Library version**: `4.8.0`
-- **Last updated**: 2026-05-11
+- **Library version**: `4.8.1`
+- **Last updated**: 2026-05-12
 
 ## Completed Work
 - v4 library shipped as the active version
@@ -36,6 +36,7 @@
 - `v4.6.1` published with practical nested `BOX_FEATURE` geometry support and initial transform grouping.
 - `v4.7.0` published with transform groups renamed to `FEATURE_GROUP` / `feature_group` and no deprecated `BOX_GROUP` alias.
 - `v4.8.0` published with `FEATURE_COPY` / `feature_copy` and `FEATURE_REFERENCE` / `feature_reference` for repeating named features or groups.
+- `v4.8.1` published with copied `FEATURE_GROUP` children restored to the group-local negative geometry path.
 
 ## Active Specs
 - No active implementation spec is currently in flight.
