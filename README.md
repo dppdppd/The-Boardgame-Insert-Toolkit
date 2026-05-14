@@ -261,6 +261,10 @@ Value is expected to be an array of lid key-value pairs.
 #### `BOX_NO_LID_B`
 Value is expected to be a bool, and determines whether a lid is ommitted. If ommitted, the box will not form an inset lip to support a lid.
 
+#### `PRINT_GROUP`
+Value is expected to be a string or list of strings, and tags printable boxes, spacers, dividers, lids, box features, feature groups/copies, or labels for grouped output. Select a group with `[ G_PRINT_GROUP, "group1" ]` or with `Make(data, print_group = "group1")`. Lids inherit from the parent box unless overridden inside `BOX_LID`; features and labels inherit from their containing box/lid/feature/group unless overridden. Print groups replace the old MMU-layer switch and compose with `G_PRINT_BOX_B`, `G_PRINT_LID_B`, and `G_ISOLATED_PRINT_BOX`.
+e.g. `[ PRINT_GROUP, "red" ]`
+
 #### `BOX_STACKABLE_B`
 Value is expected to be a bool and determines whether the base of the box is cut to fit on top of an identically sized box. Note that this requires a printer that can print a 45 degree overhang without supports.
 
@@ -578,7 +582,7 @@ To contribute a design, fork this repo, add your `.scad` file to the appropriate
 
 ## Working on the library itself
 
-After cloning, run `./scripts/install-hooks.sh` once to enable the version-stamping pre-commit hook. The hook increments the patch version by default when the development library has changed since the current full-version file. For user-facing feature releases, commit with `BIT_VERSION_BUMP=minor` so the minor version increments instead.
+After cloning, run `./scripts/install-hooks.sh` once to enable the pre-commit hook. The hook compares normalized CSG for existing v4 tests against `HEAD`, then stamps the development library version so the version edit rides along in the commit. The CSG comparison ignores no-op `group()` wrappers, reports current-only tests that have no baseline, and fails on real normalized CSG diffs. For user-facing feature releases, commit with `BIT_VERSION_BUMP=minor` so the minor version increments instead. To bypass the local CSG comparison for an exceptional commit, set `BIT_SKIP_CSG_REGRESSION=1`.
 
 Version policy:
 - Use a patch release for bug fixes and internal changes with no user-facing impact.

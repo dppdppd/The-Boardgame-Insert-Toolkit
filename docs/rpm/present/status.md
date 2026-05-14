@@ -2,8 +2,8 @@
 
 ## Project Status
 - **Current phase**: v4 stable — incremental feature work and docs maintenance
-- **Library version**: `4.8.1`
-- **Last updated**: 2026-05-12
+- **Library version**: `4.9.0`
+- **Last updated**: 2026-05-14
 
 ## Completed Work
 - v4 library shipped as the active version
@@ -37,6 +37,8 @@
 - `v4.7.0` published with transform groups renamed to `FEATURE_GROUP` / `feature_group` and no deprecated `BOX_GROUP` alias.
 - `v4.8.0` published with `FEATURE_COPY` / `feature_copy` and `FEATURE_REFERENCE` / `feature_reference` for repeating named features or groups.
 - `v4.8.1` published with copied `FEATURE_GROUP` children restored to the group-local negative geometry path.
+- `v4.9.0` published with `PRINT_GROUP` / `G_PRINT_GROUP` selection for grouped output of boxes, lids, spacers, standalone dividers, box features, feature groups/copies, and labels. Print groups replace the old MMU-layer switch.
+- `v4.9.0` adds `tests/csg_regression.sh` and wires it into the pre-commit hook so normalized CSG for existing v4 tests is compared against `HEAD` before version stamping.
 
 ## Active Specs
 - No active implementation spec is currently in flight.

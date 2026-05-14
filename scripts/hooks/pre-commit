@@ -10,8 +10,15 @@ set -e
 
 LIB="release/lib/boardgame_insert_toolkit_lib.4.scad"
 BUMP="${BIT_VERSION_BUMP:-patch}"
+ROOT="$(git rev-parse --show-toplevel)"
 
-. "$(git rev-parse --show-toplevel)/scripts/version-common.sh"
+cd "$ROOT"
+
+if [ "${BIT_SKIP_CSG_REGRESSION:-0}" != "1" ]; then
+    tests/csg_regression.sh --baseline HEAD
+fi
+
+. "$ROOT/scripts/version-common.sh"
 
 # Skip silently if the lib file isn't present (rebase, partial checkout, etc).
 [ -f "$LIB" ] || exit 0

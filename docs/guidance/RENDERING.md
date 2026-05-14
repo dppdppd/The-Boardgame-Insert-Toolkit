@@ -40,6 +40,7 @@ All use `--projection=ortho --view=edges --autocenter --viewall`:
 - `tests/v4/renders/` — PNG renders from test runner and eval tool (gitignored)
 - `tests/v4/stl/` — STL exports (gitignored)
 - `tests/run_tests.sh` — runs all tests from `tests/v4/scad/`, generates 7 PNG views per test
+- `tests/csg_regression.sh` — compares normalized CSG for existing v4 tests against a git baseline
 - Each test includes the lib via symlink: `include <boardgame_insert_toolkit_lib.4.scad>;`
 
 Tests should continue targeting the moving development library file, not a full-version shipped copy. Version-locked release files are checked by `scripts/package-release.sh` through a packaged starter smoke compile; the regression suite stays focused on the current v4 development surface.
@@ -59,11 +60,16 @@ Tests should continue targeting the moving development library file, not a full-
 ./tests/run_tests.sh test_box_minimal              # Single test
 ./tests/run_tests.sh --views iso,top test_lid_*    # Only iso+top views
 ./tests/run_tests.sh --csg-only                    # Fast compile check (~7s total)
+./tests/csg_regression.sh                          # Compare normalized CSG against HEAD
 ```
 
 Test files live in `tests/v4/scad/`; the runner discovers them there automatically.
 
 When adding or changing a test, run that affected test without `--csg-only` before finishing. `--csg-only` is useful as a fast preliminary regression check, but it does not generate STL or PNG files and is not a substitute for render output. Each committed test should have a current render-producing run that writes all requested views to `tests/v4/renders/`.
+
+`tests/csg_regression.sh` is the baseline comparison. It checks out the selected baseline ref in a temporary git worktree, exports CSG for the baseline and current tree, normalizes away identity `group()` wrappers, and diffs the normalized CSG. By default it compares against `HEAD` and only compares tests that already exist in the baseline; current-only tests are reported as skipped because they have no baseline yet.
+
+The installed pre-commit hook runs `tests/csg_regression.sh --baseline HEAD` before stamping `VERSION`. Use `BIT_SKIP_CSG_REGRESSION=1 git commit ...` only for exceptional commits where the local OpenSCAD comparison cannot be run.
 
 ## Evaluation Tool: `tests/render_eval.sh`
 
@@ -112,6 +118,7 @@ Output goes to `tests/v4/renders/generated/` by default. The script fails on Ope
 | `tests/v3-baseline/renders/` | Historical render output |
 | `tests/render_eval.sh` | Evaluation render tool |
 | `tests/run_tests.sh` | Test runner script |
+| `tests/csg_regression.sh` | Normalized CSG baseline comparison |
 | `scripts/validate-design.sh` | Generated user design validator |
 
 ## Test File Template

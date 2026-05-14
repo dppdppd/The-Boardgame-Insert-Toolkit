@@ -6,4 +6,6 @@ set -e
 cd "$(git rev-parse --show-toplevel)"
 git config core.hooksPath scripts/hooks
 echo "Installed: core.hooksPath = scripts/hooks"
-echo "  - pre-commit: increments patch by default; set BIT_VERSION_BUMP=minor for feature releases"
+echo "  - pre-commit: compares normalized CSG against HEAD, then stamps VERSION"
+echo "  - set BIT_VERSION_BUMP=minor for feature releases"
+echo "  - set BIT_SKIP_CSG_REGRESSION=1 to bypass the local CSG comparison"

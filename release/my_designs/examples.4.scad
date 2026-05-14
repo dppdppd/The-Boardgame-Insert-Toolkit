@@ -1,5 +1,5 @@
 // BGSD
-include <../lib/boardgame_insert_toolkit_lib.4.8.1.scad>;
+include <../lib/boardgame_insert_toolkit_lib.4.9.0.scad>;
 // Variables for components box
 cmp_size = 20;
 wall = $g_wall_thickness;

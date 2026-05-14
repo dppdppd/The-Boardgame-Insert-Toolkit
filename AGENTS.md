@@ -42,6 +42,7 @@ Two-phase pipeline: STL export (slow, CGAL) → multi-view PNG (fast, import STL
 
 ```bash
 ./tests/run_tests.sh --csg-only                    # Fast compile check (~7s total)
+./tests/csg_regression.sh                          # Compare normalized CSG against HEAD
 ./tests/run_tests.sh test_box_minimal              # Single test, all 7 views
 ./tests/render_eval.sh tests/v4/scad/test_box_minimal.scad  # Eval render (iso + top)
 ./scripts/validate-design.sh path/to/design.scad   # Validate an arbitrary user design
@@ -60,8 +61,9 @@ Tests live in `tests/v4/scad/`; v3 baseline in `tests/v3-baseline/`.
 | `docs/llm/` | LLM-facing user design generation guides, schema, examples |
 | `tests/v4/scad/test_*.scad` | 60 v4 test files |
 | `tests/v3-baseline/` | v3 regression baseline (read-only) |
+| `tests/csg_regression.sh` | Normalized CSG baseline comparison against a git ref |
 | `scripts/validate-design.sh` | Compile/render check for generated user `.scad` files |
-| `scripts/hooks/pre-commit` | Stamps `VERSION`; patch by default, `BIT_VERSION_BUMP=minor` for feature releases |
+| `scripts/hooks/pre-commit` | Runs normalized CSG regression against `HEAD`, then stamps `VERSION`; patch by default, `BIT_VERSION_BUMP=minor` for feature releases |
 | `scripts/install-hooks.sh` | One-time per clone: `git config core.hooksPath scripts/hooks` |
 
 > Full file conventions table and test template: [docs/guidance/RENDERING.md](docs/guidance/RENDERING.md)
@@ -79,7 +81,7 @@ The visual editor (BGSD — Board Game Storage Designer) has been split into its
 ## Key Design Decisions
 
 - **Two-phase rendering**: STL export (slow, CGAL) then PNG views (fast, import STL) — separated for efficiency
-- **Pre-commit version stamping**: the `scripts/hooks/pre-commit` hook mutates the lib and `git add`s it from inside the hook so the version stamp rides along in the commit being made. Patch is the default bump for bug fixes/internal changes; set `BIT_VERSION_BUMP=minor` for user-facing feature releases. Pre-push wouldn't work for new commits — git determines the push spec before the hook runs, so a hook-created commit wouldn't be included in the current push.
+- **Pre-commit CSG regression + version stamping**: the `scripts/hooks/pre-commit` hook first runs `tests/csg_regression.sh --baseline HEAD`, then mutates the lib and `git add`s it from inside the hook so the version stamp rides along in the commit being made. Patch is the default bump for bug fixes/internal changes; set `BIT_VERSION_BUMP=minor` for user-facing feature releases. Pre-push wouldn't work for new commits — git determines the push spec before the hook runs, so a hook-created commit wouldn't be included in the current push.
 
 ## Library Refactor Workflow
 
@@ -88,6 +90,7 @@ Key principles for structured library changes:
 - **Always render BEFORE baselines** before patching, even for "trivial" changes
 - **Refactors must produce identical geometry** — compare BEFORE/AFTER PNGs
 - **CSG regression on all tests** after every change (`run_tests.sh --csg-only`)
+- **Normalized CSG baseline comparison before commit** — `tests/csg_regression.sh` compares existing v4 tests against `HEAD`; the installed pre-commit hook runs this automatically
 - **Every new or changed test must generate renders** — run the affected test(s) without `--csg-only` so STL and all seven PNG views are written to `tests/v4/renders/`
 - **Update docs every cycle** — stale plans are worse than no plan
 
