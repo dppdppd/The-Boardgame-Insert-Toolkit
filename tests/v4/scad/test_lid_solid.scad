@@ -2,9 +2,7 @@
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
-    [ G_PRINT_LID_B, true ],
-    [ G_PRINT_BOX_B, true ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, [ BOX, LID, DIVIDERS ] ],
     [ OBJECT_BOX,
         [ NAME, "solid lid" ],
         [ BOX_SIZE_XYZ, [45, 45, 15] ],

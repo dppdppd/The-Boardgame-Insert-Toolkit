@@ -2,11 +2,7 @@
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, true ],
-    [ G_PRINT_DIVIDERS, ["wrong nested divider types", 7] ],
-    [ G_PRINT_DIVIDERS_ONLY_B, "yes" ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, [ BOX, "wrong print target" ] ],
     [ G_VALIDATE_KEYS_B, true ],
 
     [ OBJECT_BOX,
@@ -24,7 +20,6 @@ data = [
                 [ DIV_RAIL_SIZE_XYZ, "wide" ],
                 [ DIV_NO_RAILS_B, "yes" ],
                 [ DIV_THICKNESS, "thick" ],
-                [ DIV_OUTPUT_ONLY_B, "yes" ],
                 [ DIV_FRAME_TOP, "bad" ],
             ],
         ],

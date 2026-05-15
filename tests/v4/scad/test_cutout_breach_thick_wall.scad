@@ -14,9 +14,7 @@
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, true ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, [ BOX, DIVIDERS ] ],
 
     // Box 1 — round vertical compartment, EXTERIOR cutout (the user's
     // Mini-Chips case). Wall 3mm. Pre-fix: 0.5mm sliver at outer surface.

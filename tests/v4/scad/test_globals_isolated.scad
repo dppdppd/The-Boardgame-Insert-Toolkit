@@ -1,10 +1,9 @@
-// Test: g_isolated_print_box — only render the named box
+// Test: G_PRINT_BOXES can select a named box for rendering.
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, true ],
-    [ G_ISOLATED_PRINT_BOX, "target box" ],
+    [ G_PRINT_TYPES, [ BOX, DIVIDERS ] ],
+    [ G_PRINT_BOXES, "target box" ],
     [ OBJECT_BOX,
         [ NAME, "hidden box" ],
         [ BOX_SIZE_XYZ, [40, 40, 15] ],

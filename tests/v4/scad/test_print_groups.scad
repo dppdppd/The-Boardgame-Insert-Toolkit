@@ -3,9 +3,7 @@
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, true ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, [ BOX, DIVIDERS ] ],
 
     [ OBJECT_BOX,
         [ NAME, "print group box" ],
@@ -48,13 +46,13 @@ print_groups = [ "shell", "insert", "ink" ];
 module PrintGroups( offset = [0, 0, 0] )
 {
     translate( offset )
-        Make( data, print_group = print_groups );
+        Make( data, print_groups = print_groups );
 }
 
 module PrintGroup( group_name, offset = [0, 0, 0] )
 {
     translate( offset )
-        Make( data, print_group = group_name );
+        Make( data, print_groups = group_name );
 }
 
 // Left: intact composite, with automatic print-group preview colors.

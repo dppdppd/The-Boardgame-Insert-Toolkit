@@ -15,9 +15,7 @@ box_xyz = [
 ];
 
 data = [
-    [ G_PRINT_LID_B, true ],
-    [ G_PRINT_BOX_B, true ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, [ BOX, LID, DIVIDERS ] ],
     [ G_DETENT_THICKNESS, 0.5 ],
     [ OBJECT_BOX,
         [ NAME, "sliding solid lid" ],

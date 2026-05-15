@@ -6,9 +6,7 @@ box_xyz = [70, 52, 24];
 interior_xyz = [box_xyz[k_x] - 2*wall, box_xyz[k_y] - 2*wall, box_xyz[k_z] - 2*wall];
 
 data = [
-    [ G_PRINT_LID_B, true ],
-    [ G_PRINT_BOX_B, true ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, [ BOX, LID, DIVIDERS ] ],
     [ G_LID_THICKNESS, 3 ],
     [ G_DETENT_THICKNESS, 0.5 ],
     [ OBJECT_BOX,

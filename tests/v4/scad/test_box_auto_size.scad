@@ -3,9 +3,7 @@
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
-    [ G_PRINT_LID_B, true ],
-    [ G_PRINT_BOX_B, true ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, [ BOX, LID, DIVIDERS ] ],
     // Single component, centered (default) — simplest auto-size case
     // Expected: box = [44, 34, 22] (40+4, 30+4, 20+2)
     [ OBJECT_BOX,

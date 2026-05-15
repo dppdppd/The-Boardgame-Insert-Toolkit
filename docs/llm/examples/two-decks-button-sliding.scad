@@ -30,9 +30,7 @@ tray_y = max(deck_well_y, button_well) + 4 * wall;
 tray_z = max(deck_well_z, button_well_z) + 2 * wall;
 
 data = [
-    [ G_PRINT_LID_B, true ],
-    [ G_PRINT_BOX_B, true ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, [ BOX, LID, DIVIDERS ] ],
     [ G_VALIDATE_KEYS_B, true ],
     [ G_WALL_THICKNESS, wall ],
     [ G_TOLERANCE, tolerance ],

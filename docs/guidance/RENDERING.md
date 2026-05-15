@@ -79,7 +79,7 @@ The installed pre-commit hook runs `tests/csg_regression.sh --baseline HEAD` bef
 ./tests/render_eval.sh tests/v4/scad/test_cutout_sides.scad --views front      # Specific view
 ./tests/render_eval.sh --inline 'include <boardgame_insert_toolkit_lib.4.scad>;
   data=[
-    [G_PRINT_LID_B, false], [G_PRINT_BOX_B, true],
+    [G_PRINT_TYPES, BOX],
     [OBJECT_BOX, [NAME,"t"],
       [BOX_SIZE_XYZ,[50,50,20]],
       [BOX_FEATURE, [FTR_COMPARTMENT_SIZE_XYZ,[46,46,18]]],
@@ -128,9 +128,7 @@ Output goes to `tests/v4/renders/generated/` by default. The script fails on Ope
 include <boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
-    [ G_PRINT_LID_B, true ],
-    [ G_PRINT_BOX_B, true ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, [ BOX, LID, DIVIDERS ] ],
     [ OBJECT_BOX,
         [ NAME, "test name" ],
         [ BOX_SIZE_XYZ, [50, 50, 20] ],

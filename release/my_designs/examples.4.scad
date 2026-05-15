@@ -1,14 +1,12 @@
 // BGSD
-include <../lib/boardgame_insert_toolkit_lib.4.10.0.scad>;
+include <../lib/boardgame_insert_toolkit_lib.4.11.0.scad>;
 // Variables for components box
 cmp_size = 20;
 wall = $g_wall_thickness;
 cmp_pitch = cmp_size + wall;
 data = [
     // Globals
-    [ G_PRINT_LID_B, true ],
-    [ G_PRINT_BOX_B, true ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, [ BOX, LID, DIVIDERS ] ],
     [ G_VISUALIZATION_B, false ],
     [ G_WALL_THICKNESS, 1.5 ],
     [ G_TOLERANCE, 0.15 ],

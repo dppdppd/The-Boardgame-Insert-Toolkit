@@ -3,9 +3,7 @@
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, true ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, [ BOX, DIVIDERS ] ],
 
     [ OBJECT_BOX,
         [ NAME, "nested group in parent tray" ],

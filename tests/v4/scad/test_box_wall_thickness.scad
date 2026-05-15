@@ -2,9 +2,7 @@
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, true ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, [ BOX, DIVIDERS ] ],
     [ G_WALL_THICKNESS, 3.0 ],
     [ OBJECT_BOX,
         [ NAME, "thick walls" ],

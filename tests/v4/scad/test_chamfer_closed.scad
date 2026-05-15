@@ -2,8 +2,7 @@
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
-    [ G_PRINT_LID_B, true ],
-    [ G_PRINT_BOX_B, true ],
+    [ G_PRINT_TYPES, [ BOX, LID, DIVIDERS ] ],
    // [ G_VISUALIZATION_B, true ],
     [ OBJECT_BOX,
         [ NAME, "chamfer closed" ],

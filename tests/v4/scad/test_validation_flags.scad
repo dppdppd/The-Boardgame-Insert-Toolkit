@@ -2,8 +2,7 @@
 include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 validation_on_data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, true ],
+    [ G_PRINT_TYPES, [ BOX, DIVIDERS ] ],
     [ OBJECT_BOX,
         [ NAME, "flag validation on" ],
         [ BOX_SIZE_XYZ, [30, 24, 8] ],
@@ -18,8 +17,7 @@ validation_on_data = [
 ];
 
 validation_off_data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, true ],
+    [ G_PRINT_TYPES, [ BOX, DIVIDERS ] ],
     [ G_VALIDATE_KEYS_B, false ],
     [ OBJECT_BOX,
         [ NAME, "flag validation off" ],

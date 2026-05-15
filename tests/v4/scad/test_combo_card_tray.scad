@@ -5,9 +5,7 @@ include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
 
 data = [
     [ G_DEFAULT_FONT, "Liberation Sans:style=Regular" ],
-    [ G_PRINT_LID_B, true ],
-    [ G_PRINT_BOX_B, true ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, [ BOX, LID, DIVIDERS ] ],
     [ OBJECT_BOX,
         [ NAME, "card tray combo" ],
         [ BOX_SIZE_XYZ, [100, 60, cos(20) * 50 - 8] ],

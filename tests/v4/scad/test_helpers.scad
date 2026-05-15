@@ -7,9 +7,7 @@ pitch = sz + wall;
 
 data = [
     [ G_DEFAULT_FONT, "Liberation Sans:style=Regular" ],
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, true ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, [ BOX, DIVIDERS ] ],
     [ OBJECT_BOX,
         [ NAME, "shape variants" ],
         [ BOX_SIZE_XYZ, [7 * 20 + 8 * wall, 3 * 20 + 4 * wall, sz + 3 * wall] ],

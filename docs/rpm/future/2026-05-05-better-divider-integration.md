@@ -37,18 +37,14 @@ Subgroup keys:
 - `DIV_NO_RAILS_B`: when true, suppress matching box-side rail grooves. Defaults to false.
 - Divider slot gap is inferred from `DIV_THICKNESS + G_TOLERANCE`.
 - Optional `DIV_RAIL_SIZE_XYZ`: positive rail dimensions `[thickness, width, height]`; height may be `MAX` for full compartment height and defaults to `MAX`, so the full default is `[wall_thickness / 2, wall_thickness, MAX]`.
-- `DIV_OUTPUT_ONLY_B`: when true, suppresses the parent box/lid and outputs only generated fitted divider panels from output-only subgroups.
-- `G_PRINT_DIVIDERS`: global selector for generated divider panels. `true` prints all, `false` prints none, string/list prints matching divider/component/box names.
-- `G_PRINT_DIVIDERS_ONLY_B`: global exclusive mode; when true, suppresses boxes/lids and prints only the selected generated divider panels.
+- `G_PRINT_TYPES`: global output selector. Include `DIVIDERS` to print generated divider panels and standalone divider objects, omit it to suppress them, or set `G_PRINT_TYPES` to `DIVIDERS` to print divider output only.
 - Existing `DIV_*` keys are valid in the subgroup so the same nested spec can create dividers that fit this compartment.
 
 Current behavior:
 - Rail pairs are positive side-wall material and are clipped to the compartment shape.
 - Normal `FTR_DIVIDERS` output generates both box rails and loose divider panels, one per requested slot per repeated compartment.
 - Preview places generated panels in their slots; render lays generated panels out for printing.
-- `G_PRINT_DIVIDERS` can suppress generated panels or restrict them to a named subset.
-- `G_PRINT_DIVIDERS_ONLY_B` generates selected loose divider panels instead of the box/lid.
-- `DIV_OUTPUT_ONLY_B` remains as a per-divider compatibility shortcut for divider-only output.
+- `G_PRINT_TYPES` can suppress generated panels by omitting `DIVIDERS`, or generate loose divider panels instead of the box/lid by selecting only `DIVIDERS`.
 - Generated fitted divider panels are the slot slice intersected with the compartment shape, so non-square cavity profiles produce matching divider edges.
 - Fitted panel extents come from the compartment shape and stay within compartment height and side profile; `DIV_TAB_*` tabs are constrained to the fitted divider side span with their top aligned to the compartment top, then the combined divider is clipped to the compartment profile. `DIV_FRAME_*` controls optional frame openings.
 - Global exclusive divider output supports iteration and producing extra divider sets without rendering the box body.
@@ -71,7 +67,7 @@ The current public layout model uses a single input path:
 1. `DIV_LAYOUT_BAYS` is the number of bays along `DIV_AXIS`.
 2. `DIV_LAYOUT_BAY_SIZE > 0` places dividers at accumulated physical bay boundaries, centered in the compartment. Required span is `DIV_LAYOUT_BAYS * DIV_LAYOUT_BAY_SIZE + (DIV_LAYOUT_BAYS - 1) * DIV_THICKNESS`.
 3. `DIV_LAYOUT_BAY_SIZE == 0` evenly spaces `DIV_LAYOUT_BAYS - 1` generated dividers across the compartment.
-4. `DIV_AXIS`, `DIV_NO_RAILS_B`, `DIV_RAIL_SIZE_XYZ`, `G_PRINT_DIVIDERS`, `G_PRINT_DIVIDERS_ONLY_B`, and `DIV_OUTPUT_ONLY_B` all consume the same generated centerline list after layout resolution.
+4. `DIV_AXIS`, `DIV_NO_RAILS_B`, `DIV_RAIL_SIZE_XYZ`, and `G_PRINT_TYPES` all consume the same generated centerline list after layout resolution.
 5. Fitted panel dimensions come from the matching `BOX_FEATURE` compartment. `DIV_FRAME_SIZE_XY` is only for standalone `OBJECT_DIVIDERS`; `DIV_FRAME_*` controls only optional frame openings in generated feature dividers.
 
 ## Worker Result - 2026-05-07 - 019e0509-8157-7091-9615-975af4fcb917

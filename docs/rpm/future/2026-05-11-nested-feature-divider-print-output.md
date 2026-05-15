@@ -21,5 +21,5 @@ Nested `BOX_FEATURE` geometry now supports child cavities, child labels, cutouts
 ## Acceptance Criteria
 
 - Nested child `FTR_DIVIDERS` either fully generate expected loose print panels or emit a narrower validation warning that documents the remaining unsupported path.
-- Selector behavior for `G_PRINT_DIVIDERS` is documented for nested and copied feature names.
+- `G_PRINT_TYPES` behavior for generated divider panels is documented for nested and copied features.
 - Full CSG passes, and focused full renders cover nested divider rails/panels.

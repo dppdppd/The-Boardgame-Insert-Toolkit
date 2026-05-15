@@ -172,9 +172,7 @@ for ( slide_side = [ FRONT, BACK, LEFT, RIGHT ] )
 }
 
 data = [
-    [ G_PRINT_LID_B, true ],
-    [ G_PRINT_BOX_B, false ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, [ LID, DIVIDERS ] ],
     [ OBJECT_BOX,
         [ NAME, "physical validation box" ],
         [ BOX_SIZE_XYZ, [50, 40, 12] ],
@@ -299,9 +297,7 @@ data = [
 ];
 
 detent_thin_data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, false ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, DIVIDERS ],
     [ G_DETENT_THICKNESS, 0.2 ],
     [ G_DETENT_SPACING, 20 ],
     [ G_DETENT_DIST_FROM_CORNER, 0.1 ],
@@ -318,9 +314,7 @@ detent_thin_data = [
 ];
 
 detent_collapsed_data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, false ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, DIVIDERS ],
     [ G_DETENT_THICKNESS, 0.8 ],
     [ G_DETENT_SPACING, 2 ],
     [ G_DETENT_DIST_FROM_CORNER, 9 ],
@@ -337,9 +331,7 @@ detent_collapsed_data = [
 ];
 
 detent_chamfer_collision_data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, false ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, DIVIDERS ],
     [ G_DETENT_THICKNESS, 0.5 ],
     [ G_DETENT_SPACING, 10 ],
     [ G_DETENT_DIST_FROM_CORNER, 0.5 ],
@@ -357,9 +349,7 @@ detent_chamfer_collision_data = [
 ];
 
 detent_cutout_collision_data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, false ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, DIVIDERS ],
     [ G_LID_THICKNESS, 2.0 ],
     [ G_DETENT_THICKNESS, 0.5 ],
     [ G_DETENT_SPACING, 6 ],
@@ -439,9 +429,7 @@ detent_cutout_collision_data = [
 ];
 
 detent_cutout_stops_below_data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, false ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, DIVIDERS ],
     [ G_LID_THICKNESS, 1.2 ],
     [ G_DETENT_THICKNESS, 0.5 ],
     [ G_DETENT_SPACING, 6 ],
@@ -467,9 +455,7 @@ detent_cutout_stops_below_data = [
 ];
 
 detent_cutout_disabled_data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, false ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, DIVIDERS ],
     [ G_LID_THICKNESS, 2.0 ],
     [ G_DETENT_THICKNESS, 0 ],
     [ G_DETENT_SPACING, 6 ],
@@ -495,9 +481,7 @@ detent_cutout_disabled_data = [
 ];
 
 detent_groove_width_data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, false ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, DIVIDERS ],
     [ G_LID_THICKNESS, 4.0 ],
     [ G_TOLERANCE, 0.7 ],
     [ G_DETENT_THICKNESS, 2.0 ],
@@ -516,9 +500,7 @@ detent_groove_width_data = [
 ];
 
 detent_groove_height_data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, false ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, DIVIDERS ],
     [ G_LID_THICKNESS, 1.0 ],
     [ G_TOLERANCE, 0.49 ],
     [ G_DETENT_THICKNESS, 0.5 ],
@@ -537,9 +519,7 @@ detent_groove_height_data = [
 ];
 
 detent_custom_lid_thickness_data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, false ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, DIVIDERS ],
     [ G_LID_THICKNESS, 3.0 ],
     [ G_TOLERANCE, 0.2 ],
     [ G_DETENT_THICKNESS, 0.6 ],
@@ -558,9 +538,7 @@ detent_custom_lid_thickness_data = [
 ];
 
 cap_lid_fit_data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, false ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, DIVIDERS ],
     [ G_TOLERANCE, 0.6 ],
     [ OBJECT_BOX,
         [ NAME, "collapsed cap lid fit" ],
@@ -575,9 +553,7 @@ cap_lid_fit_data = [
 ];
 
 inset_lid_fit_data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, false ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, DIVIDERS ],
     [ G_TOLERANCE, 0.1 ],
     [ OBJECT_BOX,
         [ NAME, "collapsed inset lid fit" ],
@@ -592,9 +568,7 @@ inset_lid_fit_data = [
 ];
 
 sliding_lid_fit_data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, false ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, DIVIDERS ],
     [ G_LID_THICKNESS, 0.8 ],
     [ G_TOLERANCE, 0.5 ],
     [ G_DETENT_THICKNESS, 0 ],
@@ -611,9 +585,7 @@ sliding_lid_fit_data = [
 ];
 
 legacy_detent_data = [
-    [ G_PRINT_LID_B, false ],
-    [ G_PRINT_BOX_B, false ],
-    [ G_ISOLATED_PRINT_BOX, "" ],
+    [ G_PRINT_TYPES, DIVIDERS ],
     [ G_DETENT_THICKNESS, 0.1 ],
     [ G_DETENT_SPACING, 9 ],
     [ G_DETENT_DIST_FROM_CORNER, 0.1 ],
