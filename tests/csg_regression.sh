@@ -2,7 +2,8 @@
 #
 # Compare normalized OpenSCAD CSG output for existing v4 tests against a git
 # baseline. This catches unintended CSG tree changes before committing while
-# ignoring no-op group() wrappers that OpenSCAD may serialize differently.
+# ignoring no-op group(), preview color(), and identity transform wrappers that
+# OpenSCAD may serialize differently.
 #
 # Usage:
 #   tests/csg_regression.sh
@@ -115,12 +116,15 @@ normalize_csg() {
             if (line == "") {
                 next
             }
-            if (line == "group() {") {
-                push("group")
+            if (line == "group();") {
+                next
+            }
+            if (line == "group() {" || line ~ /^color\(.*\)[[:space:]]*\{$/ || line == "multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) {") {
+                push("wrapper")
                 next
             }
             if (line == "}") {
-                if (depth > 0 && stack[depth] == "group") {
+                if (depth > 0 && stack[depth] == "wrapper") {
                     pop()
                     next
                 }

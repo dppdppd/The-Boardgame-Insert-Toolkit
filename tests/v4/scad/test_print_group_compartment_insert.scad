@@ -21,17 +21,23 @@ data = [
     ],
 ];
 
-module PrintGroup( group_name, rgb, offset = [0, 0, 0] )
+print_groups = [ "shell", "insert" ];
+
+module PrintGroups( offset = [0, 0, 0] )
 {
     translate( offset )
-        color( rgb )
-            Make( data, print_group = group_name );
+        Make( data, print_group = print_groups );
 }
 
-// Left: grouped box in final assembled position.
-PrintGroup( "shell", [0.78, 0.78, 0.72] );
-PrintGroup( "insert", [0.1, 0.42, 0.9] );
+module PrintGroup( group_name, offset = [0, 0, 0] )
+{
+    translate( offset )
+        Make( data, print_group = group_name );
+}
+
+// Left: grouped box in final assembled position, using automatic colors.
+PrintGroups();
 
 // Right: same groups exploded for geometry inspection.
-PrintGroup( "shell", [0.78, 0.78, 0.72], [95, 0, 0] );
-PrintGroup( "insert", [0.1, 0.42, 0.9], [180, 0, 0] );
+PrintGroup( "shell", [95, 0, 0] );
+PrintGroup( "insert", [180, 0, 0] );

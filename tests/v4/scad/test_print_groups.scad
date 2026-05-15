@@ -43,25 +43,25 @@ data = [
     ],
 ];
 
-module PrintGroup( group_name, rgb, offset = [0, 0, 0] )
+print_groups = [ "shell", "insert", "ink" ];
+
+module PrintGroups( offset = [0, 0, 0] )
 {
     translate( offset )
-        color( rgb )
-            Make( data, print_group = group_name );
+        Make( data, print_group = print_groups );
 }
 
-module PrintGroupBox()
+module PrintGroup( group_name, offset = [0, 0, 0] )
 {
-    PrintGroup( "shell", [0.78, 0.78, 0.72] );
-    PrintGroup( "insert", [0.1, 0.42, 0.9] );
-    PrintGroup( "ink", [0.02, 0.02, 0.02] );
+    translate( offset )
+        Make( data, print_group = group_name );
 }
 
-// Left: intact composite, with groups overlaid in their final positions.
-PrintGroupBox();
+// Left: intact composite, with automatic print-group preview colors.
+PrintGroups();
 
 // Right: the exact same print groups exploded so each pass can be inspected
 // for unwanted shell/body geometry.
-PrintGroup( "shell", [0.78, 0.78, 0.72], [95, 0, 0] );
-PrintGroup( "insert", [0.1, 0.42, 0.9], [180, 0, 0] );
-PrintGroup( "ink", [0.02, 0.02, 0.02], [245, 0, 0] );
+PrintGroup( "shell", [95, 0, 0] );
+PrintGroup( "insert", [180, 0, 0] );
+PrintGroup( "ink", [245, 0, 0] );
