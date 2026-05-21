@@ -1,0 +1,35 @@
+// Test: SVG feature shape cavities scale by width and clearance.
+include <../../../release/lib/boardgame_insert_toolkit_lib.4.scad>;
+
+data = [
+    [ G_PRINT_TYPES, BOX ],
+    [ OBJECT_BOX,
+        [ NAME, "svg cavities" ],
+        [ BOX_SIZE_XYZ, [96, 48, 18] ],
+        [ BOX_NO_LID_B, true ],
+        [ CHAMFER_N, 0 ],
+        [ BOX_FEATURE,
+            [ FTR_SHAPE,
+              [ SVG,
+                [ SVG_FILE, "../assets/meeple.svg" ],
+                [ SVG_WIDTH_MM, 11 ],
+                [ SVG_CLEARANCE_MM, 0.4 ],
+              ],
+            ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [28, 34, 14] ],
+            [ POSITION_XY, [4, CENTER] ],
+        ],
+        [ BOX_FEATURE,
+            [ FTR_SHAPE,
+              [ SVG,
+                [ SVG_FILE, "../assets/meeple.svg" ],
+                [ SVG_WIDTH_MM, 11 ],
+                [ SVG_CLEARANCE_MM, 1.2 ],
+              ],
+            ],
+            [ FTR_COMPARTMENT_SIZE_XYZ, [32, 36, 14] ],
+            [ POSITION_XY, [MAX, CENTER] ],
+        ],
+    ],
+];
+Make(data);

@@ -81,7 +81,7 @@ The visual editor (BGSD — Board Game Storage Designer) has been split into its
 ## Key Design Decisions
 
 - **Two-phase rendering**: STL export (slow, CGAL) then PNG views (fast, import STL) — separated for efficiency
-- **Pre-commit CSG regression + version stamping**: the `scripts/hooks/pre-commit` hook first runs `tests/csg_regression.sh --baseline HEAD`, then mutates the lib and `git add`s it from inside the hook so the version stamp rides along in the commit being made. Patch is the default bump for bug fixes/internal changes; set `BIT_VERSION_BUMP=minor` for user-facing feature releases. Pre-push wouldn't work for new commits — git determines the push spec before the hook runs, so a hook-created commit wouldn't be included in the current push.
+- **Pre-commit CSG regression + version stamping**: the `scripts/hooks/pre-commit` hook first runs `tests/csg_regression.sh` with `--baseline HEAD`, then mutates the lib and `git add`s it from inside the hook so the version stamp rides along in the commit being made. Patch is the default bump for bug fixes/internal changes; set `BIT_VERSION_BUMP=minor` for user-facing feature releases. Pre-push wouldn't work for new commits — git determines the push spec before the hook runs, so a hook-created commit wouldn't be included in the current push.
 
 ## Library Refactor Workflow
 

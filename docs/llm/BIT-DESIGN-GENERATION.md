@@ -40,6 +40,7 @@ Use `release/lib/boardgame_insert_toolkit_lib.4.scad` only for repo tests and li
 - Prefer simple rectangular trays first. Add labels, patterns, sliding lids, and complex cutouts only when they serve the storage goal.
 - Use `G_VALIDATE_KEYS_B` unless the user asks to suppress validation.
 - Do not use v3-only `HEXBOX` in v4. For hex-shaped compartments in a rectangular tray, use `FTR_SHAPE` with `HEX` or `HEX2`.
+- For custom-piece outline cavities, use an SVG shape block only when the user provides an SVG outline and the piece's measured width: `[ FTR_SHAPE, [ SVG, [ SVG_FILE, "piece.svg" ], [ SVG_WIDTH_MM, 30 ], [ SVG_CLEARANCE_MM, 0.5 ] ] ]`. Keep `FTR_COMPARTMENT_SIZE_XYZ` as the footprint and height, set SVG feature `CHAMFER_N` to `0`, and validate/render because OpenSCAD imports only reliable 2D vector outlines.
 - If a dimension comes from the web, cite it in comments or an assumptions file. If it is not sourced, mark it as a user-measurement placeholder.
 
 ## Questions To Ask When Data Is Missing

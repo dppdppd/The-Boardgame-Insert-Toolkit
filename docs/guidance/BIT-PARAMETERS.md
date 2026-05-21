@@ -8,7 +8,9 @@ All parameters for the v4 data array format. See `release/lib/boardgame_insert_t
 
 ## Feature-level (inside BOX_FEATURE)
 
-`PRINT_GROUP`, `FTR_COMPARTMENT_SIZE_XYZ`, `FTR_NUM_COMPARTMENTS_XY`, `FTR_SHAPE` (SQUARE/HEX/HEX2/OCT/OCT2/ROUND/FILLET), `FTR_SHAPE_AXIS` (X/Y, default Y), `FTR_SHAPE_VERTICAL_B`, `FTR_PADDING_XY`, `FTR_PADDING_HEIGHT_ADJUST_XY`, `FTR_MARGIN_FBLR`, `FTR_CUTOUT_SIDES_4B`, `FTR_CUTOUT_CORNERS_4B`, `FTR_CUTOUT_HEIGHT_PCT`, `FTR_CUTOUT_DEPTH_PCT`, `FTR_CUTOUT_WIDTH_PCT`, `FTR_CUTOUT_BOTTOM_B`, `FTR_CUTOUT_BOTTOM_PCT`, `FTR_CUTOUT_TYPE` (INTERIOR/EXTERIOR/BOTH), `FTR_DIVIDERS`, `FTR_SHEAR`, `FTR_FILLET_RADIUS`, `FTR_PEDESTAL_BASE_B`, `CHAMFER_N`, `POSITION_XY`, `ROTATION`, `BOX_FEATURE`, `FEATURE_GROUP`, `FEATURE_COPY`
+`PRINT_GROUP`, `FTR_COMPARTMENT_SIZE_XYZ`, `FTR_NUM_COMPARTMENTS_XY`, `FTR_SHAPE` (SQUARE/HEX/HEX2/OCT/OCT2/ROUND/FILLET or an SVG block), `FTR_SHAPE_AXIS` (X/Y, default Y), `FTR_SHAPE_VERTICAL_B`, `FTR_PADDING_XY`, `FTR_PADDING_HEIGHT_ADJUST_XY`, `FTR_MARGIN_FBLR`, `FTR_CUTOUT_SIDES_4B`, `FTR_CUTOUT_CORNERS_4B`, `FTR_CUTOUT_HEIGHT_PCT`, `FTR_CUTOUT_DEPTH_PCT`, `FTR_CUTOUT_WIDTH_PCT`, `FTR_CUTOUT_BOTTOM_B`, `FTR_CUTOUT_BOTTOM_PCT`, `FTR_CUTOUT_TYPE` (INTERIOR/EXTERIOR/BOTH), `FTR_DIVIDERS`, `FTR_SHEAR`, `FTR_FILLET_RADIUS`, `FTR_PEDESTAL_BASE_B`, `CHAMFER_N`, `POSITION_XY`, `ROTATION`, `BOX_FEATURE`, `FEATURE_GROUP`, `FEATURE_COPY`
+
+An SVG shape block imports a 2D outline as a vertical custom-piece cavity: `[ FTR_SHAPE, [ SVG, [ SVG_FILE, "piece.svg" ], [ SVG_WIDTH_MM, 30 ], [ SVG_CLEARANCE_MM, 0.5 ] ] ]`. `SVG_WIDTH_MM` is required; `SVG_CLEARANCE_MM` is optional. BIT resizes the imported SVG to the requested width and lets OpenSCAD preserve the outline aspect ratio for the other dimension. `FTR_COMPARTMENT_SIZE_XYZ` remains the cavity footprint and height budget, so it must be large enough for the scaled outline plus clearance. SVG cavities support closed filled outlines imported by OpenSCAD; convert strokes, text, and compound artwork to paths, avoid raster images, and set `CHAMFER_N = 0` for SVG features because SVG cavity chamfers are not supported.
 
 ## Group-level (inside FEATURE_GROUP)
 
@@ -45,3 +47,4 @@ Validation is enabled by default. Set `[ G_VALIDATE_KEYS_B, false ]` to suppress
 ## Gotchas
 
 - **`FTR_SHAPE_VERTICAL_B = true` does nothing without an explicit `FTR_SHAPE`.** The default `FTR_SHAPE` is `SQUARE`, and the vertical flag is ignored for square cavities. To get a round vertical cavity (e.g. for a cylindrical token stack), set `FTR_SHAPE = ROUND` and `FTR_SHAPE_VERTICAL_B = true` together. Same applies for vertical hex / oct — pair with `FTR_SHAPE = HEX` (or `HEX2`/`OCT`/`OCT2`).
+- **SVG width is the measured cavity scale.** Inside the `FTR_SHAPE` SVG block, `SVG_WIDTH_MM` gives the measured piece width and `SVG_CLEARANCE_MM` expands the outline after scaling. Make `FTR_COMPARTMENT_SIZE_XYZ` large enough for both the width and the auto-scaled height.

@@ -2,7 +2,22 @@
 #+TODO: TODO IN-PROGRESS BLOCKED | DONE
 
 * v4 Maintenance
+Goal: Keep the v4 library release-ready by closing incomplete feature work and shipping validated user-facing capabilities.
 ** TODO Complete nested feature divider print output [[file:2026-05-11-nested-feature-divider-print-output.md]]
    :PROPERTIES:
    :ID: nested-feature-divider-print-output
+   :END:
+** DONE Define SVG feature shape API and validation [[file:2026-05-21-svg-feature-shape-api.md]] :CLOSED: [2026-05-21]
+   :PROPERTIES:
+   :ID: svg-feature-shape-api
+   :END:
+** DONE Implement SVG feature cavity geometry [[file:2026-05-21-svg-feature-cavity-geometry.md]] :CLOSED: [2026-05-21]
+   :PROPERTIES:
+   :ID: svg-feature-cavity-geometry
+   :BLOCKED_BY: svg-feature-shape-api
+   :END:
+** DONE Document and test SVG feature shapes for release [[file:2026-05-21-svg-feature-shape-docs-tests.md]] :CLOSED: [2026-05-21]
+   :PROPERTIES:
+   :ID: svg-feature-shape-docs-tests
+   :BLOCKED_BY: svg-feature-cavity-geometry
    :END:
