@@ -2,8 +2,8 @@
 
 ## Project Status
 - **Current phase**: v4 stable — incremental feature work and docs maintenance
-- **Library version**: `4.10.0`
-- **Last updated**: 2026-05-15
+- **Library version**: `4.12.0`
+- **Last updated**: 2026-05-21
 
 ## Completed Work
 - v4 library shipped as the active version
@@ -41,6 +41,9 @@
 - `v4.9.0` adds `tests/csg_regression.sh` and wires it into the pre-commit hook so normalized CSG for existing v4 tests is compared against `HEAD` before version stamping.
 - `v4.9.1` fixes separately printed no-margin feature groups so isolated compartments reserve and emit a wall-thickness rim instead of only base/chamfer helper geometry.
 - `v4.10.0` adds stable automatic preview colors for selected print groups and keeps CSG regression focused on geometry by normalizing presentation-only wrappers.
+- `v4.11.0` replaces legacy print-output toggles with `G_PRINT_TYPES`, `G_PRINT_GROUPS`, and `G_PRINT_BOXES`, with empty values selecting all.
+- `v4.11.1` fixes over-height round feature cavities so they remain negative cavities instead of producing positive remnants.
+- `v4.12.0` adds SVG shape blocks on `FTR_SHAPE` for custom-piece cavities, including width-based scaling, optional clearance expansion, validation, focused tests, and release documentation.
 
 ## Active Specs
 - No active implementation spec is currently in flight.
