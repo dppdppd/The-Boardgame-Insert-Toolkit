@@ -1,6 +1,6 @@
 /*
  * The Boardgame Insert Toolkit - Library File
- * Version: 4.12.0
+ * Version: 4.12.1
  * 
  * A parametric system for creating custom board game inserts and organizers
  * https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
@@ -49,7 +49,7 @@
 
 
 // Version information
-VERSION = "4.12.0";
+VERSION = "4.12.1";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 // Resolution settings
@@ -7300,7 +7300,13 @@ module MakeBox( box )
             // For solid lids, limit label depth instead of cutting all the way through.
             // Use per-label LBL_DEPTH if set, otherwise fall back to LID_SOLID_LABELS_DEPTH.
             _lbl_depth = __value( label, LBL_DEPTH, default = false );
-            _effective_thickness = m_has_solid_lid
+            // An inverted label with a background is incised to the label depth, so
+            // it needs the same treatment as a solid lid here -- without it a
+            // detached copy (one emitted on its own print group for a second
+            // filament) comes out the full lid thickness and stands proud of the
+            // recess it fills. Inverted with LID_LABELS_BG_THICKNESS 0 is the
+            // stencil case, which cuts through and must keep the full thickness.
+            _effective_thickness = ( m_has_solid_lid || ( m_lid_is_inverted && m_lid_label_bg_thickness > 0 ) )
                 ? ( _lbl_depth != false ? _lbl_depth : m_lid_solid_label_depth )
                 : thickness;
             _solid_label_z = m_lid_sliding ? 0 : thickness - _effective_thickness;
@@ -7439,8 +7445,12 @@ module MakeBox( box )
         {
             lid_print_position = [0, m_box_size[ k_y ] + DISTANCE_BETWEEN_PARTS, 0 ];
 
-            MoveToLidInterior( tolerance = -$g_tolerance )
-                translate( $g_vis_actual_b ? lid_vis_position : lid_print_position ) 
+            // No MoveToLidInterior here. MakeLidLabel places labels absolutely, at
+            // __lid_external_size/2, so a label on the lid itself gets no such
+            // shift; applying it only to the detached copy put that copy
+            // m_lid_wall_thickness - $g_tolerance out in both x and y, which is
+            // enough to miss the recess it is meant to fill.
+            translate( $g_vis_actual_b ? lid_vis_position : lid_print_position ) 
                     RotateAboutPoint( $g_vis_actual_b ? 180 : 0, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )            
                         MakeAllLidLabels( group_filter_b = group_filter_b, separate_filter_b = separate_filter_b );
         }
