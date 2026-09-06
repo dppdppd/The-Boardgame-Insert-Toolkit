@@ -1,6 +1,6 @@
 /*
  * The Boardgame Insert Toolkit - Library File
- * Version: 4.12.0
+ * Version: 4.12.1
  * 
  * A parametric system for creating custom board game inserts and organizers
  * https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
@@ -49,7 +49,7 @@
 
 
 // Version information
-VERSION = "4.12.0";
+VERSION = "4.12.1";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 // Resolution settings
@@ -7579,14 +7579,27 @@ module MakeBox( box )
                         }
                         else if ( m_lid_label_bg_thickness > 0 )
                         {  
-                            // negative text
+                            // negative text: a solid plaque set into the perforated lid
+                            // with the glyphs incised into it.
+                            //
+                            // The glyphs were cut through the full lid thickness, which
+                            // ignores LID_SOLID_LABELS_DEPTH and drops every letter
+                            // counter out of the print as a loose piece -- the same
+                            // problem #60 fixed for solid lids, which this path never
+                            // picked up. Cutting to the label depth keeps them attached.
+                            //
+                            // The frame is given the surface thickness for consistency
+                            // with the non-inverted branch above, which already passes it;
+                            // the default of m_lid_thickness is short for an inset lid.
+                            //
+                            // The subtraction is not filtered by print group: the recess
+                            // has to exist whether or not the glyphs are also being
+                            // emitted separately for a second filament.
                             difference()
                             {
-                                {
-                                    MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness );
-                                    MakeAllLidLabels( host_filter_b = true );
-                                }
-                            }    
+                                MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness, thickness = thickness );
+                                MakeAllLidLabels( thickness = m_lid_solid_label_depth );
+                            }
                         }
                         else
                         {
