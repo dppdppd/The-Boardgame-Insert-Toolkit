@@ -1,6 +1,6 @@
 /*
  * The Boardgame Insert Toolkit - Library File
- * Version: 4.12.0
+ * Version: 4.12.1
  * 
  * A parametric system for creating custom board game inserts and organizers
  * https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
@@ -49,7 +49,7 @@
 
 
 // Version information
-VERSION = "4.12.0";
+VERSION = "4.12.1";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 // Resolution settings
@@ -7303,7 +7303,14 @@ module MakeBox( box )
             _effective_thickness = m_has_solid_lid
                 ? ( _lbl_depth != false ? _lbl_depth : m_lid_solid_label_depth )
                 : thickness;
-            _solid_label_z = m_lid_sliding ? 0 : thickness - _effective_thickness;
+            // Incise from z=0. MakeLidLabel mirrors the glyphs about x so that they
+            // read from -z, and a perforated lid puts its raised lettering on that
+            // same face -- the glyphs run the full thickness while the striped
+            // plaque behind them occupies only the upper half. Cutting a solid lid
+            // at thickness - depth put the recess on the opposite face, so the text
+            // was mirrored on the side it was visible from and the side the mirror
+            // targets was blank. Sliding lids already used 0.
+            _solid_label_z = 0;
 
             translate( [ 0, 0, m_has_solid_lid ? _solid_label_z : 0 ] )
                 linear_extrude( _effective_thickness )
