@@ -24,7 +24,7 @@ STL_TIMEOUT=900
 VIEW_TIMEOUT=30
 
 # Temp file for STL-to-PNG rendering
-RENDER_SCAD="/tmp/bit_render_views.scad"
+RENDER_SCAD="$(mktemp /tmp/bit_render_views.XXXXXX.scad)"
 echo 'import(stl_file);' > "$RENDER_SCAD"
 cleanup() { rm -f "$RENDER_SCAD"; }
 trap cleanup EXIT

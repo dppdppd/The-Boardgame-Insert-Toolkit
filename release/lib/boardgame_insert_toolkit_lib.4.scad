@@ -1,6 +1,6 @@
 /*
  * The Boardgame Insert Toolkit - Library File
- * Version: 4.12.0
+ * Version: 4.12.1
  * 
  * A parametric system for creating custom board game inserts and organizers
  * https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
@@ -49,7 +49,7 @@
 
 
 // Version information
-VERSION = "4.12.0";
+VERSION = "4.12.1";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 // Resolution settings
@@ -7297,10 +7297,11 @@ module MakeBox( box )
             auto_width = __label_auto_width( label, __lid_external_size( k_x ), __lid_external_size( k_y ) );
             width = auto_width != 0 ? min( DEFAULT_MAX_LABEL_WIDTH, auto_width ) + offset : 0;
 
-            // For solid lids, limit label depth instead of cutting all the way through.
-            // Use per-label LBL_DEPTH if set, otherwise fall back to LID_SOLID_LABELS_DEPTH.
+            // Solid lids and backed inverted labels retain a floor below their cuts.
+            // Per-label depth overrides the lid default; background-free stencils
+            // keep the caller's full surface thickness.
             _lbl_depth = __value( label, LBL_DEPTH, default = false );
-            _effective_thickness = m_has_solid_lid
+            _effective_thickness = m_has_solid_lid || (m_lid_is_inverted && m_lid_label_bg_thickness > 0)
                 ? ( _lbl_depth != false ? _lbl_depth : m_lid_solid_label_depth )
                 : thickness;
             _solid_label_z = m_lid_sliding ? 0 : thickness - _effective_thickness;
@@ -7579,13 +7580,13 @@ module MakeBox( box )
                         }
                         else if ( m_lid_label_bg_thickness > 0 )
                         {  
-                            // negative text
+                            // Keep enclosed letter centers attached to a solid backing.
+                            // The recess remains present when the text group is exported
+                            // separately; both use the same per-label depth policy.
                             difference()
                             {
-                                {
-                                    MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness );
-                                    MakeAllLidLabels( host_filter_b = true );
-                                }
+                                MakeAllLidLabelFrames( offset = m_lid_label_bg_thickness, thickness = thickness );
+                                MakeAllLidLabels( thickness = thickness );
                             }    
                         }
                         else
