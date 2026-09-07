@@ -145,8 +145,8 @@ for f in "${FILES[@]}"; do
 
     # Phase 1: CSG compilation check (fast, ~0.3s)
     csg_out=$(mktemp /tmp/bit_csg_XXXXXX.csg)
-    csg_err=$(timeout 30 openscad -o "$csg_out" "$f" 2>&1) || true
-    csg_exit=$?
+    csg_exit=0
+    csg_err=$(timeout 30 openscad -o "$csg_out" "$f" 2>&1) || csg_exit=$?
 
     has_error=false
     has_warning=false
@@ -154,6 +154,10 @@ for f in "${FILES[@]}"; do
     if [[ $csg_exit -eq 124 ]]; then
         has_error=true
         csg_err="TIMEOUT on CSG export"
+    elif [[ $csg_exit -ne 0 ]]; then
+        has_error=true
+        csg_err="CSG export exited with status $csg_exit
+$csg_err"
     elif grep -qi "ERROR" <<< "$csg_err"; then
         has_error=true
     fi
@@ -161,8 +165,12 @@ for f in "${FILES[@]}"; do
         has_warning=true
     fi
 
-    # Check for empty geometry
-    if [[ -f "$csg_out" ]]; then
+    # A successful process must also produce a fresh, nonempty artifact.
+    if [[ ! -s "$csg_out" ]]; then
+        has_error=true
+        csg_err="CSG export missing or empty (exit=$csg_exit)
+$csg_err"
+    else
         csg_lines=$(wc -l < "$csg_out")
         if [[ $csg_lines -lt 5 ]]; then
             has_warning=true
@@ -182,6 +190,7 @@ WARNING: CSG output nearly empty ($csg_lines lines)"
     # Phase 2: STL export + multi-view PNG render
     if ! $CSG_ONLY; then
         stl_out="$STL_DIR/${name}.stl"
+        rm -f "$stl_out"
         stl_exit=0
         stl_err=$(timeout "$STL_TIMEOUT" openscad -o "$stl_out" "$f" 2>&1) || stl_exit=$?
 
@@ -192,8 +201,8 @@ WARNING: CSG output nearly empty ($csg_lines lines)"
             continue
         fi
 
-        if [[ ! -s "$stl_out" ]]; then
-            echo -e "${RED}FAIL${NC} $name — STL export empty (exit=$stl_exit)"
+        if [[ $stl_exit -ne 0 || ! -s "$stl_out" ]]; then
+            echo -e "${RED}FAIL${NC} $name — STL export failed or empty (exit=$stl_exit)"
             echo "$stl_err" | tail -5 | sed 's/^/  /'
             rm -f "$stl_out"
             FAIL=$((FAIL + 1))
@@ -206,15 +215,18 @@ WARNING: CSG output nearly empty ($csg_lines lines)"
             IFS=',' read -r vname rx ry rz <<< "$v"
             png_out="$RENDER_DIR/${name}_${vname}.png"
 
+            rm -f "$png_out"
+            view_exit=0
             timeout "$VIEW_TIMEOUT" xvfb-run -a openscad --render -o "$png_out" \
                 --imgsize="$IMGSIZE" --autocenter --viewall \
                 --projection=ortho --view=edges \
                 --camera=0,0,0,$rx,$ry,$rz,0 \
                 -D "stl_file=\"$stl_out\"" \
-                "$RENDER_SCAD" >/dev/null 2>&1
+                "$RENDER_SCAD" >/dev/null 2>&1 || view_exit=$?
 
-            if [[ ! -s "$png_out" ]]; then
-                echo -e "${RED}FAIL${NC} $name — ${vname} view failed"
+            if [[ $view_exit -ne 0 || ! -s "$png_out" ]]; then
+                echo -e "${RED}FAIL${NC} $name — ${vname} view failed (exit=$view_exit)"
+                rm -f "$png_out"
                 view_fail=true
                 break
             fi
