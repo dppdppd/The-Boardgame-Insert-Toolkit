@@ -357,6 +357,26 @@
           "tests/pattern_coverage_regression.py"
         ]
       ]
+    },
+    {
+      "baseline_commit": "f0fdd07ba83239f640b84458628d718356f0ff20",
+      "test": "tests/v4/scad/test_chamfer_n.scad",
+      "before_sha256": "a3b534b84ab7fe78c57b3dc0a9a4fb925709e6fb6d00c3374c4c50220a18cd4c",
+      "after_sha256": "a079cf677ad3386c7b1581636ef74a971293a4f832a956643f8a9ad3444ad7bb",
+      "reason": "The mixed-chamfer demonstration had overlapping features. Its two left cavities shrink from 30x46x23 mm to 23x42x23 mm and gain explicit [2,2] placement, preserving the right feature at [55,2]. The only normalized CSG changes are the resulting left feature dimensions, placement, compartment pitch and attached chamfer extents. Equality to the invalid old fixture is superseded by warning-free compilation of the corrected layout plus the native polygon geometry invariant. Applying native support alone leaves both old and corrected fixture CSG byte-identical. Exact four-way comparison and accepted seven-view mesh evidence are recorded in implementation-shapes.md and probes/shapes-implementation/fixture-transition-preflight/.",
+      "invariant_commands": [
+        [
+          "python3",
+          "-B",
+          "-c",
+          "from pathlib import Path\nimport re, subprocess, tempfile\nwith tempfile.TemporaryDirectory(prefix=\"bit-chamfer-invariant-\") as temporary:\n    output = Path(temporary) / \"chamfer.csg\"\n    result = subprocess.run([\"openscad\", \"-o\", str(output), \"tests/v4/scad/test_chamfer_n.scad\"], capture_output=True, text=True, timeout=60)\n    diagnostics = result.stdout + result.stderr\n    if result.returncode != 0:\n        raise RuntimeError(diagnostics or f\"OpenSCAD exited {result.returncode}\")\n    if not output.is_file() or output.stat().st_size == 0:\n        raise RuntimeError(\"missing or empty chamfer CSG\")\n    if re.search(r\"^(?:WARNING|ERROR):|BGSD_WARNING\", diagnostics, re.MULTILINE):\n        raise RuntimeError(diagnostics)\nprint(\"PASS: corrected mixed-chamfer fixture compiles without compiler or physical-validation warnings\")\n"
+        ],
+        [
+          "python3",
+          "-B",
+          "tests/check_native_polygon_geometry.py"
+        ]
+      ]
     }
   ]
 }

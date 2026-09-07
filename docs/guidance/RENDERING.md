@@ -155,3 +155,7 @@ Make(data);
 ### Bounded STL export timeouts
 
 The full render runner defaults to 900 seconds per STL export. Use `./tests/run_tests.sh --stl-timeout 1800 test_chamfer_n` for a complex mixed scene that needs a longer bounded export. This changes the execution budget without simplifying geometry or accepting a partial render. The mixed chamfer fixture was still actively computing around 579 MB RSS when an explicitly selected 600-second attempt expired, so its validation uses the explicit 1800-second budget.
+
+### Native triangle and pentagon regression check
+
+Run `python3 tests/check_native_polygon_geometry.py` to inspect emitted OpenSCAD geometry for the four native triangle/pentagon outlines, both storage modes, both horizontal axes, and default/zero chamfers. It checks matching cavity/chamfer sides and orientations, 45-degree chamfer slopes, and explicit unsupported laid-down diagnostics. This fast check complements the mesh and screenshot gate for `test_shape_tri_pent.scad`; it does not certify physical token fit.

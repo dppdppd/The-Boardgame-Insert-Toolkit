@@ -376,8 +376,17 @@ Value is expected to be one of the following:
 - `HEX2`     a 6-sided compartment that is rotated 30 degrees (corner down)
 - `OCT`      an 8-sided compartment (flat side down)
 - `OCT2`     an 8-sided compartment that is rotated 22.5 degrees (corner down)
+- `TRI`      a 3-sided compartment (flat lower edge for a vertical stack)
+- `TRI2`     a 3-sided compartment (lower vertex for a vertical stack)
+- `PENT`     a 5-sided compartment (flat lower edge)
+- `PENT2`    a 5-sided compartment (lower vertex)
 
-e.g. `[ FTR_SHAPE, HEX2 ]`. The following box shows all the different components. The front row has the components in the order listed above. The second row shows the same, but with the horizontal axis set (`[FTR_SHAPE_AXIS, X]` below). The third row has the same order for vertical stacks of pieces (`[FTR_SHAPE_VERTICAL_B]` below).
+`TRI` and `TRI2` share the pointed-bottom profile when laid down (`FTR_SHAPE_VERTICAL_B = false`); their orientations differ for vertical stacks. `FTR_SHAPE_AXIS` chooses X or Y for laid-down storage. Vertical native polygons use matching polygonal floor and opening chamfers, including the inherited default. Laid-down polygon chamfers are unsupported; use `[ CHAMFER_N, 0 ]` on those features.
+
+For vertical polygons, the larger X/Y compartment dimension defines the circumscribed diameter. Use equal X/Y dimensions to contain the entire polygon; a narrower declared footprint clips it. Validate the resulting cavity against actual token dimensions and print a fit sample before making a full insert.
+
+
+e.g. `[ FTR_SHAPE, HEX2 ]`. The following older illustration shows SQUARE, FILLET, ROUND, HEX, HEX2, OCT, and OCT2. The front row has the components in the order listed above. The second row shows the same, but with the horizontal axis set (`[FTR_SHAPE_AXIS, X]` below). The third row has the same order for vertical stacks of pieces (`[FTR_SHAPE_VERTICAL_B]` below).
 
 ![All component types](images/components.png)
 

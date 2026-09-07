@@ -1,6 +1,6 @@
 /*
  * The Boardgame Insert Toolkit - Library File
- * Version: 4.12.4
+ * Version: 4.13.0
  * 
  * A parametric system for creating custom board game inserts and organizers
  * https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
@@ -49,7 +49,7 @@
 
 
 // Version information
-VERSION = "4.12.4";
+VERSION = "4.13.0";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 // Resolution settings
@@ -277,6 +277,10 @@ HEX = "hex";
 HEX2 = "hex2";
 OCT = "oct";
 OCT2 = "oct2";
+TRI = "tri";
+TRI2 = "tri2";
+PENT = "pent";
+PENT2 = "pent2";
 ROUND = "round";
 FILLET = "fillet";
 SVG = "svg";
@@ -1102,7 +1106,26 @@ __VALID_LABEL_KEYS = [
 ];
 
 // Valid scalar shape enum values. SVG uses a shape value block.
-__VALID_SCALAR_SHAPES = [ SQUARE, HEX, HEX2, OCT, OCT2, ROUND, FILLET ];
+__VALID_SCALAR_SHAPES = [ SQUARE, HEX, HEX2, OCT, OCT2, TRI, TRI2, PENT, PENT2, ROUND, FILLET ];
+
+// Keep cavity walls and both chamfer rings on the same polygon. Angles are
+// degrees about the polygon center before extrusion. Laid-down TRI/TRI2 both
+// use a downward vertex, matching upright-token storage in the original design.
+function __shape_polygon_sides( shape ) =
+    shape == HEX || shape == HEX2 ? 6 :
+    shape == OCT || shape == OCT2 ? 8 :
+    shape == TRI || shape == TRI2 ? 3 :
+    shape == PENT || shape == PENT2 ? 5 :
+    shape == SQUARE ? 4 : 100;
+
+function __shape_polygon_angle( shape, vertical = true ) =
+    shape == HEX ? ( vertical ? 30 : 0 ) :
+    shape == HEX2 ? ( vertical ? 0 : 30 ) :
+    shape == OCT ? 22.5 :
+    shape == TRI ? ( vertical ? 90 : 30 ) :
+    shape == TRI2 ? 30 :
+    shape == PENT ? 18 :
+    shape == PENT2 ? 54 : 0;
 
 // Valid cutout type enum values
 __VALID_CUTOUT_TYPES = [ INTERIOR, EXTERIOR, BOTH ];
@@ -2072,7 +2095,7 @@ module __ValidateComponentTypes( table, ctx )
 
     v_shape = __value( table, FTR_SHAPE, default = false );
     if ( v_shape != false && !__shape_value_ok( v_shape ) )
-        __TypeMsg( FTR_SHAPE, ctx, "one of SQUARE, HEX, HEX2, OCT, OCT2, ROUND, FILLET, or [SVG, ...]", v_shape );
+        __TypeMsg( FTR_SHAPE, ctx, "one of SQUARE, HEX, HEX2, OCT, OCT2, TRI, TRI2, PENT, PENT2, ROUND, FILLET, or [SVG, ...]", v_shape );
 
     v_sa = __value( table, FTR_SHAPE_AXIS, default = false );
     if ( __is_valid_key( FTR_SHAPE_AXIS, table ) && !( v_sa == X || v_sa == Y ) )
@@ -2698,12 +2721,13 @@ function __component_chamfer_for_validation( comp, element ) =
     let( raw = __component_chamfer_raw_for_validation( comp, element ) )
     is_num( raw ) ? ( $g_fit_test_b ? 0 : max( 0, raw / sqrt(2) ) ) : false;
 
-function __component_laid_down_hex_oct_for_validation( comp ) =
+function __component_laid_down_polygon_for_validation( comp ) =
     let(
         shape = __component_shape_name( comp ),
         vertical = __value( comp, FTR_SHAPE_VERTICAL_B, default = false )
     )
-    ( shape == HEX || shape == HEX2 || shape == OCT || shape == OCT2 ) &&
+    ( shape == HEX || shape == HEX2 || shape == OCT || shape == OCT2 ||
+      shape == TRI || shape == TRI2 || shape == PENT || shape == PENT2 ) &&
     vertical != true;
 
 module __ValidateComponentChamferPhysical( comp, ctx, element )
@@ -2720,12 +2744,12 @@ module __ValidateComponentChamferPhysical( comp, ctx, element )
 
     if ( __component_explicit_chamfer_for_validation( comp, element ) &&
          is_num( _chamfer ) && _chamfer > 0 &&
-         __component_laid_down_hex_oct_for_validation( comp ) )
+         __component_laid_down_polygon_for_validation( comp ) )
         __PhysicalMsg( ctx, str( "has laid-down ", __component_shape_name( comp ),
             " cavity geometry with ", CHAMFER_N, " ", _raw_chamfer,
-            "mm; cavity chamfers for laid-down hex/oct features are unsupported and are skipped. Set ",
+            "mm; cavity chamfers for laid-down polygon features are unsupported and are skipped. Set ",
             CHAMFER_N, " to 0 for this feature, or set ", FTR_SHAPE_VERTICAL_B,
-            " to true for vertical hex/oct cavity chamfers." ),
+            " to true for vertical polygon cavity chamfers." ),
             [ FTR_SHAPE, FTR_SHAPE_VERTICAL_B, CHAMFER_N ] );
 }
 
@@ -5672,10 +5696,6 @@ module MakeBox( box )
         function __component_shape() = __component_shape_name( component );
         function __component_shape_axis() = __value( component, FTR_SHAPE_AXIS, default = Y ) == X ? k_x : k_y;
         function __component_shape_vertical() = __value( component, FTR_SHAPE_VERTICAL_B, default = false );
-        function __component_is_hex() = __component_shape() == HEX;
-        function __component_is_hex2() = __component_shape() == HEX2;
-        function __component_is_oct() = __component_shape() == OCT;
-        function __component_is_oct2() = __component_shape() == OCT2;        
         function __component_is_svg() = __component_shape() == SVG;
 
         function __component_is_square() = __component_shape() == SQUARE;
@@ -8221,10 +8241,8 @@ module MakeBox( box )
             else if ( __component_shape_vertical() )
             {
                 // Match MakeVerticalShape: same fn/angle/radius/center as the cavity.
-                fn  = __component_is_hex() || __component_is_hex2() ? 6
-                    : __component_is_oct() || __component_is_oct2() ? 8 : 100;
-                ang = __component_is_hex() ? 30
-                    : __component_is_oct() ? 22.5 : 0;
+                fn  = __shape_polygon_sides( __component_shape() );
+                ang = __shape_polygon_angle( __component_shape() );
                 r   = __compartment_largest_dimension() / 2;
                 // 45° chamfer means the perpendicular inset of each wall equals
                 // the height. For an n-gon, perpendicular wall-to-wall distance
@@ -8350,10 +8368,8 @@ module MakeBox( box )
             }
             else if ( __component_shape_vertical() )
             {
-                fn  = __component_is_hex() || __component_is_hex2() ? 6
-                    : __component_is_oct() || __component_is_oct2() ? 8 : 100;
-                ang = __component_is_hex() ? 30
-                    : __component_is_oct() ? 22.5 : 0;
+                fn  = __shape_polygon_sides( __component_shape() );
+                ang = __shape_polygon_angle( __component_shape() );
                 r   = __compartment_largest_dimension() / 2;
                 r_outer = r + c / cos( 180 / fn );
 
@@ -8407,7 +8423,7 @@ module MakeBox( box )
 
         // ----- COMPARTMENT SHAPES -----
 
-        module MakeVerticalShape( h, x, r )
+        module MakeVerticalShape( h, r )
         {
             compartment_z_min = m_wall_thickness;
             compartment_internal_z = __compartment_size( k_z ) - compartment_z_min;
@@ -8416,7 +8432,7 @@ module MakeBox( box )
 
             translate( cylinder_translation )
             {
-                angle = __component_is_hex() ? 30 : __component_is_oct() ? 22.5 : 0;
+                angle = __shape_polygon_angle( __component_shape() );
 
                 rotate( a=angle, v=[0, 0, 1] )
                     cylinder(h, r, r, center = false );                      
@@ -8426,7 +8442,7 @@ module MakeBox( box )
 
         module MakeCompartmentShape()
         {
-            $fn = __component_is_hex() || __component_is_hex2() ? 6 : __component_is_oct() || __component_is_oct2() ? 8 : __component_is_square() ? 4 : 100;
+            $fn = __shape_polygon_sides( __component_shape() );
 
             if ( __component_is_svg() )
             {
@@ -8450,9 +8466,8 @@ module MakeBox( box )
             else if ( __component_shape_vertical() )
             {
                 r = __compartment_largest_dimension()/2;
-                x = __component_is_hex()  ? r * sin( 360/ $fn ) : r;
 
-                MakeVerticalShape(h = __compartment_size( k_z ) + m_component_base_height + epsilon, x = x, r = r);
+                MakeVerticalShape(h = __compartment_size( k_z ) + m_component_base_height + epsilon, r = r);
             }
             else
             {
@@ -8477,13 +8492,11 @@ module MakeBox( box )
                         pt=[ 0,0, 0] )
                         {
                             {
-                                // lay the hex down
+                                // Lay the polygon extrusion down.
                                 rotate( a= 90, v=[ 1,0,0])
                                 {
-                                    // do we want hex point down?
-                                    rotate( a=__component_is_hex2() ? 
-                                            30 : __component_is_oct() ? 
-                                                22.5 : 0, 
+                                    // Orient the polygon before laying its extrusion on the selected axis.
+                                    rotate( a=__shape_polygon_angle( __component_shape(), vertical = false ),
                                             v=[ 0, 0, 1])
                                     {
                                         cylinder(h = __compartment_size( dim2 ), r1 = r, r2 = r );  

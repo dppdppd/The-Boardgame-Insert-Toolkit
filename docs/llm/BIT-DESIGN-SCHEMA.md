@@ -86,3 +86,7 @@ Use the JSON Schema in `docs/llm/BIT-DESIGN-SCHEMA.json` when a tool supports sc
   }
 }
 ```
+
+## Native polygon selection
+
+Generated SCAD can use `FTR_SHAPE` values `TRI`, `TRI2`, `PENT`, and `PENT2` in addition to the existing shapes. For vertical stacks, `TRI`/`PENT` present a flat lower outline edge and `TRI2`/`PENT2` a lower vertex. Laid-down triangles share a pointed-bottom profile. Use equal X/Y dimensions for a full circumscribed outline and measure actual tokens before selecting the diameter. Vertical polygon chamfers follow the same outline; set feature `CHAMFER_N` to zero for laid-down polygons because their chamfers are unsupported. The design-plan JSON schema records measurements and design intent rather than enumerating SCAD shape keywords, so no JSON schema field changes are required for these values.
