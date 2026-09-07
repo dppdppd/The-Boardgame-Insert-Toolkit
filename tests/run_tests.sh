@@ -48,7 +48,7 @@ usage() {
     echo "  --views LIST      Comma-separated views to render (default: all)"
     echo "                    Available: top,bottom,front,back,left,right,iso"
     echo "  --imgsize WxH     Image size (default: 1600,1200)"
-    echo "  --stl-timeout N   STL export timeout in seconds (default: 300)"
+    echo "  --stl-timeout N   STL export timeout in seconds (default: 900)"
     echo "  --view-timeout N  Per-view PNG timeout in seconds (default: 30)"
     echo "  --help            Show this help"
     echo ""

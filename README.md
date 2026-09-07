@@ -315,6 +315,8 @@ Value is expected to be a number, and determines the number of sides that the pa
 #### `LID_PATTERN_ANGLE`
 Value is expected to be a number, and determines the angle of the pattern shape. 
 
+Patterns extend far enough to cover the lid at the chosen angle while keeping the existing centered grid alignment. The radius, thickness, angle, and row/column offsets must produce positive spacing on both axes; invalid spacing stops rendering with a diagnostic.
+
 #### `LID_PATTERN_ROW_OFFSET`
 Value is expected to be a number, and determines the percent of height that each row will offset from each other. 
 

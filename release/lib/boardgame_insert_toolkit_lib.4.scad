@@ -1,6 +1,6 @@
 /*
  * The Boardgame Insert Toolkit - Library File
- * Version: 4.12.3
+ * Version: 4.12.4
  * 
  * A parametric system for creating custom board game inserts and organizers
  * https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
@@ -49,7 +49,7 @@
 
 
 // Version information
-VERSION = "4.12.3";
+VERSION = "4.12.4";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 // Resolution settings
@@ -933,6 +933,14 @@ module Make2DPattern( x = 200, y = 200, R = 1, t = 0.5, pattern_angle = 0, patte
     dx = r * ( 1 + pattern_col_offset / 100 ) - t;
     dy = R * ( 1 + ( pattern_row_offset / 100 ) ) - t;
 
+    // The grid must advance on both axes. Reject collapsed/reversed spacing
+    // before dividing or constructing a potentially unbounded index range.
+    assert( dx > 0 && dy > 0,
+        str( "Lid pattern spacing must be positive on both axes; horizontal = ", dx,
+             "mm, vertical = ", dy,
+             "mm. Adjust LID_PATTERN_ANGLE, LID_PATTERN_RADIUS, LID_PATTERN_THICKNESS,",
+             " LID_PATTERN_COL_OFFSET, or LID_PATTERN_ROW_OFFSET." ) );
+
     x_count = x / dx;
     y_count = y / dy;
 
@@ -948,18 +956,27 @@ module Make2DPattern( x = 200, y = 200, R = 1, t = 0.5, pattern_angle = 0, patte
     y_total = (y_count_even + 2) * dy;
     y_offset = (y - y_total) / 2.0;
 
-    //echo( str(x, " ", dx, " ", x_count_i, " ", x_count_odd, "\n") );
-    //echo( str(y, " ", dy, " ", y_count_i, " ", y_count_even, "\n") );
+    // Preserve the existing grid origin and alternating-row offset, but cover
+    // every cell whose radius can reach the lid. A fixed extra row/column is
+    // insufficient when rotation makes the spacing smaller than the radius.
+    row_first = ceil( ( -R - y_offset ) / dy );
+    row_last = floor( ( y + R - y_offset ) / dy );
 
     translate( [x_offset, y_offset, 0 ] )
-    for( j = [ -1: y_count + 1 ] )
-        translate( [ ( j % 2 ) * dx/2, 0, 0 ] )
-            for( i = [ -1: x_count + 1 ] )
+    if( row_first <= row_last )
+    for( j = [ row_first: row_last ] )
+    {
+        row_shift = ( j % 2 ) * dx / 2;
+        col_first = ceil( ( -R - x_offset - row_shift ) / dx );
+        col_last = floor( ( x + R - x_offset - row_shift ) / dx );
+
+        translate( [ row_shift, 0, 0 ] )
+            if( col_first <= col_last )
+            for( i = [ col_first: col_last ] )
                 translate( [ i * dx, j * dy, 0 ] )
                     rotate( a = pattern_angle, v=[ 0, 0, 1 ] )
-                    {
                         Make2dShape( R, t, pattern_n1, pattern_n2 );
-                    }
+    }
 }
 
 module MakeStripedGrid( x = 200, y = 200, w = 1, dx = 0, dy = 0, depth_ratio = 0.5, thickness = 1 )
