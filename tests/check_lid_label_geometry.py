@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Measure lid label depths, readable faces, and retained letter centers.
+"""Measure label depths and host/insert registration from evaluated OpenSCAD CSG.
 
-The CSG checks inspect evaluated extrusion depths rather than source spelling,
-including inherited and per-label settings on cap, inset, and sliding lids.
-Face checks measure the incision boundaries and readable-side handedness.
+Depth, face and placement phases support separate implementation checkpoints.
+The CSG checks inspect evaluated geometry, not source spelling: a non-centered F
+must have the same extrusion and complete transformation in body and text exports.
 Retention additionally checks a rendered O fixture's closed, connected STL mesh.
 Only retention needs a CGAL render, which the caller runs separately and serially.
 """
@@ -58,7 +58,6 @@ def glyphs(csg, include_frames=False):
 def near(actual, expected, meaning):
     if not math.isclose(actual, expected, abs_tol=1e-6):
         raise AssertionError(f"{meaning}: expected {expected}, got {actual}")
-
 
 
 def z_bounds(glyph):
@@ -123,7 +122,6 @@ class Gate:
                 near(part["height"], 2, "zero-background stencil remains a through-cut")
         self.record("depth-stencil-cap", stencil)
 
-
     def face(self):
         for kind, surface in (("cap", 2), ("inset", 3.8), ("slide", 1.8)):
             for override, depth in ((-1, 0.5), (0.8, 0.8)):
@@ -135,6 +133,33 @@ class Gate:
                         near(actual, value, "readable face incision z boundary")
                     near(part["matrix"][0][0], 1 if kind == "slide" else -1, "glyph handedness on the readable face")
                 self.record(name, check)
+
+    def placement(self):
+        configurations = [("cap", "front"), ("inset", "front")] + [("slide", side) for side in ("front", "back", "left", "right")]
+        for kind, side in configurations:
+            for visual in (False, True):
+                for mode in ("solid", "backed", "stencil", "positive"):
+                    name = f"placement-{kind}-{side}-{visual}-{mode}"
+                    def check(name=name, kind=kind, side=side, visual=visual, mode=mode):
+                        params = dict(label_kind=kind, label_side=side, label_visual=visual,
+                                      label_solid=mode == "solid", label_inverted=mode != "positive",
+                                      label_background=0 if mode == "stencil" else 2,
+                                      label_depth=0.8, **{"$preview": visual})
+                        body = self.compile(name+"-body", label_groups="body", **params)
+                        text = self.compile(name+"-text", label_groups="text", **params)
+                        if len(text) != 1:
+                            raise AssertionError(f"Detached group must contain one glyph, got {len(text)}")
+                        # Positive patterned labels also have a stripe subtraction;
+                        # the final subtraction is the insert's reserved volume.
+                        host, insert = body[-1], text[0]
+                        near(insert["height"], host["height"], "insert/recess depth")
+                        for row in range(4):
+                            for column in range(4):
+                                near(insert["matrix"][row][column], host["matrix"][row][column], f"insert/recess transform [{row},{column}]")
+                        if mode in ("stencil", "positive") and not visual:
+                            thickness = 3.8 if kind == "inset" else 1.8 if kind == "slide" else 2
+                            near(insert["height"], thickness, "through-label actual surface thickness")
+                    self.record(name, check)
 
 
 def retention(path):
@@ -177,24 +202,24 @@ def retention(path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--phase", choices=("depth", "face", "retention"), default="face")
+    parser.add_argument("--phase", choices=("depth", "face", "placement", "retention", "all"), default="all")
     parser.add_argument("--library", type=Path, default=LIBRARY)
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--retention-stl", type=Path)
     args = parser.parse_args()
-    if args.phase == "retention" and not args.retention_stl:
+    if args.phase in ("retention", "all") and not args.retention_stl:
         parser.error(f"--phase {args.phase} requires --retention-stl from test_label_lid_inverted.scad")
     with tempfile.TemporaryDirectory(prefix="bit-label-geometry-") as temporary:
         output = (args.output_dir or Path(temporary)).resolve()
         output.mkdir(parents=True, exist_ok=True)
         gate = Gate(args.library.resolve(), output)
-        for phase in ("depth", "face"):
-            if args.phase == phase:
+        for phase in ("depth", "face", "placement"):
+            if args.phase in (phase, "all"):
                 getattr(gate, phase)()
         if args.retention_stl:
             gate.record("retention-closed-connected-mesh", lambda: retention(args.retention_stl))
         failed = [result for result in gate.results if not result["passed"]]
-        report = {"phase": args.phase, "complete": False,
+        report = {"phase": args.phase, "complete": args.phase == "all" and not failed,
                   "retention_checked": bool(args.retention_stl),
                   "passed": len(gate.results)-len(failed), "failed": len(failed), "results": gate.results}
         (output / "results.json").write_text(json.dumps(report, indent=2)+"\n")

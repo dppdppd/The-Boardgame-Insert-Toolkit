@@ -1,6 +1,6 @@
 /*
  * The Boardgame Insert Toolkit - Library File
- * Version: 4.12.2
+ * Version: 4.12.3
  * 
  * A parametric system for creating custom board game inserts and organizers
  * https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
@@ -49,7 +49,7 @@
 
 
 // Version information
-VERSION = "4.12.2";
+VERSION = "4.12.3";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 // Resolution settings
@@ -7222,7 +7222,7 @@ module MakeBox( box )
             ( !host_filter_b || !__print_group_selector_active() || __print_group_values_overlap( label_group, host_group ) ) &&
             ( !separate_filter_b || ( __print_group_selector_active() && !__print_group_values_overlap( label_group, host_group ) ) );
 
-        module MakeAllLidLabels( offset = 0, thickness = m_lid_thickness, group_filter_b = false, host_filter_b = false, separate_filter_b = false )
+        module MakeAllLidLabels( offset = 0, thickness = __lid_surface_thickness(), group_filter_b = false, host_filter_b = false, separate_filter_b = false )
         {
             for( i = [ 0 : max(len( m_lid ) - 1, 0)])
             {
@@ -7289,7 +7289,7 @@ module MakeBox( box )
                     }
         }
 
-        module MakeLidLabel( label, offset = 0, thickness = m_lid_thickness )
+        module MakeLidLabel( label, offset = 0, thickness = __lid_surface_thickness() )
         {
             xpos = __lid_external_size( k_x )/2 + __label_offset( label )[k_x];
             ypos = __lid_external_size( k_y )/2 + __label_offset( label )[k_y];
@@ -7382,7 +7382,7 @@ module MakeBox( box )
 
 
 
-        module MakeAllLidLabelFrames( offset = 0, thickness = m_lid_thickness, group_filter_b = false, host_filter_b = false, separate_filter_b = false )
+        module MakeAllLidLabelFrames( offset = 0, thickness = __lid_surface_thickness(), group_filter_b = false, host_filter_b = false, separate_filter_b = false )
         {
             for( i = [ 0 : max(len( m_lid ) - 1, 0)])
             {
@@ -7402,7 +7402,7 @@ module MakeBox( box )
             }
         }
 
-        module MakeLidLabelFrame( label, offset = 0, thickness = m_lid_thickness )
+        module MakeLidLabelFrame( label, offset = 0, thickness = __lid_surface_thickness() )
         {
             xpos = __lid_external_size( k_x )/2 + __label_offset( label )[k_x];
             ypos = __lid_external_size( k_y )/2 + __label_offset( label )[k_y];
@@ -7437,14 +7437,38 @@ module MakeBox( box )
                                 
         }
 
+        // The host surface and separately selected glyphs use one placement.
+        // Sliding lids need the same flip and lift even when only text is selected.
+        function __lid_surface_thickness() =
+            m_lid_sliding ? __lid_external_size( k_z ) :
+            m_lid_inset ? m_lid_thickness + m_lid_wall_height - 2* $g_tolerance :
+            m_lid_thickness;
+
+        module PlaceLid()
+        {
+            lid_print_position = [ 0, m_box_size[ k_y ] + DISTANCE_BETWEEN_PARTS, m_lid_sliding ? __lid_external_size( k_z ) : 0 ];
+            lid_vis_position = [ 0, 0, m_box_size[ k_z ] + m_lid_thickness ];
+            lid_sliding_closed_position = !m_lid_slides_x ?
+                ( m_lid_slide_side == FRONT ?
+                    [ m_sliding_lid_rail_side_clearance, 0, m_box_size[ k_z ] + m_sliding_lid_fit_tolerance + __lid_external_size( k_z ) ] :
+                    [ m_sliding_lid_rail_side_clearance, m_sliding_lid_stop_clearance, m_box_size[ k_z ] + m_sliding_lid_fit_tolerance + __lid_external_size( k_z ) ] ) :
+                ( m_lid_slide_side == LEFT ?
+                    [ 0, m_sliding_lid_rail_side_clearance, m_box_size[ k_z ] + m_sliding_lid_fit_tolerance + __lid_external_size( k_z ) ] :
+                    [ m_sliding_lid_stop_clearance, m_sliding_lid_rail_side_clearance, m_box_size[ k_z ] + m_sliding_lid_fit_tolerance + __lid_external_size( k_z ) ] );
+            lid_position = ( m_lid_sliding && $g_vis_actual_b ) ?
+                lid_sliding_closed_position :
+                ( $g_vis_actual_b ? lid_vis_position : lid_print_position );
+            lid_rotation = m_lid_sliding ? 180 : ( $g_vis_actual_b ? 180 : 0 );
+
+            translate( lid_position )
+                RotateAboutPoint( lid_rotation, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )
+                    children();
+        }
+
         module MakeDetachedLidLabels( group_filter_b = false, separate_filter_b = false )
         {
-            lid_print_position = [0, m_box_size[ k_y ] + DISTANCE_BETWEEN_PARTS, 0 ];
-
-            MoveToLidInterior( tolerance = -$g_tolerance )
-                translate( $g_vis_actual_b ? lid_vis_position : lid_print_position ) 
-                    RotateAboutPoint( $g_vis_actual_b ? 180 : 0, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )            
-                        MakeAllLidLabels( group_filter_b = group_filter_b, separate_filter_b = separate_filter_b );
+            PlaceLid()
+                MakeAllLidLabels( thickness = __lid_surface_thickness(), group_filter_b = group_filter_b, separate_filter_b = separate_filter_b );
         }
     
         // ----- LID ASSEMBLY -----
@@ -7467,10 +7491,6 @@ module MakeBox( box )
                 }
             }
 
-            function __lid_surface_thickness() =
-                m_lid_sliding ? __lid_external_size( k_z ) :
-                m_lid_inset ? m_lid_thickness + m_lid_wall_height - 2* $g_tolerance :
-                m_lid_thickness;
 
             function __lid_surface_frame_origin() =
                 m_lid_inset ?
@@ -7748,22 +7768,7 @@ module MakeBox( box )
             }
 
 
-            lid_print_position = [ 0, m_box_size[ k_y ] + DISTANCE_BETWEEN_PARTS, m_lid_sliding ? __lid_external_size( k_z ) : 0 ];
-            lid_vis_position = [ 0, 0, m_box_size[ k_z ] + m_lid_thickness ];
-            lid_sliding_closed_position = !m_lid_slides_x ?
-                ( m_lid_slide_side == FRONT ?
-                    [ m_sliding_lid_rail_side_clearance, 0, m_box_size[ k_z ] + m_sliding_lid_fit_tolerance + __lid_external_size( k_z ) ] :
-                    [ m_sliding_lid_rail_side_clearance, m_sliding_lid_stop_clearance, m_box_size[ k_z ] + m_sliding_lid_fit_tolerance + __lid_external_size( k_z ) ] ) :
-                ( m_lid_slide_side == LEFT ?
-                    [ 0, m_sliding_lid_rail_side_clearance, m_box_size[ k_z ] + m_sliding_lid_fit_tolerance + __lid_external_size( k_z ) ] :
-                    [ m_sliding_lid_stop_clearance, m_sliding_lid_rail_side_clearance, m_box_size[ k_z ] + m_sliding_lid_fit_tolerance + __lid_external_size( k_z ) ] );
-            lid_position = ( m_lid_sliding && $g_vis_actual_b ) ?
-                lid_sliding_closed_position :
-                ( $g_vis_actual_b ? lid_vis_position : lid_print_position );
-            lid_rotation = m_lid_sliding ? 180 : ( $g_vis_actual_b ? 180 : 0 );
-
-            translate( lid_position )
-                RotateAboutPoint( lid_rotation, [0, 1, 0], [__lid_external_size( k_x )/2, __lid_external_size( k_y )/2, 0] )
+            PlaceLid()
                     difference()
                     {
                         Helper__BuildLid();

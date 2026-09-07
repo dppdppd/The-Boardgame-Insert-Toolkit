@@ -16,6 +16,61 @@
           "face"
         ]
       ]
+    },
+    {
+      "baseline_commit": "3d282bd251d868995b016059709869d4ef10e08e",
+      "test": "tests/v4/scad/test_combo_multi_box.scad",
+      "before_sha256": "d9d5095ac7bb998a63e5bfdb4935af1c8e5ffa4636b929784803227a7d6f6a5e",
+      "after_sha256": "7526037c2c4426ed09fe5aef2780f5730e4628efb0bbe64377772757897fd153",
+      "reason": "This inset positive label must span the actual 3.8 mm lid panel instead of the nominal 2 mm thickness. Only its extrusion and cancelling half-thickness centering values change. Equality to the incomplete old label is superseded by the through-label surface-thickness and body/insert registration assertions in the 48-case placement invariant. Exact before/after evidence is in /tmp/bit-label-gates-20260907/placement-transition/test_combo_multi_box.diff; implementation-labels.md records rendered/source equivalence.",
+      "invariant_commands": [
+        [
+          "python3",
+          "-B",
+          "tests/check_lid_label_geometry.py",
+          "--phase",
+          "placement"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "3d282bd251d868995b016059709869d4ef10e08e",
+      "test": "tests/v4/scad/test_helpers_lid.scad",
+      "before_sha256": "8e7c914cb6d380120f06a35790421b836315bee6ee9321546b928ebf6ef73a75",
+      "after_sha256": "d4ee6d724c8ad875e871f79e41ce166d1747890764990981853200de0ae2df8d",
+      "reason": "This inset positive label must span the actual 3.8 mm lid panel instead of the nominal 2 mm thickness. Only its extrusion and cancelling half-thickness centering values change. Equality to the incomplete old label is superseded by the through-label surface-thickness and body/insert registration assertions in the 48-case placement invariant. Exact before/after evidence is in /tmp/bit-label-gates-20260907/placement-transition/test_helpers_lid.diff; implementation-labels.md records rendered/source equivalence.",
+      "invariant_commands": [
+        [
+          "python3",
+          "-B",
+          "tests/check_lid_label_geometry.py",
+          "--phase",
+          "placement"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "3d282bd251d868995b016059709869d4ef10e08e",
+      "test": "tests/v4/scad/test_label_lid_solid_depth.scad",
+      "before_sha256": "faffc84f27c405c0bb858d0c88f2a7f65c3bc2d740d3f91886c0641395b65c38",
+      "after_sha256": "b0f059a9b99400701987dcec8d63c9ad05d77ee1bd67c9fc034166290500de28",
+      "reason": "The shared lid placement removes the obsolete +0.9 mm x/y transform around an empty detached-label branch in this body-only fixture. No geometry exists inside that changed branch. Exact before/after evidence is in /tmp/bit-label-gates-20260907/placement-transition/test_label_lid_solid_depth.diff; face boundaries remain verified and the 48-case placement invariant proves matching body and detached transforms.",
+      "invariant_commands": [
+        [
+          "python3",
+          "-B",
+          "tests/check_lid_label_geometry.py",
+          "--phase",
+          "face"
+        ],
+        [
+          "python3",
+          "-B",
+          "tests/check_lid_label_geometry.py",
+          "--phase",
+          "placement"
+        ]
+      ]
     }
   ]
 }
