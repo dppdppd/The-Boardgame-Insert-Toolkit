@@ -262,7 +262,7 @@ Value is expected to be an array of lid key-value pairs.
 Value is expected to be a bool, and determines whether a lid is ommitted. If ommitted, the box will not form an inset lip to support a lid.
 
 #### `PRINT_GROUP`
-Value is expected to be a string or list of strings, and tags printable boxes, spacers, dividers, lids, box features, feature groups/copies, or labels for grouped output. Select groups with `[ G_PRINT_GROUPS, "group1" ]` or with `Make(data, print_groups = "group1")`. Select output types with `G_PRINT_TYPES` (`BOX`, `LID`, `DIVIDERS`) and top-level entries by name with `G_PRINT_BOXES`; empty values for those three globals print all. Lids inherit from the parent box unless overridden inside `BOX_LID`; features and labels inherit from their containing box/lid/feature/group unless overridden. A box feature printed separately from its parent box reserves and emits feature-local rim/wall geometry; `FTR_MARGIN_FBLR` controls the rim explicitly, and when omitted the feature uses the box wall thickness as the default rim. When a print group selector is active, selected groups are preview-colored from a stable palette based on the first explicit `PRINT_GROUP` order in the data. Print groups replace the old MMU-layer switch.
+Value is expected to be a string or list of strings, and tags printable boxes, spacers, dividers, lids, box features, feature groups/copies, or labels for grouped output. Select groups with `[ G_PRINT_GROUPS, "group1" ]` or with `Make(data, print_groups = "group1")`. Select output types with `G_PRINT_TYPES` (`BOX`, `LID`, `DIVIDERS`) and top-level entries by name with `G_PRINT_BOXES`; empty values for those three globals print all. Lids inherit from the parent box unless overridden inside `BOX_LID`; features and labels inherit from their containing box/lid/feature/group unless overridden. A box feature printed separately from its parent box reserves and emits feature-local rim/wall geometry; `FTR_MARGIN_FBLR` controls the rim explicitly, and when omitted the feature uses the box wall thickness as the default rim. When a print group selector is active, selected groups are preview-colored from a stable palette based on the first explicit `PRINT_GROUP` order in the data. Print groups replace the old MMU-layer switch. Separately selected lid labels share the lid placement in both print layout and assembled preview, including all sliding directions. Full-depth stencil and positive labels span the actual cap, inset, or sliding panel thickness.
 e.g. `[ PRINT_GROUP, "red" ]`
 
 #### `BOX_STACKABLE_B`
@@ -315,6 +315,8 @@ Value is expected to be a number, and determines the number of sides that the pa
 #### `LID_PATTERN_ANGLE`
 Value is expected to be a number, and determines the angle of the pattern shape. 
 
+Patterns extend far enough to cover the lid at the chosen angle while keeping the existing centered grid alignment. The radius, thickness, angle, and row/column offsets must produce positive spacing on both axes; invalid spacing stops rendering with a diagnostic.
+
 #### `LID_PATTERN_ROW_OFFSET`
 Value is expected to be a number, and determines the percent of height that each row will offset from each other. 
 
@@ -331,7 +333,7 @@ Value is expected to be a bool, and determines whether the box bottom is formed 
 Value is expected to be a bool, and determines whether the lid is a hex mesh or solid.
 
 #### `LID_SOLID_LABELS_DEPTH`
-Value is expected to be a number, and if the lid is solid, determines how deep the label cut is.
+Depth in millimeters of recessed labels on solid lids and backed inverted labels. A label-specific `LBL_DEPTH` overrides this value. Keep the depth below the lid surface thickness to retain enclosed letter centers. Inverted labels with `LID_LABELS_BG_THICKNESS` set to zero remain full-depth stencils. Solid-lid lettering is recessed from the readable exterior face, including inset and sliding lids.
 
 #### `LID_LABELS_INVERT_B`
 Value is expected to be a bool, and determines whether the lid label is a positive or negative shape.
@@ -374,8 +376,17 @@ Value is expected to be one of the following:
 - `HEX2`     a 6-sided compartment that is rotated 30 degrees (corner down)
 - `OCT`      an 8-sided compartment (flat side down)
 - `OCT2`     an 8-sided compartment that is rotated 22.5 degrees (corner down)
+- `TRI`      a 3-sided compartment (flat lower edge for a vertical stack)
+- `TRI2`     a 3-sided compartment (lower vertex for a vertical stack)
+- `PENT`     a 5-sided compartment (flat lower edge)
+- `PENT2`    a 5-sided compartment (lower vertex)
 
-e.g. `[ FTR_SHAPE, HEX2 ]`. The following box shows all the different components. The front row has the components in the order listed above. The second row shows the same, but with the horizontal axis set (`[FTR_SHAPE_AXIS, X]` below). The third row has the same order for vertical stacks of pieces (`[FTR_SHAPE_VERTICAL_B]` below).
+`TRI` and `TRI2` share the pointed-bottom profile when laid down (`FTR_SHAPE_VERTICAL_B = false`); their orientations differ for vertical stacks. `FTR_SHAPE_AXIS` chooses X or Y for laid-down storage. Vertical native polygons use matching polygonal floor and opening chamfers, including the inherited default. Laid-down polygon chamfers are unsupported; use `[ CHAMFER_N, 0 ]` on those features.
+
+For vertical polygons, the larger X/Y compartment dimension defines the circumscribed diameter. Use equal X/Y dimensions to contain the entire polygon; a narrower declared footprint clips it. Validate the resulting cavity against actual token dimensions and print a fit sample before making a full insert.
+
+
+e.g. `[ FTR_SHAPE, HEX2 ]`. The following older illustration shows SQUARE, FILLET, ROUND, HEX, HEX2, OCT, and OCT2. The front row has the components in the order listed above. The second row shows the same, but with the horizontal axis set (`[FTR_SHAPE_AXIS, X]` below). The third row has the same order for vertical stacks of pieces (`[FTR_SHAPE_VERTICAL_B]` below).
 
 ![All component types](images/components.png)
 
@@ -626,7 +637,9 @@ Open an issue at https://github.com/dppdppd/The-Boardgame-Insert-Toolkit/issues 
 - [Journeys in Middle-Earth Battle-Map Terrain box](https://www.printables.com/model/60425-journeys-in-middle-earth-battle-map-terrain-stuff)
 - [Maqui 2nd edition](https://www.printables.com/model/90469-insert-for-maqui-board-game-2nd-printing)
 - [Mansions of Madness 2nd edition persons container](https://www.printables.com/model/60421-mansions-of-madness-2nd-edition-persons-container)
-- [Mice and Mystics]( https://www.thingiverse.com/thing:3435429)
+- [Mice and Mystics](https://www.thingiverse.com/thing:3435429)
+- [Nature Big Box Deluxe](https://github.com/okainov/nature-deluxe-bit-organizer)
+- [Nemesis Lockdown](https://makerworld.com/de/models/1121255#profileId-1119721)
 - [Noria](https://www.thingiverse.com/thing:6162186)
 - [Orleans]( https://www.thingiverse.com/thing:4493482 )
 - [Pandemic]( https://www.thingiverse.com/thing:3412724)
@@ -643,5 +656,6 @@ Open an issue at https://github.com/dppdppd/The-Boardgame-Insert-Toolkit/issues 
 - [Sword & Sorcey Cards box and Chit box](https://www.thingiverse.com/thing:3637030)
 - [Tainted Grail: Fall of Avalon](https://www.thingiverse.com/thing:4812198) & [Tainted Grail Expansions](https://www.thingiverse.com/thing:4812222)
 - [Tapestry](https://www.thingiverse.com/thing:4579132)
+- [Twilight Imperium wormhole token box](https://www.thingiverse.com/thing:7067400)
 - [Tyrants of the Underdark]( https://www.thingiverse.com/thing:4570276 )
 - [V Commandos]( https://www.thingiverse.com/thing:4319308 )

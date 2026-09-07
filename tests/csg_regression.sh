@@ -3,12 +3,16 @@
 # Compare normalized OpenSCAD CSG output for existing v4 tests against a git
 # baseline. This catches unintended CSG tree changes before committing while
 # ignoring no-op group(), preview color(), and identity transform wrappers that
-# OpenSCAD may serialize differently.
+# OpenSCAD may serialize differently. Import timestamps are replaced with
+# actual asset SHA256 hashes so fresh checkouts compare by geometry inputs.
 #
 # Usage:
 #   tests/csg_regression.sh
 #   tests/csg_regression.sh --baseline HEAD~1
 #   tests/csg_regression.sh test_box_minimal test_lid_basic
+#
+# Reviewed intentional changes may be pinned in tests/csg_expected_changes.json.
+# See docs/guidance/CSG-EXPECTED-CHANGES.md; hashes and invariants must all match.
 
 set -euo pipefail
 
@@ -61,6 +65,11 @@ if ! command -v git >/dev/null 2>&1; then
     exit 1
 fi
 
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "FATAL: python3 not found in PATH"
+    exit 1
+fi
+
 if ! command -v openscad >/dev/null 2>&1; then
     echo "FATAL: openscad not found in PATH"
     exit 1
@@ -79,6 +88,13 @@ if ! git rev-parse --verify "${BASELINE_REF}^{commit}" >/dev/null 2>&1; then
     exit 1
 fi
 
+BASELINE_COMMIT="$(git rev-parse "${BASELINE_REF}^{commit}")"
+EXPECTED_MANIFEST="$ROOT/tests/csg_expected_changes.json"
+EXPECTED_CHECKER="$ROOT/tests/csg_expected_changes.py"
+# No manifest means exact equality remains the only accepted outcome. If one
+# exists, reject malformed entries before spending time compiling fixtures.
+python3 "$EXPECTED_CHECKER" validate --manifest "$EXPECTED_MANIFEST"
+
 BASELINE_TREE="$(mktemp -d /tmp/bit_csg_baseline.XXXXXX)"
 OUT_DIR="$(mktemp -d /tmp/bit_csg_regression.XXXXXX)"
 DIFF_DIR="$OUT_DIR/diffs"
@@ -96,6 +112,7 @@ trap cleanup EXIT
 git worktree add --detach "$BASELINE_TREE" "$BASELINE_REF" >/dev/null 2>&1
 
 normalize_csg() {
+    local source_file="$1"
     awk '
         function trim(s) {
             sub(/^[[:space:]]+/, "", s)
@@ -137,7 +154,7 @@ normalize_csg() {
                 push("block")
             }
         }
-    '
+    ' | python3 "$ROOT/tests/normalize_csg_assets.py" --source "$source_file"
 }
 
 test_rel_path() {
@@ -200,6 +217,7 @@ echo ""
 COMPARED=0
 UNCHANGED=0
 DIFFS=0
+EXPECTED=0
 SKIPPED=0
 
 for rel in "${FILES[@]}"; do
@@ -239,17 +257,34 @@ for rel in "${FILES[@]}"; do
         continue
     fi
 
-    normalize_csg < "$baseline_csg" > "$baseline_norm"
-    normalize_csg < "$current_csg" > "$current_norm"
+    if ! normalize_csg "$baseline_file" < "$baseline_csg" > "$baseline_norm"; then
+        echo "FAIL $name - baseline CSG asset normalization failed"
+        FAIL=$((FAIL + 1))
+        continue
+    fi
+    if ! normalize_csg "$current_file" < "$current_csg" > "$current_norm"; then
+        echo "FAIL $name - current CSG asset normalization failed"
+        FAIL=$((FAIL + 1))
+        continue
+    fi
     COMPARED=$((COMPARED + 1))
 
     if cmp -s "$baseline_norm" "$current_norm"; then
         UNCHANGED=$((UNCHANGED + 1))
     else
         DIFFS=$((DIFFS + 1))
-        FAIL=$((FAIL + 1))
         diff -u "$baseline_norm" "$current_norm" > "$diff_file" || true
-        echo "DIFF $name - $diff_file"
+        if reason="$(python3 "$EXPECTED_CHECKER" check \
+            --manifest "$EXPECTED_MANIFEST" --baseline "$BASELINE_COMMIT" \
+            --test "$rel" --before "$baseline_norm" --after "$current_norm" \
+            --root "$ROOT" --cache-dir "$OUT_DIR/invariants")"; then
+            EXPECTED=$((EXPECTED + 1))
+            echo "EXPECTED $name - $reason"
+        else
+            FAIL=$((FAIL + 1))
+            echo "DIFF $name - $diff_file"
+            echo "  $reason"
+        fi
     fi
 done
 
@@ -264,7 +299,7 @@ if [[ ${#TESTS[@]} -eq 0 ]]; then
 fi
 
 echo ""
-echo "Results: $UNCHANGED unchanged, $DIFFS changed, $FAIL failures, $SKIPPED skipped (of $COMPARED compared)"
+echo "Results: $UNCHANGED unchanged, $DIFFS changed ($EXPECTED verified expected), $FAIL failures, $SKIPPED skipped (of $COMPARED compared)"
 
 if [[ $FAIL -gt 0 ]]; then
     echo "Generated CSG and diffs kept at: $OUT_DIR"

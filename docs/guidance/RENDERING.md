@@ -65,6 +65,17 @@ Tests should continue targeting the moving development library file, not a full-
 
 Test files live in `tests/v4/scad/`; the runner discovers them there automatically.
 
+Pattern edge coverage also has a focused native 2D regression check:
+
+```bash
+python3 tests/pattern_coverage_regression.py
+# Keep generated SCAD, SVG, logs, and results for inspection:
+python3 tests/pattern_coverage_regression.py --output-dir /tmp/bit-pattern-coverage
+```
+
+This compares the complete clipped pattern against an oversized lattice while preserving its established centering and alternating-row alignment. Twelve cases cover ordinary patterns, short grid spacing at 70 degrees, sparse columns with empty rows, and odd/even and fractional cell counts. A negative control verifies that the former two-extra-column proposal still omits about 2.507 mm² of material; four invalid-spacing cases verify the diagnostic. The check uses only Python's standard library and OpenSCAD. Run `./tests/run_tests.sh test_lid_pattern_edge_coverage` for the corresponding small 3D lid and all seven views; the 2D check does not replace that render. Run `./tests/run_tests.sh test_lid_pattern_edge_modes` for the companion inset and sliding lids. Its default scene includes both lids; direct OpenSCAD calls can select one with `-D 'pattern_edge_mode="inset"'` or `-D 'pattern_edge_mode="sliding"'`. Both fixtures use the same 70-degree counterexample on a 15 by 17 mm box footprint.
+
+
 When adding or changing a test, run that affected test without `--csg-only` before finishing. `--csg-only` is useful as a fast preliminary regression check, but it does not generate STL or PNG files and is not a substitute for render output. Each committed test should have a current render-producing run that writes all requested views to `tests/v4/renders/`.
 
 `tests/csg_regression.sh` is the baseline comparison. It checks out the selected baseline ref in a temporary git worktree, exports CSG for the baseline and current tree, normalizes away identity `group()` wrappers, and diffs the normalized CSG. By default it compares against `HEAD` and only compares tests that already exist in the baseline; current-only tests are reported as skipped because they have no baseline yet.
@@ -140,3 +151,11 @@ data = [
 ];
 Make(data);
 ```
+
+### Bounded STL export timeouts
+
+The full render runner defaults to 900 seconds per STL export. Use `./tests/run_tests.sh --stl-timeout 1800 test_chamfer_n` for a complex mixed scene that needs a longer bounded export. This changes the execution budget without simplifying geometry or accepting a partial render. The mixed chamfer fixture was still actively computing around 579 MB RSS when an explicitly selected 600-second attempt expired, so its validation uses the explicit 1800-second budget.
+
+### Native triangle and pentagon regression check
+
+Run `python3 tests/check_native_polygon_geometry.py` to inspect emitted OpenSCAD geometry for the four native triangle/pentagon outlines, both storage modes, both horizontal axes, and default/zero chamfers. It checks matching cavity/chamfer sides and orientations, 45-degree chamfer slopes, and explicit unsupported laid-down diagnostics. This fast check complements the mesh and screenshot gate for `test_shape_tri_pent.scad`; it does not certify physical token fit.

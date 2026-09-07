@@ -1,0 +1,382 @@
+{
+  "version": 1,
+  "changes": [
+    {
+      "baseline_commit": "a45f7ccd3a0dc76c9f78f629da23081452dc6e50",
+      "test": "tests/v4/scad/test_key_validation.scad",
+      "before_sha256": "14e4170e1b69cc0feeca7a84c35f1fe00c6c8fdbe9645fd494f8ed544a0b1d67",
+      "after_sha256": "91d648e9aa9e4eb4712cf31c05a35eace636e6d340e5ee983c8ffffa0809676a",
+      "reason": "The solid label incision moves from the interior face to the readable exterior by removing only its obsolete +1.5 mm z translation. Equality to the old wrong-face geometry is superseded by the six evaluated face boundary and handedness cases in tests/check_lid_label_geometry.py --phase face. The exact before/after diff and seven-view solid-label render are recorded in /tmp/bit-label-gates-20260907/face-transition and face-render.log; implementation-labels.md records the visual exterior-face check.",
+      "invariant_commands": [
+        [
+          "python3",
+          "-B",
+          "tests/check_lid_label_geometry.py",
+          "--phase",
+          "face"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "3d282bd251d868995b016059709869d4ef10e08e",
+      "test": "tests/v4/scad/test_combo_multi_box.scad",
+      "before_sha256": "d9d5095ac7bb998a63e5bfdb4935af1c8e5ffa4636b929784803227a7d6f6a5e",
+      "after_sha256": "7526037c2c4426ed09fe5aef2780f5730e4628efb0bbe64377772757897fd153",
+      "reason": "This inset positive label must span the actual 3.8 mm lid panel instead of the nominal 2 mm thickness. Only its extrusion and cancelling half-thickness centering values change. Equality to the incomplete old label is superseded by the through-label surface-thickness and body/insert registration assertions in the 48-case placement invariant. Exact before/after evidence is in /tmp/bit-label-gates-20260907/placement-transition/test_combo_multi_box.diff; implementation-labels.md records rendered/source equivalence.",
+      "invariant_commands": [
+        [
+          "python3",
+          "-B",
+          "tests/check_lid_label_geometry.py",
+          "--phase",
+          "placement"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "3d282bd251d868995b016059709869d4ef10e08e",
+      "test": "tests/v4/scad/test_helpers_lid.scad",
+      "before_sha256": "8e7c914cb6d380120f06a35790421b836315bee6ee9321546b928ebf6ef73a75",
+      "after_sha256": "d4ee6d724c8ad875e871f79e41ce166d1747890764990981853200de0ae2df8d",
+      "reason": "This inset positive label must span the actual 3.8 mm lid panel instead of the nominal 2 mm thickness. Only its extrusion and cancelling half-thickness centering values change. Equality to the incomplete old label is superseded by the through-label surface-thickness and body/insert registration assertions in the 48-case placement invariant. Exact before/after evidence is in /tmp/bit-label-gates-20260907/placement-transition/test_helpers_lid.diff; implementation-labels.md records rendered/source equivalence.",
+      "invariant_commands": [
+        [
+          "python3",
+          "-B",
+          "tests/check_lid_label_geometry.py",
+          "--phase",
+          "placement"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "3d282bd251d868995b016059709869d4ef10e08e",
+      "test": "tests/v4/scad/test_label_lid_solid_depth.scad",
+      "before_sha256": "faffc84f27c405c0bb858d0c88f2a7f65c3bc2d740d3f91886c0641395b65c38",
+      "after_sha256": "b0f059a9b99400701987dcec8d63c9ad05d77ee1bd67c9fc034166290500de28",
+      "reason": "The shared lid placement removes the obsolete +0.9 mm x/y transform around an empty detached-label branch in this body-only fixture. No geometry exists inside that changed branch. Exact before/after evidence is in /tmp/bit-label-gates-20260907/placement-transition/test_label_lid_solid_depth.diff; face boundaries remain verified and the 48-case placement invariant proves matching body and detached transforms.",
+      "invariant_commands": [
+        [
+          "python3",
+          "-B",
+          "tests/check_lid_label_geometry.py",
+          "--phase",
+          "face"
+        ],
+        [
+          "python3",
+          "-B",
+          "tests/check_lid_label_geometry.py",
+          "--phase",
+          "placement"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_box_auto_size.scad",
+      "before_sha256": "4031d8a6dfba80467a4be000a5f9b53d8730bb6908561f96d25a71698653b1d2",
+      "after_sha256": "ad9561457d42bf0ba4e66439b38f1b277ce43b9693f9f76bdc5cbdf739acd90a",
+      "reason": "Default patterned lids on the three automatically sized boxes; box size inference is unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_chamfer_closed.scad",
+      "before_sha256": "55c81c2b06d7c86ad417b7d967dd38f1aaa82d57e92f592aa65751a0f33505e3",
+      "after_sha256": "c0132ce32388c5fa45406b6a5451ae90b584e1b89cffabc0a24491f778fe6b37",
+      "reason": "Patterned cap lid in the closed visualization; chamfers and assembly placement are unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_chamfer_n.scad",
+      "before_sha256": "276afd1a821d4a2e86c04dffb07d7cb52f9280cceacbbfe5b2320d5baf0b00a1",
+      "after_sha256": "a3b534b84ab7fe78c57b3dc0a9a4fb925709e6fb6d00c3374c4c50220a18cd4c",
+      "reason": "Patterned lids in the chamfer matrix; compartment/chamfer geometry is unchanged by the pattern patch. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_combo_card_tray.scad",
+      "before_sha256": "8bfc6d009dde85fa0a7c0012f580a27421fbaf4dee8ed391e41d1f266e0b6fff",
+      "after_sha256": "d2dfe9760a59e344c49f3cef74464d44536d80663349efc2aab8db17b71321b8",
+      "reason": "The card-tray cap uses radius10 and thickness0.6 rings; features and labels are unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_combo_full_featured.scad",
+      "before_sha256": "265027443923c094c3b4ec69ecab55c8b8ed2d2554c8584296fc01143f2e103d",
+      "after_sha256": "0df46e123957d9e0d96471da04faa25eca39aea076f5ea8134225d11ee878fef",
+      "reason": "The full-featured cap uses radius8 rings; features/cutouts/labels are unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_combo_labels_everywhere.scad",
+      "before_sha256": "adc8740fed59ad6fd5c3599111ee74a54a6e9a22a873cbf7250ea2f8165ed7aa",
+      "after_sha256": "933ed4275c9c43c6cfde32d6544798ea1d08c994c812198b3da6dbdb879bc1f0",
+      "reason": "The radius8 patterned cap changes its candidate lattice cells; label primitives remain unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_combo_multi_box.scad",
+      "before_sha256": "7526037c2c4426ed09fe5aef2780f5730e4628efb0bbe64377772757897fd153",
+      "after_sha256": "508904375ca6007dbda82641c05287d0f02085569a3ecadbf175b9159e7dce22",
+      "reason": "Only the round-compartment patterned inset lid changes; the two explicitly solid lids remain unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_globals_print_flags.scad",
+      "before_sha256": "e0bd27dca50ab5a154c5787e5e957149c12d9ba34e1b6a55fab8ef7d27693a5f",
+      "after_sha256": "f58a5412fdea23e66870c6976c58f5c6d33d5dd9c4006fb9950deadcd7a8c788",
+      "reason": "The lid-only radius8 cap removes out-of-bounds lattice cells; the print selector is unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_helpers_lid.scad",
+      "before_sha256": "d4ee6d724c8ad875e871f79e41ce166d1747890764990981853200de0ae2df8d",
+      "after_sha256": "8ca6a9b927e7f13b99363c076d91731dbd2a2f4e494ba22d788d7db6dedb4668",
+      "reason": "Only the radius8 patterned inset lid removes out-of-bounds cells; the solid inset lid is unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_key_validation.scad",
+      "before_sha256": "91d648e9aa9e4eb4712cf31c05a35eace636e6d340e5ee983c8ffffa0809676a",
+      "after_sha256": "edfa73df1aa617a06cc978958c26411a26ae0c61a053398026060d5fea408d70",
+      "reason": "Default patterned lids inside the validation fixture change their lattice coverage; diagnostics/types are unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_label_lid.scad",
+      "before_sha256": "eb4af42b010164cf1bf3ad544dadfc352f3d57bb7b98bda7b9e1cb29248d22bb",
+      "after_sha256": "a23f7b587aa500fbc918f1c5eb964edc89ba2b98d1f9447282d38a3243be91c5",
+      "reason": "Both radius8 caps change candidate pattern cells; text and rotation primitives remain unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_label_lid_inverted.scad",
+      "before_sha256": "ab90c0f7db246347ef39a99a99c225f1411ee659788a31929793c0a451a8e270",
+      "after_sha256": "a7471abc6a540d266655d78d4dc4e3b0ee0293b7695c616391cdd3a1cf9450db",
+      "reason": "The retained-counter30x24cap uses radius4 rings; label background/cut geometry remains unchanged by this patch. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_label_lid_print_group.scad",
+      "before_sha256": "d3216e99f7c5bc174eb7c56f3481bc338cb629c620e7c72c11caa228d6844303",
+      "after_sha256": "bf18072858fb1da8e3ad02d30702bf9faed25a9d83192d92936042cbc09a3456",
+      "reason": "The selected/composite30x24cap copies use radius4 rings; group selection and detached text placement remain unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_label_stencil.scad",
+      "before_sha256": "317f0b7c33835ea3a64d79ac83c835a6a1dc31018874f2cb33c0e45336ace3e7",
+      "after_sha256": "5828594922a4940b1792115509ddced89f0a1c94e5c8972f157289cd6b1e6088",
+      "reason": "The radius4 patterned cap changes its candidate cells; stencil construction is unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_lid_fit_under.scad",
+      "before_sha256": "a372b58f76e598117b70dbcab092ae8d864caaf4a948dd44a2f1b3e384fc8be6",
+      "after_sha256": "bd60245a686a9ba1695489d13f81d7c575697857316400d4d9cbdba8929ec2cd",
+      "reason": "The radius8 fit-under cap changes its pattern lattice; fit-under geometry and dimensions are unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_lid_frame_width.scad",
+      "before_sha256": "fee7ea9245e4eed4d4cb7427ee49ff4cbd2c187a9557843bf8484f6be9196ad2",
+      "after_sha256": "6fa18cdc1a83a8af88551138c1cada1a81ff82b5db1a28e27d8e4cd2baf08829",
+      "reason": "Patterned cap/inset/sliding branches change grid coverage; all frames and the solid-cap branch remain unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_lid_height.scad",
+      "before_sha256": "6a17195776e5c00401d37416c9b693ef4d3523c697ab2e25e95ad9cc39620bce",
+      "after_sha256": "c34fcfaae00ea6e681f7a35f489d5720eef31a7311bc6c6bb0226a96a1490530",
+      "reason": "Only the tall radius8 patterned cap changes; the short solid lid and lid-height rules are unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_lid_pattern.scad",
+      "before_sha256": "b717fe404016ddbf526d5150dd654d34c10800c538d58d2857eba4abb44b4a76",
+      "after_sha256": "ab4864e8249f7ff968f1f2f21c11e06df46bab83767a3157a2f55c1e5d0c3a8c",
+      "reason": "Both radius8 and radius3 hex-pattern caps change candidate edge cells. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_lid_patterns_n1n2.scad",
+      "before_sha256": "3d00f309f41918be52b6d62f9fa7e4adb8d773c8e58bf151122e20bd56c27b1c",
+      "after_sha256": "e1d7603f3ae4b084fda06fc4cca685786fc06164077cca2cc62a00437e3fc566",
+      "reason": "The triangle/octagon/mixed polygon-pattern caps change coverage; ring shapes, angles, spacing and thickness remain unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_lid_sliding.scad",
+      "before_sha256": "c5cae9b721243015fd27f4d557de367b3166b31bfe0aebc63cc746ed571100f3",
+      "after_sha256": "d44619e602f4177fa8d003ddcde966ff44c9fc316e190f94ac865179b38c9aba",
+      "reason": "Only the left-opening patterned sliding lid removes out-of-bounds cells; the solid sliding lid and rail/detent geometry are unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_lid_stripes.scad",
+      "before_sha256": "0ae38a871b41306312e1b036eb119f9c4f78040a1f2bf078d9dae7d628bdba60",
+      "after_sha256": "fb2fd5fee8729059d5da70080761a34f633cdd08923ba1d26daa30a0c803c5a0",
+      "reason": "The two patterned caps change lattice coverage; stripe-width/space parameters and non-pattern primitives are unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "c62c0a2f388925c5e1e8bc0d6b1f775fb2acdef7",
+      "test": "tests/v4/scad/test_minimal.scad",
+      "before_sha256": "84bbb4c3ac5961feb7d4dff5537948fa903c8b006ee7bfb25d0369c3fef008b2",
+      "after_sha256": "f6ad1b93bc715dc6eec9ac966da7a83a3c3ea1a1967624acd75f86332c56ae55",
+      "reason": "The default patterned cap removes out-of-bounds cells; box and lid shell geometry are unchanged. The established lattice phase is preserved; integer bounds now include every polygon that can intersect the lid. Native2D coverage is checked against an oversized lattice.",
+      "invariant_commands": [
+        [
+          "python3",
+          "tests/pattern_coverage_regression.py"
+        ]
+      ]
+    },
+    {
+      "baseline_commit": "f0fdd07ba83239f640b84458628d718356f0ff20",
+      "test": "tests/v4/scad/test_chamfer_n.scad",
+      "before_sha256": "a3b534b84ab7fe78c57b3dc0a9a4fb925709e6fb6d00c3374c4c50220a18cd4c",
+      "after_sha256": "a079cf677ad3386c7b1581636ef74a971293a4f832a956643f8a9ad3444ad7bb",
+      "reason": "The mixed-chamfer demonstration had overlapping features. Its two left cavities shrink from 30x46x23 mm to 23x42x23 mm and gain explicit [2,2] placement, preserving the right feature at [55,2]. The only normalized CSG changes are the resulting left feature dimensions, placement, compartment pitch and attached chamfer extents. Equality to the invalid old fixture is superseded by warning-free compilation of the corrected layout plus the native polygon geometry invariant. Applying native support alone leaves both old and corrected fixture CSG byte-identical. Exact four-way comparison and accepted seven-view mesh evidence are recorded in implementation-shapes.md and probes/shapes-implementation/fixture-transition-preflight/.",
+      "invariant_commands": [
+        [
+          "python3",
+          "-B",
+          "-c",
+          "from pathlib import Path\nimport re, subprocess, tempfile\nwith tempfile.TemporaryDirectory(prefix=\"bit-chamfer-invariant-\") as temporary:\n    output = Path(temporary) / \"chamfer.csg\"\n    result = subprocess.run([\"openscad\", \"-o\", str(output), \"tests/v4/scad/test_chamfer_n.scad\"], capture_output=True, text=True, timeout=60)\n    diagnostics = result.stdout + result.stderr\n    if result.returncode != 0:\n        raise RuntimeError(diagnostics or f\"OpenSCAD exited {result.returncode}\")\n    if not output.is_file() or output.stat().st_size == 0:\n        raise RuntimeError(\"missing or empty chamfer CSG\")\n    if re.search(r\"^(?:WARNING|ERROR):|BGSD_WARNING\", diagnostics, re.MULTILINE):\n        raise RuntimeError(diagnostics)\nprint(\"PASS: corrected mixed-chamfer fixture compiles without compiler or physical-validation warnings\")\n"
+        ],
+        [
+          "python3",
+          "-B",
+          "tests/check_native_polygon_geometry.py"
+        ]
+      ]
+    }
+  ]
+}

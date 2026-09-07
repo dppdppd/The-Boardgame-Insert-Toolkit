@@ -36,7 +36,9 @@ data = [
         [ CHAMFER_N, 0.5 ],
         [ BOX_FEATURE,
             [ FTR_NUM_COMPARTMENTS_XY, [2, 1] ],
-            [ FTR_COMPARTMENT_SIZE_XYZ, [30, 46, 23] ],
+            // Leave a separate right-hand column for the smaller compartments.
+            [ FTR_COMPARTMENT_SIZE_XYZ, [23, 42, 23] ],
+            [ POSITION_XY, [2, 2] ],
         ],
         [ BOX_FEATURE,
             [ FTR_NUM_COMPARTMENTS_XY, [1, 2] ],
