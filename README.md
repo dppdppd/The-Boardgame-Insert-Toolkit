@@ -331,7 +331,7 @@ Value is expected to be a bool, and determines whether the box bottom is formed 
 Value is expected to be a bool, and determines whether the lid is a hex mesh or solid.
 
 #### `LID_SOLID_LABELS_DEPTH`
-Depth in millimeters of recessed labels on solid lids and backed inverted labels. A label-specific `LBL_DEPTH` overrides this value. Keep the depth below the lid surface thickness to retain enclosed letter centers. Inverted labels with `LID_LABELS_BG_THICKNESS` set to zero remain full-depth stencils.
+Depth in millimeters of recessed labels on solid lids and backed inverted labels. A label-specific `LBL_DEPTH` overrides this value. Keep the depth below the lid surface thickness to retain enclosed letter centers. Inverted labels with `LID_LABELS_BG_THICKNESS` set to zero remain full-depth stencils. Solid-lid lettering is recessed from the readable exterior face, including inset and sliding lids.
 
 #### `LID_LABELS_INVERT_B`
 Value is expected to be a bool, and determines whether the lid label is a positive or negative shape.

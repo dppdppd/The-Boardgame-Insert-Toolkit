@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Measure inverted label depths and retained letter centers.
+"""Measure lid label depths, readable faces, and retained letter centers.
 
 The CSG checks inspect evaluated extrusion depths rather than source spelling,
 including inherited and per-label settings on cap, inset, and sliding lids.
+Face checks measure the incision boundaries and readable-side handedness.
 Retention additionally checks a rendered O fixture's closed, connected STL mesh.
 Only retention needs a CGAL render, which the caller runs separately and serially.
 """
@@ -58,6 +59,11 @@ def near(actual, expected, meaning):
     if not math.isclose(actual, expected, abs_tol=1e-6):
         raise AssertionError(f"{meaning}: expected {expected}, got {actual}")
 
+
+
+def z_bounds(glyph):
+    m = glyph["matrix"]
+    return sorted([m[2][3], m[2][3] + m[2][2] * glyph["height"]])
 
 
 class Gate:
@@ -118,6 +124,19 @@ class Gate:
         self.record("depth-stencil-cap", stencil)
 
 
+    def face(self):
+        for kind, surface in (("cap", 2), ("inset", 3.8), ("slide", 1.8)):
+            for override, depth in ((-1, 0.5), (0.8, 0.8)):
+                name = f"face-{kind}-{override}"
+                def check(name=name, kind=kind, surface=surface, override=override, depth=depth):
+                    part = self.compile(name, label_kind=kind, label_solid=True, label_depth=override)[-1]
+                    expected = [surface-depth, surface] if kind == "slide" else [0, depth]
+                    for actual, value in zip(z_bounds(part), expected):
+                        near(actual, value, "readable face incision z boundary")
+                    near(part["matrix"][0][0], 1 if kind == "slide" else -1, "glyph handedness on the readable face")
+                self.record(name, check)
+
+
 def retention(path):
     """Count connected components and closed edges using only the standard library."""
     data = path.read_bytes()
@@ -158,7 +177,7 @@ def retention(path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--phase", choices=("depth", "retention"), default="depth")
+    parser.add_argument("--phase", choices=("depth", "face", "retention"), default="face")
     parser.add_argument("--library", type=Path, default=LIBRARY)
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--retention-stl", type=Path)
@@ -169,7 +188,7 @@ def main():
         output = (args.output_dir or Path(temporary)).resolve()
         output.mkdir(parents=True, exist_ok=True)
         gate = Gate(args.library.resolve(), output)
-        for phase in ("depth",):
+        for phase in ("depth", "face"):
             if args.phase == phase:
                 getattr(gate, phase)()
         if args.retention_stl:

@@ -1,6 +1,6 @@
 /*
  * The Boardgame Insert Toolkit - Library File
- * Version: 4.12.1
+ * Version: 4.12.2
  * 
  * A parametric system for creating custom board game inserts and organizers
  * https://github.com/dppdppd/The-Boardgame-Insert-Toolkit
@@ -49,7 +49,7 @@
 
 
 // Version information
-VERSION = "4.12.1";
+VERSION = "4.12.2";
 COPYRIGHT_INFO = "\tThe Boardgame Insert Toolkit\n\thttps://github.com/dppdppd/The-Boardgame-Insert-Toolkit\n\n\tCopyright 2020 Ido Magal\n\tCreative Commons - Attribution - Non-Commercial - Share Alike.\n\thttps://creativecommons.org/licenses/by-nc-sa/4.0/legalcode";
 
 // Resolution settings
@@ -7304,7 +7304,8 @@ module MakeBox( box )
             _effective_thickness = m_has_solid_lid || (m_lid_is_inverted && m_lid_label_bg_thickness > 0)
                 ? ( _lbl_depth != false ? _lbl_depth : m_lid_solid_label_depth )
                 : thickness;
-            _solid_label_z = m_lid_sliding ? 0 : thickness - _effective_thickness;
+            // The label mirror targets the exterior panel face at z=0.
+            _solid_label_z = 0;
 
             translate( [ 0, 0, m_has_solid_lid ? _solid_label_z : 0 ] )
                 linear_extrude( _effective_thickness )
